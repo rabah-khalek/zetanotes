@@ -1,9 +1,21 @@
+# NoteTaker Project Specific
+#
+# External dependencies (large, should be cloned/built separately)
+llama.cpp/
+
+# AI Models (large GGUF files - download separately)
+NoteTaker/Resources/Models/*.gguf
+
+# Backup files
+*.backup
+
 # Xcode
 #
 # gitignore contributors: remember to update Global/Xcode.gitignore, Objective-C.gitignore & Swift.gitignore
 
 ## User settings
 xcuserdata/
+.vscode/
 
 ## Obj-C/Swift specific
 *.hmap
