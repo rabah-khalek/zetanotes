@@ -83,32 +83,16 @@ class AutocompleteService {
     // MARK: - Prompt Engineering
 
     private func buildAutocompletePrompt(context: String) -> String {
-        // Simply return the context - the model will naturally complete it
-        // This prevents rewriting and gives natural sentence completion
-        return context
+        return """
+        \(context)
+
+        Continue naturally:
+        """
     }
 
     private func cleanCompletion(_ completion: String) -> String {
-        var cleaned = completion.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        // Remove common artifacts
-        cleaned = cleaned.replacingOccurrences(of: "Continuation:", with: "")
-        cleaned = cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        // Remove any leading newlines but preserve single spaces
-        while cleaned.hasPrefix("\n") {
-            cleaned = String(cleaned.dropFirst())
-        }
-
-        // Limit to first sentence or line for inline display
-        if let firstNewline = cleaned.firstIndex(of: "\n") {
-            cleaned = String(cleaned[..<firstNewline])
-        }
-
-        // Only return if meaningful
-        guard !cleaned.isEmpty, cleaned.count > 2 else { return "" }
-
-        return cleaned
+        // No postprocessing - return raw output
+        return completion
     }
 
     // MARK: - Cleanup

@@ -9,6 +9,24 @@ import Foundation
 import CoreData
 import Combine
 
+// MARK: - Default AI Prompts
+
+/// Centralized default prompts for all AI features
+/// These are the instruction portions that come AFTER the content
+struct DefaultPrompts {
+    static let autocomplete = "Continue naturally:"
+
+    static let summarization = "Summarize in one clear sentence:"
+
+    static let translation = "Translate to {language}. Write ONLY the {language} translation. Do not include the original text. Do not add labels or explanations."
+
+    static let titleGeneration = "Create a short title (maximum 5 words). Write only the title, nothing else."
+
+    static let autoCorrect = "Fix only spelling mistakes. Copy everything else exactly. Do not add labels or explanations. Write only the corrected text."
+
+    static let reformulate = "Rewrite to be clearer and more professional. Keep the same meaning. Do not add labels or explanations. Write only the rewritten text."
+}
+
 /// ViewModel managing note state and AI operations
 /// Bridges UI layer with data and AI services
 @MainActor
@@ -44,12 +62,12 @@ class NoteViewModel: ObservableObject {
     @Published var isAutocompleteEnabled = true
 
     // AI Prompt Customization
-    @Published var autocompletePrompt = "Continue this text naturally:"
-    @Published var summarizationPrompt = "Summarize this text in one clear sentence:"
-    @Published var translationPrompt = "Translate this text to {language}. Only output the translation:"
-    @Published var titleGenerationPrompt = "Generate a short, concise title for this text (5 words max):"
-    @Published var autoCorrectPrompt = "Copy this text EXACTLY. Only fix obvious spelling mistakes. Do NOT change any words. Do NOT rephrase."
-    @Published var reformulatePrompt = "Reformulate this text to make it clearer and more professional. Keep the same meaning:"
+    @Published var autocompletePrompt = DefaultPrompts.autocomplete
+    @Published var summarizationPrompt = DefaultPrompts.summarization
+    @Published var translationPrompt = DefaultPrompts.translation
+    @Published var titleGenerationPrompt = DefaultPrompts.titleGeneration
+    @Published var autoCorrectPrompt = DefaultPrompts.autoCorrect
+    @Published var reformulatePrompt = DefaultPrompts.reformulate
     @Published var targetLanguage = "Spanish"
 
     // MARK: - Dependencies
@@ -255,7 +273,25 @@ class NoteViewModel: ObservableObject {
     private func generateAutocomplete(for text: String) async {
         guard aiEngine.isModelLoaded else { return }
 
-        let suggestion = await aiEngine.autocomplete(for: text, maxTokens: 20)
+        // Get the last 500 characters for context
+        let contextLength = min(text.count, 500)
+        let startIndex = text.index(text.endIndex, offsetBy: -contextLength)
+        let context = String(text[startIndex...])
+
+        let prompt = """
+        Here is the content:
+
+        \(context)
+
+        Task: \(autocompletePrompt)
+        """
+
+        let suggestion = await aiEngine.llmService.generate(
+            prompt: prompt,
+            maxTokens: 20,
+            temperature: 0.3,
+            stopSequences: ["\n\n", "###"]
+        )
 
         await MainActor.run {
             if let suggestion = suggestion, !suggestion.isEmpty {
@@ -294,7 +330,20 @@ class NoteViewModel: ObservableObject {
             self.isGeneratingSummary = true
         }
 
-        let summary = await aiEngine.summarize(sections.baseContent, maxLength: 200)
+        let prompt = """
+        Here is the content:
+
+        \(sections.baseContent)
+
+        Task: \(summarizationPrompt)
+        """
+
+        let summary = await aiEngine.llmService.generate(
+            prompt: prompt,
+            maxTokens: 100,
+            temperature: 0.3,
+            stopSequences: ["---", "###", "\n\n"]
+        )
 
         await MainActor.run {
             if let summary = summary, !summary.isEmpty {
@@ -334,11 +383,11 @@ class NoteViewModel: ObservableObject {
         }
 
         let prompt = """
-        Translate the following text from English to \(targetLanguage). Provide only the \(targetLanguage) translation:
+        Here is the content:
 
         \(sections.baseContent)
 
-        \(targetLanguage) translation:
+        Task: \(translationPrompt.replacingOccurrences(of: "{language}", with: targetLanguage))
         """
 
         let translation = await aiEngine.llmService.generate(
@@ -350,15 +399,9 @@ class NoteViewModel: ObservableObject {
 
         await MainActor.run {
             if let translation = translation, !translation.isEmpty {
-                let cleanedTranslation = translation
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                    .replacingOccurrences(of: "Translation:", with: "")
-                    .replacingOccurrences(of: "\(targetLanguage) translation:", with: "")
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                print("✅ Translation generated: \(translation.prefix(100))...")
 
-                print("✅ Translation generated: \(cleanedTranslation.prefix(100))...")
-
-                let translationBlock = "\n\n--- Translation to \(targetLanguage) ---\n\n" + cleanedTranslation
+                let translationBlock = "\n\n--- Translation to \(targetLanguage) ---\n\n" + translation
                 note.content = reconstructContent(
                     base: sections.baseContent,
                     summary: sections.summaryBlock,
@@ -389,24 +432,18 @@ class NoteViewModel: ObservableObject {
 
         let sections = extractContentSections(from: originalContent)
 
-        let maxChars = 1500
-        let contentToCorrect = String(sections.baseContent.prefix(maxChars))
-        let wasTruncated = sections.baseContent.count > maxChars
-
-        if wasTruncated {
-            print("⚠️ Content truncated to \(maxChars) chars to fit model batch size")
-        }
+        let contentToCorrect = sections.baseContent
 
         await MainActor.run {
             self.isAutoCorrecting = true
         }
 
         let prompt = """
-        Copy this text EXACTLY. Only fix obvious spelling mistakes. Do NOT change any words. Do NOT rephrase. Copy word-for-word:
+        Here is the content:
 
         \(contentToCorrect)
 
-        Corrected version (copy exactly, fix only spelling):
+        Task: \(autoCorrectPrompt)
         """
 
         let correctedText = await aiEngine.llmService.generate(
@@ -418,16 +455,9 @@ class NoteViewModel: ObservableObject {
 
         await MainActor.run {
             if let correctedText = correctedText, !correctedText.isEmpty {
-                var cleanedText = correctedText
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                    .replacingOccurrences(of: "Corrected text:", with: "")
-                    .replacingOccurrences(of: "Fixed text:", with: "")
-                    .replacingOccurrences(of: "Fixed text (with only grammar/spelling corrections):", with: "")
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                print("✅ Patching completed: \(correctedText.prefix(100))...")
 
-                print("✅ Patching completed: \(cleanedText.prefix(100))...")
-
-                let correctionBlock = "\n\n--- Patched ---\n\n" + cleanedText
+                let correctionBlock = "\n\n--- Patched ---\n\n" + correctedText
                 note.content = reconstructContent(
                     base: sections.baseContent,
                     summary: sections.summaryBlock,
@@ -458,24 +488,18 @@ class NoteViewModel: ObservableObject {
 
         let sections = extractContentSections(from: originalContent)
 
-        let maxChars = 1500
-        let contentToReformulate = String(sections.baseContent.prefix(maxChars))
-        let wasTruncated = sections.baseContent.count > maxChars
-
-        if wasTruncated {
-            print("⚠️ Content truncated to \(maxChars) chars to fit model batch size")
-        }
+        let contentToReformulate = sections.baseContent
 
         await MainActor.run {
             self.isReformulating = true
         }
 
         let prompt = """
-        \(reformulatePrompt)
+        Here is the content:
 
         \(contentToReformulate)
 
-        Reformulated text:
+        Task: \(reformulatePrompt)
         """
 
         let reformulatedText = await aiEngine.llmService.generate(
@@ -487,14 +511,9 @@ class NoteViewModel: ObservableObject {
 
         await MainActor.run {
             if let reformulatedText = reformulatedText, !reformulatedText.isEmpty {
-                let cleanedText = reformulatedText
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                    .replacingOccurrences(of: "Reformulated text:", with: "")
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                print("✅ Reformulation completed: \(reformulatedText.prefix(100))...")
 
-                print("✅ Reformulation completed: \(cleanedText.prefix(100))...")
-
-                let reformulationBlock = "\n\n--- Reformulated ---\n\n" + cleanedText
+                let reformulationBlock = "\n\n--- Reformulated ---\n\n" + reformulatedText
                 note.content = reconstructContent(
                     base: sections.baseContent,
                     summary: sections.summaryBlock,
@@ -512,12 +531,12 @@ class NoteViewModel: ObservableObject {
     }
 
     func resetPromptsToDefaults() {
-        autocompletePrompt = "Continue this text naturally:"
-        summarizationPrompt = "Summarize this text in one clear sentence:"
-        translationPrompt = "Translate this text to {language}. Only output the translation:"
-        titleGenerationPrompt = "Generate a short, concise title for this text (5 words max):"
-        autoCorrectPrompt = "Copy this text EXACTLY. Only fix obvious spelling mistakes. Do NOT change any words. Do NOT rephrase."
-        reformulatePrompt = "Reformulate this text to make it clearer and more professional. Keep the same meaning:"
+        autocompletePrompt = DefaultPrompts.autocomplete
+        summarizationPrompt = DefaultPrompts.summarization
+        translationPrompt = DefaultPrompts.translation
+        titleGenerationPrompt = DefaultPrompts.titleGeneration
+        autoCorrectPrompt = DefaultPrompts.autoCorrect
+        reformulatePrompt = DefaultPrompts.reformulate
         targetLanguage = "Spanish"
     }
 
@@ -541,11 +560,11 @@ class NoteViewModel: ObservableObject {
         }
 
         let prompt = """
-        Create a short title (maximum 5 words) for this text:
+        Here is the content:
 
         \(contentForTitle)
 
-        Title:
+        Task: \(titleGenerationPrompt)
         """
 
         let generatedTitle = await aiEngine.llmService.generate(
@@ -557,20 +576,9 @@ class NoteViewModel: ObservableObject {
 
         await MainActor.run {
             if let generatedTitle = generatedTitle, !generatedTitle.isEmpty {
-                var cleanedTitle = generatedTitle
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                    .replacingOccurrences(of: "Title:", with: "")
-                    .replacingOccurrences(of: "\"", with: "")
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-
-                let words = cleanedTitle.split(separator: " ")
-                if words.count > 5 {
-                    cleanedTitle = words.prefix(5).joined(separator: " ")
-                }
-
-                if !cleanedTitle.isEmpty {
-                    print("✅ Title generated: \(cleanedTitle)")
-                    note.title = cleanedTitle
+                if !generatedTitle.isEmpty {
+                    print("✅ Title generated: \(generatedTitle)")
+                    note.title = generatedTitle
                     self.saveNote(note)
                 } else {
                     let fallbackTitle = self.extractFallbackTitle(from: sections.baseContent)

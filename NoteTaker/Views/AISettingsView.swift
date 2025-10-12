@@ -51,7 +51,7 @@ struct AISettingsView: View {
                         icon: "text.cursor",
                         prompt: $viewModel.autocompletePrompt,
                         placeholder: "Enter prompt for text completion...",
-                        defaultPrompt: "Continue this text naturally:"
+                        defaultPrompt: DefaultPrompts.autocomplete
                     )
 
                     Divider()
@@ -62,7 +62,7 @@ struct AISettingsView: View {
                         icon: "arrow.triangle.2.circlepath",
                         prompt: $viewModel.titleGenerationPrompt,
                         placeholder: "Enter prompt for title generation...",
-                        defaultPrompt: "Generate a short, concise title for this text (5 words max):"
+                        defaultPrompt: DefaultPrompts.titleGeneration
                     )
 
                     Divider()
@@ -73,7 +73,7 @@ struct AISettingsView: View {
                         icon: "doc.text.magnifyingglass",
                         prompt: $viewModel.summarizationPrompt,
                         placeholder: "Enter prompt for summarization...",
-                        defaultPrompt: "Summarize the following text in one concise sentence:"
+                        defaultPrompt: DefaultPrompts.summarization
                     )
 
                     Divider()
@@ -84,7 +84,7 @@ struct AISettingsView: View {
                         icon: "globe",
                         prompt: $viewModel.translationPrompt,
                         placeholder: "Enter prompt for translation...",
-                        defaultPrompt: "Translate the following text to {language}:"
+                        defaultPrompt: DefaultPrompts.translation
                     )
 
                     Divider()
@@ -95,7 +95,7 @@ struct AISettingsView: View {
                         icon: "checkmark.circle",
                         prompt: $viewModel.autoCorrectPrompt,
                         placeholder: "Enter prompt for patching...",
-                        defaultPrompt: "Correct only the grammar and spelling errors in this text. Keep the same meaning and style:"
+                        defaultPrompt: DefaultPrompts.autoCorrect
                     )
 
                     Divider()
@@ -106,7 +106,7 @@ struct AISettingsView: View {
                         icon: "arrow.2.squarepath",
                         prompt: $viewModel.reformulatePrompt,
                         placeholder: "Enter prompt for reformulation...",
-                        defaultPrompt: "Reformulate this text to make it clearer and more professional. Keep the same meaning:"
+                        defaultPrompt: DefaultPrompts.reformulate
                     )
 
                     // Language Selection
@@ -224,11 +224,6 @@ struct ModelCard: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            // Selection indicator
-            Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                .foregroundColor(isSelected ? .blue : .secondary)
-                .font(.title3)
-
             VStack(alignment: .leading, spacing: 4) {
                 // Model name
                 Text(model.displayName)

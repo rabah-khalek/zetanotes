@@ -100,22 +100,15 @@ class SummarizationService {
 
     private func buildSummarizationPrompt(text: String, targetLength: Int) -> String {
         return """
-        Summarize this text in one clear sentence. Be concise:
-
         \(text)
 
-        Summary:
+        Summarize in one clear sentence. Be concise:
         """
     }
 
     private func cleanSummary(_ summary: String) -> String {
-        var cleaned = summary.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        // Remove prompt artifacts
-        cleaned = cleaned.replacingOccurrences(of: "Summary:", with: "")
-        cleaned = cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        return cleaned
+        // No postprocessing - return raw output
+        return summary
     }
 
     // MARK: - Fallback: Extractive Summarization
