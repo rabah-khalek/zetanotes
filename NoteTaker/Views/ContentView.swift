@@ -22,6 +22,7 @@ struct ContentView: View {
             // Main content: Note editor
             if let selectedNote = viewModel.selectedNote {
                 NoteEditorView(note: selectedNote, viewModel: viewModel)
+                    .id(selectedNote.id) // Force new view instance for each note
             } else {
                 EmptyStateView()
             }
@@ -79,7 +80,7 @@ struct ContentView: View {
                         // Summarize
                         AIToolButton(
                             icon: "doc.text.magnifyingglass",
-                            label: "Summary",
+                            label: "Summarize",
                             shortcut: "S",
                             color: .blue,
                             isLoading: viewModel.isGeneratingSummary,
@@ -132,14 +133,13 @@ struct ContentView: View {
                         .help("AI Settings & Prompts")
 
                         Button(action: {
-                            viewModel.createNewNote()
+                            NotificationCenter.default.post(name: .createNewNote, object: nil)
                         }) {
                             Image(systemName: "square.and.pencil")
                                 .font(.system(size: 16))
                         }
                         .buttonStyle(.plain)
-                        .help("New Note")
-                        .keyboardShortcut("n", modifiers: .command)
+                        .help("New Note (⌘N)")
                     }
                     .padding(.horizontal, 8)
                     .padding(.vertical, 6)
@@ -281,7 +281,7 @@ struct EmptyStateView: View {
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
-            .keyboardShortcut("n", modifiers: .command)
+            // Note: Keyboard shortcut ⌘N is handled by toolbar button
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)

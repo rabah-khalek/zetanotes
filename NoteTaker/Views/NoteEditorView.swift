@@ -275,9 +275,7 @@ struct NoteEditorView: View {
             .background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
         }
         .onAppear {
-            loadNoteContent()
-        }
-        .onChange(of: note.id) { _ in
+            // Load note content when view appears
             loadNoteContent()
         }
         .onChange(of: note.content) { newContent in
@@ -291,6 +289,12 @@ struct NoteEditorView: View {
             if let newTitle = newTitle, newTitle != title {
                 title = newTitle
             }
+        }
+        .onDisappear {
+            // Final save when editor view disappears
+            note.content = content
+            note.title = title
+            viewModel.saveNote(note)
         }
     }
 

@@ -15,8 +15,22 @@ import Combine
 class NoteViewModel: ObservableObject {
     // MARK: - Published Properties
 
-    @Published var notes: [Note] = []
-    @Published var selectedNote: Note?
+    @Published private(set) var noteListItems: [NoteListItem] = []
+    @Published private(set) var searchItemResults: [NoteListItem] = []
+    @Published private(set) var selectedNote: Note? {
+        willSet {
+            // Save the current note before switching to a new one
+            if let currentNote = selectedNote, newValue?.id != currentNote.id {
+                persistenceController.save()
+                print("💾 Saved note before switching: \(currentNote.displayTitle)")
+            }
+        }
+    }
+    @Published var selectedNoteID: UUID? {
+        didSet {
+            updateSelectedNote()
+        }
+    }
     @Published var searchQuery = ""
     @Published var isSearching = false
     @Published var searchResults: [SearchResult] = []
@@ -42,6 +56,7 @@ class NoteViewModel: ObservableObject {
 
     private let persistenceController: PersistenceController
     private let aiEngine: AIEngine
+    private let repository: NoteRepository
     private lazy var searchEngine: SemanticSearchEngine = {
         SemanticSearchEngine(
             embeddingService: aiEngine.embeddingService,
@@ -49,6 +64,7 @@ class NoteViewModel: ObservableObject {
         )
     }()
 
+    private var noteCache: [UUID: Note] = [:]
     private var cancellables = Set<AnyCancellable>()
     private var debounceTimer: Timer?
 
@@ -57,6 +73,7 @@ class NoteViewModel: ObservableObject {
     init(persistenceController: PersistenceController = .shared, aiEngine: AIEngine = .shared) {
         self.persistenceController = persistenceController
         self.aiEngine = aiEngine
+        self.repository = NoteRepository(persistenceController: persistenceController)
 
         setupObservers()
         loadNotes()
@@ -71,14 +88,12 @@ class NoteViewModel: ObservableObject {
     // MARK: - Setup
 
     private func setupObservers() {
-        // Observe new note creation requests
         NotificationCenter.default.publisher(for: .createNewNote)
             .sink { [weak self] _ in
                 self?.createNewNote()
             }
             .store(in: &cancellables)
 
-        // Observe note deletion requests
         NotificationCenter.default.publisher(for: .deleteNote)
             .sink { [weak self] notification in
                 if let note = notification.object as? Note {
@@ -103,48 +118,84 @@ class NoteViewModel: ObservableObject {
     // MARK: - Note Management
 
     func loadNotes() {
-        notes = persistenceController.fetchAllNotes()
+        let fetchedNotes = repository.fetchAllNotes()
+        noteCache = Dictionary(uniqueKeysWithValues: fetchedNotes.compactMap { note in
+            guard let id = note.id else { return nil }
+            return (id, note)
+        })
+
+        noteListItems = fetchedNotes.compactMap { repository.makeListItem(from: $0) }
+            .sorted(by: { $0.createdAt > $1.createdAt })
+
+        if let existingID = selectedNoteID, noteCache[existingID] != nil {
+            updateSelectedNote()
+        } else {
+            selectedNoteID = noteListItems.first?.id
+            if selectedNoteID == nil {
+                selectedNote = nil
+            }
+        }
     }
 
     func createNewNote() {
         print("📝 Creating new note...")
-        let newNote = persistenceController.createNote()
+        let newNote = repository.createNote()
 
-        // Reload all notes from Core Data to ensure single source of truth
-        loadNotes()
+        guard let newItem = repository.makeListItem(from: newNote) else {
+            print("⚠️ Failed to create list item for new note")
+            return
+        }
 
-        // Select the newly created note
-        selectedNote = newNote
+        noteCache[newItem.id] = newNote
+        noteListItems.insert(newItem, at: 0)
+        noteListItems.sort(by: { $0.createdAt > $1.createdAt })
+        selectedNoteID = newItem.id
         print("✅ Note created: \(newNote.id?.uuidString ?? "unknown")")
     }
 
     func deleteNote(_ note: Note) {
-        let deletedNoteId = note.id
-        persistenceController.deleteNote(note)
+        guard let id = note.id else { return }
+        deleteNote(id: id)
+    }
 
-        // Reload all notes from Core Data to ensure single source of truth
-        loadNotes()
+    func deleteNote(id: UUID) {
+        guard let note = noteCache[id] else { return }
 
-        // Select first note if the deleted note was selected
-        if selectedNote?.id == deletedNoteId {
-            selectedNote = notes.first
+        let wasSelected = selectedNoteID == id
+        repository.deleteNote(note)
+        noteCache.removeValue(forKey: id)
+        noteListItems.removeAll(where: { $0.id == id })
+        searchItemResults.removeAll(where: { $0.id == id })
+
+        if wasSelected {
+            selectedNoteID = noteListItems.first?.id
+        } else {
+            updateSelectedNote()
         }
     }
 
     func saveNote(_ note: Note) {
         note.touch()
-        persistenceController.save()
+        repository.saveContext()
 
-        // Regenerate title if empty
         if note.title?.isEmpty ?? true {
             note.generateTitleFromContent()
-            persistenceController.save()
+            repository.saveContext()
         }
 
-        // Force UI update by triggering objectWillChange
-        objectWillChange.send()
+        if let noteID = note.id {
+            NotificationCenter.default.post(
+                name: Notification.Name("NoteUpdated"),
+                object: noteID
+            )
+        }
 
-        // Reindex for semantic search (async, non-blocking)
+        if let updatedItem = repository.makeListItem(from: note) {
+            noteCache[updatedItem.id] = note
+            upsertListItem(updatedItem)
+            updateSearchItemIfNeeded(updatedItem)
+        }
+
         Task {
             await searchEngine.reindexNote(note)
         }
@@ -155,17 +206,22 @@ class NoteViewModel: ObservableObject {
     func performSearch(query: String) async {
         guard !query.isEmpty else {
             searchResults = []
+            searchItemResults = []
             isSearching = false
             return
         }
 
         isSearching = true
 
-        // Perform hybrid search (semantic + keyword)
         let results = await searchEngine.hybridSearch(query: query, limit: 20)
 
         await MainActor.run {
             self.searchResults = results
+            self.searchItemResults = results.compactMap { result in
+                guard let noteID = result.note.id else { return nil }
+                self.noteCache[noteID] = result.note
+                return self.repository.makeListItem(from: result.note)
+            }
             self.isSearching = false
         }
     }
@@ -173,28 +229,20 @@ class NoteViewModel: ObservableObject {
     func clearSearch() {
         searchQuery = ""
         searchResults = []
+        searchItemResults = []
         isSearching = false
     }
 
     // MARK: - AI Features
 
-    /// Generates autocomplete suggestion for current note content
-    /// Implements typing pause detection - only generates suggestions after user stops typing
-    /// This reduces overhead and avoids generating suggestions while actively typing
     func requestAutocomplete(for text: String) {
-        // Don't generate if autocomplete is disabled
         guard isAutocompleteEnabled else {
             autocompleteSuggestion = nil
             return
         }
 
-        // Cancel any existing timer
         debounceTimer?.invalidate()
 
-        // DON'T clear existing suggestion - let the new one replace it
-        // This prevents race condition when Tab is pressed
-
-        // Start new debounce timer (500ms pause before generating)
         debounceTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { [weak self] _ in
             guard let self = self else { return }
 
@@ -207,11 +255,9 @@ class NoteViewModel: ObservableObject {
     private func generateAutocomplete(for text: String) async {
         guard aiEngine.isModelLoaded else { return }
 
-        // Generate suggestion only when user has paused typing
         let suggestion = await aiEngine.autocomplete(for: text, maxTokens: 20)
 
         await MainActor.run {
-            // Only set suggestion if it's valid and non-empty
             if let suggestion = suggestion, !suggestion.isEmpty {
                 self.autocompleteSuggestion = suggestion
             } else {
@@ -230,7 +276,6 @@ class NoteViewModel: ObservableObject {
         autocompleteSuggestion = nil
     }
 
-    /// Generates a summary for the given note
     func generateSummary(for note: Note) async {
         guard aiEngine.isModelLoaded else {
             print("⚠️ Cannot summarize: Model not loaded")
@@ -243,21 +288,18 @@ class NoteViewModel: ObservableObject {
 
         print("🔄 Starting summarization for content: \(originalContent.prefix(100))...")
 
-        // Extract content sections
         let sections = extractContentSections(from: originalContent)
 
         await MainActor.run {
             self.isGeneratingSummary = true
         }
 
-        // Use the SummarizationService for better fallback handling
         let summary = await aiEngine.summarize(sections.baseContent, maxLength: 200)
 
         await MainActor.run {
             if let summary = summary, !summary.isEmpty {
                 print("✅ Summary generated: \(summary)")
 
-                // Reconstruct note content with updated summary block
                 let summaryBlock = "\n\n--- Summary ---\n\n" + summary
                 note.content = reconstructContent(
                     base: sections.baseContent,
@@ -267,7 +309,7 @@ class NoteViewModel: ObservableObject {
                     reformulated: sections.reformulatedBlock
                 )
 
-                self.persistenceController.save()
+                self.saveNote(note)
             } else {
                 print("❌ Summary generation returned nil or empty")
             }
@@ -275,26 +317,22 @@ class NoteViewModel: ObservableObject {
         }
     }
 
-    /// Generates embeddings for all notes (background operation)
     func indexAllNotes() async {
         await searchEngine.indexAllNotes()
     }
 
-    /// Generates a translation for the given note
     func generateTranslation(for note: Note) async {
         guard aiEngine.isModelLoaded else { return }
         guard let originalContent = note.content, !originalContent.isEmpty else { return }
 
         print("🔄 Starting translation to \(targetLanguage) for content: \(originalContent.prefix(100))...")
 
-        // Extract content sections
         let sections = extractContentSections(from: originalContent)
 
         await MainActor.run {
             self.isTranslating = true
         }
 
-        // Build a more explicit translation prompt with language name repetition
         let prompt = """
         Translate the following text from English to \(targetLanguage). Provide only the \(targetLanguage) translation:
 
@@ -303,7 +341,6 @@ class NoteViewModel: ObservableObject {
         \(targetLanguage) translation:
         """
 
-        // Generate translation with more tokens and lower temperature for accuracy
         let translation = await aiEngine.llmService.generate(
             prompt: prompt,
             maxTokens: 800,
@@ -313,7 +350,6 @@ class NoteViewModel: ObservableObject {
 
         await MainActor.run {
             if let translation = translation, !translation.isEmpty {
-                // Clean up the translation
                 let cleanedTranslation = translation
                     .trimmingCharacters(in: .whitespacesAndNewlines)
                     .replacingOccurrences(of: "Translation:", with: "")
@@ -322,7 +358,6 @@ class NoteViewModel: ObservableObject {
 
                 print("✅ Translation generated: \(cleanedTranslation.prefix(100))...")
 
-                // Reconstruct note content with updated translation block
                 let translationBlock = "\n\n--- Translation to \(targetLanguage) ---\n\n" + cleanedTranslation
                 note.content = reconstructContent(
                     base: sections.baseContent,
@@ -332,7 +367,7 @@ class NoteViewModel: ObservableObject {
                     reformulated: sections.reformulatedBlock
                 )
 
-                self.persistenceController.save()
+                self.saveNote(note)
             } else {
                 print("❌ Translation generation returned nil or empty")
             }
@@ -340,9 +375,233 @@ class NoteViewModel: ObservableObject {
         }
     }
 
-    // MARK: - AI Generation Helpers
+    func autoCorrect(for note: Note) async {
+        guard aiEngine.isModelLoaded else {
+            print("⚠️ Cannot patch: Model not loaded")
+            return
+        }
+        guard let originalContent = note.content, !originalContent.isEmpty else {
+            print("⚠️ Cannot patch: Content is empty")
+            return
+        }
 
-    /// Common structure for extracting content sections from a note
+        print("🔄 Starting patching for content: \(originalContent.prefix(100))...")
+
+        let sections = extractContentSections(from: originalContent)
+
+        let maxChars = 1500
+        let contentToCorrect = String(sections.baseContent.prefix(maxChars))
+        let wasTruncated = sections.baseContent.count > maxChars
+
+        if wasTruncated {
+            print("⚠️ Content truncated to \(maxChars) chars to fit model batch size")
+        }
+
+        await MainActor.run {
+            self.isAutoCorrecting = true
+        }
+
+        let prompt = """
+        Copy this text EXACTLY. Only fix obvious spelling mistakes. Do NOT change any words. Do NOT rephrase. Copy word-for-word:
+
+        \(contentToCorrect)
+
+        Corrected version (copy exactly, fix only spelling):
+        """
+
+        let correctedText = await aiEngine.llmService.generate(
+            prompt: prompt,
+            maxTokens: 800,
+            temperature: 0.05,
+            stopSequences: ["---", "###", "\n\n\n\n"]
+        )
+
+        await MainActor.run {
+            if let correctedText = correctedText, !correctedText.isEmpty {
+                var cleanedText = correctedText
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                    .replacingOccurrences(of: "Corrected text:", with: "")
+                    .replacingOccurrences(of: "Fixed text:", with: "")
+                    .replacingOccurrences(of: "Fixed text (with only grammar/spelling corrections):", with: "")
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+
+                print("✅ Patching completed: \(cleanedText.prefix(100))...")
+
+                let correctionBlock = "\n\n--- Patched ---\n\n" + cleanedText
+                note.content = reconstructContent(
+                    base: sections.baseContent,
+                    summary: sections.summaryBlock,
+                    translation: sections.translationBlock,
+                    autoCorrect: correctionBlock,
+                    reformulated: sections.reformulatedBlock
+                )
+
+                self.saveNote(note)
+            } else {
+                print("❌ Patching returned nil or empty")
+            }
+            self.isAutoCorrecting = false
+        }
+    }
+
+    func reformulate(for note: Note) async {
+        guard aiEngine.isModelLoaded else {
+            print("⚠️ Cannot reformulate: Model not loaded")
+            return
+        }
+        guard let originalContent = note.content, !originalContent.isEmpty else {
+            print("⚠️ Cannot reformulate: Content is empty")
+            return
+        }
+
+        print("🔄 Starting reformulation for content: \(originalContent.prefix(100))...")
+
+        let sections = extractContentSections(from: originalContent)
+
+        let maxChars = 1500
+        let contentToReformulate = String(sections.baseContent.prefix(maxChars))
+        let wasTruncated = sections.baseContent.count > maxChars
+
+        if wasTruncated {
+            print("⚠️ Content truncated to \(maxChars) chars to fit model batch size")
+        }
+
+        await MainActor.run {
+            self.isReformulating = true
+        }
+
+        let prompt = """
+        \(reformulatePrompt)
+
+        \(contentToReformulate)
+
+        Reformulated text:
+        """
+
+        let reformulatedText = await aiEngine.llmService.generate(
+            prompt: prompt,
+            maxTokens: 800,
+            temperature: 0.4,
+            stopSequences: ["---", "###", "\n\n\n"]
+        )
+
+        await MainActor.run {
+            if let reformulatedText = reformulatedText, !reformulatedText.isEmpty {
+                let cleanedText = reformulatedText
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                    .replacingOccurrences(of: "Reformulated text:", with: "")
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+
+                print("✅ Reformulation completed: \(cleanedText.prefix(100))...")
+
+                let reformulationBlock = "\n\n--- Reformulated ---\n\n" + cleanedText
+                note.content = reconstructContent(
+                    base: sections.baseContent,
+                    summary: sections.summaryBlock,
+                    translation: sections.translationBlock,
+                    autoCorrect: sections.autoCorrectedBlock,
+                    reformulated: reformulationBlock
+                )
+
+                self.saveNote(note)
+            } else {
+                print("❌ Reformulation returned nil or empty")
+            }
+            self.isReformulating = false
+        }
+    }
+
+    func resetPromptsToDefaults() {
+        autocompletePrompt = "Continue this text naturally:"
+        summarizationPrompt = "Summarize this text in one clear sentence:"
+        translationPrompt = "Translate this text to {language}. Only output the translation:"
+        titleGenerationPrompt = "Generate a short, concise title for this text (5 words max):"
+        autoCorrectPrompt = "Copy this text EXACTLY. Only fix obvious spelling mistakes. Do NOT change any words. Do NOT rephrase."
+        reformulatePrompt = "Reformulate this text to make it clearer and more professional. Keep the same meaning:"
+        targetLanguage = "Spanish"
+    }
+
+    func generateTitle(for note: Note) async {
+        guard aiEngine.isModelLoaded else {
+            print("⚠️ Cannot generate title: Model not loaded")
+            return
+        }
+        guard let originalContent = note.content, !originalContent.isEmpty else {
+            print("⚠️ Cannot generate title: Content is empty")
+            return
+        }
+
+        print("🔄 Starting title generation for content: \(originalContent.prefix(100))...")
+
+        let sections = extractContentSections(from: originalContent)
+        let contentForTitle = String(sections.baseContent.prefix(300))
+
+        await MainActor.run {
+            self.isGeneratingTitle = true
+        }
+
+        let prompt = """
+        Create a short title (maximum 5 words) for this text:
+
+        \(contentForTitle)
+
+        Title:
+        """
+
+        let generatedTitle = await aiEngine.llmService.generate(
+            prompt: prompt,
+            maxTokens: 15,
+            temperature: 0.3,
+            stopSequences: ["\n", ".", "---", "###"]
+        )
+
+        await MainActor.run {
+            if let generatedTitle = generatedTitle, !generatedTitle.isEmpty {
+                var cleanedTitle = generatedTitle
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                    .replacingOccurrences(of: "Title:", with: "")
+                    .replacingOccurrences(of: "\"", with: "")
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+
+                let words = cleanedTitle.split(separator: " ")
+                if words.count > 5 {
+                    cleanedTitle = words.prefix(5).joined(separator: " ")
+                }
+
+                if !cleanedTitle.isEmpty {
+                    print("✅ Title generated: \(cleanedTitle)")
+                    note.title = cleanedTitle
+                    self.saveNote(note)
+                } else {
+                    let fallbackTitle = self.extractFallbackTitle(from: sections.baseContent)
+                    print("⚠️ Using fallback title: \(fallbackTitle)")
+                    note.title = fallbackTitle
+                    self.saveNote(note)
+                }
+            } else {
+                let fallbackTitle = self.extractFallbackTitle(from: sections.baseContent)
+                print("⚠️ Title generation failed, using fallback: \(fallbackTitle)")
+                note.title = fallbackTitle
+                self.saveNote(note)
+            }
+            self.isGeneratingTitle = false
+        }
+    }
+
+    func reindex(note: Note) async {
+        await searchEngine.reindexNote(note)
+    }
+
+    private func extractFallbackTitle(from content: String) -> String {
+        let words = content
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .split(separator: " ")
+            .prefix(5)
+            .map(String.init)
+
+        return words.isEmpty ? "Untitled Note" : words.joined(separator: " ")
+    }
+
     private struct ContentSections {
         var baseContent: String
         var summaryBlock: String
@@ -351,7 +610,6 @@ class NoteViewModel: ObservableObject {
         var reformulatedBlock: String
     }
 
-    /// Extracts and separates the different sections of note content
     private func extractContentSections(from content: String) -> ContentSections {
         var baseContent = content
         var summaryBlock = ""
@@ -359,7 +617,6 @@ class NoteViewModel: ObservableObject {
         var autoCorrectedBlock = ""
         var reformulatedBlock = ""
 
-        // Define all AI-generated section markers
         let markers = [
             "\n\n--- Summary ---",
             "\n\n--- Translation to ",
@@ -367,7 +624,6 @@ class NoteViewModel: ObservableObject {
             "\n\n--- Reformulated ---"
         ]
 
-        // Find the earliest AI section to determine where base content ends
         var firstAIIndex: String.Index? = nil
 
         for marker in markers {
@@ -378,15 +634,12 @@ class NoteViewModel: ObservableObject {
             }
         }
 
-        // Extract base content (everything before first AI section)
         if let firstIndex = firstAIIndex {
             baseContent = String(content[..<firstIndex])
             let aiSections = String(content[firstIndex...])
 
-            // Extract each block individually
             if let summaryStart = aiSections.range(of: "\n\n--- Summary ---") {
                 let summaryContent = String(aiSections[summaryStart.lowerBound...])
-                // Find where summary block ends (next marker or end)
                 var summaryEnd = summaryContent.endIndex
 
                 for marker in ["\n\n--- Translation to ", "\n\n--- Patched ---", "\n\n--- Reformulated ---"] {
@@ -451,269 +704,44 @@ class NoteViewModel: ObservableObject {
         )
     }
 
-    /// Reconstructs note content from sections
     private func reconstructContent(base: String, summary: String, translation: String, autoCorrect: String = "", reformulated: String = "") -> String {
         return base + autoCorrect + reformulated + summary + translation
     }
 
-    /// Generates a title for the given note based on its content
-    func generateTitle(for note: Note) async {
-        guard aiEngine.isModelLoaded else {
-            print("⚠️ Cannot generate title: Model not loaded")
-            return
+    var displayItems: [NoteListItem] {
+        if !searchQuery.isEmpty {
+            return searchItemResults
         }
-        guard let originalContent = note.content, !originalContent.isEmpty else {
-            print("⚠️ Cannot generate title: Content is empty")
-            return
-        }
-
-        print("🔄 Starting title generation for content: \(originalContent.prefix(100))...")
-
-        // Extract only the base content for title generation
-        let sections = extractContentSections(from: originalContent)
-        let contentForTitle = String(sections.baseContent.prefix(300)) // Use first 300 chars for title
-
-        await MainActor.run {
-            self.isGeneratingTitle = true
-        }
-
-        // Build a clearer, more direct title generation prompt
-        let prompt = """
-        Create a short title (maximum 5 words) for this text:
-
-        \(contentForTitle)
-
-        Title:
-        """
-
-        // Generate title with limited tokens and low temperature
-        let generatedTitle = await aiEngine.llmService.generate(
-            prompt: prompt,
-            maxTokens: 15,
-            temperature: 0.3,
-            stopSequences: ["\n", ".", "---", "###"]
-        )
-
-        await MainActor.run {
-            if let generatedTitle = generatedTitle, !generatedTitle.isEmpty {
-                // Clean up the title
-                var cleanedTitle = generatedTitle
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                    .replacingOccurrences(of: "Title:", with: "")
-                    .replacingOccurrences(of: "\"", with: "")
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-
-                // Limit to first 5 words if longer
-                let words = cleanedTitle.split(separator: " ")
-                if words.count > 5 {
-                    cleanedTitle = words.prefix(5).joined(separator: " ")
-                }
-
-                if !cleanedTitle.isEmpty {
-                    print("✅ Title generated: \(cleanedTitle)")
-                    note.title = cleanedTitle
-                    self.persistenceController.save()
-                } else {
-                    // Fallback: use first few words from content
-                    let fallbackTitle = extractFallbackTitle(from: sections.baseContent)
-                    print("⚠️ Using fallback title: \(fallbackTitle)")
-                    note.title = fallbackTitle
-                    self.persistenceController.save()
-                }
-            } else {
-                // Fallback: use first few words from content
-                let fallbackTitle = extractFallbackTitle(from: sections.baseContent)
-                print("⚠️ Title generation failed, using fallback: \(fallbackTitle)")
-                note.title = fallbackTitle
-                self.persistenceController.save()
-            }
-            self.isGeneratingTitle = false
-        }
-    }
-
-    /// Extracts a fallback title from content (first 5 words)
-    private func extractFallbackTitle(from content: String) -> String {
-        let words = content
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .split(separator: " ")
-            .prefix(5)
-            .map(String.init)
-
-        return words.isEmpty ? "Untitled Note" : words.joined(separator: " ")
-    }
-
-    /// Patchs grammar and spelling in the note content
-    func autoCorrect(for note: Note) async {
-        guard aiEngine.isModelLoaded else {
-            print("⚠️ Cannot patch: Model not loaded")
-            return
-        }
-        guard let originalContent = note.content, !originalContent.isEmpty else {
-            print("⚠️ Cannot patch: Content is empty")
-            return
-        }
-
-        print("🔄 Starting patching for content: \(originalContent.prefix(100))...")
-
-        // Extract content sections
-        let sections = extractContentSections(from: originalContent)
-
-        // Limit content size to prevent batch size overflow (approx 1500 chars = ~400 tokens)
-        let maxChars = 1500
-        let contentToCorrect = String(sections.baseContent.prefix(maxChars))
-        let wasTruncated = sections.baseContent.count > maxChars
-
-        if wasTruncated {
-            print("⚠️ Content truncated to \(maxChars) chars to fit model batch size")
-        }
-
-        await MainActor.run {
-            self.isAutoCorrecting = true
-        }
-
-        // Build a very explicit prompt - copy the text exactly, fix only obvious typos
-        let prompt = """
-        Copy this text EXACTLY. Only fix obvious spelling mistakes. Do NOT change any words. Do NOT rephrase. Copy word-for-word:
-
-        \(contentToCorrect)
-
-        Corrected version (copy exactly, fix only spelling):
-        """
-
-        // Generate corrected text with extremely low temperature
-        let correctedText = await aiEngine.llmService.generate(
-            prompt: prompt,
-            maxTokens: 800,
-            temperature: 0.05,  // Extremely low temperature for minimal changes
-            stopSequences: ["---", "###", "\n\n\n\n"]
-        )
-
-        await MainActor.run {
-            if let correctedText = correctedText, !correctedText.isEmpty {
-                // Clean up the corrected text
-                var cleanedText = correctedText
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                    .replacingOccurrences(of: "Corrected text:", with: "")
-                    .replacingOccurrences(of: "Fixed text:", with: "")
-                    .replacingOccurrences(of: "Fixed text (with only grammar/spelling corrections):", with: "")
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-
-                // Log the correction
-                print("✅ Patching completed: \(cleanedText.prefix(100))...")
-
-                // Update only the patch block, preserve all others
-                let correctionBlock = "\n\n--- Patched ---\n\n" + cleanedText
-                note.content = reconstructContent(
-                    base: sections.baseContent,
-                    summary: sections.summaryBlock,
-                    translation: sections.translationBlock,
-                    autoCorrect: correctionBlock,
-                    reformulated: sections.reformulatedBlock
-                )
-
-                self.persistenceController.save()
-            } else {
-                print("❌ Patching returned nil or empty")
-            }
-            self.isAutoCorrecting = false
-        }
-    }
-
-    /// Reformulates the note content to make it clearer and more professional
-    func reformulate(for note: Note) async {
-        guard aiEngine.isModelLoaded else {
-            print("⚠️ Cannot reformulate: Model not loaded")
-            return
-        }
-        guard let originalContent = note.content, !originalContent.isEmpty else {
-            print("⚠️ Cannot reformulate: Content is empty")
-            return
-        }
-
-        print("🔄 Starting reformulation for content: \(originalContent.prefix(100))...")
-
-        // Extract content sections
-        let sections = extractContentSections(from: originalContent)
-
-        // Limit content size to prevent batch size overflow (approx 1500 chars = ~400 tokens)
-        let maxChars = 1500
-        let contentToReformulate = String(sections.baseContent.prefix(maxChars))
-        let wasTruncated = sections.baseContent.count > maxChars
-
-        if wasTruncated {
-            print("⚠️ Content truncated to \(maxChars) chars to fit model batch size")
-        }
-
-        await MainActor.run {
-            self.isReformulating = true
-        }
-
-        // Build reformulate prompt
-        let prompt = """
-        \(reformulatePrompt)
-
-        \(contentToReformulate)
-
-        Reformulated text:
-        """
-
-        // Generate reformulated text with moderate token limit and moderate temperature
-        let reformulatedText = await aiEngine.llmService.generate(
-            prompt: prompt,
-            maxTokens: 800,
-            temperature: 0.4,
-            stopSequences: ["---", "###", "\n\n\n"]
-        )
-
-        await MainActor.run {
-            if let reformulatedText = reformulatedText, !reformulatedText.isEmpty {
-                // Clean up the reformulated text
-                let cleanedText = reformulatedText
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                    .replacingOccurrences(of: "Reformulated text:", with: "")
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-
-                print("✅ Reformulation completed: \(cleanedText.prefix(100))...")
-
-                // Update only the reformulated block, preserve all others
-                let reformulationBlock = "\n\n--- Reformulated ---\n\n" + cleanedText
-                note.content = reconstructContent(
-                    base: sections.baseContent,
-                    summary: sections.summaryBlock,
-                    translation: sections.translationBlock,
-                    autoCorrect: sections.autoCorrectedBlock,
-                    reformulated: reformulationBlock
-                )
-
-                self.persistenceController.save()
-            } else {
-                print("❌ Reformulation returned nil or empty")
-            }
-            self.isReformulating = false
-        }
-    }
-
-    /// Resets all prompts to default values
-    func resetPromptsToDefaults() {
-        autocompletePrompt = "Continue this text naturally:"
-        summarizationPrompt = "Summarize this text in one clear sentence:"
-        translationPrompt = "Translate this text to {language}. Only output the translation:"
-        titleGenerationPrompt = "Generate a short, concise title for this text (5 words max):"
-        autoCorrectPrompt = "Copy this text EXACTLY. Only fix obvious spelling mistakes. Do NOT change any words. Do NOT rephrase."
-        reformulatePrompt = "Reformulate this text to make it clearer and more professional. Keep the same meaning:"
-        targetLanguage = "Spanish"
-    }
-
-    // MARK: - Utility
-
-    var displayNotes: [Note] {
-        if !searchResults.isEmpty {
-            return searchResults.map { $0.note }
-        }
-        return notes
+        return noteListItems
     }
 
     var hasNotes: Bool {
-        return !notes.isEmpty
+        return !noteListItems.isEmpty
+    }
+
+    func note(for id: UUID) -> Note? {
+        noteCache[id]
+    }
+
+    private func upsertListItem(_ item: NoteListItem) {
+        if let index = noteListItems.firstIndex(where: { $0.id == item.id }) {
+            noteListItems[index] = item
+        } else {
+            noteListItems.append(item)
+        }
+        noteListItems.sort(by: { $0.createdAt > $1.createdAt })
+    }
+
+    private func updateSearchItemIfNeeded(_ item: NoteListItem) {
+        guard let index = searchItemResults.firstIndex(where: { $0.id == item.id }) else { return }
+        searchItemResults[index] = item
+    }
+
+    private func updateSelectedNote() {
+        if let selectedID = selectedNoteID, let note = noteCache[selectedID] {
+            selectedNote = note
+        } else {
+            selectedNote = nil
+        }
     }
 }

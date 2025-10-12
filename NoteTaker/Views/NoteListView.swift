@@ -10,6 +10,65 @@ import SwiftUI
 struct NoteListView: View {
     @ObservedObject var viewModel: NoteViewModel
 
+    // Extract List content to avoid compiler crash
+    private var noteListContent: some View {
+        List(selection: $viewModel.selectedNoteID) {
+            ForEach(viewModel.displayItems) { item in
+                noteRowContent(for: item)
+                    .tag(item.id)
+                    .listRowInsets(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
+            }
+            .onDelete { indexSet in
+                let items = viewModel.displayItems
+                for index in indexSet {
+                    viewModel.deleteNote(id: items[index].id)
+                }
+            }
+        }
+    }
+
+    // Extract row content with context menu
+    private func noteRowContent(for item: NoteListItem) -> some View {
+        NoteRowView(item: item) {
+            viewModel.deleteNote(id: item.id)
+        }
+        .contextMenu {
+            contextMenuItems(for: item)
+        }
+    }
+
+    // Extract context menu
+    @ViewBuilder
+    private func contextMenuItems(for item: NoteListItem) -> some View {
+        Button {
+            if let note = viewModel.note(for: item.id) {
+                Task {
+                    await viewModel.generateSummary(for: note)
+                }
+            }
+        } label: {
+            Label("Summarize", systemImage: "doc.text.magnifyingglass")
+        }
+
+        Button {
+            if let note = viewModel.note(for: item.id) {
+                Task {
+                    await viewModel.generateTranslation(for: note)
+                }
+            }
+        } label: {
+            Label("Translate", systemImage: "globe")
+        }
+
+        Divider()
+
+        Button(role: .destructive) {
+            viewModel.deleteNote(id: item.id)
+        } label: {
+            Label("Delete", systemImage: "trash")
+        }
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             // Search Bar (Mac Notes style - minimal)
@@ -20,47 +79,9 @@ struct NoteListView: View {
 
             // Note List (Clean Mac Notes style)
             if viewModel.hasNotes {
-                List(selection: $viewModel.selectedNote) {
-                    ForEach(viewModel.displayNotes, id: \.objectID) { note in
-                        NoteRowView(note: note)
-                            .tag(note)
-                            .id(note.objectID) // Force refresh on changes
-                            .listRowInsets(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
-                            .contextMenu {
-                                Button(action: {
-                                    Task {
-                                        await viewModel.generateSummary(for: note)
-                                    }
-                                }) {
-                                    Label("Summarize", systemImage: "doc.text.magnifyingglass")
-                                }
-
-                                Button(action: {
-                                    Task {
-                                        await viewModel.generateTranslation(for: note)
-                                    }
-                                }) {
-                                    Label("Translate", systemImage: "globe")
-                                }
-
-                                Divider()
-
-                                Button(role: .destructive, action: {
-                                    viewModel.deleteNote(note)
-                                }) {
-                                    Label("Delete", systemImage: "trash")
-                                }
-                            }
-                    }
-                    .onDelete { indexSet in
-                        for index in indexSet {
-                            let note = viewModel.displayNotes[index]
-                            viewModel.deleteNote(note)
-                        }
-                    }
-                }
-                .listStyle(.sidebar)
-                .scrollContentBackground(.hidden)
+                noteListContent
+                    .listStyle(.sidebar)
+                    .scrollContentBackground(.hidden)
             } else {
                 // Empty state (minimal)
                 VStack(spacing: 16) {
@@ -90,45 +111,34 @@ struct NoteListView: View {
 // MARK: - Note Row (Mac Notes style - clean and minimal)
 
 struct NoteRowView: View {
-    @ObservedObject var note: Note
+    let item: NoteListItem
+    let onDelete: () -> Void
     @State private var isHovering = false
 
     var body: some View {
         HStack(spacing: 8) {
             VStack(alignment: .leading, spacing: 6) {
-                // Title and date on same line
                 HStack {
-                    Text(note.displayTitle)
+                    Text(item.displayTitle)
                         .font(.system(size: 14, weight: .semibold))
                         .lineLimit(1)
 
                     Spacer()
 
-                    Text(note.formattedUpdatedDate)
+                    Text(item.formattedCreatedDate)
                         .font(.system(size: 11))
                         .foregroundColor(.secondary.opacity(0.7))
                 }
 
-                // Preview text (either summary or content)
-                if let summary = note.summary, !summary.isEmpty {
-                    Text(summary)
-                        .font(.system(size: 12))
-                        .foregroundColor(.secondary)
-                        .lineLimit(2)
-                } else {
-                    Text(note.contentPreview)
-                        .font(.system(size: 12))
-                        .foregroundColor(.secondary)
-                        .lineLimit(2)
-                }
+                Text(item.preview)
+                    .font(.system(size: 12))
+                    .foregroundColor(.secondary)
+                    .lineLimit(2)
             }
             .padding(.vertical, 2)
 
-            // Delete button (shown on hover)
             if isHovering {
-                Button(action: {
-                    NotificationCenter.default.post(name: .deleteNote, object: note)
-                }) {
+                Button(action: onDelete) {
                     Image(systemName: "trash")
                         .font(.system(size: 11))
                         .foregroundColor(.red.opacity(0.8))
