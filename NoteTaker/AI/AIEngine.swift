@@ -37,6 +37,7 @@ class AIEngine: ObservableObject {
     @Published var isModelLoaded = false
     @Published var modelLoadingError: String?
     @Published var memoryUsage: Double = 0.0 // In MB
+    @Published var selectedModel: AIModel = .tinyLlama
 
     private var cancellables = Set<AnyCancellable>()
     private let memoryMonitorQueue = DispatchQueue(label: "com.notetaker.memorymonitor", qos: .utility)
@@ -45,32 +46,65 @@ class AIEngine: ObservableObject {
 
     private init() {
         setupMemoryMonitoring()
+        loadSavedModelPreference()
     }
 
     // MARK: - Model Management
 
-    /// Loads the TinyLlama model from the app bundle
+    /// Loads the saved model preference from UserDefaults
+    private func loadSavedModelPreference() {
+        if let savedModelRawValue = UserDefaults.standard.string(forKey: "selectedAIModel"),
+           let savedModel = AIModel(rawValue: savedModelRawValue) {
+            selectedModel = savedModel
+        }
+    }
+
+    /// Loads the currently selected model
     /// Call this on app launch or lazily on first use
     func loadModel() async {
-        guard !isModelLoaded else { return }
+        await loadModel(selectedModel)
+    }
+
+    /// Loads a specific model
+    /// - Parameter modelType: The AI model to load
+    func loadModel(_ modelType: AIModel) async {
+        // If already loaded with the same model, skip
+        if isModelLoaded && llmService.getCurrentModel() == modelType {
+            return
+        }
+
+        await MainActor.run {
+            self.isModelLoaded = false
+        }
 
         do {
-            try await llmService.loadModel()
+            try await llmService.loadModel(modelType)
 
             await MainActor.run {
                 self.isModelLoaded = true
                 self.modelLoadingError = nil
+                self.selectedModel = modelType
             }
 
-            print("✅ AI Model loaded successfully")
+            // Save preference
+            UserDefaults.standard.set(modelType.rawValue, forKey: "selectedAIModel")
+
+            print("✅ \(modelType.displayName) loaded successfully")
         } catch {
             await MainActor.run {
                 self.isModelLoaded = false
                 self.modelLoadingError = error.localizedDescription
             }
 
-            print("❌ Failed to load AI model: \(error)")
+            print("❌ Failed to load \(modelType.displayName): \(error)")
         }
+    }
+
+    /// Switches to a different model
+    /// - Parameter modelType: The new model to switch to
+    func switchModel(to modelType: AIModel) async {
+        print("🔄 Switching to \(modelType.displayName)...")
+        await loadModel(modelType)
     }
 
     /// Unloads the model to free memory (useful for memory pressure situations)
@@ -143,12 +177,17 @@ class AIEngine: ObservableObject {
     /// Returns current model status as a string
     var statusDescription: String {
         if isModelLoaded {
-            return "✅ TinyLlama 1.1B (Metal GPU) • \(String(format: "%.1f", memoryUsage)) MB"
+            return "✅ \(selectedModel.displayName) (Metal GPU) • \(String(format: "%.1f", memoryUsage)) MB"
         } else if let error = modelLoadingError {
             return "Error: \(error)"
         } else {
             return "Model not loaded"
         }
+    }
+
+    /// Checks if a model is downloaded locally
+    func isModelDownloaded(_ modelType: AIModel) -> Bool {
+        return llmService.isModelDownloaded(modelType)
     }
 }
 

@@ -13,6 +13,11 @@ import AppKit
 class AutocompleteTextView: NSTextView {
     var onTabPressed: (() -> Void)?
     var onEscapePressed: (() -> Void)?
+    var ghostText: String? {
+        didSet {
+            setNeedsDisplay(bounds)
+        }
+    }
 
     override func keyDown(with event: NSEvent) {
         // Handle Tab key (keyCode 48)
@@ -32,15 +37,49 @@ class AutocompleteTextView: NSTextView {
 
         super.keyDown(with: event)
     }
+
+    override func draw(_ dirtyRect: NSRect) {
+        super.draw(dirtyRect)
+
+        // Draw ghost text if available
+        guard let ghostText = ghostText, !ghostText.isEmpty else { return }
+
+        // Get cursor position
+        let cursorRange = selectedRange()
+        guard cursorRange.length == 0 else { return } // Only show if no selection
+
+        // Calculate where to draw ghost text
+        guard let layoutManager = layoutManager,
+              let textContainer = textContainer else { return }
+
+        let glyphIndex = layoutManager.glyphIndexForCharacter(at: cursorRange.location)
+        let glyphRect = layoutManager.boundingRect(forGlyphRange: NSRange(location: glyphIndex, length: 0), in: textContainer)
+
+        // Create attributed string for ghost text
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: font ?? NSFont.systemFont(ofSize: NSFont.systemFontSize),
+            .foregroundColor: NSColor.placeholderTextColor.withAlphaComponent(0.5)
+        ]
+
+        let attributedGhostText = NSAttributedString(string: ghostText, attributes: attributes)
+
+        // Draw ghost text at cursor position
+        let drawPoint = NSPoint(
+            x: glyphRect.maxX + textContainerInset.width,
+            y: glyphRect.minY + textContainerInset.height
+        )
+
+        attributedGhostText.draw(at: drawPoint)
+    }
 }
 
 // MARK: - Simple Text Editor
 
-/// A clean SwiftUI wrapper for NSTextView - no ghost text complications
-/// Suggestions shown in separate tooltip to keep editor smooth
+/// A clean SwiftUI wrapper for NSTextView with ghost text support
 struct SimpleTextEditor: NSViewRepresentable {
     @Binding var text: String
-    var onChange: ((String) -> Void)?
+    var ghostText: String?
+    var onChange: ((String, Int) -> Void)?  // Now includes cursor position
     var onTabPressed: (() -> Void)?
     var onEscapePressed: (() -> Void)?
 
@@ -55,10 +94,11 @@ struct SimpleTextEditor: NSViewRepresentable {
         func textDidChange(_ notification: Notification) {
             guard let textView = notification.object as? NSTextView else { return }
             let currentText = textView.string
+            let cursorPosition = textView.selectedRange().location
 
             DispatchQueue.main.async {
                 self.parent.text = currentText
-                self.parent.onChange?(currentText)
+                self.parent.onChange?(currentText, cursorPosition)
             }
         }
     }
@@ -115,6 +155,9 @@ struct SimpleTextEditor: NSViewRepresentable {
             }
         }
 
+        // Update ghost text
+        textView.ghostText = ghostText
+
         // Update key handlers
         textView.onTabPressed = onTabPressed
         textView.onEscapePressed = onEscapePressed
@@ -133,31 +176,53 @@ struct NoteEditorView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Title Field
-            TextField("Title", text: $title, axis: .vertical)
-                .font(.title)
-                .fontWeight(.bold)
-                .textFieldStyle(.plain)
-                .padding(.horizontal, 20)
-                .padding(.top, 20)
-                .padding(.bottom, 8)
-                .onChange(of: title) { newValue in
-                    note.title = newValue
-                    viewModel.saveNote(note)
+            // Title Field with AI Generate Button
+            HStack(spacing: 8) {
+                // Generate Title Button (Recycle icon) - LEFT SIDE
+                Button(action: {
+                    Task {
+                        await viewModel.generateTitle(for: note)
+                    }
+                }) {
+                    if viewModel.isGeneratingTitle {
+                        ProgressView()
+                            .scaleEffect(0.7)
+                            .frame(width: 16, height: 16)
+                    } else {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                            .font(.system(size: 14))
+                            .foregroundColor(.secondary)
+                    }
                 }
+                .buttonStyle(.plain)
+                .disabled(content.count < 20 || viewModel.isGeneratingTitle)
+                .help("Generate title from content")
+                .opacity((content.count < 20 || viewModel.isGeneratingTitle) ? 0.3 : 1.0)
 
-            Divider()
-
-            // Content Editor (Simple, No Ghost Text)
-            ZStack(alignment: .topLeading) {
-                SimpleTextEditor(
-                    text: $content,
-                    onChange: { newValue in
-                        // Update both the state and note content
-                        content = newValue
-                        note.content = newValue
+                TextField("Title", text: $title)
+                    .font(.system(size: 22, weight: .semibold))
+                    .textFieldStyle(.plain)
+                    .onChange(of: title) { newValue in
+                        note.title = newValue
                         viewModel.saveNote(note)
+                    }
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 24)
+            .padding(.bottom, 12)
 
+            // Content Editor (Clean, minimal Mac style with ghost text)
+            SimpleTextEditor(
+                text: $content,
+                ghostText: viewModel.autocompleteSuggestion,
+                onChange: { newValue, cursorPosition in
+                    // Update both the state and note content
+                    content = newValue
+                    note.content = newValue
+                    viewModel.saveNote(note)
+
+                    // Check if cursor is in base content (not in AI-generated sections)
+                    if isInBaseContent(content: newValue, cursorPosition: cursorPosition) {
                         // Extract last sentence for context
                         let context = extractLastSentence(from: newValue)
 
@@ -167,114 +232,65 @@ struct NoteEditorView: View {
                         } else {
                             viewModel.dismissAutocomplete()
                         }
-                    },
-                    onTabPressed: {
-                        if viewModel.autocompleteSuggestion != nil {
-                            acceptAutocomplete()
-                        }
-                    },
-                    onEscapePressed: {
-                        if viewModel.autocompleteSuggestion != nil {
-                            viewModel.dismissAutocomplete()
-                        }
+                    } else {
+                        // Dismiss autocomplete when in AI-generated sections
+                        viewModel.dismissAutocomplete()
                     }
-                )
-                .frame(minHeight: 200)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 8)
-
-                // Suggestion Tooltip (Shown Below Cursor)
-                if let suggestion = viewModel.autocompleteSuggestion, !suggestion.isEmpty {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(suggestion)
-                            .font(.system(size: 13))
-                            .foregroundColor(.primary)
-                            .lineLimit(3)
-                            .padding(8)
-
-                        HStack(spacing: 8) {
-                            Label("Tab", systemImage: "keyboard")
-                            Text("to accept")
-                            Spacer()
-                            Label("Esc", systemImage: "escape")
-                            Text("to dismiss")
-                        }
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                        .padding(.horizontal, 8)
-                        .padding(.bottom, 6)
+                },
+                onTabPressed: {
+                    if viewModel.autocompleteSuggestion != nil {
+                        acceptAutocomplete()
                     }
-                    .frame(maxWidth: 300)
-                    .background(Color(nsColor: .controlBackgroundColor))
-                    .cornerRadius(8)
-                    .shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 2)
-                    .padding(.leading, 20)
-                    .padding(.top, 40)
+                },
+                onEscapePressed: {
+                    if viewModel.autocompleteSuggestion != nil {
+                        viewModel.dismissAutocomplete()
+                    }
                 }
-            }
+            )
+            .frame(minHeight: 200)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
 
-            Divider()
+            // Bottom Toolbar (Minimal Mac Notes style - Stats only)
+            HStack(spacing: 0) {
+                // Stats
+                HStack(spacing: 12) {
+                    Text("\(wordCount(content)) words")
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary)
 
-            // Bottom Toolbar
-            HStack(spacing: 16) {
-                // Summary Section
-                if let summary = note.summary, !summary.isEmpty {
-                    HStack(spacing: 8) {
-                        Image(systemName: "doc.text.magnifyingglass")
-                            .foregroundColor(.accentColor)
+                    Text("•")
+                        .foregroundColor(.secondary.opacity(0.5))
 
-                        Text(summary)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .lineLimit(2)
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(Color(nsColor: .controlBackgroundColor))
-                    .cornerRadius(6)
+                    Text("\(content.count) characters")
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary)
                 }
 
                 Spacer()
-
-                // AI Actions
-                Button(action: {
-                    Task {
-                        await viewModel.generateSummary(for: note)
-                    }
-                }) {
-                    HStack(spacing: 4) {
-                        if viewModel.isGeneratingSummary {
-                            ProgressView()
-                                .scaleEffect(0.8)
-                                .frame(width: 12, height: 12)
-                        } else {
-                            Image(systemName: "sparkles")
-                        }
-                        Text("Summarize")
-                            .font(.caption)
-                    }
-                }
-                .buttonStyle(.bordered)
-                .disabled(content.count < 50 || viewModel.isGeneratingSummary)
-
-                // Word/Character Count
-                Text("\(wordCount(content)) words")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-
-                // Character Count
-                Text("\(content.count) chars")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 12)
+            .padding(.horizontal, 24)
+            .padding(.vertical, 10)
+            .background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
         }
         .onAppear {
             loadNoteContent()
         }
         .onChange(of: note.id) { _ in
             loadNoteContent()
+        }
+        .onChange(of: note.content) { newContent in
+            // Sync the @State content with note.content changes (e.g., from translation)
+            if let newContent = newContent, newContent != content {
+                content = newContent
+            }
+        }
+        .onChange(of: note.title) { newTitle in
+            // Sync the @State title with note.title changes (e.g., from AI generation)
+            if let newTitle = newTitle, newTitle != title {
+                title = newTitle
+            }
         }
     }
 
@@ -284,6 +300,37 @@ struct NoteEditorView: View {
         title = note.title ?? ""
         content = note.content ?? ""
         viewModel.dismissAutocomplete()
+    }
+
+    /// Check if cursor position is within base content (not in AI-generated sections)
+    private func isInBaseContent(content: String, cursorPosition: Int) -> Bool {
+        // Define all AI-generated section markers
+        let markers = [
+            "\n\n--- Summary ---",
+            "\n\n--- Translation to ",
+            "\n\n--- Patched ---",
+            "\n\n--- Reformulated ---"
+        ]
+
+        // Find the earliest AI section marker
+        var firstAIPosition: Int? = nil
+
+        for marker in markers {
+            if let range = content.range(of: marker) {
+                let position = content.distance(from: content.startIndex, to: range.lowerBound)
+                if firstAIPosition == nil || position < firstAIPosition! {
+                    firstAIPosition = position
+                }
+            }
+        }
+
+        // If no AI sections found, cursor is always in base content
+        guard let aiPosition = firstAIPosition else {
+            return true
+        }
+
+        // Cursor is in base content if it's before the first AI section
+        return cursorPosition < aiPosition
     }
 
     private func acceptAutocomplete() {

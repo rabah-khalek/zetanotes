@@ -18,8 +18,8 @@ class SummarizationService {
     private struct Config {
         static let minLengthForSummary = 100 // Characters
         static let defaultSummaryLength = 100 // Characters
-        static let maxTokens = 150
-        static let temperature: Float = 0.5
+        static let maxTokens = 100
+        static let temperature: Float = 0.3 // Lower temperature for more focused summaries
     }
 
     // MARK: - Initialization
@@ -36,8 +36,11 @@ class SummarizationService {
     ///   - maxLength: Maximum length of summary in characters
     /// - Returns: Summary text, or nil if summarization fails
     func summarize(_ text: String, maxLength: Int = Config.defaultSummaryLength) async -> String? {
+        print("📝 SummarizationService: Starting summarization, text length: \(text.count)")
+
         // For short text, just return it trimmed
         if text.count <= Config.minLengthForSummary {
+            print("ℹ️ Text too short (\(text.count) < \(Config.minLengthForSummary)), returning as-is")
             return text.trimmingCharacters(in: .whitespacesAndNewlines)
         }
 
@@ -45,11 +48,13 @@ class SummarizationService {
         let textToSummarize: String
         if text.count > 2000 {
             textToSummarize = String(text.prefix(2000))
+            print("✂️ Text truncated to 2000 chars for performance")
         } else {
             textToSummarize = text
         }
 
         let prompt = buildSummarizationPrompt(text: textToSummarize, targetLength: maxLength)
+        print("📤 Sending prompt to LLM, length: \(prompt.count)")
 
         guard let summary = await llmService.generate(
             prompt: prompt,
@@ -57,12 +62,21 @@ class SummarizationService {
             temperature: Config.temperature,
             stopSequences: ["\n\n", "###", "---"]
         ) else {
+            print("⚠️ LLM returned nil, using extractive fallback")
             // Fallback: use extractive summarization
             return extractiveSummary(from: text, maxLength: maxLength)
         }
 
+        print("📥 LLM returned: \(summary.prefix(100))...")
         let cleaned = cleanSummary(summary)
-        return cleaned.isEmpty ? extractiveSummary(from: text, maxLength: maxLength) : cleaned
+        print("🧹 Cleaned summary: \(cleaned)")
+
+        if cleaned.isEmpty {
+            print("⚠️ Cleaned summary is empty, using extractive fallback")
+            return extractiveSummary(from: text, maxLength: maxLength)
+        }
+
+        return cleaned
     }
 
     /// Generates summaries for multiple notes in batch
@@ -86,7 +100,7 @@ class SummarizationService {
 
     private func buildSummarizationPrompt(text: String, targetLength: Int) -> String {
         return """
-        Summarize the following text in approximately \(targetLength) characters. Be concise and capture the key points:
+        Summarize this text in one clear sentence. Be concise:
 
         \(text)
 

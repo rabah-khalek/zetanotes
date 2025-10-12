@@ -12,26 +12,35 @@ struct NoteListView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Search Bar
+            // Search Bar (Mac Notes style - minimal)
             SearchBarView(searchQuery: $viewModel.searchQuery, isSearching: $viewModel.isSearching)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 8)
+                .padding(.horizontal, 12)
+                .padding(.top, 12)
+                .padding(.bottom, 8)
 
-            Divider()
-
-            // Note List
+            // Note List (Clean Mac Notes style)
             if viewModel.hasNotes {
                 List(selection: $viewModel.selectedNote) {
-                    ForEach(viewModel.displayNotes, id: \.id) { note in
+                    ForEach(viewModel.displayNotes, id: \.objectID) { note in
                         NoteRowView(note: note)
                             .tag(note)
+                            .id(note.objectID) // Force refresh on changes
+                            .listRowInsets(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
                             .contextMenu {
                                 Button(action: {
                                     Task {
                                         await viewModel.generateSummary(for: note)
                                     }
                                 }) {
-                                    Label("Generate Summary", systemImage: "doc.text.magnifyingglass")
+                                    Label("Summarize", systemImage: "doc.text.magnifyingglass")
+                                }
+
+                                Button(action: {
+                                    Task {
+                                        await viewModel.generateTranslation(for: note)
+                                    }
+                                }) {
+                                    Label("Translate", systemImage: "globe")
                                 }
 
                                 Divider()
@@ -51,22 +60,25 @@ struct NoteListView: View {
                     }
                 }
                 .listStyle(.sidebar)
+                .scrollContentBackground(.hidden)
             } else {
-                // Empty state
-                VStack(spacing: 12) {
-                    Image(systemName: "tray")
-                        .font(.system(size: 48))
-                        .foregroundColor(.secondary)
+                // Empty state (minimal)
+                VStack(spacing: 16) {
+                    Image(systemName: "note.text")
+                        .font(.system(size: 44))
+                        .foregroundColor(.secondary.opacity(0.6))
 
                     Text("No Notes")
-                        .font(.headline)
+                        .font(.system(size: 15, weight: .medium))
                         .foregroundColor(.secondary)
 
                     Button(action: {
                         viewModel.createNewNote()
                     }) {
-                        Label("Create First Note", systemImage: "plus")
+                        Text("Create Note")
+                            .font(.system(size: 12))
                     }
+                    .buttonStyle(.bordered)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
@@ -75,34 +87,59 @@ struct NoteListView: View {
     }
 }
 
-// MARK: - Note Row
+// MARK: - Note Row (Mac Notes style - clean and minimal)
 
 struct NoteRowView: View {
-    let note: Note
+    @ObservedObject var note: Note
+    @State private var isHovering = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(note.displayTitle)
-                .font(.headline)
-                .lineLimit(1)
+        HStack(spacing: 8) {
+            VStack(alignment: .leading, spacing: 6) {
+                // Title and date on same line
+                HStack {
+                    Text(note.displayTitle)
+                        .font(.system(size: 14, weight: .semibold))
+                        .lineLimit(1)
 
-            if let summary = note.summary, !summary.isEmpty {
-                Text(summary)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .lineLimit(2)
-            } else {
-                Text(note.contentPreview)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .lineLimit(2)
+                    Spacer()
+
+                    Text(note.formattedUpdatedDate)
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary.opacity(0.7))
+                }
+
+                // Preview text (either summary or content)
+                if let summary = note.summary, !summary.isEmpty {
+                    Text(summary)
+                        .font(.system(size: 12))
+                        .foregroundColor(.secondary)
+                        .lineLimit(2)
+                } else {
+                    Text(note.contentPreview)
+                        .font(.system(size: 12))
+                        .foregroundColor(.secondary)
+                        .lineLimit(2)
+                }
             }
+            .padding(.vertical, 2)
 
-            Text(note.formattedUpdatedDate)
-                .font(.caption2)
-                .foregroundColor(.secondary.opacity(0.7))
+            // Delete button (shown on hover)
+            if isHovering {
+                Button(action: {
+                    NotificationCenter.default.post(name: .deleteNote, object: note)
+                }) {
+                    Image(systemName: "trash")
+                        .font(.system(size: 11))
+                        .foregroundColor(.red.opacity(0.8))
+                }
+                .buttonStyle(.plain)
+                .help("Delete note")
+            }
         }
-        .padding(.vertical, 4)
+        .onHover { hovering in
+            isHovering = hovering
+        }
     }
 }
 

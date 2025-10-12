@@ -14,30 +14,34 @@ struct SearchBarView: View {
     var body: some View {
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
-                .foregroundColor(.secondary)
+                .font(.system(size: 13))
+                .foregroundColor(.secondary.opacity(0.7))
 
-            TextField("Search notes...", text: $searchQuery)
+            TextField("Search", text: $searchQuery)
                 .textFieldStyle(.plain)
+                .font(.system(size: 13))
 
             if !searchQuery.isEmpty {
                 if isSearching {
                     ProgressView()
-                        .scaleEffect(0.7)
-                        .frame(width: 16, height: 16)
+                        .scaleEffect(0.6)
+                        .frame(width: 14, height: 14)
                 } else {
                     Button(action: {
                         searchQuery = ""
                     }) {
                         Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.secondary)
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary.opacity(0.6))
                     }
                     .buttonStyle(.plain)
                 }
             }
         }
-        .padding(8)
-        .background(Color(nsColor: .controlBackgroundColor))
-        .cornerRadius(8)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(Color(nsColor: .controlBackgroundColor).opacity(0.8))
+        .cornerRadius(6)
     }
 }
 

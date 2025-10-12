@@ -59,8 +59,17 @@ class EmbeddingService {
     /// - Parameter note: The note to generate an embedding for
     /// - Parameter context: The managed object context
     func generateAndStoreEmbedding(for note: Note, in context: NSManagedObjectContext) async {
-        // Combine title and content for embedding
-        let textToEmbed = "\(note.title ?? "") \(note.content ?? "")"
+        // Extract only base content (exclude AI-generated blocks)
+        let baseContent = extractBaseContent(from: note.content ?? "")
+
+        // Combine title and base content for embedding (limit to ~1500 chars = ~400 tokens)
+        let combinedText = "\(note.title ?? "") \(baseContent)"
+        let maxChars = 1500
+        let textToEmbed = String(combinedText.prefix(maxChars))
+
+        if combinedText.count > maxChars {
+            print("⚠️ Content truncated to \(maxChars) chars for embedding generation")
+        }
 
         guard let embedding = await generateEmbedding(for: textToEmbed) else {
             print("⚠️ Failed to generate embedding for note: \(note.id?.uuidString ?? "unknown")")
@@ -138,6 +147,35 @@ class EmbeddingService {
     }
 
     // MARK: - Utilities
+
+    /// Extracts only the base content from a note, excluding all AI-generated blocks
+    private func extractBaseContent(from content: String) -> String {
+        // Define all AI-generated section markers
+        let markers = [
+            "\n\n--- Summary ---",
+            "\n\n--- Translation to ",
+            "\n\n--- Patched ---",
+            "\n\n--- Reformulated ---"
+        ]
+
+        // Find the earliest AI section marker
+        var firstAIIndex: String.Index? = nil
+
+        for marker in markers {
+            if let range = content.range(of: marker) {
+                if firstAIIndex == nil || range.lowerBound < firstAIIndex! {
+                    firstAIIndex = range.lowerBound
+                }
+            }
+        }
+
+        // Return only content before first AI section
+        if let firstIndex = firstAIIndex {
+            return String(content[..<firstIndex])
+        }
+
+        return content
+    }
 
     private func floatArrayToData(_ array: [Float]) -> Data {
         return array.withUnsafeBytes { Data($0) }

@@ -10,6 +10,7 @@
 		8104180C2E9AF4770086B1B2 /* NoteEmbedding+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 810418082E9AF4770086B1B2 /* NoteEmbedding+CoreDataClass.swift */; };
 		8104180D2E9AF4770086B1B2 /* Tag+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8104180A2E9AF4770086B1B2 /* Tag+CoreDataClass.swift */; };
 		810418102E9AF4770086B1B2 /* Note+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 810418062E9AF4770086B1B2 /* Note+CoreDataClass.swift */; };
+		81DE21652E9B3C2400692788 /* ModelDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE21642E9B3C2400692788 /* ModelDownloader.swift */; };
 		81EFBE2E2E9B05C700F7E48B /* libllama.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 81EFBE282E9B05C700F7E48B /* libllama.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		81EFBE2F2E9B05C700F7E48B /* libggml-base.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 81EFBE292E9B05C700F7E48B /* libggml-base.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		81EFBE302E9B05C700F7E48B /* libggml-metal.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 81EFBE2A2E9B05C700F7E48B /* libggml-metal.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -33,6 +34,7 @@
 		A1000029000000000000001 /* SummarizationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000030000000000000001 /* SummarizationService.swift */; };
 		A1000031000000000000001 /* Note+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000032000000000000001 /* Note+Extensions.swift */; };
 		A1000033000000000000001 /* NoteViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000034000000000000001 /* NoteViewModel.swift */; };
+		A1000060000000000000001 /* AISettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000061000000000000001 /* AISettingsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -57,6 +59,7 @@
 		810418062E9AF4770086B1B2 /* Note+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Note+CoreDataClass.swift"; sourceTree = "<group>"; };
 		810418082E9AF4770086B1B2 /* NoteEmbedding+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NoteEmbedding+CoreDataClass.swift"; sourceTree = "<group>"; };
 		8104180A2E9AF4770086B1B2 /* Tag+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Tag+CoreDataClass.swift"; sourceTree = "<group>"; };
+		81DE21642E9B3C2400692788 /* ModelDownloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelDownloader.swift; sourceTree = "<group>"; };
 		81EFBE282E9B05C700F7E48B /* libllama.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libllama.dylib; path = llama.cpp/build/bin/libllama.dylib; sourceTree = "<group>"; };
 		81EFBE292E9B05C700F7E48B /* libggml-base.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libggml-base.dylib"; path = "llama.cpp/build/bin/libggml-base.dylib"; sourceTree = "<group>"; };
 		81EFBE2A2E9B05C700F7E48B /* libggml-metal.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libggml-metal.dylib"; path = "llama.cpp/build/bin/libggml-metal.dylib"; sourceTree = "<group>"; };
@@ -82,6 +85,7 @@
 		A1000035000000000000001 /* NoteTaker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NoteTaker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A1000036000000000000001 /* NoteTaker.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NoteTaker.entitlements; sourceTree = "<group>"; };
 		A1000058000000000000001 /* NotesDataModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = NotesDataModel.xcdatamodel; sourceTree = "<group>"; };
+		A1000061000000000000001 /* AISettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AISettingsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -141,6 +145,7 @@
 				A1000012000000000000001 /* NoteListView.swift */,
 				A1000014000000000000001 /* NoteEditorView.swift */,
 				A1000016000000000000001 /* SearchBarView.swift */,
+				A1000061000000000000001 /* AISettingsView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -168,6 +173,7 @@
 		A1000044000000000000001 /* AI */ = {
 			isa = PBXGroup;
 			children = (
+				81DE21642E9B3C2400692788 /* ModelDownloader.swift */,
 				A1000020000000000000001 /* AIEngine.swift */,
 				A1000022000000000000001 /* LLMInferenceService.swift */,
 				A1000024000000000000001 /* EmbeddingService.swift */,
@@ -284,12 +290,14 @@
 				A1000017000000000000001 /* PersistenceController.swift in Sources */,
 				A1000019000000000000001 /* AIEngine.swift in Sources */,
 				A1000021000000000000001 /* LLMInferenceService.swift in Sources */,
+				81DE21652E9B3C2400692788 /* ModelDownloader.swift in Sources */,
 				A1000023000000000000001 /* EmbeddingService.swift in Sources */,
 				A1000025000000000000001 /* SemanticSearchEngine.swift in Sources */,
 				A1000027000000000000001 /* AutocompleteService.swift in Sources */,
 				A1000029000000000000001 /* SummarizationService.swift in Sources */,
 				A1000031000000000000001 /* Note+Extensions.swift in Sources */,
 				A1000033000000000000001 /* NoteViewModel.swift in Sources */,
+				A1000060000000000000001 /* AISettingsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

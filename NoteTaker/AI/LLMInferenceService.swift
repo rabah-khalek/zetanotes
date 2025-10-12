@@ -2,11 +2,87 @@
 //  LLMInferenceService.swift
 //  NoteTaker
 //
-//  Low-level interface to TinyLlama 1.1B GGUF model
+//  Low-level interface to GGUF models via llama.cpp
+//  Supports TinyLlama 1.1B and Qwen2.5-3B
 //  Uses llama.cpp for CPU/GPU inference on Apple Silicon
 //
 
 import Foundation
+
+// MARK: - Model Types
+
+/// Available AI models for the NoteTaker app
+enum AIModel: String, CaseIterable, Codable {
+    case tinyLlama = "TinyLlama 1.1B"
+    case qwen25_3B = "Qwen2.5 3B"
+
+    var displayName: String {
+        self.rawValue
+    }
+
+    var fileName: String {
+        switch self {
+        case .tinyLlama:
+            return "tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"
+        case .qwen25_3B:
+            return "qwen2.5-3b-instruct-q4_k_m.gguf"
+        }
+    }
+
+    var fileSize: String {
+        switch self {
+        case .tinyLlama:
+            return "0.7 GB"
+        case .qwen25_3B:
+            return "2.0 GB"
+        }
+    }
+
+    var memoryUsage: String {
+        switch self {
+        case .tinyLlama:
+            return "~1.5 GB RAM"
+        case .qwen25_3B:
+            return "~2.5 GB RAM"
+        }
+    }
+
+    var speedRating: String {
+        switch self {
+        case .tinyLlama:
+            return "Very Fast"
+        case .qwen25_3B:
+            return "Fast"
+        }
+    }
+
+    var qualityRating: String {
+        switch self {
+        case .tinyLlama:
+            return "Basic"
+        case .qwen25_3B:
+            return "High"
+        }
+    }
+
+    var description: String {
+        switch self {
+        case .tinyLlama:
+            return "Lightweight model, best for autocomplete and embeddings. Limited instruction-following quality."
+        case .qwen25_3B:
+            return "3B parameter model with excellent instruction-following. Much better for patch, reformulate, and title generation."
+        }
+    }
+
+    var huggingFaceURL: String {
+        switch self {
+        case .tinyLlama:
+            return "https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF"
+        case .qwen25_3B:
+            return "https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF/resolve/main/qwen2.5-3b-instruct-q4_k_m.gguf"
+        }
+    }
+}
 
 /// Service handling direct LLM inference
 /// Wraps llama.cpp or Core ML for running quantized GGUF models
@@ -15,7 +91,6 @@ class LLMInferenceService: @unchecked Sendable {
     // MARK: - Configuration
 
     private struct ModelConfig {
-        static let modelName = "tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"
         static let contextSize: Int32 = 2048
         static let batchSize: Int32 = 512
         static let threads: Int32 = 0 // 0 = auto-detect optimal threads
@@ -28,14 +103,27 @@ class LLMInferenceService: @unchecked Sendable {
     private var context: OpaquePointer?
     private var sampler: UnsafeMutablePointer<llama_sampler>?
     private var isLoaded = false
+    private var currentModel: AIModel = .tinyLlama
     private let inferenceQueue = DispatchQueue(label: "com.notetaker.inference", qos: .userInitiated)
 
     // MARK: - Model Loading
 
-    /// Loads the GGUF model from the app bundle
+    /// Loads the specified GGUF model from the app bundle or Application Support
     /// This is an async operation that should be called once on app launch
-    func loadModel() async throws {
-        guard !isLoaded else { return }
+    /// - Parameter modelType: The AI model to load (defaults to TinyLlama)
+    func loadModel(_ modelType: AIModel = .tinyLlama) async throws {
+        // If already loaded with same model, skip
+        if isLoaded && currentModel == modelType {
+            return
+        }
+
+        // If different model requested, unload current model first
+        if isLoaded && currentModel != modelType {
+            print("🔄 Switching from \(currentModel.displayName) to \(modelType.displayName)")
+            unloadModel()
+        }
+
+        currentModel = modelType
 
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             inferenceQueue.async { [weak self] in
@@ -45,12 +133,12 @@ class LLMInferenceService: @unchecked Sendable {
                 }
 
                 do {
-                    // Get model path from bundle
-                    guard let modelPath = self.getModelPath() else {
+                    // Get model path from bundle or Application Support (with verbose logging)
+                    guard let modelPath = self.getModelPath(for: modelType, verbose: true) else {
                         throw LLMError.modelNotFound
                     }
 
-                    print("📦 Loading model from: \(modelPath)")
+                    print("📦 Loading \(modelType.displayName) from: \(modelPath)")
 
                     // Initialize llama.cpp backend
                     llama_backend_init()
@@ -330,8 +418,14 @@ class LLMInferenceService: @unchecked Sendable {
                     return
                 }
 
-                // Keep only the valid tokens
-                var embeddingTokens = Array(tokens.prefix(Int(tokenCount)))
+                // Check if token count exceeds batch size
+                if tokenCount > ModelConfig.batchSize {
+                    print("⚠️ Token count (\(tokenCount)) exceeds batch size (\(ModelConfig.batchSize)), truncating")
+                }
+
+                // Keep only the valid tokens, limited to batch size
+                let validTokenCount = min(Int(tokenCount), Int(ModelConfig.batchSize))
+                var embeddingTokens = Array(tokens.prefix(validTokenCount))
                 let embeddingTokenCount = Int32(embeddingTokens.count)
 
                 // Create batch and decode - keep tokens alive during decode
@@ -367,51 +461,80 @@ class LLMInferenceService: @unchecked Sendable {
 
     // MARK: - Helpers
 
-    private func getModelPath() -> String? {
-        print("🔍 Starting model search...")
+    private func getModelPath(for modelType: AIModel, verbose: Bool = false) -> String? {
+        if verbose {
+            print("🔍 Starting search for \(modelType.displayName)...")
+        }
+
+        let modelFileName = modelType.fileName
+        let fileManager = FileManager.default
+
+        // Extract base name without extension for Bundle.main.path
+        let baseName = modelFileName.replacingOccurrences(of: ".gguf", with: "")
 
         // First, check if model exists in app bundle (Resources/Models/)
-        if let bundlePath = Bundle.main.path(forResource: "tinyllama-1.1b-chat-v1.0.Q4_K_M", ofType: "gguf") {
-            print("✅ Found model in app bundle: \(bundlePath)")
+        if let bundlePath = Bundle.main.path(forResource: baseName, ofType: "gguf") {
+            if verbose {
+                print("✅ Found model in app bundle: \(bundlePath)")
+            }
             return bundlePath
         }
 
         // Check in Resources/Models subdirectory of bundle
         if let resourcesPath = Bundle.main.resourcePath {
-            let modelsPath = resourcesPath + "/Models/" + ModelConfig.modelName
-            print("📂 Checking bundle Models path: \(modelsPath)")
-            if FileManager.default.fileExists(atPath: modelsPath) {
-                print("✅ Found model in bundle Models: \(modelsPath)")
+            let modelsPath = resourcesPath + "/Models/" + modelFileName
+            if fileManager.fileExists(atPath: modelsPath) {
+                if verbose {
+                    print("✅ Found model in bundle Models: \(modelsPath)")
+                }
                 return modelsPath
             }
         }
 
-        // Fallback: Check in ~/Library/Application Support/NoteTaker/Models/
-        let fileManager = FileManager.default
+        // Check in ~/Library/Application Support/NoteTaker/Models/
         if let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first {
             let modelsDir = appSupport.appendingPathComponent("NoteTaker/Models")
-            let modelPath = modelsDir.appendingPathComponent(ModelConfig.modelName)
-
-            print("📂 Checking Application Support path: \(modelPath.path)")
-            print("📂 Directory exists: \(fileManager.fileExists(atPath: modelsDir.path))")
-            print("📂 Model file exists: \(fileManager.fileExists(atPath: modelPath.path))")
+            let modelPath = modelsDir.appendingPathComponent(modelFileName)
 
             if fileManager.fileExists(atPath: modelPath.path) {
-                print("✅ Found model in Application Support: \(modelPath.path)")
+                if verbose {
+                    print("✅ Found model in Application Support: \(modelPath.path)")
+                }
                 return modelPath.path
             }
         }
 
         // Last resort: Check in the project source directory (for development)
-        let devPath = "/Users/projects/Documents/notetaker/NoteTaker/Resources/Models/" + ModelConfig.modelName
-        print("📂 Checking development path: \(devPath)")
+        let devPath = "/Users/projects/Documents/notetaker/NoteTaker/Resources/Models/" + modelFileName
         if fileManager.fileExists(atPath: devPath) {
-            print("✅ Found model in development path: \(devPath)")
+            if verbose {
+                print("✅ Found model in development path: \(devPath)")
+            }
             return devPath
         }
 
-        print("❌ Model not found in any location")
+        if verbose {
+            print("❌ Model not found in any location")
+        }
         return nil
+    }
+
+    /// Returns the Application Support directory path for storing models
+    func getModelsDirectory() -> URL? {
+        guard let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+            return nil
+        }
+        return appSupport.appendingPathComponent("NoteTaker/Models")
+    }
+
+    /// Checks if a model file exists locally
+    func isModelDownloaded(_ modelType: AIModel) -> Bool {
+        return getModelPath(for: modelType) != nil
+    }
+
+    /// Returns the loaded model type
+    func getCurrentModel() -> AIModel {
+        return currentModel
     }
 }
 
@@ -426,7 +549,7 @@ enum LLMError: Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .modelNotFound:
-            return "Model file not found. Place tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf in the app bundle or ~/Library/Application Support/NoteTaker/Models/"
+            return "Model file not found. Place model files in ~/Library/Application Support/NoteTaker/Models/ or use the download feature in settings."
         case .modelLoadFailed:
             return "Failed to load the AI model"
         case .inferenceFailed:
