@@ -32,6 +32,22 @@ class AIEngine: ObservableObject {
         SummarizationService(llmService: llmService)
     }()
 
+    private(set) lazy var translationService: TranslationService = {
+        TranslationService(llmService: llmService)
+    }()
+
+    private(set) lazy var autoCorrectService: AutoCorrectService = {
+        AutoCorrectService(llmService: llmService)
+    }()
+
+    private(set) lazy var reformulationService: ReformulationService = {
+        ReformulationService(llmService: llmService)
+    }()
+
+    private(set) lazy var titleGenerationService: TitleGenerationService = {
+        TitleGenerationService(llmService: llmService)
+    }()
+
     // MARK: - State
 
     @Published var isModelLoaded = false
@@ -158,8 +174,8 @@ class AIEngine: ObservableObject {
     // MARK: - Quick Access Methods
 
     /// Generates autocomplete suggestions for the given text
-    func autocomplete(for text: String, maxTokens: Int = 20) async -> String? {
-        return await autocompleteService.generateSuggestion(for: text, maxTokens: maxTokens)
+    func autocomplete(for text: String) async -> String? {
+        return await autocompleteService.generateSuggestion(for: text)
     }
 
     /// Generates a summary of the given text

@@ -10,8 +10,9 @@ import Foundation
 
 /// Service for generating note summaries
 /// Provides quick overviews for long-form content
-class SummarizationService {
-    private let llmService: LLMInferenceService
+class SummarizationService: AIService {
+    let llmService: LLMInferenceService
+    let config: AIGenerationConfig
 
     // MARK: - Configuration
 
@@ -19,13 +20,52 @@ class SummarizationService {
         static let minLengthForSummary = 100 // Characters
         static let defaultSummaryLength = 100 // Characters
         static let maxTokens = 100
-        static let temperature: Float = 0.3 // Lower temperature for more focused summaries
     }
 
     // MARK: - Initialization
 
     init(llmService: LLMInferenceService) {
         self.llmService = llmService
+        self.config = AIGenerationConfig(
+            temperature: 0.3,
+            maxTokens: Config.maxTokens,
+            stopSequences: [
+                "\n\n\n",
+                "\n---",
+                "\nNote:",
+                "\nHere is",
+                "\nThe summary",
+                "\nIn summary"
+            ]
+        )
+    }
+
+    // MARK: - AIService Protocol
+
+    func buildPrompt(for text: String) -> String {
+        return "\(DefaultPrompts.summarization)\(text)"
+    }
+
+    // MARK: - AIService Override
+
+    /// Override process to use custom prompt and respect maxTokens from config
+    func process(_ text: String, customPrompt: String) async -> String? {
+        // For very long text, truncate to first 2000 characters for performance
+        let textToProcess = text.count > 2000 ? String(text.prefix(2000)) : text
+
+        let instruction = customPrompt.isEmpty ? DefaultPrompts.summarization : customPrompt + "\n\n"
+        let prompt = "\(instruction)\(textToProcess)"
+
+        guard let rawOutput = await llmService.generate(
+            prompt: prompt,
+            maxTokens: config.maxTokens,  // Use fixed 100 tokens from config
+            temperature: config.temperature,
+            stopSequences: config.stopSequences
+        ) else {
+            return nil
+        }
+
+        return postProcess(rawOutput)
     }
 
     // MARK: - Summarization
@@ -53,14 +93,14 @@ class SummarizationService {
             textToSummarize = text
         }
 
-        let prompt = buildSummarizationPrompt(text: textToSummarize, targetLength: maxLength)
+        let prompt = buildPrompt(for: textToSummarize)
         print("📤 Sending prompt to LLM, length: \(prompt.count)")
 
         guard let summary = await llmService.generate(
             prompt: prompt,
-            maxTokens: Config.maxTokens,
-            temperature: Config.temperature,
-            stopSequences: ["\n\n", "###", "---"]
+            maxTokens: config.maxTokens,
+            temperature: config.temperature,
+            stopSequences: config.stopSequences
         ) else {
             print("⚠️ LLM returned nil, using extractive fallback")
             // Fallback: use extractive summarization
@@ -68,7 +108,7 @@ class SummarizationService {
         }
 
         print("📥 LLM returned: \(summary.prefix(100))...")
-        let cleaned = cleanSummary(summary)
+        let cleaned = postProcess(summary)
         print("🧹 Cleaned summary: \(cleaned)")
 
         if cleaned.isEmpty {
@@ -77,6 +117,33 @@ class SummarizationService {
         }
 
         return cleaned
+    }
+
+    // MARK: - Post-processing
+
+    func postProcess(_ output: String) -> String {
+        let stopMarkers = [
+            "\n\nThe ",
+            "\n\nHere is",
+            "\n\nNote:",
+            "\n\nIn summary",
+            "\n\nThis summary",
+            "\n\n---"
+        ]
+
+        let prefixes = [
+            "Summary:",
+            "Here is the summary:",
+            "The summary is:",
+            "summary:"
+        ]
+
+        return standardPostProcess(
+            output,
+            stopMarkers: stopMarkers,
+            prefixes: prefixes,
+            keepOnlyFirstParagraph: true
+        )
     }
 
     /// Generates summaries for multiple notes in batch
@@ -96,20 +163,6 @@ class SummarizationService {
         return summaries
     }
 
-    // MARK: - Prompt Engineering
-
-    private func buildSummarizationPrompt(text: String, targetLength: Int) -> String {
-        return """
-        \(text)
-
-        Summarize in one clear sentence. Be concise:
-        """
-    }
-
-    private func cleanSummary(_ summary: String) -> String {
-        // No postprocessing - return raw output
-        return summary
-    }
 
     // MARK: - Fallback: Extractive Summarization
 

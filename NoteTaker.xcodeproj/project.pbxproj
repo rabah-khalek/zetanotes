@@ -10,6 +10,12 @@
 		8104180C2E9AF4770086B1B2 /* NoteEmbedding+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 810418082E9AF4770086B1B2 /* NoteEmbedding+CoreDataClass.swift */; };
 		8104180D2E9AF4770086B1B2 /* Tag+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8104180A2E9AF4770086B1B2 /* Tag+CoreDataClass.swift */; };
 		810418102E9AF4770086B1B2 /* Note+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 810418062E9AF4770086B1B2 /* Note+CoreDataClass.swift */; };
+		81111F5B2E9F348400D7317B /* AIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F562E9F348400D7317B /* AIService.swift */; };
+		81111F5C2E9F348400D7317B /* ReformulationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F582E9F348400D7317B /* ReformulationService.swift */; };
+		81111F5D2E9F348400D7317B /* AutoCorrectService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F572E9F348400D7317B /* AutoCorrectService.swift */; };
+		81111F5E2E9F348400D7317B /* TitleGenerationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F592E9F348400D7317B /* TitleGenerationService.swift */; };
+		81111F5F2E9F348400D7317B /* TranslationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F5A2E9F348400D7317B /* TranslationService.swift */; };
+		81111F612E9F37FB00D7317B /* DefaultPrompts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F602E9F37FB00D7317B /* DefaultPrompts.swift */; };
 		81DE21652E9B3C2400692788 /* ModelDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE21642E9B3C2400692788 /* ModelDownloader.swift */; };
 		81EFBE2E2E9B05C700F7E48B /* libllama.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 81EFBE282E9B05C700F7E48B /* libllama.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		81EFBE2F2E9B05C700F7E48B /* libggml-base.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 81EFBE292E9B05C700F7E48B /* libggml-base.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -26,7 +32,6 @@
 		A1000013000000000000001 /* NoteEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000014000000000000001 /* NoteEditorView.swift */; };
 		A1000015000000000000001 /* SearchBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000016000000000000001 /* SearchBarView.swift */; };
 		A1000017000000000000001 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000018000000000000001 /* PersistenceController.swift */; };
-		A1000062000000000000001 /* NoteRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000063000000000000001 /* NoteRepository.swift */; };
 		A1000019000000000000001 /* AIEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000020000000000000001 /* AIEngine.swift */; };
 		A1000021000000000000001 /* LLMInferenceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000022000000000000001 /* LLMInferenceService.swift */; };
 		A1000023000000000000001 /* EmbeddingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000024000000000000001 /* EmbeddingService.swift */; };
@@ -36,6 +41,7 @@
 		A1000031000000000000001 /* Note+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000032000000000000001 /* Note+Extensions.swift */; };
 		A1000033000000000000001 /* NoteViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000034000000000000001 /* NoteViewModel.swift */; };
 		A1000060000000000000001 /* AISettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000061000000000000001 /* AISettingsView.swift */; };
+		A1000062000000000000001 /* NoteRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000063000000000000001 /* NoteRepository.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -60,6 +66,12 @@
 		810418062E9AF4770086B1B2 /* Note+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Note+CoreDataClass.swift"; sourceTree = "<group>"; };
 		810418082E9AF4770086B1B2 /* NoteEmbedding+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NoteEmbedding+CoreDataClass.swift"; sourceTree = "<group>"; };
 		8104180A2E9AF4770086B1B2 /* Tag+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Tag+CoreDataClass.swift"; sourceTree = "<group>"; };
+		81111F562E9F348400D7317B /* AIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIService.swift; sourceTree = "<group>"; };
+		81111F572E9F348400D7317B /* AutoCorrectService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoCorrectService.swift; sourceTree = "<group>"; };
+		81111F582E9F348400D7317B /* ReformulationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReformulationService.swift; sourceTree = "<group>"; };
+		81111F592E9F348400D7317B /* TitleGenerationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TitleGenerationService.swift; sourceTree = "<group>"; };
+		81111F5A2E9F348400D7317B /* TranslationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationService.swift; sourceTree = "<group>"; };
+		81111F602E9F37FB00D7317B /* DefaultPrompts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefaultPrompts.swift; sourceTree = "<group>"; };
 		81DE21642E9B3C2400692788 /* ModelDownloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelDownloader.swift; sourceTree = "<group>"; };
 		81EFBE282E9B05C700F7E48B /* libllama.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libllama.dylib; path = llama.cpp/build/bin/libllama.dylib; sourceTree = "<group>"; };
 		81EFBE292E9B05C700F7E48B /* libggml-base.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libggml-base.dylib"; path = "llama.cpp/build/bin/libggml-base.dylib"; sourceTree = "<group>"; };
@@ -75,7 +87,6 @@
 		A1000014000000000000001 /* NoteEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteEditorView.swift; sourceTree = "<group>"; };
 		A1000016000000000000001 /* SearchBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchBarView.swift; sourceTree = "<group>"; };
 		A1000018000000000000001 /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
-		A1000063000000000000001 /* NoteRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteRepository.swift; sourceTree = "<group>"; };
 		A1000020000000000000001 /* AIEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIEngine.swift; sourceTree = "<group>"; };
 		A1000022000000000000001 /* LLMInferenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMInferenceService.swift; sourceTree = "<group>"; };
 		A1000024000000000000001 /* EmbeddingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbeddingService.swift; sourceTree = "<group>"; };
@@ -88,6 +99,7 @@
 		A1000036000000000000001 /* NoteTaker.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NoteTaker.entitlements; sourceTree = "<group>"; };
 		A1000058000000000000001 /* NotesDataModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = NotesDataModel.xcdatamodel; sourceTree = "<group>"; };
 		A1000061000000000000001 /* AISettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AISettingsView.swift; sourceTree = "<group>"; };
+		A1000063000000000000001 /* NoteRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteRepository.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -175,6 +187,12 @@
 		A1000044000000000000001 /* AI */ = {
 			isa = PBXGroup;
 			children = (
+				81111F602E9F37FB00D7317B /* DefaultPrompts.swift */,
+				81111F562E9F348400D7317B /* AIService.swift */,
+				81111F572E9F348400D7317B /* AutoCorrectService.swift */,
+				81111F582E9F348400D7317B /* ReformulationService.swift */,
+				81111F592E9F348400D7317B /* TitleGenerationService.swift */,
+				81111F5A2E9F348400D7317B /* TranslationService.swift */,
 				81DE21642E9B3C2400692788 /* ModelDownloader.swift */,
 				A1000020000000000000001 /* AIEngine.swift */,
 				A1000022000000000000001 /* LLMInferenceService.swift */,
@@ -284,6 +302,7 @@
 				A1000003000000000000001 /* ContentView.swift in Sources */,
 				A1000001000000000000001 /* NoteTakerApp.swift in Sources */,
 				A1000009000000000000001 /* NotesDataModel.xcdatamodeld in Sources */,
+				81111F612E9F37FB00D7317B /* DefaultPrompts.swift in Sources */,
 				A1000011000000000000001 /* NoteListView.swift in Sources */,
 				A1000013000000000000001 /* NoteEditorView.swift in Sources */,
 				A1000015000000000000001 /* SearchBarView.swift in Sources */,
@@ -295,6 +314,11 @@
 				A1000019000000000000001 /* AIEngine.swift in Sources */,
 				A1000021000000000000001 /* LLMInferenceService.swift in Sources */,
 				81DE21652E9B3C2400692788 /* ModelDownloader.swift in Sources */,
+				81111F5B2E9F348400D7317B /* AIService.swift in Sources */,
+				81111F5C2E9F348400D7317B /* ReformulationService.swift in Sources */,
+				81111F5D2E9F348400D7317B /* AutoCorrectService.swift in Sources */,
+				81111F5E2E9F348400D7317B /* TitleGenerationService.swift in Sources */,
+				81111F5F2E9F348400D7317B /* TranslationService.swift in Sources */,
 				A1000023000000000000001 /* EmbeddingService.swift in Sources */,
 				A1000025000000000000001 /* SemanticSearchEngine.swift in Sources */,
 				A1000027000000000000001 /* AutocompleteService.swift in Sources */,

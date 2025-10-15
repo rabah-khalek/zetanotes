@@ -355,13 +355,13 @@ class LLMInferenceService: @unchecked Sendable {
     /// Generates text completion for the given prompt
     /// - Parameters:
     ///   - prompt: The input text prompt
-    ///   - maxTokens: Maximum number of tokens to generate
+    ///   - maxTokens: Maximum number of tokens to generate (nil = use model's max context)
     ///   - temperature: Sampling temperature (0.0 = deterministic, 1.0 = creative)
     ///   - stopSequences: Sequences that stop generation when encountered
     /// - Returns: Generated text
     func generate(
         prompt: String,
-        maxTokens: Int = 100,
+        maxTokens: Int? = nil,
         temperature: Float = 0.7,
         stopSequences: [String] = []
     ) async -> String? {
@@ -383,8 +383,18 @@ class LLMInferenceService: @unchecked Sendable {
                 print("🔄 Starting text generation...")
                 print("📝 Prompt: \(prompt.prefix(100))...")
 
+                // Clear KV cache and reset sampler before generation to ensure clean context
+                let mem = llama_get_memory(ctx)
+                llama_memory_clear(mem, false) // Clear metadata only, keep data buffer
+                llama_sampler_reset(smpl) // Reset sampler state
+                print("🧹 KV cache cleared and sampler reset")
+
+                // Determine max generation length
+                let contextSize = Int32(ModelConfig.contextSize)
+
                 // Tokenize the prompt
-                var tokens = [llama_token](repeating: 0, count: prompt.count + maxTokens + 16)
+                let maxBufferSize = prompt.count + 2048 // Generous buffer
+                var tokens = [llama_token](repeating: 0, count: maxBufferSize)
                 let tokenCount = prompt.withCString { promptCStr in
                     llama_tokenize(
                         llama_model_get_vocab(mdl),
@@ -428,9 +438,12 @@ class LLMInferenceService: @unchecked Sendable {
                 // Generate tokens
                 var generatedText = ""
                 var nCur = tokenCount
-                let nLen = nCur + Int32(maxTokens)
 
-                print("🔄 Generating up to \(maxTokens) tokens...")
+                // If maxTokens is nil, use remaining context size; otherwise use specified limit
+                let maxGenTokens = maxTokens ?? Int(contextSize - tokenCount)
+                let nLen = nCur + Int32(maxGenTokens)
+
+                print("🔄 Generating up to \(maxGenTokens) tokens...")
                 while nCur < nLen {
                     // Sample the next token using the sampler chain
                     let newTokenId = llama_sampler_sample(smpl, ctx, -1)
@@ -491,10 +504,6 @@ class LLMInferenceService: @unchecked Sendable {
                     }
                 }
 
-                // Clear KV cache after generation to free memory slots
-                let mem = llama_get_memory(ctx)
-                _ = llama_memory_seq_rm(mem, 0, 0, -1) // Remove all tokens from sequence 0
-
                 print("✅ Generated: \(generatedText)")
                 continuation.resume(returning: generatedText)
             }
@@ -518,6 +527,10 @@ class LLMInferenceService: @unchecked Sendable {
                     continuation.resume(returning: nil)
                     return
                 }
+
+                // Clear KV cache before embedding generation
+                let mem = llama_get_memory(ctx)
+                llama_memory_clear(mem, false) // Clear metadata only
 
                 // Tokenize the text
                 var tokens = [llama_token](repeating: 0, count: text.count + 16)
@@ -569,10 +582,6 @@ class LLMInferenceService: @unchecked Sendable {
 
                 // Convert to Swift array
                 let embedding = Array(UnsafeBufferPointer(start: embeddingsPtr, count: Int(embeddingSize)))
-
-                // Clear KV cache after embedding generation to free memory slots
-                let mem = llama_get_memory(ctx)
-                _ = llama_memory_seq_rm(mem, 0, 0, -1) // Remove all tokens from sequence 0
 
                 print("✅ Generated embedding with \(embedding.count) dimensions")
                 continuation.resume(returning: embedding)

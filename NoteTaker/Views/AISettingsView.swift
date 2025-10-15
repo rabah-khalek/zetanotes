@@ -78,14 +78,8 @@ struct AISettingsView: View {
 
                     Divider()
 
-                    // Translation Prompt
-                    PromptSection(
-                        title: "Translation",
-                        icon: "globe",
-                        prompt: $viewModel.translationPrompt,
-                        placeholder: "Enter prompt for translation...",
-                        defaultPrompt: DefaultPrompts.translation
-                    )
+                    // Translation Prompt with Language Selector
+                    TranslationPromptSection(viewModel: viewModel)
 
                     Divider()
 
@@ -108,32 +102,6 @@ struct AISettingsView: View {
                         placeholder: "Enter prompt for reformulation...",
                         defaultPrompt: DefaultPrompts.reformulate
                     )
-
-                    // Language Selection
-                    VStack(alignment: .leading, spacing: 8) {
-                        Label("Target Language", systemImage: "globe")
-                            .font(.subheadline)
-                            .fontWeight(.medium)
-
-                        Picker("Language", selection: $viewModel.targetLanguage) {
-                            Text("English — High confidence").tag("English")
-                            Text("Chinese — High confidence").tag("Chinese")
-                            Text("Spanish — Medium confidence").tag("Spanish")
-                            Text("French — Medium confidence").tag("French")
-                            Text("German — Medium confidence").tag("German")
-                            Text("Portuguese — Medium confidence").tag("Portuguese")
-                            Text("Italian — Medium confidence").tag("Italian")
-                            Text("Dutch — Medium confidence").tag("Dutch")
-                            Text("Japanese — Low–Medium confidence").tag("Japanese")
-                            Text("Korean — Low–Medium confidence").tag("Korean")
-                            Text("Russian — Low confidence").tag("Russian")
-                            Text("Arabic — Low confidence").tag("Arabic")
-                        }
-                        .pickerStyle(.menu)
-                    }
-                    .padding()
-                    .background(Color(nsColor: .controlBackgroundColor))
-                    .cornerRadius(8)
                 }
                 .padding()
             }
@@ -300,6 +268,60 @@ struct ModelCard: View {
             RoundedRectangle(cornerRadius: 8)
                 .strokeBorder(isSelected ? Color.blue.opacity(0.3) : Color.gray.opacity(0.2), lineWidth: 1.5)
         )
+    }
+}
+
+// MARK: - Translation Prompt Section Component
+
+struct TranslationPromptSection: View {
+    @ObservedObject var viewModel: NoteViewModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Label("Translation", systemImage: "globe")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+
+                Spacer()
+
+                // Language picker next to title
+                Picker("Target Language", selection: $viewModel.targetLanguage) {
+                    Text("English").tag("English")
+                    Text("Chinese").tag("Chinese")
+                    Text("Spanish").tag("Spanish")
+                    Text("French").tag("French")
+                    Text("German").tag("German")
+                    Text("Portuguese").tag("Portuguese")
+                    Text("Italian").tag("Italian")
+                    Text("Dutch").tag("Dutch")
+                    Text("Japanese").tag("Japanese")
+                    Text("Korean").tag("Korean")
+                    Text("Russian").tag("Russian")
+                    Text("Arabic").tag("Arabic")
+                }
+                .pickerStyle(.menu)
+                .labelsHidden()
+                .frame(width: 150)
+            }
+
+            TextEditor(text: $viewModel.translationPrompt)
+                .font(.system(size: 13))
+                .frame(height: 80)
+                .padding(8)
+                .background(Color(nsColor: .controlBackgroundColor))
+                .cornerRadius(6)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                )
+
+            if viewModel.translationPrompt.isEmpty {
+                Text("Enter prompt for translation (use {language} as placeholder)...")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
     }
 }
 

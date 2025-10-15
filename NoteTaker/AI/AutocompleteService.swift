@@ -11,8 +11,10 @@ import Combine
 
 /// Service providing intelligent autocomplete suggestions
 /// Uses debouncing to ensure smooth, non-blocking experience
-class AutocompleteService {
-    private let llmService: LLMInferenceService
+class AutocompleteService: AIService {
+    let llmService: LLMInferenceService
+    let config: AIGenerationConfig
+
     private var debounceTimer: Timer?
     private let debounceDelay: TimeInterval = 0.2 // 200ms debounce
 
@@ -21,45 +23,47 @@ class AutocompleteService {
     private struct Config {
         static let minCharacters = 10 // Minimum characters before suggesting
         static let maxTokens: Int = 20 // Maximum tokens to generate
-        static let temperature: Float = 0.3 // Lower temperature for more deterministic suggestions
+        static let contextLength = 500 // Characters of context to use
     }
 
     // MARK: - Initialization
 
     init(llmService: LLMInferenceService) {
         self.llmService = llmService
+        self.config = AIGenerationConfig(
+            temperature: 0.3,
+            maxTokens: Config.maxTokens,
+            stopSequences: ["\n\n"]  // Stop at paragraph breaks
+        )
+    }
+
+    // MARK: - AIService Protocol
+
+    func buildPrompt(for text: String) -> String {
+        // Get the last N characters for context
+        let contextLength = min(text.count, Config.contextLength)
+        let startIndex = text.index(text.endIndex, offsetBy: -contextLength)
+        let context = String(text[startIndex...])
+
+        // For autocomplete, we want natural continuation
+        // Keep it simple - just provide context
+        return """
+        Continue the following text naturally. Write only the next few words that would logically follow.
+
+        \(context)
+        """
     }
 
     // MARK: - Autocomplete
 
     /// Generates an autocomplete suggestion for the given text
-    /// - Parameters:
-    ///   - text: The current text content
-    ///   - maxTokens: Maximum tokens to generate
+    /// - Parameter text: The current text content
     /// - Returns: Suggested completion text, or nil if no suggestion
-    func generateSuggestion(for text: String, maxTokens: Int = Config.maxTokens) async -> String? {
+    func generateSuggestion(for text: String) async -> String? {
         // Don't suggest if text is too short
         guard text.count >= Config.minCharacters else { return nil }
 
-        // Get the last 100 characters for context (more efficient)
-        let contextLength = min(text.count, 500)
-        let startIndex = text.index(text.endIndex, offsetBy: -contextLength)
-        let context = String(text[startIndex...])
-
-        // Build prompt for autocomplete
-        let prompt = buildAutocompletePrompt(context: context)
-
-        // Generate completion
-        guard let completion = await llmService.generate(
-            prompt: prompt,
-            maxTokens: maxTokens,
-            temperature: Config.temperature,
-            stopSequences: ["\n\n", "###"]
-        ) else {
-            return nil
-        }
-
-        return cleanCompletion(completion)
+        return await process(text)
     }
 
     /// Generates autocomplete with debouncing
@@ -78,21 +82,6 @@ class AutocompleteService {
             }
         }
         .eraseToAnyPublisher()
-    }
-
-    // MARK: - Prompt Engineering
-
-    private func buildAutocompletePrompt(context: String) -> String {
-        return """
-        \(context)
-
-        Continue naturally:
-        """
-    }
-
-    private func cleanCompletion(_ completion: String) -> String {
-        // No postprocessing - return raw output
-        return completion
     }
 
     // MARK: - Cleanup

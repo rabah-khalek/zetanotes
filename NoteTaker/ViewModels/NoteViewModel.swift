@@ -9,24 +9,6 @@ import Foundation
 import CoreData
 import Combine
 
-// MARK: - Default AI Prompts
-
-/// Centralized default prompts for all AI features
-/// These are the instruction portions that come AFTER the content
-struct DefaultPrompts {
-    static let autocomplete = "Continue naturally:"
-
-    static let summarization = "Summarize in one clear sentence:"
-
-    static let translation = "Translate to {language}. Write ONLY the {language} translation. Do not include the original text. Do not add labels or explanations."
-
-    static let titleGeneration = "Create a short title (maximum 5 words). Write only the title, nothing else."
-
-    static let autoCorrect = "Fix only spelling mistakes. Copy everything else exactly. Do not add labels or explanations. Write only the corrected text."
-
-    static let reformulate = "Rewrite to be clearer and more professional. Keep the same meaning. Do not add labels or explanations. Write only the rewritten text."
-}
-
 /// ViewModel managing note state and AI operations
 /// Bridges UI layer with data and AI services
 @MainActor
@@ -288,9 +270,9 @@ class NoteViewModel: ObservableObject {
 
         let suggestion = await aiEngine.llmService.generate(
             prompt: prompt,
-            maxTokens: 20,
+            maxTokens: 20,  // Keep short for autocomplete
             temperature: 0.3,
-            stopSequences: ["\n\n", "###"]
+            stopSequences: ["\n\n"]  // Stop at paragraph breaks
         )
 
         await MainActor.run {
@@ -313,42 +295,24 @@ class NoteViewModel: ObservableObject {
     }
 
     func generateSummary(for note: Note) async {
-        guard aiEngine.isModelLoaded else {
-            print("⚠️ Cannot summarize: Model not loaded")
-            return
-        }
-        guard let originalContent = note.content, !originalContent.isEmpty else {
-            print("⚠️ Cannot summarize: Content is empty")
-            return
-        }
+        guard let content = note.content, !content.isEmpty else { return }
 
-        print("🔄 Starting summarization for content: \(originalContent.prefix(100))...")
-
-        let sections = extractContentSections(from: originalContent)
+        let sections = extractContentSections(from: content)
 
         await MainActor.run {
             self.isGeneratingSummary = true
         }
 
-        let prompt = """
-        Here is the content:
+        // Use custom prompt if provided, otherwise use service default
+        let summary: String?
+        if !summarizationPrompt.isEmpty {
+            summary = await aiEngine.summarizationService.process(sections.baseContent, customPrompt: summarizationPrompt)
+        } else {
+            summary = await aiEngine.summarizationService.summarize(sections.baseContent)
+        }
 
-        \(sections.baseContent)
-
-        Task: \(summarizationPrompt)
-        """
-
-        let summary = await aiEngine.llmService.generate(
-            prompt: prompt,
-            maxTokens: 100,
-            temperature: 0.3,
-            stopSequences: ["---", "###", "\n\n"]
-        )
-
-        await MainActor.run {
-            if let summary = summary, !summary.isEmpty {
-                print("✅ Summary generated: \(summary)")
-
+        if let summary = summary {
+            await MainActor.run {
                 let summaryBlock = "\n\n--- Summary ---\n\n" + summary
                 note.content = reconstructContent(
                     base: sections.baseContent,
@@ -357,12 +321,13 @@ class NoteViewModel: ObservableObject {
                     autoCorrect: sections.autoCorrectedBlock,
                     reformulated: sections.reformulatedBlock
                 )
-
                 self.saveNote(note)
-            } else {
-                print("❌ Summary generation returned nil or empty")
+                self.isGeneratingSummary = false
             }
-            self.isGeneratingSummary = false
+        } else {
+            await MainActor.run {
+                self.isGeneratingSummary = false
+            }
         }
     }
 
@@ -371,36 +336,27 @@ class NoteViewModel: ObservableObject {
     }
 
     func generateTranslation(for note: Note) async {
-        guard aiEngine.isModelLoaded else { return }
-        guard let originalContent = note.content, !originalContent.isEmpty else { return }
+        guard let content = note.content, !content.isEmpty else { return }
 
-        print("🔄 Starting translation to \(targetLanguage) for content: \(originalContent.prefix(100))...")
-
-        let sections = extractContentSections(from: originalContent)
+        let sections = extractContentSections(from: content)
 
         await MainActor.run {
             self.isTranslating = true
         }
 
-        let prompt = """
-        Here is the content:
+        // Set target language and translate using custom prompt
+        aiEngine.translationService.setTargetLanguage(targetLanguage)
 
-        \(sections.baseContent)
+        // Use custom prompt if provided, otherwise use default
+        let translation: String?
+        if !translationPrompt.isEmpty {
+            translation = await aiEngine.translationService.translate(sections.baseContent, withPrompt: translationPrompt)
+        } else {
+            translation = await aiEngine.translationService.translate(sections.baseContent)
+        }
 
-        Task: \(translationPrompt.replacingOccurrences(of: "{language}", with: targetLanguage))
-        """
-
-        let translation = await aiEngine.llmService.generate(
-            prompt: prompt,
-            maxTokens: 800,
-            temperature: 0.3,
-            stopSequences: ["---", "###", "\n\n\n", "English"]
-        )
-
-        await MainActor.run {
-            if let translation = translation, !translation.isEmpty {
-                print("✅ Translation generated: \(translation.prefix(100))...")
-
+        if let translation = translation {
+            await MainActor.run {
                 let translationBlock = "\n\n--- Translation to \(targetLanguage) ---\n\n" + translation
                 note.content = reconstructContent(
                     base: sections.baseContent,
@@ -409,124 +365,87 @@ class NoteViewModel: ObservableObject {
                     autoCorrect: sections.autoCorrectedBlock,
                     reformulated: sections.reformulatedBlock
                 )
-
                 self.saveNote(note)
-            } else {
-                print("❌ Translation generation returned nil or empty")
+                self.isTranslating = false
             }
-            self.isTranslating = false
+        } else {
+            await MainActor.run {
+                self.isTranslating = false
+            }
         }
     }
 
     func autoCorrect(for note: Note) async {
-        guard aiEngine.isModelLoaded else {
-            print("⚠️ Cannot patch: Model not loaded")
-            return
-        }
-        guard let originalContent = note.content, !originalContent.isEmpty else {
-            print("⚠️ Cannot patch: Content is empty")
-            return
-        }
+        guard let content = note.content, !content.isEmpty else { return }
 
-        print("🔄 Starting patching for content: \(originalContent.prefix(100))...")
-
-        let sections = extractContentSections(from: originalContent)
-
-        let contentToCorrect = sections.baseContent
+        let sections = extractContentSections(from: content)
 
         await MainActor.run {
             self.isAutoCorrecting = true
         }
 
-        let prompt = """
-        Here is the content:
+        // Use custom prompt if provided, otherwise use service default
+        let corrected: String?
+        if !autoCorrectPrompt.isEmpty {
+            corrected = await aiEngine.autoCorrectService.process(sections.baseContent, customPrompt: autoCorrectPrompt)
+        } else {
+            corrected = await aiEngine.autoCorrectService.correct(sections.baseContent)
+        }
 
-        \(contentToCorrect)
-
-        Task: \(autoCorrectPrompt)
-        """
-
-        let correctedText = await aiEngine.llmService.generate(
-            prompt: prompt,
-            maxTokens: 800,
-            temperature: 0.05,
-            stopSequences: ["---", "###", "\n\n\n\n"]
-        )
-
-        await MainActor.run {
-            if let correctedText = correctedText, !correctedText.isEmpty {
-                print("✅ Patching completed: \(correctedText.prefix(100))...")
-
-                let correctionBlock = "\n\n--- Patched ---\n\n" + correctedText
+        if let corrected = corrected {
+            await MainActor.run {
+                let correctedBlock = "\n\n--- Patched ---\n\n" + corrected
                 note.content = reconstructContent(
                     base: sections.baseContent,
                     summary: sections.summaryBlock,
                     translation: sections.translationBlock,
-                    autoCorrect: correctionBlock,
+                    autoCorrect: correctedBlock,
                     reformulated: sections.reformulatedBlock
                 )
-
                 self.saveNote(note)
-            } else {
-                print("❌ Patching returned nil or empty")
+                self.isAutoCorrecting = false
             }
-            self.isAutoCorrecting = false
+        } else {
+            await MainActor.run {
+                self.isAutoCorrecting = false
+            }
         }
     }
 
     func reformulate(for note: Note) async {
-        guard aiEngine.isModelLoaded else {
-            print("⚠️ Cannot reformulate: Model not loaded")
-            return
-        }
-        guard let originalContent = note.content, !originalContent.isEmpty else {
-            print("⚠️ Cannot reformulate: Content is empty")
-            return
-        }
+        guard let content = note.content, !content.isEmpty else { return }
 
-        print("🔄 Starting reformulation for content: \(originalContent.prefix(100))...")
-
-        let sections = extractContentSections(from: originalContent)
-
-        let contentToReformulate = sections.baseContent
+        let sections = extractContentSections(from: content)
 
         await MainActor.run {
             self.isReformulating = true
         }
 
-        let prompt = """
-        Here is the content:
+        // Use custom prompt if provided, otherwise use service default
+        let reformulated: String?
+        if !reformulatePrompt.isEmpty {
+            reformulated = await aiEngine.reformulationService.process(sections.baseContent, customPrompt: reformulatePrompt)
+        } else {
+            reformulated = await aiEngine.reformulationService.reformulate(sections.baseContent)
+        }
 
-        \(contentToReformulate)
-
-        Task: \(reformulatePrompt)
-        """
-
-        let reformulatedText = await aiEngine.llmService.generate(
-            prompt: prompt,
-            maxTokens: 800,
-            temperature: 0.4,
-            stopSequences: ["---", "###", "\n\n\n"]
-        )
-
-        await MainActor.run {
-            if let reformulatedText = reformulatedText, !reformulatedText.isEmpty {
-                print("✅ Reformulation completed: \(reformulatedText.prefix(100))...")
-
-                let reformulationBlock = "\n\n--- Reformulated ---\n\n" + reformulatedText
+        if let reformulated = reformulated {
+            await MainActor.run {
+                let reformulatedBlock = "\n\n--- Reformulated ---\n\n" + reformulated
                 note.content = reconstructContent(
                     base: sections.baseContent,
                     summary: sections.summaryBlock,
                     translation: sections.translationBlock,
                     autoCorrect: sections.autoCorrectedBlock,
-                    reformulated: reformulationBlock
+                    reformulated: reformulatedBlock
                 )
-
                 self.saveNote(note)
-            } else {
-                print("❌ Reformulation returned nil or empty")
+                self.isReformulating = false
             }
-            self.isReformulating = false
+        } else {
+            await MainActor.run {
+                self.isReformulating = false
+            }
         }
     }
 
@@ -541,57 +460,25 @@ class NoteViewModel: ObservableObject {
     }
 
     func generateTitle(for note: Note) async {
-        guard aiEngine.isModelLoaded else {
-            print("⚠️ Cannot generate title: Model not loaded")
-            return
-        }
-        guard let originalContent = note.content, !originalContent.isEmpty else {
-            print("⚠️ Cannot generate title: Content is empty")
-            return
-        }
+        guard let content = note.content, !content.isEmpty else { return }
 
-        print("🔄 Starting title generation for content: \(originalContent.prefix(100))...")
-
-        let sections = extractContentSections(from: originalContent)
-        let contentForTitle = String(sections.baseContent.prefix(300))
+        let sections = extractContentSections(from: content)
 
         await MainActor.run {
             self.isGeneratingTitle = true
         }
 
-        let prompt = """
-        Here is the content:
-
-        \(contentForTitle)
-
-        Task: \(titleGenerationPrompt)
-        """
-
-        let generatedTitle = await aiEngine.llmService.generate(
-            prompt: prompt,
-            maxTokens: 15,
-            temperature: 0.3,
-            stopSequences: ["\n", ".", "---", "###"]
-        )
+        // Use custom prompt if provided, otherwise use service default
+        let title: String
+        if !titleGenerationPrompt.isEmpty {
+            title = await aiEngine.titleGenerationService.generateTitleWithFallback(for: sections.baseContent, customPrompt: titleGenerationPrompt)
+        } else {
+            title = await aiEngine.titleGenerationService.generateTitleWithFallback(for: sections.baseContent)
+        }
 
         await MainActor.run {
-            if let generatedTitle = generatedTitle, !generatedTitle.isEmpty {
-                if !generatedTitle.isEmpty {
-                    print("✅ Title generated: \(generatedTitle)")
-                    note.title = generatedTitle
-                    self.saveNote(note)
-                } else {
-                    let fallbackTitle = self.extractFallbackTitle(from: sections.baseContent)
-                    print("⚠️ Using fallback title: \(fallbackTitle)")
-                    note.title = fallbackTitle
-                    self.saveNote(note)
-                }
-            } else {
-                let fallbackTitle = self.extractFallbackTitle(from: sections.baseContent)
-                print("⚠️ Title generation failed, using fallback: \(fallbackTitle)")
-                note.title = fallbackTitle
-                self.saveNote(note)
-            }
+            note.title = title
+            self.saveNote(note)
             self.isGeneratingTitle = false
         }
     }
@@ -600,15 +487,6 @@ class NoteViewModel: ObservableObject {
         await searchEngine.reindexNote(note)
     }
 
-    private func extractFallbackTitle(from content: String) -> String {
-        let words = content
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .split(separator: " ")
-            .prefix(5)
-            .map(String.init)
-
-        return words.isEmpty ? "Untitled Note" : words.joined(separator: " ")
-    }
 
     private struct ContentSections {
         var baseContent: String
