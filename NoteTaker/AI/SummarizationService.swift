@@ -43,7 +43,7 @@ class SummarizationService: AIService {
     // MARK: - AIService Protocol
 
     func buildPrompt(for text: String) -> String {
-        return "\(DefaultPrompts.summarization)\(text)"
+        return "\(DefaultPrompts.summarization)\(text)\n\nSummary:"
     }
 
     // MARK: - AIService Override
@@ -54,7 +54,7 @@ class SummarizationService: AIService {
         let textToProcess = text.count > 2000 ? String(text.prefix(2000)) : text
 
         let instruction = customPrompt.isEmpty ? DefaultPrompts.summarization : customPrompt + "\n\n"
-        let prompt = "\(instruction)\(textToProcess)"
+        let prompt = "\(instruction)\(textToProcess)\n\nSummary:"
 
         guard let rawOutput = await llmService.generate(
             prompt: prompt,

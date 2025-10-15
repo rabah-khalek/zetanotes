@@ -34,7 +34,7 @@ class AutoCorrectService: AIService {
     // MARK: - AIService Protocol
 
     func buildPrompt(for text: String) -> String {
-        return "\(DefaultPrompts.autoCorrect)\(text)"
+        return "\(DefaultPrompts.autoCorrect)\(text)\n\nCorrected text:"
     }
 
     // MARK: - AIService Override
@@ -45,7 +45,7 @@ class AutoCorrectService: AIService {
         let maxTokens = calculateMaxTokens(for: text, bufferPercent: 20, maxLimit: 1024)
 
         let instruction = customPrompt.isEmpty ? DefaultPrompts.autoCorrect : customPrompt + "\n\n"
-        let prompt = "\(instruction)\(text)"
+        let prompt = "\(instruction)\(text)\n\nCorrected text:"
 
         guard let rawOutput = await llmService.generate(
             prompt: prompt,

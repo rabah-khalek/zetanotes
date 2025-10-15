@@ -44,7 +44,7 @@ class TitleGenerationService: AIService {
         // Limit context to first 300 characters
         let limitedText = String(text.prefix(Config.contextLimit))
 
-        return "\(DefaultPrompts.titleGeneration)\(limitedText)"
+        return "\(DefaultPrompts.titleGeneration)\(limitedText)\n\nTitle:"
     }
 
     // MARK: - AIService Override
@@ -55,7 +55,7 @@ class TitleGenerationService: AIService {
         let limitedText = String(text.prefix(Config.contextLimit))
 
         let instruction = customPrompt.isEmpty ? DefaultPrompts.titleGeneration : customPrompt + "\n\n"
-        let prompt = "\(instruction)\(limitedText)"
+        let prompt = "\(instruction)\(limitedText)\n\nTitle:"
 
         guard let rawOutput = await llmService.generate(
             prompt: prompt,

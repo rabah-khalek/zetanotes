@@ -59,7 +59,7 @@ class TranslationService: AIService {
             DefaultPrompts.translation.replacingOccurrences(of: "{language}", with: targetLanguage)
         }
 
-        let prompt = "\(instruction)\(text)"
+        let prompt = "\(instruction)\(text)\n\nTranslation:"
 
         print("🌍 Translation prompt built:")
         print("📝 Using: \(customPrompt != nil && !customPrompt!.isEmpty ? "custom prompt" : "default prompt")")

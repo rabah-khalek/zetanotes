@@ -34,7 +34,7 @@ class ReformulationService: AIService {
     // MARK: - AIService Protocol
 
     func buildPrompt(for text: String) -> String {
-        return "\(DefaultPrompts.reformulate)\(text)"
+        return "\(DefaultPrompts.reformulate)\(text)\n\nRewritten text:"
     }
 
     // MARK: - AIService Override
@@ -45,7 +45,7 @@ class ReformulationService: AIService {
         let maxTokens = calculateMaxTokens(for: text, bufferPercent: 30, maxLimit: 1024)
 
         let instruction = customPrompt.isEmpty ? DefaultPrompts.reformulate : customPrompt + "\n\n"
-        let prompt = "\(instruction)\(text)"
+        let prompt = "\(instruction)\(text)\n\nRewritten text:"
 
         guard let rawOutput = await llmService.generate(
             prompt: prompt,
