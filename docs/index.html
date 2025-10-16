@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OffNotes - Offline AI Note-Taking for Mac</title>
+    <meta name="description"
+        content="Privacy-first note-taking with portable AI. All processing happens locally on your Mac with no data ever leaving your device.">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #fafafa;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: #007AFF;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #007AFF;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 100px 0;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .hero h1 {
+            font-size: 56px;
+            font-weight: 800;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        .hero .subtitle {
+            font-size: 24px;
+            margin-bottom: 40px;
+            opacity: 0.95;
+            font-weight: 400;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 16px 32px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 12px;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Features Section */
+        .features {
+            padding: 80px 0;
+            background: white;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 60px;
+            color: #222;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+        }
+
+        .feature-card {
+            padding: 30px;
+            border-radius: 16px;
+            background: #f8f9fa;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .feature-card h3 {
+            font-size: 24px;
+            margin-bottom: 12px;
+            color: #222;
+        }
+
+        .feature-card p {
+            color: #666;
+            line-height: 1.7;
+        }
+
+        /* Pricing Section */
+        .pricing {
+            padding: 80px 0;
+            background: #f8f9fa;
+        }
+
+        .pricing-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 40px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .pricing-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            position: relative;
+            transition: transform 0.3s;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .pricing-card.featured {
+            border: 3px solid #007AFF;
+            transform: scale(1.05);
+        }
+
+        .pricing-card.featured::before {
+            content: "BEST VALUE";
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #007AFF;
+            color: white;
+            padding: 6px 20px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .plan-name {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #222;
+        }
+
+        .plan-price {
+            font-size: 48px;
+            font-weight: 800;
+            color: #007AFF;
+            margin-bottom: 10px;
+        }
+
+        .plan-price span {
+            font-size: 18px;
+            color: #666;
+            font-weight: 400;
+        }
+
+        .plan-features {
+            list-style: none;
+            margin: 30px 0;
+            text-align: left;
+        }
+
+        .plan-features li {
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .plan-features li:last-child {
+            border-bottom: none;
+        }
+
+        .check-icon {
+            color: #34C759;
+            font-weight: bold;
+        }
+
+        .cross-icon {
+            color: #ccc;
+        }
+
+        /* Trust Section */
+        .trust {
+            padding: 60px 0;
+            background: #f8f9fa;
+            text-align: center;
+        }
+
+        .trust-badges {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            margin-top: 40px;
+        }
+
+        .trust-badge {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .trust-badge-icon {
+            font-size: 36px;
+        }
+
+        .trust-badge h4 {
+            font-size: 18px;
+            color: #222;
+            margin: 0;
+        }
+
+        .trust-badge p {
+            font-size: 14px;
+            color: #666;
+            margin: 0;
+        }
+
+        /* Download Section */
+        .download {
+            padding: 80px 0;
+            background: white;
+            text-align: center;
+        }
+
+        .download-info {
+            max-width: 700px;
+            margin: 0 auto 40px;
+            color: #666;
+            font-size: 18px;
+        }
+
+        .system-requirements {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 600px;
+            margin: 40px auto 0;
+            text-align: left;
+        }
+
+        .system-requirements h3 {
+            margin-bottom: 15px;
+            color: #222;
+        }
+
+        .system-requirements ul {
+            list-style: none;
+            color: #666;
+        }
+
+        .system-requirements li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .system-requirements li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #007AFF;
+            font-weight: bold;
+        }
+
+        /* Footer */
+        footer {
+            background: #222;
+            color: white;
+            padding: 40px 0;
+            text-align: center;
+        }
+
+        footer a {
+            color: #007AFF;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 36px;
+            }
+
+            .hero .subtitle {
+                font-size: 18px;
+            }
+
+            .nav-links {
+                gap: 15px;
+            }
+
+            .section-title {
+                font-size: 32px;
+            }
+
+            .pricing-card.featured {
+                transform: scale(1);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">OffNotes</div>
+                <nav>
+                    <ul class="nav-links">
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#pricing">Pricing</a></li>
+                        <li><a href="#download">Download</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>Offline AI-Powered<br>Note-Taking for Mac</h1>
+            <p class="subtitle">Privacy-first notes with portable AI. Everything runs locally—no data ever leaves your
+                device.</p>
+            <div class="cta-buttons">
+                <a href="#download" class="btn btn-primary">Download Free</a>
+                <a href="#pricing" class="btn btn-secondary">View Pricing</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="container">
+            <h2 class="section-title">Why OffNotes?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>100% Private</h3>
+                    <p>All AI processing happens locally on your Mac. Your notes never touch the cloud. Complete privacy
+                        guaranteed.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">✨</div>
+                    <h3>AI Autocomplete</h3>
+                    <p>Smart text completion powered by local LLMs. Write faster with intelligent suggestions that
+                        understand context.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📝</div>
+                    <h3>Instant Summaries</h3>
+                    <p>Get quick summaries of long notes. Perfect for reviewing meeting notes or research documents.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🌍</div>
+                    <h3>Translate Anything</h3>
+                    <p>Translate notes to 12+ languages instantly. All processing happens offline on your device.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔍</div>
+                    <h3>Semantic Search</h3>
+                    <p>Find notes by meaning, not just keywords. Powered by local vector embeddings for intelligent
+                        search.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Blazing Fast</h3>
+                    <p>Optimized for Apple Silicon with Metal GPU acceleration. Lightning-fast AI responses.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trust Section -->
+    <section class="trust">
+        <div class="container">
+            <h2 class="section-title" style="margin-bottom: 20px;">Why Trust OffNotes?</h2>
+            <p style="font-size: 18px; color: #666; max-width: 800px; margin: 0 auto 40px;">
+                We know trust is hard with closed-source software. Here's how we earn it:
+            </p>
+            <div class="trust-badges">
+                <div class="trust-badge">
+                    <div class="trust-badge-icon">🛡️</div>
+                    <h4>VirusTotal Verified</h4>
+                    <p>Scanned by 60+ antivirus engines</p>
+                </div>
+                <div class="trust-badge">
+                    <div class="trust-badge-icon">🔒</div>
+                    <h4>100% Offline</h4>
+                    <p>No data collection or tracking</p>
+                </div>
+                <div class="trust-badge">
+                    <div class="trust-badge-icon">✓</div>
+                    <h4>SHA-256 Verified</h4>
+                    <p>Checksums published with every release</p>
+                </div>
+                <div class="trust-badge">
+                    <div class="trust-badge-icon">🆓</div>
+                    <h4>Try Before You Buy</h4>
+                    <p>Free tier with full AI features</p>
+                </div>
+                <div class="trust-badge">
+                    <div class="trust-badge-icon">↩️</div>
+                    <h4>14-Day Refund</h4>
+                    <p>Money-back guarantee, no questions</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="pricing">
+        <div class="container">
+            <h2 class="section-title">Simple Pricing</h2>
+            <div class="pricing-cards">
+                <!-- Free Plan -->
+                <div class="pricing-card">
+                    <div class="plan-name">Free</div>
+                    <div class="plan-price">$0</div>
+                    <ul class="plan-features">
+                        <li><span class="check-icon">✓</span> TinyLlama 1.1B model</li>
+                        <li><span class="check-icon">✓</span> AI autocomplete</li>
+                        <li><span class="check-icon">✓</span> Summaries & translation</li>
+                        <li><span class="check-icon">✓</span> Semantic search</li>
+                        <li><span class="check-icon">✓</span> Unlimited notes</li>
+                        <li><span class="cross-icon">✗</span> Premium AI models</li>
+                        <li><span class="cross-icon">✗</span> Custom prompts</li>
+                    </ul>
+                    <a href="#download" class="btn btn-primary">Download Free</a>
+                </div>
+
+                <!-- Pro Plan -->
+                <div class="pricing-card featured">
+                    <div class="plan-name">Pro</div>
+                    <div class="plan-price">$14.99 <span>one-time</span></div>
+                    <ul class="plan-features">
+                        <li><span class="check-icon">✓</span> Everything in Free</li>
+                        <li><span class="check-icon">✓</span> 8 premium AI models</li>
+                        <li><span class="check-icon">✓</span> Download any model</li>
+                        <li><span class="check-icon">✓</span> Custom prompt editing</li>
+                        <li><span class="check-icon">✓</span> Better AI quality</li>
+                        <li><span class="check-icon">✓</span> Future model updates</li>
+                        <li><span class="check-icon">✓</span> Lifetime access</li>
+                    </ul>
+                    <a href="https://offnotes.lemonsqueezy.com/checkout" class="btn btn-primary">Upgrade to Pro</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Download Section -->
+    <section id="download" class="download">
+        <div class="container">
+            <h2 class="section-title">Download OffNotes</h2>
+            <p class="download-info">
+                OffNotes is a native macOS app optimized for Apple Silicon (M1/M2/M3/M4).
+                Download the latest version and start taking private, AI-powered notes today.
+            </p>
+            <div class="cta-buttons">
+                <a href="download.html" class="btn btn-primary">
+                    Download OffNotes.dmg
+                </a>
+            </div>
+
+            <p style="margin-top: 30px; color: #999; font-size: 16px;">
+                🛡️ <a href="https://www.virustotal.com/gui/file/YOUR_VIRUSTOTAL_LINK" target="_blank" rel="noopener"
+                    style="color: #007AFF; text-decoration: none;">VirusTotal Scan</a> •
+                📋 <a href="download.html#verify" style="color: #007AFF; text-decoration: none;">Verify Checksum</a> •
+                🔒 <a href="download.html#privacy" style="color: #007AFF; text-decoration: none;">Privacy Policy</a>
+            </p>
+
+            <div class="system-requirements">
+                <h3>System Requirements</h3>
+                <ul>
+                    <li>macOS 13.0 (Ventura) or later</li>
+                    <li>Apple Silicon (M1/M2/M3/M4) recommended</li>
+                    <li>4 GB RAM minimum (8 GB+ recommended)</li>
+                    <li>1 GB disk space (+ space for additional models)</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 OffNotes. All rights reserved.</p>
+            <p style="margin-top: 10px;">
+                <a href="download.html">Download</a> •
+                <a href="download.html#privacy">Privacy</a> •
+                <a href="mailto:support@offnotes.app">Support</a>
+            </p>
+            <p style="margin-top: 20px; font-size: 14px; opacity: 0.7;">
+                🔒 100% Offline • No Data Collection • No Tracking
+            </p>
+        </div>
+    </footer>
+</body>
+
+</html>

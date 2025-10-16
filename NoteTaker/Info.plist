@@ -22,11 +22,11 @@
 
 	<!-- Display Name -->
 	<key>CFBundleDisplayName</key>
-	<string>NoteTaker</string>
+	<string>OffNotes</string>
 
 	<!-- Copyright & Credits -->
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2024 NoteTaker. All rights reserved.</string>
+	<string>Copyright © 2024 OffNotes. All rights reserved.</string>
 
 	<!-- Minimum System Version -->
 	<key>LSMinimumSystemVersion</key>
@@ -43,14 +43,14 @@
 	<!-- Privacy - Usage Descriptions -->
 	<!-- Note: Currently app is fully local, but adding these for future features -->
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>NoteTaker downloads AI models from the internet to provide local, private AI features. No user data is uploaded.</string>
+	<string>OffNotes downloads AI models from the internet to provide local, private AI features. No user data is uploaded.</string>
 
 	<!-- Document Types (for future file association) -->
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
 			<key>CFBundleTypeName</key>
-			<string>NoteTaker Document</string>
+			<string>OffNotes Document</string>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>LSHandlerRank</key>
@@ -70,7 +70,7 @@
 			<key>NSMessage</key>
 			<string>createNoteFromService</string>
 			<key>NSPortName</key>
-			<string>NoteTaker</string>
+			<string>OffNotes</string>
 			<key>NSSendTypes</key>
 			<array>
 				<string>NSStringPboardType</string>
@@ -124,17 +124,17 @@
 
 	<!-- Application Features Description -->
 	<key>NSHumanReadableDescription</key>
-	<string>AI-powered note-taking app with local processing. Features include intelligent autocomplete, summarization, translation, and semantic search - all running privately on your Mac.</string>
+	<string>Offline AI-powered note-taking for Mac. Features intelligent autocomplete, summarization, translation, and semantic search - all running privately on your device with portable LLMs.</string>
 
 	<!-- URL Schemes (for future deep linking) -->
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>com.notetaker.url</string>
+			<string>com.offnotes.url</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>notetaker</string>
+				<string>offnotes</string>
 			</array>
 		</dict>
 	</array>

@@ -27,11 +27,11 @@ struct UpgradePromptView: View {
         var description: String {
             switch self {
             case .modelSwitching:
-                return "Get access to Phi-3, Qwen 2.5, Llama 3.2, and more premium models for better AI quality."
+                return "Get access to Phi-3, Qwen 2.5, Llama 3.2, and 5 more premium models for better AI quality."
             case .promptEditing:
                 return "Customize how the AI responds to your needs. Fine-tune prompts for perfect results."
             case .general:
-                return "Unlock all premium AI models and advanced customization options."
+                return "Download premium AI models and customize prompts to match your workflow."
             }
         }
 
@@ -39,7 +39,7 @@ struct UpgradePromptView: View {
             switch self {
             case .modelSwitching: return "cpu.fill"
             case .promptEditing: return "text.alignleft"
-            case .general: return "star.fill"
+            case .general: return "bolt.fill"
             }
         }
     }
@@ -80,11 +80,11 @@ struct UpgradePromptView: View {
                     .font(.headline)
                     .padding(.bottom, 4)
 
-                FeatureRow(icon: "cpu.fill", text: "All Premium AI Models", subtitle: "Phi-3, Qwen 2.5, Llama 3.2 & more")
-                FeatureRow(icon: "text.alignleft", text: "Custom Prompt Editing", subtitle: "Fine-tune AI responses")
-                FeatureRow(icon: "sparkles", text: "Better AI Quality", subtitle: "Larger models = smarter results")
+                FeatureRow(icon: "cpu.fill", text: "8 Premium AI Models", subtitle: "Phi-3, Qwen 2.5, Llama 3.2, Gemma 2 & more")
                 FeatureRow(icon: "arrow.down.circle.fill", text: "Download Any Model", subtitle: "Switch between models anytime")
-                FeatureRow(icon: "gift.fill", text: "Future Updates", subtitle: "All new AI features included")
+                FeatureRow(icon: "sparkles", text: "Better AI Quality", subtitle: "Larger models = smarter results")
+                FeatureRow(icon: "text.alignleft", text: "Custom Prompt Editing", subtitle: "Fine-tune all AI responses")
+                FeatureRow(icon: "gift.fill", text: "Future Model Updates", subtitle: "New models added regularly")
             }
             .padding()
 
@@ -93,7 +93,7 @@ struct UpgradePromptView: View {
             // Pricing
             VStack(spacing: 8) {
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text("$29")
+                    Text("$14.99")
                         .font(.system(size: 36, weight: .bold))
                     Text("one-time")
                         .font(.subheadline)
@@ -117,8 +117,8 @@ struct UpgradePromptView: View {
                 .buttonStyle(.bordered)
 
                 Button(action: {
-                    // Open Gumroad purchase page
-                    openGumroadPage()
+                    // Open LemonSqueezy purchase page
+                    openLemonSqueezyPage()
                     AnalyticsManager.shared.trackEvent(.upgradeButtonClicked)
                 }) {
                     HStack {
@@ -149,10 +149,11 @@ struct UpgradePromptView: View {
         .shadow(radius: 20)
     }
 
-    private func openGumroadPage() {
-        // TODO: Replace with your actual Gumroad product URL
-        let gumroadURL = "https://notetaker.gumroad.com/l/notetaker-pro"
-        if let url = URL(string: gumroadURL) {
+    private func openLemonSqueezyPage() {
+        // DEV_TODO: Replace with your actual LemonSqueezy checkout URL
+        // Get this from your LemonSqueezy dashboard after creating the product
+        let checkoutURL = "https://offnotes.lemonsqueezy.com/checkout/buy/DEV_VARIANT_ID"
+        if let url = URL(string: checkoutURL) {
             NSWorkspace.shared.open(url)
         }
     }
@@ -217,7 +218,7 @@ struct LicenseActivationView: View {
                         .font(.title2)
                         .fontWeight(.bold)
 
-                    Text("Enter your license key from Gumroad")
+                    Text("Enter your license key from your purchase email")
                         .font(.body)
                         .foregroundColor(.secondary)
                 }
@@ -287,7 +288,7 @@ struct LicenseActivationView: View {
                     }
 
                     #if DEBUG
-                    Text("Debug: Use 'TEST-XXXX-XXXX-XXXX' with any email")
+                    Text("Debug: Use email 'admin' and key 'test'")
                         .font(.caption)
                         .foregroundColor(.orange)
                     #endif
@@ -327,23 +328,59 @@ struct LicenseActivationView: View {
     }
 
     private func activateLicense() {
+        // Validate inputs first
+        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedKey = licenseKey.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if trimmedEmail.isEmpty {
+            errorMessage = "Please enter your email address."
+            return
+        }
+
+        if trimmedKey.isEmpty {
+            errorMessage = "Please enter your license key."
+            return
+        }
+
+        // Email validation - allow test credentials in DEBUG mode
+        #if DEBUG
+        let isTestCredential = trimmedEmail.lowercased() == "admin" && trimmedKey.lowercased() == "test"
+        if !trimmedEmail.contains("@") && !isTestCredential {
+            errorMessage = "Please enter a valid email address."
+            return
+        }
+        #else
+        if !trimmedEmail.contains("@") {
+            errorMessage = "Please enter a valid email address."
+            return
+        }
+        #endif
+
         isValidating = true
         errorMessage = nil
 
         Task {
-            let success = await licenseManager.validateLicense(key: licenseKey, email: email)
+            do {
+                let success = await licenseManager.validateLicense(key: trimmedKey, email: trimmedEmail)
 
-            await MainActor.run {
-                isValidating = false
+                await MainActor.run {
+                    isValidating = false
 
-                if success {
-                    showSuccess = true
-                    // Auto-dismiss after 2 seconds
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                        isPresented = false
+                    if success {
+                        showSuccess = true
+                        // Auto-dismiss after 2 seconds
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                            isPresented = false
+                        }
+                    } else {
+                        errorMessage = "Invalid license key or email. Please double-check your purchase email and license key, then try again."
                     }
-                } else {
-                    errorMessage = "Invalid license key. Please check your email and try again."
+                }
+            } catch {
+                await MainActor.run {
+                    isValidating = false
+                    errorMessage = "An error occurred while validating your license. Please try again. Error: \(error.localizedDescription)"
+                    print("❌ License validation error: \(error)")
                 }
             }
         }

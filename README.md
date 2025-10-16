@@ -1,371 +1,326 @@
-# NoteTaker Quick Start Guide
+# OffNotes
 
-Get NoteTaker up and running in 5 minutes.
+**Privacy-first note-taking with offline AI for Mac**
 
-## Prerequisites Checklist
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Platform](https://img.shields.io/badge/platform-macOS%2013.0+-lightgrey.svg)
+![Swift](https://img.shields.io/badge/Swift-5.9-orange.svg)
 
-- [ ] macOS 13.0+ (Ventura or later)
-- [ ] Xcode 15.0+
-- [ ] Apple Silicon Mac (M1/M2/M3)
-- [ ] ~5GB free disk space (for model + build artifacts)
+OffNotes is a native macOS note-taking app that runs AI models completely offline on your device. No cloud, no tracking, no data collection. Everything stays on your Mac.
 
-## 5-Minute Setup
+🔒 **100% Private** • ✨ **AI Autocomplete** • 📝 **Instant Summaries** • 🌍 **Translate to 12+ Languages** • 🔍 **Semantic Search**
 
-### Step 1: Open the Project (30 seconds)
-
-```bash
-cd /Users/projects/Documents/notetaker
-open NoteTaker.xcodeproj
-```
-
-Wait for Xcode to open and index the project.
-
-### Step 2: Build the App (1 minute)
-
-In Xcode:
-
-1. Select the **NoteTaker** scheme (top left)
-2. Press **Cmd+B** to build
-3. Wait for build to complete (should succeed)
-
-### Step 3: Run Without AI (30 seconds)
-
-1. Press **Cmd+R** to run the app
-2. You should see an empty notes interface
-3. Click "New Note" and start typing
-4. Basic note-taking works, but AI features are mocked
-
-**You now have a working note-taking app!**
-
-### Step 4: One-Command Setup (3-5 minutes)
-
-To enable real AI features with **automated setup**:
-
-```bash
-# Run the automated setup script
-./scripts/setup-dev.sh
-```
-
-This script will:
-
-- ✅ Check prerequisites (Xcode, CMake, Git)
-- ✅ Clone and build llama.cpp with Metal support
-- ✅ Create Swift-C++ bridging header
-- ✅ Download TinyLlama model (~669MB)
-- ✅ Verify everything is ready
-
-**OR Manual Setup** (if you prefer):
-
-```bash
-# Download TinyLlama model (669MB)
-curl -L -o tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf \
-  https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
-
-# Create models directory
-mkdir -p ~/Library/Application\ Support/NoteTaker/Models
-
-# Move model
-mv tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf ~/Library/Application\ Support/NoteTaker/Models/
-
-# Clone and build llama.cpp
-cd /Users/projects/Documents/notetaker
-git clone https://github.com/ggerganov/llama.cpp.git
-cd llama.cpp
-mkdir build && cd build
-cmake .. -DLLAMA_METAL=ON
-cmake --build . --config Release
-```
-
-### Step 5: Configure Xcode Build Settings
-
-After running the setup script, configure Xcode (one-time):
-
-See [LLAMA_CPP_INTEGRATION.md](LLAMA_CPP_INTEGRATION.md) Step 2 for details.
-
-**Quick version:**
-
-1. Open `NoteTaker.xcodeproj`
-2. Select NoteTaker target → Build Settings
-3. Set:
-   - **Bridging Header**: `$(SRCROOT)/NoteTaker/NoteTaker-Bridging-Header.h`
-   - **Header Search Paths**: `$(SRCROOT)/llama.cpp` and `$(SRCROOT)/llama.cpp/common`
-   - **Library Search Paths**: `$(SRCROOT)/llama.cpp/build/src`
-   - **Other Linker Flags**: `-lllama -lc++`
-
-## What Works Now?
-
-### ✅ Without AI Integration (Mock Mode)
-
-- ✅ Create, edit, delete notes
-- ✅ Search notes by keyword
-- ✅ Note list with previews
-- ✅ Automatic timestamps
-- ✅ Core Data persistence
-- ⚠️ AI features return mock data
-
-### ✅ With Full AI Integration
-
-- ✅ Real-time autocomplete while typing
-- ✅ Note summarization (one-click)
-- ✅ Semantic search (find notes by meaning)
-- ✅ Embedding generation
-- ✅ <3GB memory usage
-- ✅ Offline, local inference
-
-## First Use Tutorial
-
-### Create Your First Note
-
-1. **Launch app**: Press Cmd+R in Xcode
-2. **New note**: Click "New Note" or press Cmd+N
-3. **Type content**: Start typing in the editor
-4. **Auto-save**: Changes save automatically
-
-### Try Search
-
-1. **Type in search bar**: Top of sidebar
-2. **See results**: Notes filtered in real-time
-3. **Click result**: Opens note in editor
-
-### Generate Summary (with AI)
-
-1. **Write a long note**: At least 50 characters
-2. **Click "Summarize"**: Sparkles button at bottom
-3. **Wait 2-3 seconds**: Progress indicator shows
-4. **See summary**: Appears in bottom toolbar
-
-### Try Autocomplete (with AI)
-
-1. **Type at least 10 characters**: In editor
-2. **Pause typing for 500ms**: Wait for typing pause (new: reduces overhead)
-3. **See suggestion**: Ghost text appears inline after cursor
-4. **Accept**: Press **Tab**
-5. **Dismiss**: Press **Esc** or just keep typing
-
-### Index Notes for Semantic Search (with AI)
-
-1. **Click "Index Notes"**: Toolbar button
-2. **Wait**: Embeddings generate in background
-3. **Search semantically**: Type concept, not keyword
-4. **See results**: Ranked by relevance
-
-## Common Commands
-
-### Clean Build
-
-```bash
-xcodebuild -project NoteTaker.xcodeproj -scheme NoteTaker clean && xcodebuild -project NoteTaker.xcodeproj -scheme NoteTaker build && cd /Users/projects/Library/Developer/Xcode/DerivedData/NoteTaker-*/Build/Products/Debug && ./NoteTaker.app/Contents/MacOS/NoteTaker 2>&1
-
-# Or just open the app (from anywhere)
-open /Users/projects/Library/Developer/Xcode/DerivedData/NoteTaker-*/Build/Products/Debug/NoteTaker.app
-```
-
-**Tip**: Running from terminal shows debug output including:
-
-- Model loading progress
-- Metal GPU initialization
-- Token generation logs
-- Memory usage stats
-- Error messages with stack traces
-
-## Testing the Project
-
-### Manual Tests
-
-Test these features to verify everything works:
-
-**Basic Functionality**:
-
-- [ ] Create note (Cmd+N)
-- [ ] Edit note content
-- [ ] Auto-generate title from first line
-- [ ] Delete note (right-click → Delete)
-- [ ] Search by keyword
-
-**UI/UX**:
-
-- [ ] Three-column layout renders
-- [ ] Sidebar shows note list
-- [ ] Editor shows selected note
-- [ ] Search bar filters notes
-- [ ] Empty state shows when no notes
-
-**AI Features** (requires llama.cpp):
-
-- [ ] Model loads on launch (check toolbar indicator)
-- [ ] Autocomplete appears after typing
-- [ ] Summary generates on button click
-- [ ] Semantic search finds relevant notes
-- [ ] Memory stays under 3GB
-
-### Performance Benchmarks
-
-Expected performance on M1 Mac:
-
-| Operation | Target | Actual |
-|-----------|--------|--------|
-| App launch | <2s | ? |
-| Model load | <3s | ? |
-| Create note | <100ms | ? |
-| Autocomplete | <500ms | ? |
-| Summarization | <3s | ? |
-| Embedding | <300ms | ? |
-| Search (1k notes) | <500ms | ? |
-
-Run these and note your results!
-
-## Troubleshooting
-
-### App Won't Build
-
-**Error**: Various build errors
-
-**Solution**:
-
-1. Clean build folder: Cmd+Shift+K
-2. Restart Xcode
-3. Check Xcode version (need 15.0+)
-4. Verify macOS version (need 13.0+)
-
-### Model Not Loading
-
-**Error**: "Failed to load AI model: modelNotFound"
-
-**Root Cause**: App sandboxing prevents access to files outside the app container.
-
-**Solution**: See [TROUBLESHOOTING_AI_MODEL.md](TROUBLESHOOTING_AI_MODEL.md) for detailed fix.
-
-**Quick Fix** (Development only):
-
-1. Sandboxing has been disabled in `NoteTaker.entitlements`
-2. Rebuild: `xcodebuild clean build`
-3. Run from Xcode to see debug logs
-4. Verify model exists:
-
-   ```bash
-   ls -lh ~/Library/Application\ Support/NoteTaker/Models/
-   ```
-
-5. Should see ~669MB `tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf` file
-
-### AI Features Don't Work
-
-**Symptom**: Autocomplete/summary return placeholder text
-
-**Reason**: llama.cpp not integrated (mock mode active)
-
-**Solution**: Follow [LLAMA_CPP_INTEGRATION.md](LLAMA_CPP_INTEGRATION.md)
-
-### High Memory Usage
-
-**Symptom**: Activity Monitor shows >3GB
-
-**Solution**:
-
-1. Check model quantization (should be Q4, not FP16)
-2. Reduce context size to 1024 in `LLMInferenceService.swift`
-3. Click "Index Notes" only when needed
-4. Restart app to clear caches
-
-## Project Structure Overview
-
-```text
-NoteTaker/
-├── NoteTaker.xcodeproj/        # Xcode project
-├── NoteTaker/
-│   ├── NoteTakerApp.swift      # App entry point
-│   ├── Views/                  # SwiftUI UI layer
-│   ├── ViewModels/             # Business logic
-│   ├── Models/                 # Core Data schema
-│   ├── AI/                     # AI services
-│   ├── Storage/                # Persistence
-│   └── Search/                 # Semantic search
-├── README.md                   # Full documentation
-├── ARCHITECTURE.md             # Technical deep-dive
-├── LLAMA_CPP_INTEGRATION.md    # AI integration guide
-└── QUICKSTART.md               # This file
-```
-
-## Next Steps
-
-1. **Read [README.md](README.md)**: Full feature documentation
-2. **Read [ARCHITECTURE.md](ARCHITECTURE.md)**: Understand the design
-3. **Integrate AI**: Follow [LLAMA_CPP_INTEGRATION.md](LLAMA_CPP_INTEGRATION.md)
-4. **Customize**: Add your own AI features
-5. **Deploy**: Build for release and distribute
-
-## Development Tips
-
-### Xcode Shortcuts
-
-- **Cmd+N**: New note (when app is running)
-- **Cmd+B**: Build project
-- **Cmd+R**: Run app
-- **Cmd+.**: Stop app
-- **Cmd+Shift+K**: Clean build folder
-- **Cmd+F**: Find in file
-- **Cmd+Shift+F**: Find in project
-
-### Debugging
-
-**View Console Output**:
-
-1. Run app (Cmd+R)
-2. Open Debug Area (Cmd+Shift+Y)
-3. Watch for log messages (marked with emoji)
-
-**Check Memory Usage**:
-
-1. Open Activity Monitor
-2. Filter for "NoteTaker"
-3. Watch Memory column
-
-**Profile Performance**:
-
-1. Product → Profile (Cmd+I)
-2. Choose Instruments template
-3. Record and analyze
-
-### Code Navigation
-
-**Find by filename**:
-
-- Press **Cmd+Shift+O**
-- Type filename
-- Press Enter
-
-**Jump to definition**:
-
-- Cmd+Click on symbol
-- Or right-click → Jump to Definition
-
-**Find references**:
-
-- Right-click symbol
-- Select "Find Call Hierarchy"
-
-## Getting Help
-
-- **Documentation**: Read [README.md](README.md)
-- **Architecture**: Read [ARCHITECTURE.md](ARCHITECTURE.md)
-- **AI Integration**: Read [LLAMA_CPP_INTEGRATION.md](LLAMA_CPP_INTEGRATION.md)
-- **llama.cpp**: <https://github.com/ggerganov/llama.cpp>
-- **TinyLlama**: <https://github.com/jzhang38/TinyLlama>
-
-## Contributing
-
-To extend NoteTaker:
-
-1. **Add new AI service**: Create file in `AI/` folder
-2. **Add to AIEngine**: Register in `AIEngine.swift`
-3. **Add UI**: Create button/view in appropriate view
-4. **Test**: Verify memory usage stays <3GB
-5. **Document**: Update README with your feature
-
-Example template: See "Adding New AI Features" section in [README.md](README.md).
+**[Download Latest Release](https://github.com/YOUR_USERNAME/offnotes/releases/latest)** | **[Documentation](https://YOUR_USERNAME.github.io/offnotes/)** | **[Upgrade to Pro ($14.99)](https://offnotes.lemonsqueezy.com/checkout)**
 
 ---
 
-**You're ready to build!** 🚀
+## ✨ Features
 
-Open NoteTaker.xcodeproj and press Cmd+R to start.
+### Free Tier (Forever)
+- ✅ **AI Autocomplete** - Smart text completion powered by TinyLlama 1.1B
+- ✅ **Summarization** - Get quick summaries of long notes
+- ✅ **Translation** - Translate to English, Spanish, French, German, Chinese, Japanese, Korean, and more
+- ✅ **Semantic Search** - Find notes by meaning, not just keywords
+- ✅ **Unlimited Notes** - No limits on note count or storage
+- ✅ **100% Offline** - All AI processing happens locally
+- ✅ **Privacy-First** - Zero telemetry, no cloud sync, no data collection
+
+### Pro Tier ($14.99 one-time)
+- 🚀 **8 Premium AI Models** - Phi-3, Qwen 2.5, Llama 3.2, Gemma 2, SmolLM2 & more
+- 📥 **Download Any Model** - Switch between models anytime
+- ✏️ **Custom Prompts** - Fine-tune all AI responses to your needs
+- ⚡ **Better Quality** - Larger models = smarter, more accurate results
+- 🎁 **Future Updates** - New models added regularly
+- 💎 **Lifetime Access** - Pay once, own forever
+
+---
+
+## 🎯 Why OffNotes?
+
+| Feature | OffNotes | Cloud-Based Apps |
+|---------|----------|------------------|
+| **Privacy** | 100% offline | ❌ Data sent to servers |
+| **AI Features** | ✅ Local models | ⚠️ Requires internet |
+| **Speed** | ⚡ Instant | 🐌 Network latency |
+| **Cost** | $0-$14.99 one-time | 💸 $10-20/month |
+| **Data Security** | 🔒 Never leaves your Mac | ⚠️ Stored in cloud |
+| **Works Offline** | ✅ Always | ❌ Internet required |
+
+---
+
+## 📦 Installation
+
+### Requirements
+- **macOS 13.0** (Ventura) or later
+- **Apple Silicon** (M1/M2/M3/M4) recommended
+- **4 GB RAM** minimum (8 GB+ recommended)
+- **1 GB disk space** (+ more for premium models)
+
+### Download
+
+1. Download the latest DMG from [Releases](https://github.com/YOUR_USERNAME/offnotes/releases/latest)
+2. Open `OffNotes.dmg`
+3. Drag **OffNotes** to Applications folder
+4. Open OffNotes from Applications
+
+### First Launch
+
+On first launch, macOS may show a security warning. To open:
+1. Right-click OffNotes in Applications
+2. Select "Open" from the menu
+3. Click "Open" in the dialog
+
+Or: System Settings → Privacy & Security → "Open Anyway"
+
+**Full installation guide:** [docs/download.html](https://YOUR_USERNAME.github.io/offnotes/download.html)
+
+---
+
+## 🚀 Getting Started
+
+### Basic Usage
+
+1. **Create a Note** - Click "+" or press `Cmd+N`
+2. **Start Typing** - AI autocomplete activates automatically
+3. **Accept Suggestions** - Press `Tab` to accept AI suggestions
+4. **Search Notes** - Use semantic search to find by meaning
+5. **AI Actions** - Right-click selected text for:
+   - Summarize
+   - Translate
+   - Patch (grammar/spelling fix)
+   - Reformulate (rewrite)
+
+### Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Cmd+N` | New note |
+| `Cmd+F` | Search notes |
+| `Cmd+,` | Settings |
+| `Tab` | Accept AI suggestion |
+| `Esc` | Dismiss suggestion |
+| `Cmd+K` | Semantic search |
+
+---
+
+## 🤖 AI Models
+
+### Included (Free)
+- **TinyLlama 1.1B** - Lightweight, fast, perfect for autocomplete and embeddings
+
+### Pro Models ($14.99)
+| Model | Size | Speed | Quality | Best For |
+|-------|------|-------|---------|----------|
+| **Llama 3.2 1B** | 0.7 GB | Very Fast | Basic+ | Quick tasks |
+| **Qwen 2.5 1.5B** | 0.9 GB | Very Fast | Good | Balanced performance |
+| **SmolLM2 1.7B** | 1.0 GB | Very Fast | Good | Instruction following |
+| **Phi-2 2.7B** | 1.6 GB | Very Fast | Good+ | Reasoning tasks |
+| **Gemma 2 2B** | 1.4 GB | Very Fast | High | High quality |
+| **Qwen 2.5 3B** | 2.0 GB | Fast | High | Complex tasks |
+| **Llama 3.2 3B** | 2.0 GB | Fast | Very High | Multilingual |
+| **Phi-3.5 Mini** | 2.3 GB | Fast | Very High | Best quality |
+
+All models run with **Metal GPU acceleration** on Apple Silicon for maximum performance.
+
+---
+
+## ⚙️ Configuration
+
+### AI Settings
+
+1. Open **Settings** → **AI Settings**
+2. **Change Model** (Pro only):
+   - Click "Download" next to any premium model
+   - After download, click "Use This"
+3. **Customize Prompts** (Pro only):
+   - Edit prompts for autocomplete, summarization, translation, etc.
+   - Reset to defaults anytime
+
+### Storage Location
+
+- **Notes Database**: `~/Library/Application Support/NoteTaker/notes.sqlite`
+- **Downloaded Models**: `~/Library/Application Support/NoteTaker/Models/`
+- **Logs**: `~/Library/Logs/NoteTaker/`
+
+---
+
+## 💻 Technical Details
+
+### Architecture
+
+- **UI Framework**: SwiftUI
+- **Database**: Core Data with SQLite
+- **AI Engine**: llama.cpp with Metal GPU acceleration
+- **Vector Search**: Local embeddings with cosine similarity
+- **Model Format**: GGUF (quantized, optimized for inference)
+
+### Privacy & Security
+
+- ✅ **No Network Requests** (except for optional model downloads)
+- ✅ **No Analytics** or telemetry
+- ✅ **No Crash Reporting** to external services
+- ✅ **Local Encryption** using macOS Keychain for license keys
+- ✅ **File Permissions** set to owner-only (0600)
+
+### Performance Optimizations
+
+- 🚀 **N+1 Query Prevention** via relationship prefetching
+- 🚀 **Vector Caching** with NSCache (90% memory reduction)
+- 🚀 **Search Result Caching** (5-minute TTL)
+- 🚀 **Core Data Indexes** on frequently queried fields
+- 🚀 **Batch Operations** for bulk updates
+- 🚀 **Metal GPU Acceleration** for inference
+
+---
+
+## 🛠️ Development
+
+### Build Requirements
+
+- **Xcode 15.0+**
+- **macOS 14.0+** (for development)
+- **Swift 5.9+**
+
+### Building from Source
+
+```bash
+# Clone the repository
+git clone https://github.com/YOUR_USERNAME/offnotes.git
+cd offnotes
+
+# Initialize llama.cpp submodule
+git submodule update --init --recursive
+
+# Build llama.cpp
+cd llama.cpp
+cmake -B build -DGGML_METAL=ON
+cmake --build build --config Release
+
+# Open in Xcode
+cd ..
+open NoteTaker.xcodeproj
+
+# Run in Xcode
+# Product → Run (Cmd+R)
+```
+
+### Project Structure
+
+```
+NoteTaker/
+├── AI/                    # AI engine & inference
+│   ├── AIEngine.swift
+│   ├── LLMInferenceService.swift
+│   └── AutocompleteService.swift
+├── Models/                # Core Data models
+│   ├── Note.swift
+│   └── NotesDataModel.xcdatamodeld
+├── Views/                 # SwiftUI views
+│   ├── ContentView.swift
+│   ├── AISettingsView.swift
+│   └── UpgradePromptView.swift
+├── Search/                # Semantic search
+│   └── SemanticSearchEngine.swift
+├── Managers/              # Licensing, analytics
+│   ├── LicenseManager.swift
+│   └── AnalyticsManager.swift
+└── Utilities/             # Helpers
+    ├── Logger.swift
+    └── SystemMonitor.swift
+```
+
+### Running Tests
+
+```bash
+# Unit tests
+xcodebuild test -scheme NoteTaker -destination 'platform=macOS'
+
+# Or in Xcode
+# Product → Test (Cmd+U)
+```
+
+---
+
+## 📈 Roadmap
+
+### v1.1 (Next Release)
+- [ ] iCloud sync (optional, end-to-end encrypted)
+- [ ] Export notes to Markdown/PDF
+- [ ] Note linking and backlinks
+- [ ] Tags and folders
+
+### v1.2
+- [ ] Voice notes with Whisper (local transcription)
+- [ ] Image OCR
+- [ ] Code syntax highlighting
+- [ ] Plugin system
+
+### v2.0
+- [ ] iOS/iPadOS version
+- [ ] Collaborative editing
+- [ ] Advanced search filters
+- [ ] Custom themes
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Here's how you can help:
+
+### Ways to Contribute
+
+- 🐛 **Report bugs** via [GitHub Issues](https://github.com/YOUR_USERNAME/offnotes/issues)
+- 💡 **Suggest features** in Discussions
+- 📝 **Improve documentation**
+- 🔧 **Submit pull requests**
+- 🌍 **Translate the app** to other languages
+
+### Development Guidelines
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+---
+
+## 📄 License
+
+OffNotes is open source under the MIT License. See [LICENSE](LICENSE) for details.
+
+**TL;DR:** You can use, modify, and distribute this software freely, including for commercial purposes.
+
+---
+
+## 🙏 Acknowledgments
+
+OffNotes is built with these amazing open-source projects:
+
+- [llama.cpp](https://github.com/ggerganov/llama.cpp) - LLM inference in C/C++
+- [TinyLlama](https://github.com/jzhang38/TinyLlama) - Compact 1.1B parameter model
+- [Qwen2.5](https://github.com/QwenLM/Qwen2.5) - High-quality small models
+- [Phi-3](https://huggingface.co/microsoft/phi-3-mini-128k-instruct) - Microsoft's reasoning model
+- [Llama 3.2](https://ai.meta.com/llama/) - Meta's latest small models
+
+---
+
+## 📞 Support
+
+- **Website**: https://YOUR_USERNAME.github.io/offnotes/
+- **Email**: support@offnotes.app
+- **GitHub Issues**: https://github.com/YOUR_USERNAME/offnotes/issues
+
+---
+
+## ⭐ Star History
+
+If you find OffNotes useful, please consider starring the repository!
+
+[![Star History Chart](https://api.star-history.com/svg?repos=YOUR_USERNAME/offnotes&type=Date)](https://star-history.com/#YOUR_USERNAME/offnotes&Date)
+
+---
+
+**Made with ❤️ for privacy-conscious note-takers**
+
+[Download](https://YOUR_USERNAME.github.io/offnotes/) • [Website](https://YOUR_USERNAME.github.io/offnotes/) • [Upgrade to Pro](https://offnotes.lemonsqueezy.com/checkout)

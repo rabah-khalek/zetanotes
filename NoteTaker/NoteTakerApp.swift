@@ -19,12 +19,16 @@ struct NoteTakerApp: App {
     // License Manager - handles Pro features
     @StateObject private var licenseManager = LicenseManager.shared
 
+    // Appearance preference
+    @AppStorage("preferredAppearance") private var preferredAppearance: String = "auto"
+
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environment(\.managedObjectContext, persistenceController.container.viewContext)
                 .environmentObject(aiEngine)
                 .frame(minWidth: 800, minHeight: 600)
+                .preferredColorScheme(colorScheme)
         }
         .commands {
             // Add custom menu commands
@@ -37,6 +41,17 @@ struct NoteTakerApp: App {
         }
         .windowStyle(.hiddenTitleBar)
         .windowToolbarStyle(.unified)
+    }
+
+    private var colorScheme: ColorScheme? {
+        switch preferredAppearance {
+        case "light":
+            return .light
+        case "dark":
+            return .dark
+        default:
+            return nil // Auto - follows system
+        }
     }
 }
 

@@ -8,6 +8,7 @@
 import Foundation
 import CoreData
 import Combine
+import SwiftUI
 
 /// ViewModel managing note state and AI operations
 /// Bridges UI layer with data and AI services
@@ -42,6 +43,8 @@ class NoteViewModel: ObservableObject {
     @Published var isAutoCorrecting = false
     @Published var isReformulating = false
     @Published var isAutocompleteEnabled = true
+    @Published var isExecutingCustomService = false
+    @Published var executingCustomServiceId: UUID? = nil
 
     // AI Prompt Customization
     @Published var autocompletePrompt = DefaultPrompts.autocomplete
@@ -328,7 +331,8 @@ class NoteViewModel: ObservableObject {
                     summary: summaryBlock,
                     translation: sections.translationBlock,
                     autoCorrect: sections.autoCorrectedBlock,
-                    reformulated: sections.reformulatedBlock
+                    reformulated: sections.reformulatedBlock,
+                    customServices: sections.customServiceBlocks
                 )
                 self.saveNote(note)
                 self.isGeneratingSummary = false
@@ -373,7 +377,8 @@ class NoteViewModel: ObservableObject {
                     summary: sections.summaryBlock,
                     translation: translationBlock,
                     autoCorrect: sections.autoCorrectedBlock,
-                    reformulated: sections.reformulatedBlock
+                    reformulated: sections.reformulatedBlock,
+                    customServices: sections.customServiceBlocks
                 )
                 self.saveNote(note)
                 self.isTranslating = false
@@ -411,7 +416,8 @@ class NoteViewModel: ObservableObject {
                     summary: sections.summaryBlock,
                     translation: sections.translationBlock,
                     autoCorrect: correctedBlock,
-                    reformulated: sections.reformulatedBlock
+                    reformulated: sections.reformulatedBlock,
+                    customServices: sections.customServiceBlocks
                 )
                 self.saveNote(note)
                 self.isAutoCorrecting = false
@@ -449,7 +455,8 @@ class NoteViewModel: ObservableObject {
                     summary: sections.summaryBlock,
                     translation: sections.translationBlock,
                     autoCorrect: sections.autoCorrectedBlock,
-                    reformulated: reformulatedBlock
+                    reformulated: reformulatedBlock,
+                    customServices: sections.customServiceBlocks
                 )
                 self.saveNote(note)
                 self.isReformulating = false
@@ -499,6 +506,112 @@ class NoteViewModel: ObservableObject {
         await searchEngine.reindexNote(note)
     }
 
+    /// Execute a custom service on a note
+    func executeCustomService(_ service: CustomService, for note: Note) async {
+        guard let content = note.content, !content.isEmpty else { return }
+
+        let sections = extractContentSections(from: content)
+
+        await MainActor.run {
+            self.isExecutingCustomService = true
+            self.executingCustomServiceId = service.id
+        }
+
+        // Format prompt like other services: instruction + content + trigger
+        // The custom prompt is the instruction, followed by the content to process
+        let prompt = "\(service.prompt)\n\n\(sections.baseContent)\n\nResult:"
+
+        // Calculate dynamic max tokens based on input length (with buffer for potential expansion)
+        let estimatedInputTokens = sections.baseContent.count / 4 // Rough estimate: 1 token ≈ 4 chars
+        let maxTokens = min(max(estimatedInputTokens + 200, 300), 1024) // At least 300, at most 1024
+
+        let result = await aiEngine.llmService.generate(
+            prompt: prompt,
+            maxTokens: maxTokens,
+            temperature: 0.7
+        )
+
+        if let result = result, !result.isEmpty {
+            // Post-process the result to remove common unwanted prefixes/suffixes
+            let cleanedResult = cleanCustomServiceOutput(result)
+
+            if !cleanedResult.isEmpty {
+                await MainActor.run {
+                    let timestamp = self.generateTimestamp()
+                    let resultBlock = "\n\n--- \(service.name) (\(timestamp)) ---\n\n" + cleanedResult
+
+                    // Update custom service blocks, replacing existing block for this service
+                    var updatedCustomServices = sections.customServiceBlocks
+                    updatedCustomServices[service.name] = resultBlock
+
+                    // Reconstruct content with updated custom service block
+                    note.content = reconstructContent(
+                        base: sections.baseContent,
+                        summary: sections.summaryBlock,
+                        translation: sections.translationBlock,
+                        autoCorrect: sections.autoCorrectedBlock,
+                        reformulated: sections.reformulatedBlock,
+                        customServices: updatedCustomServices
+                    )
+                    self.saveNote(note)
+                    self.isExecutingCustomService = false
+                    self.executingCustomServiceId = nil
+                }
+            } else {
+                await MainActor.run {
+                    self.isExecutingCustomService = false
+                    self.executingCustomServiceId = nil
+                }
+            }
+        } else {
+            await MainActor.run {
+                self.isExecutingCustomService = false
+                self.executingCustomServiceId = nil
+            }
+        }
+    }
+
+    // MARK: - Custom Service Post-processing
+
+    private func cleanCustomServiceOutput(_ output: String) -> String {
+        var cleaned = output.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // Remove common unwanted prefixes
+        let prefixes = [
+            "Result:",
+            "Here is the result:",
+            "The result is:",
+            "Output:",
+            "Here is:",
+            "Here's the",
+            "Here's",
+            "result:"
+        ]
+
+        for prefix in prefixes {
+            if cleaned.lowercased().hasPrefix(prefix.lowercased()) {
+                cleaned = String(cleaned.dropFirst(prefix.count))
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+        }
+
+        // Stop at common ending markers
+        let stopMarkers = [
+            "\n\nNote:",
+            "\n\nThe ",
+            "\n\nHere is",
+            "\n\n---"
+        ]
+
+        for marker in stopMarkers {
+            if let range = cleaned.range(of: marker) {
+                cleaned = String(cleaned[..<range.lowerBound])
+            }
+        }
+
+        return cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
 
     private struct ContentSections {
         var baseContent: String
@@ -506,6 +619,7 @@ class NoteViewModel: ObservableObject {
         var translationBlock: String
         var autoCorrectedBlock: String
         var reformulatedBlock: String
+        var customServiceBlocks: [String: String] = [:] // Service name -> block content
     }
 
     private func extractContentSections(from content: String) -> ContentSections {
@@ -514,84 +628,51 @@ class NoteViewModel: ObservableObject {
         var translationBlock = ""
         var autoCorrectedBlock = ""
         var reformulatedBlock = ""
+        var customServiceBlocks: [String: String] = [:]
 
-        // Markers now support both old format (without timestamp) and new format (with timestamp)
-        // Use regex-like patterns to match headers with optional timestamps
-        let markerPrefixes = [
-            "\n\n--- Summary",
-            "\n\n--- Translation to ",
-            "\n\n--- Patched",
-            "\n\n--- Reformulated"
-        ]
-
+        // Find the first AI-generated section marker
+        let markerPrefix = "\n\n--- "
         var firstAIIndex: String.Index? = nil
 
-        for markerPrefix in markerPrefixes {
-            if let range = content.range(of: markerPrefix) {
-                if firstAIIndex == nil || range.lowerBound < firstAIIndex! {
-                    firstAIIndex = range.lowerBound
-                }
-            }
+        if let range = content.range(of: markerPrefix) {
+            firstAIIndex = range.lowerBound
         }
 
         if let firstIndex = firstAIIndex {
             baseContent = String(content[..<firstIndex])
             let aiSections = String(content[firstIndex...])
 
-            if let summaryStart = aiSections.range(of: "\n\n--- Summary") {
-                let summaryContent = String(aiSections[summaryStart.lowerBound...])
-                var summaryEnd = summaryContent.endIndex
+            // Split by section markers
+            let sectionPattern = "\n\n--- "
+            let parts = aiSections.components(separatedBy: sectionPattern)
 
-                for markerPrefix in ["\n\n--- Translation to ", "\n\n--- Patched", "\n\n--- Reformulated"] {
-                    if let nextRange = summaryContent.range(of: markerPrefix) {
-                        if nextRange.lowerBound < summaryEnd {
-                            summaryEnd = nextRange.lowerBound
-                        }
+            for (index, part) in parts.enumerated() {
+                if index == 0 && part.isEmpty { continue } // Skip empty first part
+
+                // Extract section name from the header line
+                let lines = part.components(separatedBy: "\n")
+                guard let headerLine = lines.first else { continue }
+
+                // Reconstruct the full block with marker
+                let fullBlock = (index > 0 || !part.isEmpty) ? sectionPattern + part : part
+
+                // Categorize the block by its header
+                if headerLine.hasPrefix("Summary") {
+                    summaryBlock = fullBlock
+                } else if headerLine.hasPrefix("Translation to ") {
+                    translationBlock = fullBlock
+                } else if headerLine.hasPrefix("Patched") {
+                    autoCorrectedBlock = fullBlock
+                } else if headerLine.hasPrefix("Reformulated") {
+                    reformulatedBlock = fullBlock
+                } else {
+                    // This is a custom service block
+                    // Extract service name from "ServiceName (timestamp) ---"
+                    if let nameEnd = headerLine.range(of: " (") {
+                        let serviceName = String(headerLine[..<nameEnd.lowerBound])
+                        customServiceBlocks[serviceName] = fullBlock
                     }
                 }
-                summaryBlock = String(summaryContent[..<summaryEnd])
-            }
-
-            if let translationStart = aiSections.range(of: "\n\n--- Translation to ") {
-                let translationContent = String(aiSections[translationStart.lowerBound...])
-                var translationEnd = translationContent.endIndex
-
-                for markerPrefix in ["\n\n--- Summary", "\n\n--- Patched", "\n\n--- Reformulated"] {
-                    if let nextRange = translationContent.range(of: markerPrefix) {
-                        if nextRange.lowerBound < translationEnd {
-                            translationEnd = nextRange.lowerBound
-                        }
-                    }
-                }
-                translationBlock = String(translationContent[..<translationEnd])
-            }
-
-            if let autoCorrectedStart = aiSections.range(of: "\n\n--- Patched") {
-                let autoCorrectedContent = String(aiSections[autoCorrectedStart.lowerBound...])
-                var autoCorrectedEnd = autoCorrectedContent.endIndex
-
-                for markerPrefix in ["\n\n--- Summary", "\n\n--- Translation to ", "\n\n--- Reformulated"] {
-                    if let nextRange = autoCorrectedContent.range(of: markerPrefix) {
-                        if nextRange.lowerBound < autoCorrectedEnd {
-                            autoCorrectedEnd = nextRange.lowerBound
-                        }
-                    }
-                }
-                autoCorrectedBlock = String(autoCorrectedContent[..<autoCorrectedEnd])
-            }
-
-            if let reformulatedStart = aiSections.range(of: "\n\n--- Reformulated") {
-                let reformulatedContent = String(aiSections[reformulatedStart.lowerBound...])
-                var reformulatedEnd = reformulatedContent.endIndex
-
-                for markerPrefix in ["\n\n--- Summary", "\n\n--- Translation to ", "\n\n--- Patched"] {
-                    if let nextRange = reformulatedContent.range(of: markerPrefix) {
-                        if nextRange.lowerBound < reformulatedEnd {
-                            reformulatedEnd = nextRange.lowerBound
-                        }
-                    }
-                }
-                reformulatedBlock = String(reformulatedContent[..<reformulatedEnd])
             }
         }
 
@@ -600,12 +681,23 @@ class NoteViewModel: ObservableObject {
             summaryBlock: summaryBlock,
             translationBlock: translationBlock,
             autoCorrectedBlock: autoCorrectedBlock,
-            reformulatedBlock: reformulatedBlock
+            reformulatedBlock: reformulatedBlock,
+            customServiceBlocks: customServiceBlocks
         )
     }
 
-    private func reconstructContent(base: String, summary: String, translation: String, autoCorrect: String = "", reformulated: String = "") -> String {
-        return base + autoCorrect + reformulated + summary + translation
+    private func reconstructContent(base: String, summary: String, translation: String, autoCorrect: String = "", reformulated: String = "", customServices: [String: String] = [:]) -> String {
+        var result = base + autoCorrect + reformulated + summary + translation
+
+        // Append custom service blocks in a consistent order (alphabetically by service name)
+        let sortedServiceNames = customServices.keys.sorted()
+        for serviceName in sortedServiceNames {
+            if let block = customServices[serviceName] {
+                result += block
+            }
+        }
+
+        return result
     }
 
     var displayItems: [NoteListItem] {

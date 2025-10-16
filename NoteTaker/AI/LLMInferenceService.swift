@@ -14,7 +14,6 @@ import Foundation
 /// Available AI models for the NoteTaker app
 /// Ordered from worst to best quality
 enum AIModel: String, CaseIterable, Codable {
-    case qwen25_0_5B = "Qwen2.5 0.5B"
     case tinyLlama = "TinyLlama 1.1B"
     case llama32_1B = "Llama 3.2 1B"
     case qwen25_1_5B = "Qwen2.5 1.5B"
@@ -31,8 +30,6 @@ enum AIModel: String, CaseIterable, Codable {
 
     var fileName: String {
         switch self {
-        case .qwen25_0_5B:
-            return "qwen2.5-0.5b-instruct-q4_k_m.gguf"
         case .tinyLlama:
             return "tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"
         case .llama32_1B:
@@ -56,8 +53,6 @@ enum AIModel: String, CaseIterable, Codable {
 
     var fileSize: String {
         switch self {
-        case .qwen25_0_5B:
-            return "0.4 GB"
         case .tinyLlama:
             return "0.7 GB"
         case .llama32_1B:
@@ -81,8 +76,6 @@ enum AIModel: String, CaseIterable, Codable {
 
     var memoryUsage: String {
         switch self {
-        case .qwen25_0_5B:
-            return "~0.8 GB"
         case .tinyLlama:
             return "~1.5 GB"
         case .llama32_1B:
@@ -106,8 +99,6 @@ enum AIModel: String, CaseIterable, Codable {
 
     var speedRating: String {
         switch self {
-        case .qwen25_0_5B:
-            return "Blazing Fast"
         case .tinyLlama:
             return "Very Fast"
         case .llama32_1B:
@@ -131,8 +122,6 @@ enum AIModel: String, CaseIterable, Codable {
 
     var qualityRating: String {
         switch self {
-        case .qwen25_0_5B:
-            return "Basic"
         case .tinyLlama:
             return "Basic"
         case .llama32_1B:
@@ -156,8 +145,6 @@ enum AIModel: String, CaseIterable, Codable {
 
     var description: String {
         switch self {
-        case .qwen25_0_5B:
-            return "Ultra-compact model. Blazing fast for autocomplete, but very limited instruction-following."
         case .tinyLlama:
             return "Lightweight model, best for autocomplete and embeddings. Limited instruction-following quality."
         case .llama32_1B:
@@ -181,8 +168,6 @@ enum AIModel: String, CaseIterable, Codable {
 
     var huggingFaceURL: String {
         switch self {
-        case .qwen25_0_5B:
-            return "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/qwen2.5-0.5b-instruct-q4_k_m.gguf"
         case .tinyLlama:
             return "https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"
         case .llama32_1B:
@@ -380,14 +365,15 @@ class LLMInferenceService: @unchecked Sendable {
                     return
                 }
 
-                print("🔄 Starting text generation...")
-                print("📝 Prompt: \(prompt.prefix(100))...")
+                print("\n� === Text Generation Started ===")
+                print("📝 Prompt: \(prompt.prefix(150))\(prompt.count > 150 ? "..." : "")")
+                print("📊 Prompt length: \(prompt.count) chars")
 
                 // Clear KV cache and reset sampler before generation to ensure clean context
                 let mem = llama_get_memory(ctx)
                 llama_memory_clear(mem, false) // Clear metadata only, keep data buffer
                 llama_sampler_reset(smpl) // Reset sampler state
-                print("🧹 KV cache cleared and sampler reset")
+                print("🧹 Context prepared (KV cache cleared, sampler reset)")
 
                 // Determine max generation length
                 let contextSize = Int32(ModelConfig.contextSize)
@@ -419,7 +405,7 @@ class LLMInferenceService: @unchecked Sendable {
                     return
                 }
 
-                print("✅ Tokenized: \(tokenCount) tokens")
+                print("✅ Tokenized: \(tokenCount) tokens (\(prompt.count) chars → \(tokenCount) tokens)")
 
                 // Keep only the valid tokens
                 var promptTokens = Array(tokens.prefix(Int(tokenCount)))
@@ -427,14 +413,14 @@ class LLMInferenceService: @unchecked Sendable {
 
                 // Create batch using the new API
                 // Important: tokens array must remain valid for the lifetime of the batch
-                print("🔄 Decoding prompt batch...")
+                print("🔄 Processing prompt tokens...")
                 let decodeResult = promptTokens.withUnsafeMutableBufferPointer { tokensPtr -> Int32 in
                     let batch = llama_batch_get_one(tokensPtr.baseAddress, promptTokenCount)
                     return llama_decode(ctx, batch)
                 }
 
                 if decodeResult != 0 {
-                    print("❌ Failed to decode prompt")
+                    print("❌ Failed to decode prompt (error code: \(decodeResult))")
                     ErrorLogger.shared.logError(
                         "Failed to decode prompt",
                         severity: .error,
@@ -445,7 +431,7 @@ class LLMInferenceService: @unchecked Sendable {
                     return
                 }
 
-                print("✅ Prompt decoded, starting generation...")
+                print("✅ Prompt processed successfully")
 
                 // Generate tokens
                 var generatedText = ""
@@ -455,14 +441,14 @@ class LLMInferenceService: @unchecked Sendable {
                 let maxGenTokens = maxTokens ?? Int(contextSize - tokenCount)
                 let nLen = nCur + Int32(maxGenTokens)
 
-                print("🔄 Generating up to \(maxGenTokens) tokens...")
+                print("🎯 Generating up to \(maxGenTokens) new tokens (temp: \(String(format: "%.1f", temperature)))...")
+
+                var lastProgressPrint = Date()
+                let progressInterval: TimeInterval = 2.0 // Print progress every 2 seconds
+
                 while nCur < nLen {
                     // Sample the next token using the sampler chain
                     let newTokenId = llama_sampler_sample(smpl, ctx, -1)
-
-                    if nCur == tokenCount {
-                        print("✅ First token sampled: \(newTokenId)")
-                    }
 
                     // Accept the token
                     llama_sampler_accept(smpl, newTokenId)
@@ -470,7 +456,7 @@ class LLMInferenceService: @unchecked Sendable {
                     // Check for end of sequence
                     let vocab = llama_model_get_vocab(mdl)
                     if llama_vocab_is_eog(vocab, newTokenId) {
-                        print("✅ End of generation detected")
+                        print("🏁 End-of-generation token detected")
                         break
                     }
 
@@ -482,8 +468,13 @@ class LLMInferenceService: @unchecked Sendable {
                         let piece = String(cString: buf)
                         generatedText += piece
 
-                        if nCur < tokenCount + 5 {
-                            print("🔤 Token \(nCur): '\(piece)'")
+                        // Print periodic progress updates instead of every token
+                        let now = Date()
+                        let tokensGenerated = Int(nCur - tokenCount)
+                        if now.timeIntervalSince(lastProgressPrint) >= progressInterval {
+                            let progress = Double(tokensGenerated) / Double(maxGenTokens) * 100
+                            print("⏳ Progress: \(tokensGenerated)/\(maxGenTokens) tokens (\(String(format: "%.1f", progress))%) - \(generatedText.count) chars")
+                            lastProgressPrint = now
                         }
 
                         // Check for stop sequences
@@ -493,6 +484,9 @@ class LLMInferenceService: @unchecked Sendable {
                                     if let range = generatedText.range(of: stopSeq) {
                                         generatedText = String(generatedText[..<range.lowerBound])
                                     }
+                                    print("🛑 Stop sequence '\(stopSeq)' detected")
+                                    print("✅ Generated \(tokensGenerated) tokens → \(generatedText.count) chars")
+                                    print("=== Generation Complete ===\n")
                                     continuation.resume(returning: generatedText)
                                     return
                                 }
@@ -511,12 +505,15 @@ class LLMInferenceService: @unchecked Sendable {
                     }
 
                     if decodeResult != 0 {
-                        print("❌ Failed to decode token at position \(nCur)")
+                        print("❌ Failed to decode token at position \(nCur) (error: \(decodeResult))")
                         break
                     }
                 }
 
-                print("✅ Generated: \(generatedText)")
+                let tokensGenerated = Int(nCur - tokenCount)
+                print("✅ Generation complete: \(tokensGenerated) tokens → \(generatedText.count) chars")
+                print("📄 Output preview: \(generatedText.prefix(200))\(generatedText.count > 200 ? "..." : "")")
+                print("=== Generation Complete ===\n")
                 continuation.resume(returning: generatedText)
             }
         }

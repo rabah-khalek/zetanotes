@@ -13,9 +13,14 @@ struct ContentView: View {
     @StateObject private var systemMonitor = SystemMonitor.shared
     @StateObject private var errorLogger = ErrorLogger.shared
     @EnvironmentObject var aiEngine: AIEngine
+    @StateObject private var licenseManager = LicenseManager.shared
+    @StateObject private var customServiceManager = CustomServiceManager.shared
     @State private var showingSettings = false
     @State private var showingErrorLog = false
-    @State private var showingSystemMonitor = false
+
+    // Custom Service Editor state
+    @State private var showingCustomServiceEditor = false
+    @State private var editingService: CustomService?
 
     // License/Upgrade state
     @State private var showUpgradePrompt = false
@@ -37,13 +42,42 @@ struct ContentView: View {
             }
         }
             .toolbar {
+                // Upgrade button on the far left (only for non-Pro users)
+                ToolbarItem(placement: .navigation) {
+                    if !licenseManager.isPro {
+                        Button(action: {
+                            showUpgradePrompt = true
+                            upgradePromptType = .general
+                        }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "bolt.fill")
+                                    .font(.system(size: 12))
+                                Text("Pro")
+                                    .font(.system(size: 12, weight: .semibold))
+                            }
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(
+                                LinearGradient(
+                                    gradient: Gradient(colors: [Color.orange, Color.orange.opacity(0.8)]),
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .cornerRadius(6)
+                        }
+                        .buttonStyle(.plain)
+                        .help("Upgrade to Pro - $14.99")
+                    }
+                }
+
                 ToolbarItem(placement: .principal) {
-                    Group {
-                        // AI Tool Buttons - Sleek compact design
-                        HStack(alignment: .center, spacing: 8) {
-                            // Autocomplete Toggle with Switch
-                            AutocompleteToggle(isEnabled: $viewModel.isAutocompleteEnabled)
-                                .help("Toggle Autocomplete")
+                    // AI Tool Buttons - Sleek compact design
+                    HStack(alignment: .center, spacing: 8) {
+                        // Autocomplete Toggle with Switch
+                        AutocompleteToggle(isEnabled: $viewModel.isAutocompleteEnabled)
+                            .help("Toggle Autocomplete")
 
                             Rectangle()
                                 .fill(Color.secondary.opacity(0.2))
@@ -124,25 +158,26 @@ struct ContentView: View {
                         .keyboardShortcut("t", modifiers: .command)
                         .help("Translate text (⌘T)")
                         .disabled(viewModel.selectedNote == nil || viewModel.isTranslating)
-                        }
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 4)
-                        .background(
-                            RoundedRectangle(cornerRadius: 6)
-                                .fill(Color(nsColor: .controlBackgroundColor).opacity(0.5))
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 6)
-                                .strokeBorder(Color.secondary.opacity(0.2), lineWidth: 0.5)
-                        )
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
+
+                        // Custom Services section
+                        customServicesSection
                     }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(Color(nsColor: .controlBackgroundColor).opacity(0.5))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6)
+                            .strokeBorder(Color.secondary.opacity(0.2), lineWidth: 0.5)
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
                 }
 
                 ToolbarItem(placement: .automatic) {
-                    Group {
-                        HStack(alignment: .center, spacing: 8) {
-                            Button(action: { showingSettings.toggle() }) {
+                    HStack(alignment: .center, spacing: 8) {
+                        Button(action: { showingSettings.toggle() }) {
                                 Image(systemName: "gear")
                                     .font(.system(size: 14))
                                     .foregroundColor(.secondary)
@@ -159,23 +194,36 @@ struct ContentView: View {
                             }
                             .buttonStyle(.plain)
                             .help("New Note (⌘N)")
-                        }
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 4)
-                        .background(
-                            RoundedRectangle(cornerRadius: 6)
-                                .fill(Color(nsColor: .controlBackgroundColor).opacity(0.5))
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 6)
-                                .strokeBorder(Color.secondary.opacity(0.2), lineWidth: 0.5)
-                        )
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
                     }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(Color(nsColor: .controlBackgroundColor).opacity(0.5))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6)
+                            .strokeBorder(Color.secondary.opacity(0.2), lineWidth: 0.5)
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
                 }
             }
         .sheet(isPresented: $showingSettings) {
             AISettingsView(viewModel: viewModel)
+                .environmentObject(aiEngine)
+        }
+        .sheet(isPresented: $showingCustomServiceEditor) {
+            CustomServiceEditorView(
+                service: editingService ?? CustomService(),
+                isPresented: $showingCustomServiceEditor,
+                onSave: { service in
+                    if editingService != nil {
+                        customServiceManager.updateService(service)
+                    } else {
+                        customServiceManager.addService(service)
+                    }
+                }
+            )
         }
         .sheet(isPresented: $showUpgradePrompt) {
             UpgradePromptView(
@@ -191,21 +239,11 @@ struct ContentView: View {
             StatusFooterView(
                 systemMonitor: systemMonitor,
                 errorLogger: errorLogger,
-                showingErrorLog: $showingErrorLog,
-                showingSystemMonitor: $showingSystemMonitor
+                showingErrorLog: $showingErrorLog
             )
         }
         .overlay(alignment: .bottom) {
             ZStack {
-                // System Monitor popout
-                if showingSystemMonitor {
-                    SystemMonitorView(monitor: systemMonitor, isPresented: $showingSystemMonitor)
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
-                        .padding(.bottom, 36) // Offset for footer
-                        .padding(.horizontal)
-                        .zIndex(1)
-                }
-
                 // Error Log popout
                 if showingErrorLog {
                     ErrorLogView(errorLogger: errorLogger, isPresented: $showingErrorLog)
@@ -232,6 +270,67 @@ struct ContentView: View {
         }
         .onDisappear {
             systemMonitor.stopMonitoring()
+        }
+    }
+
+    // MARK: - Custom Services Section
+
+    @ViewBuilder
+    private var customServicesSection: some View {
+        if licenseManager.isPro || !customServiceManager.services.isEmpty {
+            Rectangle()
+                .fill(Color.secondary.opacity(0.2))
+                .frame(width: 1, height: 14)
+
+            // Show custom services (Pro only)
+            if licenseManager.isPro {
+                ForEach(customServiceManager.services.prefix(3)) { service in
+                    CustomServiceButton(
+                        service: service,
+                        isLoading: viewModel.executingCustomServiceId == service.id,
+                        action: {
+                            if let note = viewModel.selectedNote {
+                                Task {
+                                    await viewModel.executeCustomService(service, for: note)
+                                }
+                            }
+                        }
+                    )
+                    .keyboardShortcut(KeyEquivalent(Character(service.keyboardShortcut)), modifiers: .command)
+                    .help("\(service.name) (⌘\(service.keyboardShortcut))")
+                    .disabled(viewModel.selectedNote == nil || viewModel.executingCustomServiceId == service.id)
+                }
+            }
+
+            // "+" button to add new custom service (always on the right)
+            Button(action: {
+                if licenseManager.isPro {
+                    editingService = nil
+                    showingCustomServiceEditor = true
+                } else {
+                    NotificationCenter.default.post(
+                        name: .showUpgradePrompt,
+                        object: UpgradePromptView.PromptType.general
+                    )
+                }
+            }) {
+                HStack(spacing: 4) {
+                    if !licenseManager.isPro {
+                        Image(systemName: "lock.fill")
+                            .font(.system(size: 9))
+                            .foregroundColor(.orange)
+                    }
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 12))
+                }
+                .foregroundColor(licenseManager.isPro ? .blue : .orange)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 4)
+                .background(licenseManager.isPro ? Color.blue.opacity(0.1) : Color.orange.opacity(0.1))
+                .cornerRadius(6)
+            }
+            .buttonStyle(.plain)
+            .help(licenseManager.isPro ? "Add custom service" : "Upgrade to Pro for custom services")
         }
     }
 }
@@ -336,6 +435,74 @@ struct AIToolButton: View {
     }
 }
 
+// MARK: - Custom Service Button Component
+
+struct CustomServiceButton: View {
+    let service: CustomService
+    let isLoading: Bool
+    let action: () -> Void
+
+    @State private var isHovered = false
+    @Environment(\.isEnabled) private var isEnabled
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 3) {
+                // Loading spinner if active
+                if isLoading {
+                    ProgressView()
+                        .scaleEffect(0.5)
+                        .frame(width: 10, height: 10)
+                        .padding(.trailing, 2)
+                }
+
+                // Square with ⌘ + keyboard shortcut letter
+                HStack(spacing: 1) {
+                    Text("⌘")
+                        .font(.system(size: 8, weight: .medium))
+                    Text(service.keyboardShortcut)
+                        .font(.system(size: 9, weight: .bold))
+                }
+                .foregroundColor(foregroundColor)
+                .padding(.horizontal, 3)
+                .padding(.vertical, 2)
+                .background(
+                    RoundedRectangle(cornerRadius: 3)
+                        .strokeBorder(foregroundColor.opacity(0.4), lineWidth: 0.5)
+                        .background(
+                            RoundedRectangle(cornerRadius: 3)
+                                .fill(foregroundColor.opacity(isHovered && isEnabled ? 0.08 : 0.03))
+                        )
+                )
+
+                // Full service name
+                Text(service.name)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundColor(foregroundColor)
+            }
+            .scaleEffect(isHovered && isEnabled ? 1.02 : 1.0)
+            .animation(.easeInOut(duration: 0.12), value: isHovered)
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering in
+            isHovered = hovering
+        }
+    }
+
+    private var foregroundColor: Color {
+        if !isEnabled {
+            return .secondary.opacity(0.3)
+        }
+        if isLoading {
+            return service.color.color.opacity(0.85)
+        }
+        if isHovered {
+            return service.color.color
+        }
+        return service.color.color.opacity(0.8)
+    }
+}
+
 // MARK: - Empty State (Compact and clean)
 
 struct EmptyStateView: View {
@@ -381,65 +548,96 @@ struct StatusFooterView: View {
     @ObservedObject var systemMonitor: SystemMonitor
     @ObservedObject var errorLogger: ErrorLogger
     @Binding var showingErrorLog: Bool
-    @Binding var showingSystemMonitor: Bool
 
     var body: some View {
         HStack(spacing: 0) {
             Spacer()
 
             HStack(alignment: .center, spacing: 8) {
-                // System Monitor button (compact)
-                Button(action: {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                        showingSystemMonitor.toggle()
+                // Active AI Model (left side)
+                if !systemMonitor.activeModel.isEmpty {
+                    HStack(spacing: 4) {
+                        Image(systemName: "brain.head.profile")
+                            .font(.system(size: 9))
+                            .foregroundColor(.purple)
+
+                        Text(systemMonitor.activeModel)
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundColor(.primary)
+                            .lineLimit(1)
                     }
-                }) {
-                    HStack(spacing: 6) {
-                        // CPU indicator
-                        HStack(spacing: 3) {
-                            Image(systemName: "cpu.fill")
-                                .font(.system(size: 9))
-                                .foregroundColor(cpuColor)
-
-                            Text("\(Int(systemMonitor.cpuUsage))%")
-                                .font(.system(size: 10, weight: .medium, design: .monospaced))
-                                .foregroundColor(.primary)
-                        }
-
-                        Rectangle()
-                            .fill(Color.secondary.opacity(0.3))
-                            .frame(width: 1, height: 10)
-
-                        // Memory indicator
-                        HStack(spacing: 3) {
-                            Image(systemName: "memorychip.fill")
-                                .font(.system(size: 9))
-                                .foregroundColor(memoryColor)
-
-                            Text("\(Int(systemMonitor.memoryUsage))MB")
-                                .font(.system(size: 10, weight: .medium, design: .monospaced))
-                                .foregroundColor(.primary)
-                        }
-                    }
-                    .padding(.horizontal, 8)
+                    .padding(.horizontal, 7)
                     .padding(.vertical, 4)
                     .background(
                         RoundedRectangle(cornerRadius: 4)
-                            .fill(Color.secondary.opacity(0.08))
+                            .fill(Color.purple.opacity(0.08))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 4)
-                                    .strokeBorder(Color.secondary.opacity(0.2), lineWidth: 0.5)
+                                    .strokeBorder(Color.purple.opacity(0.2), lineWidth: 0.5)
                             )
                     )
+                    .help("Active AI Model: \(systemMonitor.activeModel)")
+
+                    Rectangle()
+                        .fill(Color.secondary.opacity(0.2))
+                        .frame(width: 1, height: 14)
                 }
-                .buttonStyle(.plain)
-                .help("System Performance")
+
+                // System Monitor (inline, no popup)
+                HStack(spacing: 6) {
+                    // CPU indicator with fixed width for percentage
+                    HStack(spacing: 3) {
+                        Image(systemName: "cpu.fill")
+                            .font(.system(size: 9))
+                            .foregroundColor(cpuColor)
+
+                        Text("CPU:")
+                            .font(.system(size: 9, weight: .medium))
+                            .foregroundColor(.secondary)
+
+                        Text(String(format: "%3d", Int(systemMonitor.cpuUsage)) + "%")
+                            .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                            .foregroundColor(.primary)
+                            .frame(width: 32, alignment: .trailing)
+                    }
+
+                    Rectangle()
+                        .fill(Color.secondary.opacity(0.3))
+                        .frame(width: 1, height: 10)
+
+                    // Memory indicator with fixed width
+                    HStack(spacing: 3) {
+                        Image(systemName: "memorychip.fill")
+                            .font(.system(size: 9))
+                            .foregroundColor(memoryColor)
+
+                        Text("MEM:")
+                            .font(.system(size: 9, weight: .medium))
+                            .foregroundColor(.secondary)
+
+                        Text(String(format: "%4d", Int(systemMonitor.memoryUsage)) + "M")
+                            .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                            .foregroundColor(.primary)
+                            .frame(width: 42, alignment: .trailing)
+                    }
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.secondary.opacity(0.08))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 4)
+                                .strokeBorder(Color.secondary.opacity(0.2), lineWidth: 0.5)
+                        )
+                )
+                .help("CPU: \(Int(systemMonitor.cpuUsage))% of \(systemMonitor.cpuCoreCount) cores • Memory: \(Int(systemMonitor.memoryUsage))MB (\(String(format: "%.1f", systemMonitor.memoryUsagePercentage))% of \(Int(systemMonitor.totalSystemMemory / 1024))GB)")
 
                 Rectangle()
                     .fill(Color.secondary.opacity(0.2))
                     .frame(width: 1, height: 14)
 
-                // Error log button with badge
+                // Error log button with badge and expand indicator
                 Button(action: {
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                         showingErrorLog.toggle()
@@ -453,6 +651,11 @@ struct StatusFooterView: View {
                         Text(errorLogger.errors.isEmpty ? "No Errors" : "\(errorLogger.errors.count)")
                             .font(.system(size: 10, weight: .medium))
                             .foregroundColor(errorLogger.errors.isEmpty ? .secondary : .orange)
+
+                        // Chevron to indicate expandable
+                        Image(systemName: showingErrorLog ? "chevron.down.circle.fill" : "chevron.up.circle.fill")
+                            .font(.system(size: 9))
+                            .foregroundColor(.secondary.opacity(0.7))
                     }
                     .padding(.horizontal, 6)
                     .padding(.vertical, 3)
@@ -462,7 +665,7 @@ struct StatusFooterView: View {
                     )
                 }
                 .buttonStyle(.plain)
-                .help(errorLogger.errors.isEmpty ? "No errors" : "View \(errorLogger.errors.count) error\(errorLogger.errors.count == 1 ? "" : "s")")
+                .help(errorLogger.errors.isEmpty ? "No errors" : "Click to view \(errorLogger.errors.count) error\(errorLogger.errors.count == 1 ? "" : "s")")
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 6)

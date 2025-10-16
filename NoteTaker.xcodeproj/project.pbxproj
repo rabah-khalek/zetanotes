@@ -21,6 +21,9 @@
 		81111F6E2EA0896E00D7317B /* LicenseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F6C2EA0896E00D7317B /* LicenseManager.swift */; };
 		81111F6F2EA0896E00D7317B /* AnalyticsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F6B2EA0896E00D7317B /* AnalyticsManager.swift */; };
 		81DE21652E9B3C2400692788 /* ModelDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE21642E9B3C2400692788 /* ModelDownloader.swift */; };
+		81DE4F662EA18C90006293FC /* CustomService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F632EA18C90006293FC /* CustomService.swift */; };
+		81DE4F672EA18C90006293FC /* NotesDataModel.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F642EA18C90006293FC /* NotesDataModel.xcdatamodeld */; };
+		81DE4F692EA18EA3006293FC /* CustomServiceEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F682EA18EA3006293FC /* CustomServiceEditorView.swift */; };
 		81EFBE2E2E9B05C700F7E48B /* libllama.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 81EFBE282E9B05C700F7E48B /* libllama.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		81EFBE2F2E9B05C700F7E48B /* libggml-base.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 81EFBE292E9B05C700F7E48B /* libggml-base.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		81EFBE302E9B05C700F7E48B /* libggml-metal.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 81EFBE2A2E9B05C700F7E48B /* libggml-metal.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -49,6 +52,8 @@
 		A1000065000000000000001 /* SystemMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000064000000000000001 /* SystemMonitor.swift */; };
 		A1000067000000000000001 /* SystemMonitorWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000066000000000000001 /* SystemMonitorWidget.swift */; };
 		A1000070000000000000001 /* ErrorLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000069000000000000001 /* ErrorLogView.swift */; };
+		A1000093000000000000001 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000091000000000000001 /* Logger.swift */; };
+		A1000094000000000000001 /* ErrorManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000092000000000000001 /* ErrorManager.swift */; };
 		A1000072000000000000001 /* SystemMonitorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000071000000000000001 /* SystemMonitorView.swift */; };
 /* End PBXBuildFile section */
 
@@ -85,6 +90,9 @@
 		81111F6B2EA0896E00D7317B /* AnalyticsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsManager.swift; sourceTree = "<group>"; };
 		81111F6C2EA0896E00D7317B /* LicenseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseManager.swift; sourceTree = "<group>"; };
 		81DE21642E9B3C2400692788 /* ModelDownloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelDownloader.swift; sourceTree = "<group>"; };
+		81DE4F632EA18C90006293FC /* CustomService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomService.swift; sourceTree = "<group>"; };
+		81DE4F652EA18C90006293FC /* NotesDataModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = NotesDataModel.xcdatamodel; sourceTree = "<group>"; };
+		81DE4F682EA18EA3006293FC /* CustomServiceEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomServiceEditorView.swift; sourceTree = "<group>"; };
 		81EFBE282E9B05C700F7E48B /* libllama.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libllama.dylib; path = llama.cpp/build/bin/libllama.dylib; sourceTree = "<group>"; };
 		81EFBE292E9B05C700F7E48B /* libggml-base.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libggml-base.dylib"; path = "llama.cpp/build/bin/libggml-base.dylib"; sourceTree = "<group>"; };
 		81EFBE2A2E9B05C700F7E48B /* libggml-metal.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libggml-metal.dylib"; path = "llama.cpp/build/bin/libggml-metal.dylib"; sourceTree = "<group>"; };
@@ -114,6 +122,8 @@
 		A1000063000000000000001 /* NoteRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteRepository.swift; sourceTree = "<group>"; };
 		A1000064000000000000001 /* SystemMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMonitor.swift; sourceTree = "<group>"; };
 		A1000066000000000000001 /* SystemMonitorWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMonitorWidget.swift; sourceTree = "<group>"; };
+		A1000091000000000000001 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
+		A1000092000000000000001 /* ErrorManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorManager.swift; sourceTree = "<group>"; };
 		A1000069000000000000001 /* ErrorLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorLogView.swift; sourceTree = "<group>"; };
 		A1000071000000000000001 /* SystemMonitorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMonitorView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -135,7 +145,7 @@
 				81111F6B2EA0896E00D7317B /* AnalyticsManager.swift */,
 				81111F6C2EA0896E00D7317B /* LicenseManager.swift */,
 			);
-			path = Managers;
+			path = NoteTaker/Managers;
 			sourceTree = "<group>";
 		};
 		A1000038000000000000001 = {
@@ -182,6 +192,7 @@
 		A1000041000000000000001 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				81DE4F682EA18EA3006293FC /* CustomServiceEditorView.swift */,
 				81111F622EA0891A00D7317B /* InlineAutocompleteTextEditor.swift */,
 				81111F632EA0891A00D7317B /* UpgradePromptView.swift */,
 				A1000004000000000000001 /* ContentView.swift */,
@@ -207,6 +218,8 @@
 		A1000043000000000000001 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				81DE4F632EA18C90006293FC /* CustomService.swift */,
+				81DE4F642EA18C90006293FC /* NotesDataModel.xcdatamodeld */,
 				810418062E9AF4770086B1B2 /* Note+CoreDataClass.swift */,
 				810418082E9AF4770086B1B2 /* NoteEmbedding+CoreDataClass.swift */,
 				8104180A2E9AF4770086B1B2 /* Tag+CoreDataClass.swift */,
@@ -264,6 +277,8 @@
 			isa = PBXGroup;
 			children = (
 				A1000064000000000000001 /* SystemMonitor.swift */,
+				A1000091000000000000001 /* Logger.swift */,
+				A1000092000000000000001 /* ErrorManager.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -351,6 +366,7 @@
 				810418102E9AF4770086B1B2 /* Note+CoreDataClass.swift in Sources */,
 				A1000017000000000000001 /* PersistenceController.swift in Sources */,
 				A1000062000000000000001 /* NoteRepository.swift in Sources */,
+				81DE4F692EA18EA3006293FC /* CustomServiceEditorView.swift in Sources */,
 				A1000019000000000000001 /* AIEngine.swift in Sources */,
 				81111F6E2EA0896E00D7317B /* LicenseManager.swift in Sources */,
 				81111F6F2EA0896E00D7317B /* AnalyticsManager.swift in Sources */,
@@ -364,18 +380,22 @@
 				A1000023000000000000001 /* EmbeddingService.swift in Sources */,
 				A1000025000000000000001 /* SemanticSearchEngine.swift in Sources */,
 				A1000027000000000000001 /* AutocompleteService.swift in Sources */,
+				81DE4F662EA18C90006293FC /* CustomService.swift in Sources */,
+				81DE4F672EA18C90006293FC /* NotesDataModel.xcdatamodeld in Sources */,
 				A1000029000000000000001 /* SummarizationService.swift in Sources */,
 				A1000031000000000000001 /* Note+Extensions.swift in Sources */,
 				81111F642EA0891A00D7317B /* InlineAutocompleteTextEditor.swift in Sources */,
 				81111F652EA0891A00D7317B /* UpgradePromptView.swift in Sources */,
 				A1000033000000000000001 /* NoteViewModel.swift in Sources */,
 				A1000060000000000000001 /* AISettingsView.swift in Sources */,
-				A1000070000000000000001 /* ErrorLogView.swift in Sources */,
-				A1000065000000000000001 /* SystemMonitor.swift in Sources */,
-				A1000067000000000000001 /* SystemMonitorWidget.swift in Sources */,
-				A1000072000000000000001 /* SystemMonitorView.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
+			A1000070000000000000001 /* ErrorLogView.swift in Sources */,
+			A1000065000000000000001 /* SystemMonitor.swift in Sources */,
+			A1000067000000000000001 /* SystemMonitorWidget.swift in Sources */,
+			A1000072000000000000001 /* SystemMonitorView.swift in Sources */,
+			A1000093000000000000001 /* Logger.swift in Sources */,
+			A1000094000000000000001 /* ErrorManager.swift in Sources */,
+		);
+		runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
@@ -602,6 +622,16 @@
 /* End XCConfigurationList section */
 
 /* Begin XCVersionGroup section */
+		81DE4F642EA18C90006293FC /* NotesDataModel.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				81DE4F652EA18C90006293FC /* NotesDataModel.xcdatamodel */,
+			);
+			currentVersion = 81DE4F652EA18C90006293FC /* NotesDataModel.xcdatamodel */;
+			path = NotesDataModel.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
 		A1000010000000000000001 /* NotesDataModel.xcdatamodeld */ = {
 			isa = XCVersionGroup;
 			children = (

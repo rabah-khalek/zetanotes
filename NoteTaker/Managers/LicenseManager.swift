@@ -1,9 +1,9 @@
 //
 //  LicenseManager.swift
-//  NoteTaker
+//  OffNotes
 //
 //  Manages Pro license validation and feature access
-//  Integrates with Gumroad for license key validation
+//  Integrates with LemonSqueezy for license key validation
 //
 
 import Foundation
@@ -27,7 +27,8 @@ class LicenseManager: ObservableObject {
     // For development/testing
     #if DEBUG
     private let allowTestLicense = true
-    private let testLicenseKey = "TEST-XXXX-XXXX-XXXX"
+    private let testLicenseKey = "TEST"
+    private let testLicenseEmail = "ADMIN"
     #endif
 
     // MARK: - Initialization
@@ -38,7 +39,7 @@ class LicenseManager: ObservableObject {
 
     // MARK: - License Validation
 
-    /// Validates a license key with Gumroad
+    /// Validates a license key with LemonSqueezy
     /// - Parameters:
     ///   - key: The license key to validate
     ///   - email: The email associated with the purchase
@@ -50,94 +51,148 @@ class LicenseManager: ObservableObject {
 
         #if DEBUG
         // Allow test license in debug mode
-        if allowTestLicense && cleanKey == testLicenseKey {
+        print("🔍 DEBUG: Checking test credentials...")
+        print("   Input key: '\(cleanKey)' (length: \(cleanKey.count))")
+        print("   Expected key: '\(testLicenseKey)' (length: \(testLicenseKey.count))")
+        print("   Keys match: \(cleanKey == testLicenseKey)")
+        print("   Input email: '\(cleanEmail)' (length: \(cleanEmail.count))")
+        print("   Expected email: '\(testLicenseEmail.lowercased())' (length: \(testLicenseEmail.lowercased().count))")
+        print("   Emails match: \(cleanEmail == testLicenseEmail.lowercased())")
+        print("   allowTestLicense: \(allowTestLicense)")
+
+        if allowTestLicense && cleanKey == testLicenseKey && cleanEmail == testLicenseEmail.lowercased() {
             await saveLicense(key: cleanKey, email: cleanEmail)
-            print("✅ Test license activated")
+            print("✅ Test license activated (DEV MODE)")
             return true
+        } else if allowTestLicense {
+            print("⚠️ Test credentials don't match - continuing to API validation")
         }
         #endif
 
-        // Validate with Gumroad API
-        let isValid = await validateWithGumroad(key: cleanKey, email: cleanEmail)
+        // Validate with LemonSqueezy API
+        let isValid = await validateWithLemonSqueezy(key: cleanKey, email: cleanEmail)
 
         if isValid {
             await saveLicense(key: cleanKey, email: cleanEmail)
             print("✅ Pro license activated for \(cleanEmail)")
-            AnalyticsManager.shared.trackEvent(.licenseActivated, metadata: [
-                "email": cleanEmail
-            ])
+            // Note: Analytics tracking removed to avoid circular dependency
         } else {
             print("❌ Invalid license key attempted: \(cleanKey)")
-            AnalyticsManager.shared.trackEvent(.licenseValidationFailed, metadata: [
-                "email": cleanEmail
-            ])
+            // Note: Analytics tracking removed to avoid circular dependency
         }
 
         return isValid
     }
 
-    /// Validates license key with Gumroad API
-    private func validateWithGumroad(key: String, email: String) async -> Bool {
-        // TODO: Replace with your actual Gumroad product permalink
-        // Get this from: https://app.gumroad.com/products -> Your Product -> Settings
-        let productPermalink = "notetaker-pro" // CHANGE THIS
+    /// Validates license key with LemonSqueezy API
+    private func validateWithLemonSqueezy(key: String, email: String) async -> Bool {
+        // DEV_TODO: Replace with your actual LemonSqueezy store ID and product ID
+        // Get these from: https://app.lemonsqueezy.com/settings/api
+        let storeId = "DEV_STORE_ID" // DEV_TODO: CHANGE THIS
+        let productId = "DEV_PRODUCT_ID" // DEV_TODO: CHANGE THIS (optional, can validate without)
 
-        // Gumroad license verification endpoint
-        let urlString = "https://api.gumroad.com/v2/licenses/verify"
+        // LemonSqueezy license activation endpoint
+        let urlString = "https://api.lemonsqueezy.com/v1/licenses/activate"
 
         guard let url = URL(string: urlString) else {
-            print("❌ Invalid Gumroad API URL")
+            print("❌ Invalid LemonSqueezy API URL")
             return false
         }
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
 
-        // Create form data
-        let formData = [
-            "product_permalink": productPermalink,
+        // Add timeout to prevent hanging
+        request.timeoutInterval = 10
+
+        // Create JSON payload
+        let payload: [String: Any] = [
             "license_key": key,
-            "increment_uses_count": "false" // Don't increment on validation
+            "instance_name": email // Use email as instance identifier
         ]
 
-        let formString = formData.map { "\($0.key)=\($0.value)" }.joined(separator: "&")
-        request.httpBody = formString.data(using: .utf8)
+        guard let jsonData = try? JSONSerialization.data(withJSONObject: payload) else {
+            print("❌ Failed to create request payload")
+            return false
+        }
+
+        request.httpBody = jsonData
 
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
 
             guard let httpResponse = response as? HTTPURLResponse else {
-                print("❌ Invalid response from Gumroad")
+                print("❌ Invalid response from LemonSqueezy")
                 return false
             }
 
+            print("📡 LemonSqueezy API response status: \(httpResponse.statusCode)")
+
             if httpResponse.statusCode == 200 {
                 // Parse response
-                let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
-                let success = json?["success"] as? Bool ?? false
+                guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                    print("❌ Failed to parse LemonSqueezy response")
+                    return false
+                }
 
-                if success {
-                    // Optionally check purchase data
-                    if let purchase = json?["purchase"] as? [String: Any],
-                       let purchaseEmail = purchase["email"] as? String {
-                        // Verify email matches (case-insensitive)
-                        if purchaseEmail.lowercased() == email.lowercased() {
+                // LemonSqueezy returns { "activated": true, "license_key": {...} }
+                let activated = json["activated"] as? Bool ?? false
+
+                if activated {
+                    // Check license key metadata
+                    if let licenseData = json["license_key"] as? [String: Any] {
+                        let status = licenseData["status"] as? String ?? ""
+
+                        // Valid statuses: "active", "inactive", "expired", "disabled"
+                        if status == "active" {
+                            print("✅ License validated successfully")
                             return true
                         } else {
-                            print("⚠️ Email mismatch: provided \(email), purchase \(purchaseEmail)")
+                            print("⚠️ License status: \(status)")
                             return false
                         }
                     }
                     return true
                 }
+
+                print("⚠️ License not activated")
+                return false
+
+            } else if httpResponse.statusCode == 422 {
+                // Validation error (invalid key, expired, etc.)
+                if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                    let errors = json["errors"] as? [[String: Any]] ?? []
+                    for error in errors {
+                        if let detail = error["detail"] as? String {
+                            print("⚠️ LemonSqueezy error: \(detail)")
+                        }
+                    }
+                }
+                return false
+            } else if httpResponse.statusCode == 404 {
+                print("⚠️ LemonSqueezy API endpoint not found (check configuration)")
+                return false
             }
 
-            print("⚠️ Gumroad validation failed with status: \(httpResponse.statusCode)")
+            print("⚠️ LemonSqueezy validation failed with status: \(httpResponse.statusCode)")
+
+            // Try to parse error message
+            if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let message = json["message"] as? String {
+                print("⚠️ Error message: \(message)")
+            }
+
             return false
 
-        } catch {
+        } catch let error as NSError {
             print("❌ Failed to validate license: \(error.localizedDescription)")
+            print("   Error domain: \(error.domain)")
+            print("   Error code: \(error.code)")
+            return false
+        } catch {
+            print("❌ Unexpected error: \(error.localizedDescription)")
             return false
         }
     }
@@ -145,10 +200,12 @@ class LicenseManager: ObservableObject {
     // MARK: - License Storage
 
     /// Saves license to Keychain
-    @MainActor
-    private func saveLicense(key: String, email: String) {
-        // Save to Keychain
-        let licenseData = "\(email):\(key)".data(using: .utf8)!
+    private func saveLicense(key: String, email: String) async {
+        // Save to Keychain (background thread is fine for Security framework)
+        guard let licenseData = "\(email):\(key)".data(using: .utf8) else {
+            print("❌ Failed to encode license data")
+            return
+        }
 
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
@@ -164,9 +221,12 @@ class LicenseManager: ObservableObject {
         let status = SecItemAdd(query as CFDictionary, nil)
 
         if status == errSecSuccess {
-            self.isPro = true
-            self.licenseEmail = email
-            self.licenseKey = key
+            // Update UI state on main thread
+            await MainActor.run {
+                self.isPro = true
+                self.licenseEmail = email
+                self.licenseKey = key
+            }
 
             // Save to UserDefaults as backup
             UserDefaults.standard.set(true, forKey: "isProUser")
@@ -235,10 +295,18 @@ class LicenseManager: ObservableObject {
         }
 
         print("✅ License removed")
-        AnalyticsManager.shared.trackEvent(.licenseRemoved)
+        // Note: Analytics tracking removed to avoid circular dependency
     }
 
-    // MARK: - Feature Access
+    #if DEBUG
+    /// Deactivates Pro license (dev mode only)
+    func deactivateLicense() {
+        removeLicense()
+        print("🔓 [DEV] Pro license deactivated")
+    }
+    #endif
+
+    // MARK: - Feature Access Control
 
     /// Check if user has access to Pro features
     var hasProAccess: Bool {

@@ -8,6 +8,7 @@
 
 import Foundation
 import Combine
+import AppKit
 
 /// Privacy-first analytics manager
 /// Tracks app usage, feature utilization, and performance metrics locally
@@ -74,11 +75,11 @@ class AnalyticsManager: ObservableObject {
         let sessionId: UUID
         let metadata: [String: String]
 
-        init(type: EventType, metadata: [String: String] = [:]) {
+        init(type: EventType, sessionId: UUID, metadata: [String: String] = [:]) {
             self.id = UUID()
             self.type = type
             self.timestamp = Date()
-            self.sessionId = AnalyticsManager.shared.currentSessionId
+            self.sessionId = sessionId
             self.metadata = metadata
         }
     }
@@ -107,7 +108,7 @@ class AnalyticsManager: ObservableObject {
 
     /// Tracks an analytics event
     func trackEvent(_ type: EventType, metadata: [String: String] = [:]) {
-        let event = AnalyticsEvent(type: type, metadata: metadata)
+        let event = AnalyticsEvent(type: type, sessionId: currentSessionId, metadata: metadata)
         events.append(event)
 
         // Update computed properties
