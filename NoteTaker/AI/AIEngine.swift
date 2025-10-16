@@ -105,11 +105,22 @@ class AIEngine: ObservableObject {
             // Save preference
             UserDefaults.standard.set(modelType.rawValue, forKey: "selectedAIModel")
 
+            // Update system monitor (if available)
+            // SystemMonitor.shared.setActiveModel(modelType.displayName)
+
             print("✅ \(modelType.displayName) loaded successfully")
         } catch {
             await MainActor.run {
                 self.isModelLoaded = false
                 self.modelLoadingError = error.localizedDescription
+
+                // Log error to error logger
+                ErrorLogger.shared.logError(
+                    "Failed to load \(modelType.displayName)",
+                    severity: .error,
+                    operation: "Model Loading",
+                    details: error.localizedDescription
+                )
             }
 
             print("❌ Failed to load \(modelType.displayName): \(error)")

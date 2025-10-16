@@ -41,24 +41,38 @@ extension Note {
         return formatDate(date)
     }
 
+    // Static cached formatters to avoid repeated allocation
+    private static let timeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        return formatter
+    }()
+
+    private static let monthDayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d"
+        return formatter
+    }()
+
+    private static let fullDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d, yyyy"
+        return formatter
+    }()
+
+    private static let calendar = Calendar.current
+
     /// Helper to format dates consistently
     private func formatDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-
-        let calendar = Calendar.current
-        if calendar.isDateInToday(date) {
-            formatter.timeStyle = .short
-            return "Today, \(formatter.string(from: date))"
-        } else if calendar.isDateInYesterday(date) {
-            formatter.timeStyle = .short
-            return "Yesterday, \(formatter.string(from: date))"
-        } else if calendar.isDate(date, equalTo: Date(), toGranularity: .year) {
-            formatter.dateFormat = "MMM d"
+        if Self.calendar.isDateInToday(date) {
+            return "Today, \(Self.timeFormatter.string(from: date))"
+        } else if Self.calendar.isDateInYesterday(date) {
+            return "Yesterday, \(Self.timeFormatter.string(from: date))"
+        } else if Self.calendar.isDate(date, equalTo: Date(), toGranularity: .year) {
+            return Self.monthDayFormatter.string(from: date)
         } else {
-            formatter.dateFormat = "MMM d, yyyy"
+            return Self.fullDateFormatter.string(from: date)
         }
-
-        return formatter.string(from: date)
     }
 
     /// Updates the note's timestamp
@@ -85,9 +99,25 @@ extension Note {
 // MARK: - NoteEmbedding Extensions
 
 extension NoteEmbedding {
+    // Static cache for converted vectors to avoid repeated allocation
+    private static let vectorCache = NSCache<NSManagedObjectID, NSArray>()
+
+    static func configureVectorCache() {
+        // Cache up to 200 vectors (200 * 8KB = ~1.6MB)
+        vectorCache.countLimit = 200
+        // Set memory limit to 10MB
+        vectorCache.totalCostLimit = 10 * 1024 * 1024
+    }
+
     /// Converts binary data to float array for vector operations
+    /// Uses caching to avoid repeated conversions and memory allocations
     var vector: [Float]? {
         guard let data = embeddingData else { return nil }
+
+        // Check cache first
+        if let cached = Self.vectorCache.object(forKey: self.objectID) as? [Float] {
+            return cached
+        }
 
         let count = data.count / MemoryLayout<Float>.stride
         var array = [Float](repeating: 0, count: count)
@@ -97,7 +127,16 @@ extension NoteEmbedding {
             array = Array(bufferPointer)
         }
 
+        // Store in cache with cost = array byte size
+        let cost = array.count * MemoryLayout<Float>.stride
+        Self.vectorCache.setObject(array as NSArray, forKey: self.objectID, cost: cost)
+
         return array
+    }
+
+    /// Clears the vector cache (useful for memory pressure situations)
+    static func clearVectorCache() {
+        vectorCache.removeAllObjects()
     }
 
     /// Sets the embedding from a float array

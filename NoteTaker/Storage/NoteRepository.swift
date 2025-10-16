@@ -14,25 +14,41 @@ struct NoteListItem: Identifiable, Hashable {
     let preview: String
     let createdAt: Date
 
+    // Static cached formatters to avoid repeated allocation
+    private static let timeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        return formatter
+    }()
+
+    private static let monthDayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d"
+        return formatter
+    }()
+
+    private static let fullDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d, yyyy"
+        return formatter
+    }()
+
+    private static let calendar = Calendar.current
+
     var displayTitle: String {
         title.isEmpty ? "Untitled" : title
     }
 
     var formattedCreatedDate: String {
-        let formatter = DateFormatter()
-        let calendar = Calendar.current
-        if calendar.isDateInToday(createdAt) {
-            formatter.timeStyle = .short
-            return "Today, \(formatter.string(from: createdAt))"
-        } else if calendar.isDateInYesterday(createdAt) {
-            formatter.timeStyle = .short
-            return "Yesterday, \(formatter.string(from: createdAt))"
-        } else if calendar.isDate(createdAt, equalTo: Date(), toGranularity: .year) {
-            formatter.dateFormat = "MMM d"
+        if Self.calendar.isDateInToday(createdAt) {
+            return "Today, \(Self.timeFormatter.string(from: createdAt))"
+        } else if Self.calendar.isDateInYesterday(createdAt) {
+            return "Yesterday, \(Self.timeFormatter.string(from: createdAt))"
+        } else if Self.calendar.isDate(createdAt, equalTo: Date(), toGranularity: .year) {
+            return Self.monthDayFormatter.string(from: createdAt)
         } else {
-            formatter.dateFormat = "MMM d, yyyy"
+            return Self.fullDateFormatter.string(from: createdAt)
         }
-        return formatter.string(from: createdAt)
     }
 }
 

@@ -409,6 +409,12 @@ class LLMInferenceService: @unchecked Sendable {
 
                 guard tokenCount > 0 else {
                     print("❌ Failed to tokenize prompt")
+                    ErrorLogger.shared.logError(
+                        "Failed to tokenize prompt",
+                        severity: .error,
+                        operation: "Text Generation",
+                        details: "Token count was 0 or negative"
+                    )
                     continuation.resume(returning: nil)
                     return
                 }
@@ -429,6 +435,12 @@ class LLMInferenceService: @unchecked Sendable {
 
                 if decodeResult != 0 {
                     print("❌ Failed to decode prompt")
+                    ErrorLogger.shared.logError(
+                        "Failed to decode prompt",
+                        severity: .error,
+                        operation: "Text Generation",
+                        details: "Decode result code: \(decodeResult)"
+                    )
                     continuation.resume(returning: nil)
                     return
                 }
@@ -645,6 +657,12 @@ class LLMInferenceService: @unchecked Sendable {
 
         if verbose {
             print("❌ Model not found in any location")
+            ErrorLogger.shared.logError(
+                "Model file not found: \(modelFileName)",
+                severity: .error,
+                operation: "Model Loading",
+                details: "Searched in Application Support and development directories"
+            )
         }
         return nil
     }

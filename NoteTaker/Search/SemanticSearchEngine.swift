@@ -15,6 +15,17 @@ class SemanticSearchEngine {
     private let embeddingService: EmbeddingService
     private let persistenceController: PersistenceController
 
+    // MARK: - Search Result Caching
+
+    private struct CachedSearchResult {
+        let results: [SearchResult]
+        let timestamp: Date
+    }
+
+    private var searchCache: [String: CachedSearchResult] = [:]
+    private let cacheExpirationTime: TimeInterval = 300 // 5 minutes
+    private let maxCacheSize = 50
+
     // MARK: - Configuration
 
     private struct Config {
@@ -38,6 +49,14 @@ class SemanticSearchEngine {
     ///   - threshold: Minimum similarity threshold (0-1)
     /// - Returns: Array of search results sorted by relevance
     func search(query: String, limit: Int = Config.defaultResultLimit, threshold: Float = Config.minimumSimilarityThreshold) async -> [SearchResult] {
+        // Check cache first
+        let cacheKey = "\(query)_\(limit)_\(threshold)"
+        if let cached = searchCache[cacheKey],
+           Date().timeIntervalSince(cached.timestamp) < cacheExpirationTime {
+            print("🔍 Using cached search results for: \(query)")
+            return cached.results
+        }
+
         // Generate query embedding
         guard let queryEmbedding = await embeddingService.generateEmbedding(for: query) else {
             print("⚠️ Failed to generate query embedding")
@@ -64,7 +83,42 @@ class SemanticSearchEngine {
 
         // Sort by similarity (descending) and limit results
         results.sort { $0.similarity > $1.similarity }
-        return Array(results.prefix(limit))
+        let limitedResults = Array(results.prefix(limit))
+
+        // Cache the results
+        cacheSearchResults(query: cacheKey, results: limitedResults)
+
+        return limitedResults
+    }
+
+    /// Caches search results with automatic cleanup
+    private func cacheSearchResults(query: String, results: [SearchResult]) {
+        // Clean expired entries
+        cleanExpiredCache()
+
+        // Limit cache size
+        if searchCache.count >= maxCacheSize {
+            // Remove oldest entry
+            if let oldestKey = searchCache.min(by: { $0.value.timestamp < $1.value.timestamp })?.key {
+                searchCache.removeValue(forKey: oldestKey)
+            }
+        }
+
+        searchCache[query] = CachedSearchResult(results: results, timestamp: Date())
+    }
+
+    /// Removes expired cache entries
+    private func cleanExpiredCache() {
+        let now = Date()
+        searchCache = searchCache.filter { _, cached in
+            now.timeIntervalSince(cached.timestamp) < cacheExpirationTime
+        }
+    }
+
+    /// Invalidates the search cache (call when notes are modified)
+    func invalidateCache() {
+        searchCache.removeAll()
+        print("🔍 Search cache invalidated")
     }
 
     /// Finds notes similar to a given note

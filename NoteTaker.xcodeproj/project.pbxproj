@@ -42,6 +42,10 @@
 		A1000033000000000000001 /* NoteViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000034000000000000001 /* NoteViewModel.swift */; };
 		A1000060000000000000001 /* AISettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000061000000000000001 /* AISettingsView.swift */; };
 		A1000062000000000000001 /* NoteRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000063000000000000001 /* NoteRepository.swift */; };
+		A1000065000000000000001 /* SystemMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000064000000000000001 /* SystemMonitor.swift */; };
+		A1000067000000000000001 /* SystemMonitorWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000066000000000000001 /* SystemMonitorWidget.swift */; };
+		A1000070000000000000001 /* ErrorLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000069000000000000001 /* ErrorLogView.swift */; };
+		A1000072000000000000001 /* SystemMonitorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000071000000000000001 /* SystemMonitorView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -100,6 +104,10 @@
 		A1000058000000000000001 /* NotesDataModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = NotesDataModel.xcdatamodel; sourceTree = "<group>"; };
 		A1000061000000000000001 /* AISettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AISettingsView.swift; sourceTree = "<group>"; };
 		A1000063000000000000001 /* NoteRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteRepository.swift; sourceTree = "<group>"; };
+		A1000064000000000000001 /* SystemMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMonitor.swift; sourceTree = "<group>"; };
+		A1000066000000000000001 /* SystemMonitorWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMonitorWidget.swift; sourceTree = "<group>"; };
+		A1000069000000000000001 /* ErrorLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorLogView.swift; sourceTree = "<group>"; };
+		A1000071000000000000001 /* SystemMonitorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMonitorView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -137,6 +145,7 @@
 				A1000044000000000000001 /* AI */,
 				A1000045000000000000001 /* Storage */,
 				A1000046000000000000001 /* Search */,
+				A1000068000000000000001 /* Utilities */,
 				A1000006000000000000001 /* Assets.xcassets */,
 				A1000036000000000000001 /* NoteTaker.entitlements */,
 				A1000047000000000000001 /* Preview Content */,
@@ -160,7 +169,10 @@
 				A1000014000000000000001 /* NoteEditorView.swift */,
 				A1000016000000000000001 /* SearchBarView.swift */,
 				A1000061000000000000001 /* AISettingsView.swift */,
-			);
+				A1000069000000000000001 /* ErrorLogView.swift */,
+			
+				A1000066000000000000001 /* SystemMonitorWidget.swift */,
+				A1000071000000000000001 /* SystemMonitorView.swift */,);
 			path = Views;
 			sourceTree = "<group>";
 		};
@@ -210,6 +222,14 @@
 				A1000063000000000000001 /* NoteRepository.swift */,
 			);
 			path = Storage;
+			sourceTree = "<group>";
+		};
+			A1000068000000000000001 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				A1000064000000000000001 /* SystemMonitor.swift */,
+			);
+			path = Utilities;
 			sourceTree = "<group>";
 		};
 		A1000046000000000000001 /* Search */ = {
@@ -326,6 +346,10 @@
 				A1000031000000000000001 /* Note+Extensions.swift in Sources */,
 				A1000033000000000000001 /* NoteViewModel.swift in Sources */,
 				A1000060000000000000001 /* AISettingsView.swift in Sources */,
+				A1000070000000000000001 /* ErrorLogView.swift in Sources */,
+				A1000065000000000000001 /* SystemMonitor.swift in Sources */,
+				A1000067000000000000001 /* SystemMonitorWidget.swift in Sources */,
+				A1000072000000000000001 /* SystemMonitorView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

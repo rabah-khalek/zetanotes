@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Application Identification -->
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+
+	<!-- Display Name -->
+	<key>CFBundleDisplayName</key>
+	<string>NoteTaker</string>
+
+	<!-- Copyright & Credits -->
+	<key>NSHumanReadableCopyright</key>
+	<string>Copyright © 2024 NoteTaker. All rights reserved.</string>
+
+	<!-- Minimum System Version -->
+	<key>LSMinimumSystemVersion</key>
+	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
+
+	<!-- Application Category -->
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.productivity</string>
+
+	<!-- High Resolution Support -->
+	<key>NSHighResolutionCapable</key>
+	<true/>
+
+	<!-- Privacy - Usage Descriptions -->
+	<!-- Note: Currently app is fully local, but adding these for future features -->
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>NoteTaker downloads AI models from the internet to provide local, private AI features. No user data is uploaded.</string>
+
+	<!-- Document Types (for future file association) -->
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>NoteTaker Document</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
+		</dict>
+	</array>
+
+	<!-- Services Menu -->
+	<key>NSServices</key>
+	<array>
+		<dict>
+			<key>NSMenuItem</key>
+			<dict>
+				<key>default</key>
+				<string>Create Note from Selection</string>
+			</dict>
+			<key>NSMessage</key>
+			<string>createNoteFromService</string>
+			<key>NSPortName</key>
+			<string>NoteTaker</string>
+			<key>NSSendTypes</key>
+			<array>
+				<string>NSStringPboardType</string>
+			</array>
+		</dict>
+	</array>
+
+	<!-- Application Features -->
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+
+	<!-- App Transport Security -->
+	<!-- Allow HTTPS connections for model downloads -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<false/>
+		<!-- Specifically allow Hugging Face for model downloads -->
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>huggingface.co</key>
+			<dict>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+				<key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key>
+				<false/>
+				<key>NSTemporaryExceptionRequiresForwardSecrecy</key>
+				<true/>
+			</dict>
+		</dict>
+	</dict>
+
+	<!-- Support Dark Mode -->
+	<key>NSRequiresAquaSystemAppearance</key>
+	<false/>
+
+	<!-- Main Storyboard (if using storyboards) -->
+	<!-- NoteTaker uses SwiftUI, so this is commented out -->
+	<!-- <key>NSMainStoryboardFile</key> -->
+	<!-- <string>Main</string> -->
+
+	<!-- Principal Class for SwiftUI App -->
+	<key>NSPrincipalClass</key>
+	<string>NSApplication</string>
+
+	<!-- Supported Platforms -->
+	<key>CFBundleSupportedPlatforms</key>
+	<array>
+		<string>MacOSX</string>
+	</array>
+
+	<!-- Application Features Description -->
+	<key>NSHumanReadableDescription</key>
+	<string>AI-powered note-taking app with local processing. Features include intelligent autocomplete, summarization, translation, and semantic search - all running privately on your Mac.</string>
+
+	<!-- URL Schemes (for future deep linking) -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.notetaker.url</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>notetaker</string>
+			</array>
+		</dict>
+	</array>
+
+	<!-- Accessibility -->
+	<key>NSSupportsAutomaticTermination</key>
+	<true/>
+	<key>NSSupportsSuddenTermination</key>
+	<true/>
+
+	<!-- Background Modes (if needed for future features) -->
+	<!-- Currently not needed as all processing is on-demand -->
+
+	<!-- App Icons -->
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
+	<key>CFBundleIconName</key>
+	<string>AppIcon</string>
+</dict>
+</plist>

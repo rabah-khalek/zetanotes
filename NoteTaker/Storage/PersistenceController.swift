@@ -29,10 +29,33 @@ class PersistenceController: ObservableObject {
         container.persistentStoreDescriptions.first?.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
         container.persistentStoreDescriptions.first?.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
 
+        // Enable data encryption at rest for security (macOS)
+        // On macOS, Core Data encryption is handled at the file system level
+        // Data is encrypted when FileVault is enabled
+        // For additional security, we ensure the store is not accessible to other apps
+        if !inMemory {
+            // Set file protection attributes after store creation
+            // This will be done in the completion handler
+        }
+
         container.loadPersistentStores { description, error in
             if let error = error {
                 // In production, handle this error appropriately
                 fatalError("Failed to load Core Data stack: \(error)")
+            }
+
+            // Set file permissions for additional security (macOS)
+            if let storeURL = description.url, !inMemory {
+                do {
+                    // Set file attributes to protect the database file
+                    let attributes: [FileAttributeKey: Any] = [
+                        .posixPermissions: 0o600  // Owner read/write only
+                    ]
+                    try FileManager.default.setAttributes(attributes, ofItemAtPath: storeURL.path)
+                    print("✅ Core Data store secured with restricted permissions")
+                } catch {
+                    print("⚠️ Failed to set file permissions: \(error)")
+                }
             }
         }
 
