@@ -235,6 +235,14 @@ class NoteViewModel: ObservableObject {
 
     // MARK: - AI Features
 
+    /// Generate a friendly timestamp for AI tool outputs
+    /// Format: "Jan 15, 3:45 PM"
+    private func generateTimestamp() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d, h:mm a"
+        return formatter.string(from: Date())
+    }
+
     func requestAutocomplete(for text: String) {
         guard isAutocompleteEnabled else {
             autocompleteSuggestion = nil
@@ -313,7 +321,8 @@ class NoteViewModel: ObservableObject {
 
         if let summary = summary {
             await MainActor.run {
-                let summaryBlock = "\n\n--- Summary ---\n\n" + summary
+                let timestamp = self.generateTimestamp()
+                let summaryBlock = "\n\n--- Summary (\(timestamp)) ---\n\n" + summary
                 note.content = reconstructContent(
                     base: sections.baseContent,
                     summary: summaryBlock,
@@ -357,7 +366,8 @@ class NoteViewModel: ObservableObject {
 
         if let translation = translation {
             await MainActor.run {
-                let translationBlock = "\n\n--- Translation to \(targetLanguage) ---\n\n" + translation
+                let timestamp = self.generateTimestamp()
+                let translationBlock = "\n\n--- Translation to \(targetLanguage) (\(timestamp)) ---\n\n" + translation
                 note.content = reconstructContent(
                     base: sections.baseContent,
                     summary: sections.summaryBlock,
@@ -394,7 +404,8 @@ class NoteViewModel: ObservableObject {
 
         if let corrected = corrected {
             await MainActor.run {
-                let correctedBlock = "\n\n--- Patched ---\n\n" + corrected
+                let timestamp = self.generateTimestamp()
+                let correctedBlock = "\n\n--- Patched (\(timestamp)) ---\n\n" + corrected
                 note.content = reconstructContent(
                     base: sections.baseContent,
                     summary: sections.summaryBlock,
@@ -431,7 +442,8 @@ class NoteViewModel: ObservableObject {
 
         if let reformulated = reformulated {
             await MainActor.run {
-                let reformulatedBlock = "\n\n--- Reformulated ---\n\n" + reformulated
+                let timestamp = self.generateTimestamp()
+                let reformulatedBlock = "\n\n--- Reformulated (\(timestamp)) ---\n\n" + reformulated
                 note.content = reconstructContent(
                     base: sections.baseContent,
                     summary: sections.summaryBlock,
@@ -503,17 +515,19 @@ class NoteViewModel: ObservableObject {
         var autoCorrectedBlock = ""
         var reformulatedBlock = ""
 
-        let markers = [
-            "\n\n--- Summary ---",
+        // Markers now support both old format (without timestamp) and new format (with timestamp)
+        // Use regex-like patterns to match headers with optional timestamps
+        let markerPrefixes = [
+            "\n\n--- Summary",
             "\n\n--- Translation to ",
-            "\n\n--- Patched ---",
-            "\n\n--- Reformulated ---"
+            "\n\n--- Patched",
+            "\n\n--- Reformulated"
         ]
 
         var firstAIIndex: String.Index? = nil
 
-        for marker in markers {
-            if let range = content.range(of: marker) {
+        for markerPrefix in markerPrefixes {
+            if let range = content.range(of: markerPrefix) {
                 if firstAIIndex == nil || range.lowerBound < firstAIIndex! {
                     firstAIIndex = range.lowerBound
                 }
@@ -524,12 +538,12 @@ class NoteViewModel: ObservableObject {
             baseContent = String(content[..<firstIndex])
             let aiSections = String(content[firstIndex...])
 
-            if let summaryStart = aiSections.range(of: "\n\n--- Summary ---") {
+            if let summaryStart = aiSections.range(of: "\n\n--- Summary") {
                 let summaryContent = String(aiSections[summaryStart.lowerBound...])
                 var summaryEnd = summaryContent.endIndex
 
-                for marker in ["\n\n--- Translation to ", "\n\n--- Patched ---", "\n\n--- Reformulated ---"] {
-                    if let nextRange = summaryContent.range(of: marker) {
+                for markerPrefix in ["\n\n--- Translation to ", "\n\n--- Patched", "\n\n--- Reformulated"] {
+                    if let nextRange = summaryContent.range(of: markerPrefix) {
                         if nextRange.lowerBound < summaryEnd {
                             summaryEnd = nextRange.lowerBound
                         }
@@ -542,8 +556,8 @@ class NoteViewModel: ObservableObject {
                 let translationContent = String(aiSections[translationStart.lowerBound...])
                 var translationEnd = translationContent.endIndex
 
-                for marker in ["\n\n--- Summary ---", "\n\n--- Patched ---", "\n\n--- Reformulated ---"] {
-                    if let nextRange = translationContent.range(of: marker) {
+                for markerPrefix in ["\n\n--- Summary", "\n\n--- Patched", "\n\n--- Reformulated"] {
+                    if let nextRange = translationContent.range(of: markerPrefix) {
                         if nextRange.lowerBound < translationEnd {
                             translationEnd = nextRange.lowerBound
                         }
@@ -552,12 +566,12 @@ class NoteViewModel: ObservableObject {
                 translationBlock = String(translationContent[..<translationEnd])
             }
 
-            if let autoCorrectedStart = aiSections.range(of: "\n\n--- Patched ---") {
+            if let autoCorrectedStart = aiSections.range(of: "\n\n--- Patched") {
                 let autoCorrectedContent = String(aiSections[autoCorrectedStart.lowerBound...])
                 var autoCorrectedEnd = autoCorrectedContent.endIndex
 
-                for marker in ["\n\n--- Summary ---", "\n\n--- Translation to ", "\n\n--- Reformulated ---"] {
-                    if let nextRange = autoCorrectedContent.range(of: marker) {
+                for markerPrefix in ["\n\n--- Summary", "\n\n--- Translation to ", "\n\n--- Reformulated"] {
+                    if let nextRange = autoCorrectedContent.range(of: markerPrefix) {
                         if nextRange.lowerBound < autoCorrectedEnd {
                             autoCorrectedEnd = nextRange.lowerBound
                         }
@@ -566,12 +580,12 @@ class NoteViewModel: ObservableObject {
                 autoCorrectedBlock = String(autoCorrectedContent[..<autoCorrectedEnd])
             }
 
-            if let reformulatedStart = aiSections.range(of: "\n\n--- Reformulated ---") {
+            if let reformulatedStart = aiSections.range(of: "\n\n--- Reformulated") {
                 let reformulatedContent = String(aiSections[reformulatedStart.lowerBound...])
                 var reformulatedEnd = reformulatedContent.endIndex
 
-                for marker in ["\n\n--- Summary ---", "\n\n--- Translation to ", "\n\n--- Patched ---"] {
-                    if let nextRange = reformulatedContent.range(of: marker) {
+                for markerPrefix in ["\n\n--- Summary", "\n\n--- Translation to ", "\n\n--- Patched"] {
+                    if let nextRange = reformulatedContent.range(of: markerPrefix) {
                         if nextRange.lowerBound < reformulatedEnd {
                             reformulatedEnd = nextRange.lowerBound
                         }

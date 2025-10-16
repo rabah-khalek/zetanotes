@@ -28,16 +28,17 @@ struct ContentView: View {
             }
         }
             .toolbar {
-                ToolbarItemGroup(placement: .principal) {
-                    // AI Tool Buttons - Modern, compact design
-                    HStack(alignment: .center, spacing: 6) {
-                        // Autocomplete Toggle with Switch
-                        AutocompleteToggle(isEnabled: $viewModel.isAutocompleteEnabled)
-                            .help("Toggle Autocomplete")
+                ToolbarItem(placement: .principal) {
+                    Group {
+                        // AI Tool Buttons - Sleek compact design
+                        HStack(alignment: .center, spacing: 8) {
+                            // Autocomplete Toggle with Switch
+                            AutocompleteToggle(isEnabled: $viewModel.isAutocompleteEnabled)
+                                .help("Toggle Autocomplete")
 
-                        Divider()
-                            .frame(height: 20)
-                            .padding(.horizontal, 4)
+                            Rectangle()
+                                .fill(Color.secondary.opacity(0.2))
+                                .frame(width: 1, height: 14)
 
                         // Patch
                         AIToolButton(
@@ -114,39 +115,54 @@ struct ContentView: View {
                         .keyboardShortcut("t", modifiers: .command)
                         .help("Translate text (⌘T)")
                         .disabled(viewModel.selectedNote == nil || viewModel.isTranslating)
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(Color(nsColor: .controlBackgroundColor).opacity(0.5))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6)
+                                .strokeBorder(Color.secondary.opacity(0.2), lineWidth: 0.5)
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
                     }
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 6)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(Color(nsColor: .controlBackgroundColor).opacity(0.5))
-                    )
                 }
 
-                ToolbarItemGroup(placement: .automatic) {
-                    HStack(spacing: 8) {
-                        Button(action: { showingSettings.toggle() }) {
-                            Image(systemName: "gear")
-                                .font(.system(size: 16))
-                        }
-                        .buttonStyle(.plain)
-                        .help("AI Settings & Prompts")
+                ToolbarItem(placement: .automatic) {
+                    Group {
+                        HStack(alignment: .center, spacing: 8) {
+                            Button(action: { showingSettings.toggle() }) {
+                                Image(systemName: "gear")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.secondary)
+                            }
+                            .buttonStyle(.plain)
+                            .help("AI Settings & Prompts")
 
-                        Button(action: {
-                            NotificationCenter.default.post(name: .createNewNote, object: nil)
-                        }) {
-                            Image(systemName: "square.and.pencil")
-                                .font(.system(size: 16))
+                            Button(action: {
+                                NotificationCenter.default.post(name: .createNewNote, object: nil)
+                            }) {
+                                Image(systemName: "square.and.pencil")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.secondary)
+                            }
+                            .buttonStyle(.plain)
+                            .help("New Note (⌘N)")
                         }
-                        .buttonStyle(.plain)
-                        .help("New Note (⌘N)")
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(Color(nsColor: .controlBackgroundColor).opacity(0.5))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6)
+                                .strokeBorder(Color.secondary.opacity(0.2), lineWidth: 0.5)
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
                     }
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 6)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(Color(nsColor: .controlBackgroundColor).opacity(0.5))
-                    )
                 }
             }
         .sheet(isPresented: $showingSettings) {
@@ -162,9 +178,9 @@ struct AutocompleteToggle: View {
     @State private var isHovered = false
 
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 5) {
             Text("Autocomplete")
-                .font(.system(size: 11, weight: .medium))
+                .font(.system(size: 10, weight: .medium))
                 .foregroundColor(isEnabled ? .purple : .secondary)
 
             Toggle("", isOn: $isEnabled)
@@ -182,7 +198,7 @@ struct AutocompleteToggle: View {
     }
 }
 
-// MARK: - AI Tool Button Component
+// MARK: - AI Tool Button Component (Keybind square + label)
 
 struct AIToolButton: View {
     let icon: String
@@ -206,34 +222,39 @@ struct AIToolButton: View {
                         .padding(.trailing, 2)
                 }
 
-                // Keyboard shortcut before label
-                Text("⌘")
-                    .font(.system(size: 10, weight: .medium, design: .default))
-                    .foregroundColor(foregroundColor.opacity(0.7))
+                // Square with ⌘ + first letter
+                HStack(spacing: 1) {
+                    Text("⌘")
+                        .font(.system(size: 8, weight: .medium))
+                    Text(String(label.prefix(1)))
+                        .font(.system(size: 9, weight: .bold))
+                }
+                .foregroundColor(foregroundColor)
+                .padding(.horizontal, 3)
+                .padding(.vertical, 2)
+                .background(
+                    RoundedRectangle(cornerRadius: 3)
+                        .strokeBorder(foregroundColor.opacity(0.4), lineWidth: 0.5)
+                        .background(
+                            RoundedRectangle(cornerRadius: 3)
+                                .fill(foregroundColor.opacity(isHovered && isEnabled ? 0.08 : 0.03))
+                        )
+                )
 
-                // Label with first letter in bold
-                Text(attributedLabel)
-                    .font(.system(size: 11, weight: .medium))
+                // Rest of label
+                if label.count > 1 {
+                    Text(String(label.dropFirst()))
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundColor(foregroundColor)
+                }
             }
-            .foregroundColor(foregroundColor)
-            .scaleEffect(isHovered && isEnabled ? 1.03 : 1.0)
+            .scaleEffect(isHovered && isEnabled ? 1.02 : 1.0)
             .animation(.easeInOut(duration: 0.12), value: isHovered)
         }
         .buttonStyle(.plain)
         .onHover { hovering in
             isHovered = hovering
         }
-    }
-
-    private var attributedLabel: AttributedString {
-        var result = AttributedString(label)
-
-        // Make first character bold
-        if let firstCharRange = result.range(of: String(label.prefix(1))) {
-            result[firstCharRange].font = .system(size: 11, weight: .bold)
-        }
-
-        return result
     }
 
     private var foregroundColor: Color {
@@ -250,37 +271,37 @@ struct AIToolButton: View {
     }
 }
 
-// MARK: - Empty State (Minimal Mac style)
+// MARK: - Empty State (Compact and clean)
 
 struct EmptyStateView: View {
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 18) {
             Image(systemName: "note.text")
-                .font(.system(size: 56))
+                .font(.system(size: 50))
                 .foregroundColor(.secondary.opacity(0.5))
 
             Text("No Note Selected")
-                .font(.system(size: 18, weight: .medium))
+                .font(.system(size: 16, weight: .medium))
                 .foregroundColor(.secondary)
 
             Text("Select a note or create a new one")
-                .font(.system(size: 13))
+                .font(.system(size: 12))
                 .foregroundColor(.secondary.opacity(0.8))
 
             Button(action: {
                 NotificationCenter.default.post(name: .createNewNote, object: nil)
             }) {
-                HStack(spacing: 6) {
+                HStack(spacing: 5) {
                     Image(systemName: "plus")
-                        .font(.system(size: 11, weight: .semibold))
+                        .font(.system(size: 10, weight: .semibold))
                     Text("New Note")
-                        .font(.system(size: 13))
+                        .font(.system(size: 12))
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 7)
             }
             .buttonStyle(.borderedProminent)
-            .controlSize(.large)
+            .controlSize(.regular)
             // Note: Keyboard shortcut ⌘N is handled by toolbar button
         }
         .padding()

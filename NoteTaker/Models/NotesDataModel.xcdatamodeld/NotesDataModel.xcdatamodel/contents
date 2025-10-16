@@ -9,17 +9,35 @@
         <attribute name="updatedAt" optional="NO" attributeType="Date" usesScalarValueType="NO"/>
         <relationship name="embedding" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="NoteEmbedding" inverseName="note" inverseEntity="NoteEmbedding"/>
         <relationship name="tags" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Tag" inverseName="notes" inverseEntity="Tag"/>
+        <fetchIndex name="byId">
+            <fetchIndexElement property="id" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="byUpdatedAt">
+            <fetchIndexElement property="updatedAt" type="Binary" order="descending"/>
+        </fetchIndex>
+        <fetchIndex name="byCreatedAt">
+            <fetchIndexElement property="createdAt" type="Binary" order="descending"/>
+        </fetchIndex>
     </entity>
     <entity name="NoteEmbedding" representedClassName="NoteEmbedding" syncable="YES" codeGenerationType="category">
         <attribute name="embeddingData" optional="NO" attributeType="Binary"/>
         <attribute name="id" optional="NO" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="version" optional="NO" attributeType="Integer 16" defaultValueString="1" usesScalarValueType="YES"/>
         <relationship name="note" optional="NO" maxCount="1" deletionRule="Nullify" destinationEntity="Note" inverseName="embedding" inverseEntity="Note"/>
+        <fetchIndex name="byEmbeddingId">
+            <fetchIndexElement property="id" type="Binary" order="ascending"/>
+        </fetchIndex>
     </entity>
     <entity name="Tag" representedClassName="Tag" syncable="YES" codeGenerationType="category">
         <attribute name="color" optional="YES" attributeType="String"/>
         <attribute name="id" optional="NO" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="name" optional="NO" attributeType="String" defaultValueString=""/>
         <relationship name="notes" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Note" inverseName="tags" inverseEntity="Note"/>
+        <fetchIndex name="byTagId">
+            <fetchIndexElement property="id" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="byTagName">
+            <fetchIndexElement property="name" type="Binary" order="ascending"/>
+        </fetchIndex>
     </entity>
 </model>

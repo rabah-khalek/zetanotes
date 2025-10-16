@@ -12,16 +12,26 @@ struct NoteListView: View {
 
     // Extract List content to avoid compiler crash
     private var noteListContent: some View {
-        List(selection: $viewModel.selectedNoteID) {
-            ForEach(viewModel.displayItems) { item in
-                noteRowContent(for: item)
-                    .tag(item.id)
-                    .listRowInsets(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
+        ScrollViewReader { proxy in
+            List(selection: $viewModel.selectedNoteID) {
+                ForEach(viewModel.displayItems) { item in
+                    noteRowContent(for: item)
+                        .tag(item.id)
+                        .listRowInsets(EdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12))
+                        .id(item.id)
+                }
+                .onDelete { indexSet in
+                    let items = viewModel.displayItems
+                    for index in indexSet {
+                        viewModel.deleteNote(id: items[index].id)
+                    }
+                }
             }
-            .onDelete { indexSet in
-                let items = viewModel.displayItems
-                for index in indexSet {
-                    viewModel.deleteNote(id: items[index].id)
+            .onChange(of: viewModel.selectedNoteID) { newID in
+                if let id = newID {
+                    withAnimation {
+                        proxy.scrollTo(id, anchor: .center)
+                    }
                 }
             }
         }
@@ -71,44 +81,48 @@ struct NoteListView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Search Bar (Mac Notes style - minimal)
-            SearchBarView(searchQuery: $viewModel.searchQuery, isSearching: $viewModel.isSearching)
-                .padding(.horizontal, 12)
-                .padding(.top, 12)
-                .padding(.bottom, 8)
+            // Compact header
+            VStack(spacing: 8) {
+                // Search Bar only
+                SearchBarView(searchQuery: $viewModel.searchQuery, isSearching: $viewModel.isSearching)
+                    .padding(.horizontal, 12)
+                    .padding(.top, 12)
+                    .padding(.bottom, 6)
+            }
 
-            // Note List (Clean Mac Notes style)
+            // Note List (Modern glass morphism style)
             if viewModel.hasNotes {
                 noteListContent
                     .listStyle(.sidebar)
                     .scrollContentBackground(.hidden)
+                    .background(Color(nsColor: .textBackgroundColor))
             } else {
-                // Empty state (minimal)
-                VStack(spacing: 16) {
+                // Compact empty state
+                VStack(spacing: 14) {
                     Image(systemName: "note.text")
-                        .font(.system(size: 44))
+                        .font(.system(size: 40))
                         .foregroundColor(.secondary.opacity(0.6))
 
                     Text("No Notes")
-                        .font(.system(size: 15, weight: .medium))
+                        .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.secondary)
 
                     Button(action: {
                         viewModel.createNewNote()
                     }) {
                         Text("Create Note")
-                            .font(.system(size: 12))
+                            .font(.system(size: 11))
                     }
                     .buttonStyle(.bordered)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .navigationTitle("Notes")
+        .background(Color(nsColor: .textBackgroundColor))
     }
 }
 
-// MARK: - Note Row (Mac Notes style - clean and minimal)
+// MARK: - Note Row (Clean and compact)
 
 struct NoteRowView: View {
     let item: NoteListItem
@@ -116,22 +130,22 @@ struct NoteRowView: View {
     @State private var isHovering = false
 
     var body: some View {
-        HStack(spacing: 8) {
-            VStack(alignment: .leading, spacing: 6) {
+        HStack(spacing: 6) {
+            VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Text(item.displayTitle)
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.system(size: 13, weight: .semibold))
                         .lineLimit(1)
 
                     Spacer()
 
                     Text(item.formattedCreatedDate)
-                        .font(.system(size: 11))
+                        .font(.system(size: 10))
                         .foregroundColor(.secondary.opacity(0.7))
                 }
 
                 Text(item.preview)
-                    .font(.system(size: 12))
+                    .font(.system(size: 11))
                     .foregroundColor(.secondary)
                     .lineLimit(2)
             }

@@ -12,14 +12,14 @@ struct SearchBarView: View {
     @Binding var isSearching: Bool
 
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 7) {
             Image(systemName: "magnifyingglass")
-                .font(.system(size: 13))
+                .font(.system(size: 12))
                 .foregroundColor(.secondary.opacity(0.7))
 
             TextField("Search", text: $searchQuery)
                 .textFieldStyle(.plain)
-                .font(.system(size: 13))
+                .font(.system(size: 12))
 
             if !searchQuery.isEmpty {
                 if isSearching {
@@ -31,15 +31,15 @@ struct SearchBarView: View {
                         searchQuery = ""
                     }) {
                         Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 12))
+                            .font(.system(size: 11))
                             .foregroundColor(.secondary.opacity(0.6))
                     }
                     .buttonStyle(.plain)
                 }
             }
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 5)
         .background(Color(nsColor: .controlBackgroundColor).opacity(0.8))
         .cornerRadius(6)
     }

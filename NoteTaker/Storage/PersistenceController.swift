@@ -144,6 +144,15 @@ class PersistenceController: ObservableObject {
         let request: NSFetchRequest<Note> = Note.fetchRequest()
         request.sortDescriptors = [NSSortDescriptor(keyPath: \Note.updatedAt, ascending: false)]
 
+        // Prefetch relationships to avoid N+1 queries
+        request.relationshipKeyPathsForPrefetching = ["embedding", "tags"]
+
+        // Limit results for better performance with large datasets
+        request.fetchLimit = 1000
+
+        // Use property-level fault optimization
+        request.returnsObjectsAsFaults = false
+
         do {
             return try container.viewContext.fetch(request)
         } catch {
@@ -161,6 +170,15 @@ class PersistenceController: ObservableObject {
         let request: NSFetchRequest<Note> = Note.fetchRequest()
         request.predicate = NSPredicate(format: "title CONTAINS[cd] %@ OR content CONTAINS[cd] %@", query, query)
         request.sortDescriptors = [NSSortDescriptor(keyPath: \Note.updatedAt, ascending: false)]
+
+        // Prefetch relationships to avoid N+1 queries
+        request.relationshipKeyPathsForPrefetching = ["embedding", "tags"]
+
+        // Limit search results
+        request.fetchLimit = 100
+
+        // Use property-level fault optimization
+        request.returnsObjectsAsFaults = false
 
         do {
             return try container.viewContext.fetch(request)
