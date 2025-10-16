@@ -17,6 +17,7 @@ class AutocompleteService: AIService {
 
     private var debounceTimer: Timer?
     private let debounceDelay: TimeInterval = 0.2 // 200ms debounce
+    private var lastContext: String = "" // Store context for post-processing
 
     // MARK: - Configuration
 
@@ -33,7 +34,7 @@ class AutocompleteService: AIService {
         self.config = AIGenerationConfig(
             temperature: 0.3,
             maxTokens: Config.maxTokens,
-            stopSequences: ["\n\n"]  // Stop at paragraph breaks
+            stopSequences: ["\n\n", "\n\n\n"]  // Stop at paragraph breaks only
         )
     }
 
@@ -45,13 +46,74 @@ class AutocompleteService: AIService {
         let startIndex = text.index(text.endIndex, offsetBy: -contextLength)
         let context = String(text[startIndex...])
 
-        // For autocomplete, we want natural continuation
-        // Keep it simple - just provide context
+        // Store context for post-processing
+        lastContext = context
+
+        // Use same pattern as other services: instruction + text + label
         return """
-        Continue the following text naturally. Write only the next few words that would logically follow.
+        \(DefaultPrompts.autocomplete)
 
         \(context)
+
+        Continuation:
         """
+    }
+
+    // Post-process to clean the autocomplete output
+    func postProcess(_ output: String) -> String {
+        var cleaned = output.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // Remove common prefixes that models add
+        let prefixes = [
+            "Continuation:",
+            "Here is the continuation:",
+            "Here is",
+            "Here's",
+            "The continuation is:",
+            "continuation:"
+        ]
+
+        for prefix in prefixes {
+            if cleaned.lowercased().hasPrefix(prefix.lowercased()) {
+                cleaned = String(cleaned.dropFirst(prefix.count))
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                    .trimmingCharacters(in: CharacterSet(charactersIn: ":"))
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+        }
+
+        // Remove leading ellipsis that models add when context seems truncated
+        if cleaned.hasPrefix("...") {
+            cleaned = String(cleaned.dropFirst(3))
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        if cleaned.hasPrefix("..") {
+            cleaned = String(cleaned.dropFirst(2))
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
+        // Remove the context if the LLM echoed it back
+        if cleaned.lowercased().hasPrefix(lastContext.lowercased()) {
+            cleaned = String(cleaned.dropFirst(lastContext.count))
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
+        // Also handle partial context repetition (last few words)
+        let contextWords = lastContext.split(separator: " ")
+        if contextWords.count >= 3 {
+            let lastFewWords = contextWords.suffix(min(5, contextWords.count)).joined(separator: " ")
+            if let range = cleaned.range(of: lastFewWords, options: [.caseInsensitive, .anchored]) {
+                cleaned = String(cleaned[range.upperBound...])
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+        }
+
+        // Stop at double newlines (paragraph breaks)
+        if let doubleNewline = cleaned.range(of: "\n\n") {
+            cleaned = String(cleaned[..<doubleNewline.lowerBound])
+        }
+
+        return cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     // MARK: - Autocomplete

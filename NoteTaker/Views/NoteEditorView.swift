@@ -13,6 +13,7 @@ import AppKit
 class AutocompleteTextView: NSTextView {
     var onTabPressed: (() -> Void)?
     var onEscapePressed: (() -> Void)?
+    var onRightArrowPressed: (() -> Void)?
     var ghostText: String? {
         didSet {
             setNeedsDisplay(bounds)
@@ -20,17 +21,26 @@ class AutocompleteTextView: NSTextView {
     }
 
     override func keyDown(with event: NSEvent) {
-        // Handle Tab key (keyCode 48)
+        // Handle Tab key (keyCode 48) - accept full suggestion
         if event.keyCode == 48 {
-            if let onTab = onTabPressed {
+            if ghostText != nil, let onTab = onTabPressed {
                 onTab()
                 return // Don't call super - we handled it
             }
         }
-        // Handle Escape key (keyCode 53)
+        // Handle Escape key (keyCode 53) - dismiss suggestion
         else if event.keyCode == 53 {
-            if let onEscape = onEscapePressed {
+            if ghostText != nil, let onEscape = onEscapePressed {
                 onEscape()
+                return // Don't call super - we handled it
+            }
+        }
+        // Handle Right Arrow key (keyCode 124) - accept one word
+        else if event.keyCode == 124 {
+            // Only intercept if we're at end of text and have a suggestion
+            let cursorPosition = selectedRange().location
+            if cursorPosition == string.count, ghostText != nil, let onRightArrow = onRightArrowPressed {
+                onRightArrow()
                 return // Don't call super - we handled it
             }
         }
@@ -82,6 +92,7 @@ struct SimpleTextEditor: NSViewRepresentable {
     var onChange: ((String, Int) -> Void)?  // Now includes cursor position
     var onTabPressed: (() -> Void)?
     var onEscapePressed: (() -> Void)?
+    var onRightArrowPressed: (() -> Void)?
 
     class Coordinator: NSObject, NSTextViewDelegate {
         var parent: SimpleTextEditor
@@ -129,6 +140,7 @@ struct SimpleTextEditor: NSViewRepresentable {
         // Set up key handlers
         textView.onTabPressed = onTabPressed
         textView.onEscapePressed = onEscapePressed
+        textView.onRightArrowPressed = onRightArrowPressed
 
         scrollView.documentView = textView
         scrollView.hasVerticalScroller = true
@@ -223,12 +235,14 @@ struct NoteEditorView: View {
 
                     // Check if cursor is in base content (not in AI-generated sections)
                     if isInBaseContent(content: newValue, cursorPosition: cursorPosition) {
-                        // Extract last sentence for context
-                        let context = extractLastSentence(from: newValue)
-
-                        // Request autocomplete only if model is loaded and sufficient context
-                        if aiEngine.isModelLoaded && context.count >= 10 {
-                            viewModel.requestAutocomplete(for: context)
+                        // Smart triggering: only suggest at natural pause points
+                        if shouldTriggerAutocomplete(text: newValue, cursorPosition: cursorPosition) {
+                            // Request autocomplete only if model is loaded
+                            if aiEngine.isModelLoaded && newValue.count >= 10 {
+                                viewModel.requestAutocomplete(for: newValue)
+                            } else {
+                                viewModel.dismissAutocomplete()
+                            }
                         } else {
                             viewModel.dismissAutocomplete()
                         }
@@ -245,6 +259,11 @@ struct NoteEditorView: View {
                 onEscapePressed: {
                     if viewModel.autocompleteSuggestion != nil {
                         viewModel.dismissAutocomplete()
+                    }
+                },
+                onRightArrowPressed: {
+                    if viewModel.autocompleteSuggestion != nil {
+                        acceptOneWord()
                     }
                 }
             )
@@ -347,8 +366,51 @@ struct NoteEditorView: View {
         }
     }
 
-    /// Extract context for autocomplete using TinyLlama's full context window
-    /// TinyLlama 1.1B supports 2,048 tokens ≈ 8,000 characters (using 4 chars/token approximation)
+    /// Accept one word from the suggestion (right arrow key)
+    private func acceptOneWord() {
+        guard let suggestion = viewModel.autocompleteSuggestion else { return }
+
+        // Find the first word boundary (space or punctuation)
+        var firstWordEnd = suggestion.firstIndex(where: { char in
+            char == " " || char == "." || char == "," || char == "!" || char == "?" || char == "\n"
+        })
+
+        // If found, include the delimiter; otherwise take the whole suggestion
+        if let endIndex = firstWordEnd {
+            // Include the space/punctuation
+            firstWordEnd = suggestion.index(after: endIndex)
+        }
+
+        let oneWord = String(suggestion[..<(firstWordEnd ?? suggestion.endIndex)])
+
+        // Append the word to content
+        let newContent = content + oneWord
+        content = newContent
+        note.content = newContent
+        viewModel.saveNote(note)
+
+        // Update the suggestion to remove the accepted word
+        viewModel.acceptPartialAutocomplete(oneWord)
+    }
+
+    /// Smart triggering: only suggest autocomplete at natural pause points
+    /// This prevents suggestions mid-word and reduces unnecessary inference calls
+    private func shouldTriggerAutocomplete(text: String, cursorPosition: Int) -> Bool {
+        guard cursorPosition > 0, cursorPosition <= text.count else { return false }
+
+        // Get the character just before cursor
+        let index = text.index(text.startIndex, offsetBy: cursorPosition - 1)
+        let charBeforeCursor = text[index]
+
+        // Natural pause points where autocomplete makes sense
+        let naturalPausePoints: Set<Character> = [" ", ".", ",", ":", ";", "!", "?", "\n"]
+
+        // Only trigger if we're at a natural pause point (after space, punctuation, etc.)
+        return naturalPausePoints.contains(charBeforeCursor)
+    }
+
+    /// OLD - Kept for reference but no longer used
+    /// Context extraction is now handled by AutocompleteService
     private func extractLastSentence(from text: String) -> String {
         guard !text.isEmpty else { return "" }
 

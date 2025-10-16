@@ -241,6 +241,9 @@ class NoteViewModel: ObservableObject {
             return
         }
 
+        // Immediately clear old suggestion when new request comes in
+        autocompleteSuggestion = nil
+
         debounceTimer?.invalidate()
 
         debounceTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { [weak self] _ in
@@ -255,25 +258,8 @@ class NoteViewModel: ObservableObject {
     private func generateAutocomplete(for text: String) async {
         guard aiEngine.isModelLoaded else { return }
 
-        // Get the last 500 characters for context
-        let contextLength = min(text.count, 500)
-        let startIndex = text.index(text.endIndex, offsetBy: -contextLength)
-        let context = String(text[startIndex...])
-
-        let prompt = """
-        Here is the content:
-
-        \(context)
-
-        Task: \(autocompletePrompt)
-        """
-
-        let suggestion = await aiEngine.llmService.generate(
-            prompt: prompt,
-            maxTokens: 20,  // Keep short for autocomplete
-            temperature: 0.3,
-            stopSequences: ["\n\n"]  // Stop at paragraph breaks
-        )
+        // Use the AutocompleteService directly instead of duplicating logic
+        let suggestion = await aiEngine.autocompleteService.generateSuggestion(for: text)
 
         await MainActor.run {
             if let suggestion = suggestion, !suggestion.isEmpty {
@@ -288,6 +274,20 @@ class NoteViewModel: ObservableObject {
         let suggestion = autocompleteSuggestion
         autocompleteSuggestion = nil
         return suggestion
+    }
+
+    func acceptPartialAutocomplete(_ acceptedPart: String) {
+        guard let currentSuggestion = autocompleteSuggestion else { return }
+
+        // Remove the accepted part from the suggestion
+        let remaining = String(currentSuggestion.dropFirst(acceptedPart.count))
+
+        // Update suggestion with remaining text, or clear if nothing left
+        if remaining.isEmpty {
+            autocompleteSuggestion = nil
+        } else {
+            autocompleteSuggestion = remaining
+        }
     }
 
     func dismissAutocomplete() {
