@@ -17,6 +17,11 @@ struct ContentView: View {
     @State private var showingErrorLog = false
     @State private var showingSystemMonitor = false
 
+    // License/Upgrade state
+    @State private var showUpgradePrompt = false
+    @State private var showLicenseActivation = false
+    @State private var upgradePromptType: UpgradePromptView.PromptType = .general
+
     var body: some View {
         NavigationSplitView {
             // Sidebar: Note list (minimal Mac Notes style)
@@ -172,6 +177,15 @@ struct ContentView: View {
         .sheet(isPresented: $showingSettings) {
             AISettingsView(viewModel: viewModel)
         }
+        .sheet(isPresented: $showUpgradePrompt) {
+            UpgradePromptView(
+                isPresented: $showUpgradePrompt,
+                promptType: upgradePromptType
+            )
+        }
+        .sheet(isPresented: $showLicenseActivation) {
+            LicenseActivationView(isPresented: $showLicenseActivation)
+        }
         .safeAreaInset(edge: .bottom) {
             // Footer with system monitor and error log
             StatusFooterView(
@@ -206,6 +220,15 @@ struct ContentView: View {
             // Start system monitoring for CPU/GPU usage
             systemMonitor.startMonitoring()
             systemMonitor.setActiveModel(aiEngine.selectedModel.displayName)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .showUpgradePrompt)) { notification in
+            if let type = notification.object as? UpgradePromptView.PromptType {
+                upgradePromptType = type
+            }
+            showUpgradePrompt = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .showLicenseActivation)) { _ in
+            showLicenseActivation = true
         }
         .onDisappear {
             systemMonitor.stopMonitoring()

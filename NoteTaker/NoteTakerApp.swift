@@ -16,6 +16,9 @@ struct NoteTakerApp: App {
     // AI Engine singleton - loads TinyLlama model on first access
     @StateObject private var aiEngine = AIEngine.shared
 
+    // License Manager - handles Pro features
+    @StateObject private var licenseManager = LicenseManager.shared
+
     var body: some Scene {
         WindowGroup {
             ContentView()
@@ -42,4 +45,5 @@ extension Notification.Name {
     static let createNewNote = Notification.Name("createNewNote")
     static let deleteNote = Notification.Name("deleteNote")
     static let triggerSearch = Notification.Name("triggerSearch")
+    static let showUpgradePrompt = Notification.Name("showUpgradePrompt")
 }

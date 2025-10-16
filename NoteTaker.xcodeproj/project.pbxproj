@@ -16,6 +16,10 @@
 		81111F5E2E9F348400D7317B /* TitleGenerationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F592E9F348400D7317B /* TitleGenerationService.swift */; };
 		81111F5F2E9F348400D7317B /* TranslationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F5A2E9F348400D7317B /* TranslationService.swift */; };
 		81111F612E9F37FB00D7317B /* DefaultPrompts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F602E9F37FB00D7317B /* DefaultPrompts.swift */; };
+		81111F642EA0891A00D7317B /* InlineAutocompleteTextEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F622EA0891A00D7317B /* InlineAutocompleteTextEditor.swift */; };
+		81111F652EA0891A00D7317B /* UpgradePromptView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F632EA0891A00D7317B /* UpgradePromptView.swift */; };
+		81111F6E2EA0896E00D7317B /* LicenseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F6C2EA0896E00D7317B /* LicenseManager.swift */; };
+		81111F6F2EA0896E00D7317B /* AnalyticsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F6B2EA0896E00D7317B /* AnalyticsManager.swift */; };
 		81DE21652E9B3C2400692788 /* ModelDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE21642E9B3C2400692788 /* ModelDownloader.swift */; };
 		81EFBE2E2E9B05C700F7E48B /* libllama.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 81EFBE282E9B05C700F7E48B /* libllama.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		81EFBE2F2E9B05C700F7E48B /* libggml-base.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 81EFBE292E9B05C700F7E48B /* libggml-base.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -76,6 +80,10 @@
 		81111F592E9F348400D7317B /* TitleGenerationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TitleGenerationService.swift; sourceTree = "<group>"; };
 		81111F5A2E9F348400D7317B /* TranslationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationService.swift; sourceTree = "<group>"; };
 		81111F602E9F37FB00D7317B /* DefaultPrompts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefaultPrompts.swift; sourceTree = "<group>"; };
+		81111F622EA0891A00D7317B /* InlineAutocompleteTextEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineAutocompleteTextEditor.swift; sourceTree = "<group>"; };
+		81111F632EA0891A00D7317B /* UpgradePromptView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpgradePromptView.swift; sourceTree = "<group>"; };
+		81111F6B2EA0896E00D7317B /* AnalyticsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsManager.swift; sourceTree = "<group>"; };
+		81111F6C2EA0896E00D7317B /* LicenseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseManager.swift; sourceTree = "<group>"; };
 		81DE21642E9B3C2400692788 /* ModelDownloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelDownloader.swift; sourceTree = "<group>"; };
 		81EFBE282E9B05C700F7E48B /* libllama.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libllama.dylib; path = llama.cpp/build/bin/libllama.dylib; sourceTree = "<group>"; };
 		81EFBE292E9B05C700F7E48B /* libggml-base.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libggml-base.dylib"; path = "llama.cpp/build/bin/libggml-base.dylib"; sourceTree = "<group>"; };
@@ -121,9 +129,19 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		81111F6D2EA0896E00D7317B /* Managers */ = {
+			isa = PBXGroup;
+			children = (
+				81111F6B2EA0896E00D7317B /* AnalyticsManager.swift */,
+				81111F6C2EA0896E00D7317B /* LicenseManager.swift */,
+			);
+			path = Managers;
+			sourceTree = "<group>";
+		};
 		A1000038000000000000001 = {
 			isa = PBXGroup;
 			children = (
+				81111F6D2EA0896E00D7317B /* Managers */,
 				81EFBE2C2E9B05C700F7E48B /* libggml.dylib */,
 				81EFBE292E9B05C700F7E48B /* libggml-base.dylib */,
 				81EFBE2D2E9B05C700F7E48B /* libggml-blas.dylib */,
@@ -164,15 +182,17 @@
 		A1000041000000000000001 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				81111F622EA0891A00D7317B /* InlineAutocompleteTextEditor.swift */,
+				81111F632EA0891A00D7317B /* UpgradePromptView.swift */,
 				A1000004000000000000001 /* ContentView.swift */,
 				A1000012000000000000001 /* NoteListView.swift */,
 				A1000014000000000000001 /* NoteEditorView.swift */,
 				A1000016000000000000001 /* SearchBarView.swift */,
 				A1000061000000000000001 /* AISettingsView.swift */,
 				A1000069000000000000001 /* ErrorLogView.swift */,
-			
 				A1000066000000000000001 /* SystemMonitorWidget.swift */,
-				A1000071000000000000001 /* SystemMonitorView.swift */,);
+				A1000071000000000000001 /* SystemMonitorView.swift */,
+			);
 			path = Views;
 			sourceTree = "<group>";
 		};
@@ -224,14 +244,6 @@
 			path = Storage;
 			sourceTree = "<group>";
 		};
-			A1000068000000000000001 /* Utilities */ = {
-			isa = PBXGroup;
-			children = (
-				A1000064000000000000001 /* SystemMonitor.swift */,
-			);
-			path = Utilities;
-			sourceTree = "<group>";
-		};
 		A1000046000000000000001 /* Search */ = {
 			isa = PBXGroup;
 			children = (
@@ -246,6 +258,14 @@
 				A1000008000000000000001 /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		A1000068000000000000001 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				A1000064000000000000001 /* SystemMonitor.swift */,
+			);
+			path = Utilities;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -332,6 +352,8 @@
 				A1000017000000000000001 /* PersistenceController.swift in Sources */,
 				A1000062000000000000001 /* NoteRepository.swift in Sources */,
 				A1000019000000000000001 /* AIEngine.swift in Sources */,
+				81111F6E2EA0896E00D7317B /* LicenseManager.swift in Sources */,
+				81111F6F2EA0896E00D7317B /* AnalyticsManager.swift in Sources */,
 				A1000021000000000000001 /* LLMInferenceService.swift in Sources */,
 				81DE21652E9B3C2400692788 /* ModelDownloader.swift in Sources */,
 				81111F5B2E9F348400D7317B /* AIService.swift in Sources */,
@@ -344,6 +366,8 @@
 				A1000027000000000000001 /* AutocompleteService.swift in Sources */,
 				A1000029000000000000001 /* SummarizationService.swift in Sources */,
 				A1000031000000000000001 /* Note+Extensions.swift in Sources */,
+				81111F642EA0891A00D7317B /* InlineAutocompleteTextEditor.swift in Sources */,
+				81111F652EA0891A00D7317B /* UpgradePromptView.swift in Sources */,
 				A1000033000000000000001 /* NoteViewModel.swift in Sources */,
 				A1000060000000000000001 /* AISettingsView.swift in Sources */,
 				A1000070000000000000001 /* ErrorLogView.swift in Sources */,

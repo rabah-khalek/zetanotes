@@ -54,6 +54,15 @@ class AnalyticsManager: ObservableObject {
 
         // Errors
         case errorOccurred = "error_occurred"
+
+        // License/Monetization
+        case licenseActivated = "license_activated"
+        case licenseValidationFailed = "license_validation_failed"
+        case licenseRemoved = "license_removed"
+        case proFeatureBlocked = "pro_feature_blocked"
+        case upgradePromptShown = "upgrade_prompt_shown"
+        case upgradePromptDismissed = "upgrade_prompt_dismissed"
+        case upgradeButtonClicked = "upgrade_button_clicked"
     }
 
     // MARK: - Event Structure

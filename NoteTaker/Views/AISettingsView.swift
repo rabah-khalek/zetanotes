@@ -37,6 +37,11 @@ struct AISettingsView: View {
             // Settings Content
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
+                    // Pro Status / Upgrade Section
+                    ProStatusSection()
+
+                    Divider()
+
                     // Model Selection Section
                     ModelSelectionSection(
                         aiEngine: aiEngine,
@@ -134,12 +139,33 @@ struct AISettingsView: View {
 struct ModelSelectionSection: View {
     @ObservedObject var aiEngine: AIEngine
     @ObservedObject var modelDownloader: ModelDownloader
+    @ObservedObject var licenseManager = LicenseManager.shared
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("AI Model", systemImage: "cpu")
-                .font(.headline)
-                .fontWeight(.semibold)
+            HStack {
+                Label("AI Model", systemImage: "cpu")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+
+                Spacer()
+
+                // Pro status badge
+                if licenseManager.isPro {
+                    HStack(spacing: 4) {
+                        Image(systemName: "checkmark.seal.fill")
+                            .foregroundColor(.green)
+                        Text("Pro")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.green)
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.green.opacity(0.1))
+                    .cornerRadius(12)
+                }
+            }
 
             Text("Choose between fast lightweight mode or high-quality mode")
                 .font(.caption)
@@ -190,12 +216,26 @@ struct ModelCard: View {
     let onSelect: () -> Void
     let onDownload: () -> Void
 
+    @ObservedObject var licenseManager = LicenseManager.shared
+
+    private var isLocked: Bool {
+        !licenseManager.canUseModel(model)
+    }
+
     var body: some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
-                // Model name
-                Text(model.displayName)
-                    .font(.system(size: 14, weight: .semibold))
+                // Model name with lock icon
+                HStack(spacing: 6) {
+                    Text(model.displayName)
+                        .font(.system(size: 14, weight: .semibold))
+
+                    if isLocked {
+                        Image(systemName: "lock.fill")
+                            .font(.caption)
+                            .foregroundColor(.orange)
+                    }
+                }
 
                 // Model specs
                 HStack(spacing: 8) {
@@ -226,7 +266,24 @@ struct ModelCard: View {
             Spacer()
 
             // Action button
-            if isDownloading {
+            if isLocked {
+                // Show upgrade button for locked models
+                Button(action: {
+                    NotificationCenter.default.post(
+                        name: .showUpgradePrompt,
+                        object: UpgradePromptView.PromptType.modelSwitching
+                    )
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "lock.fill")
+                        Text("Upgrade")
+                            .font(.caption)
+                    }
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .foregroundColor(.orange)
+            } else if isDownloading {
                 VStack(spacing: 4) {
                     ProgressView(value: downloadProgress)
                         .frame(width: 80)
@@ -334,11 +391,31 @@ struct PromptSection: View {
     let placeholder: String
     let defaultPrompt: String
 
+    @ObservedObject var licenseManager = LicenseManager.shared
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Label(title, systemImage: icon)
-                .font(.subheadline)
-                .fontWeight(.medium)
+            HStack {
+                Label(title, systemImage: icon)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+
+                if !licenseManager.canEditPrompts {
+                    Spacer()
+                    HStack(spacing: 4) {
+                        Image(systemName: "lock.fill")
+                            .font(.caption2)
+                        Text("Pro")
+                            .font(.caption2)
+                            .fontWeight(.semibold)
+                    }
+                    .foregroundColor(.orange)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Color.orange.opacity(0.1))
+                    .cornerRadius(8)
+                }
+            }
 
             TextEditor(text: $prompt)
                 .font(.system(size: 13))
@@ -350,6 +427,8 @@ struct PromptSection: View {
                     RoundedRectangle(cornerRadius: 6)
                         .stroke(Color.gray.opacity(0.2), lineWidth: 1)
                 )
+                .disabled(!licenseManager.canEditPrompts)
+                .opacity(licenseManager.canEditPrompts ? 1.0 : 0.6)
 
             if prompt.isEmpty {
                 Text(placeholder)
@@ -357,6 +436,95 @@ struct PromptSection: View {
                     .foregroundColor(.secondary)
             }
         }
+    }
+}
+
+// MARK: - Pro Status Section
+
+struct ProStatusSection: View {
+    @ObservedObject var licenseManager = LicenseManager.shared
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if licenseManager.isPro {
+                // Pro Active State
+                HStack(spacing: 12) {
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.system(size: 32))
+                        .foregroundColor(.green)
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Pro Active")
+                            .font(.headline)
+                            .fontWeight(.semibold)
+
+                        if let email = licenseManager.licenseEmail {
+                            Text(email)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+
+                    Spacer()
+
+                    Button("Manage") {
+                        NotificationCenter.default.post(name: .showLicenseActivation, object: nil)
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                }
+                .padding()
+                .background(Color.green.opacity(0.1))
+                .cornerRadius(8)
+            } else {
+                // Free Tier State
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(spacing: 12) {
+                        Image(systemName: "star.fill")
+                            .font(.system(size: 32))
+                            .foregroundColor(.orange)
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Upgrade to Pro")
+                                .font(.headline)
+                                .fontWeight(.semibold)
+
+                            Text("Unlock all premium AI models & custom prompts")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+
+                        Spacer()
+                    }
+
+                    HStack(spacing: 12) {
+                        Button(action: {
+                            NotificationCenter.default.post(
+                                name: .showUpgradePrompt,
+                                object: UpgradePromptView.PromptType.general
+                            )
+                        }) {
+                            HStack {
+                                Image(systemName: "cart.fill")
+                                Text("Upgrade for $29")
+                            }
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.large)
+
+                        Button("Enter License Key") {
+                            NotificationCenter.default.post(name: .showLicenseActivation, object: nil)
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.large)
+                    }
+                }
+                .padding()
+                .background(Color.orange.opacity(0.1))
+                .cornerRadius(8)
+            }
+        }
+        .padding(.horizontal)
     }
 }
 

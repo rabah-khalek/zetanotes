@@ -130,6 +130,18 @@ class AIEngine: ObservableObject {
     /// Switches to a different model
     /// - Parameter modelType: The new model to switch to
     func switchModel(to modelType: AIModel) async {
+        // Check if user has access to this model
+        guard LicenseManager.shared.canUseModel(modelType) else {
+            print("🔒 Model \(modelType.displayName) requires Pro license")
+            await MainActor.run {
+                NotificationCenter.default.post(
+                    name: .showUpgradePrompt,
+                    object: UpgradePromptView.PromptType.modelSwitching
+                )
+            }
+            return
+        }
+
         print("🔄 Switching to \(modelType.displayName)...")
         await loadModel(modelType)
     }
