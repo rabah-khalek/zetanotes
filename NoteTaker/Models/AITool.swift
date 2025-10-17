@@ -114,6 +114,20 @@ extension AITool {
         ]
 
         return [
+            // Autocomplete
+            AITool(
+                name: "Autocomplete",
+                icon: "text.cursor",
+                prompt: DefaultPrompts.autocomplete,
+                keyboardShortcut: "A",
+                color: .purple,
+                isDefault: true,
+                isEditable: false,
+                temperature: 0.7,   // Moderate for natural continuations
+                maxTokens: 50,      // Short completions
+                stopSequences: ["\n", ".", "!", "?"]  // Stop at sentence boundaries
+            ),
+
             // Patch (Auto-correct)
             AITool(
                 name: "Patch",

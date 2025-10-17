@@ -12,22 +12,37 @@ struct AutocompleteToggle: View {
     @State private var isHovered = false
 
     var body: some View {
-        HStack(spacing: 5) {
-            Text("Autocomplete")
-                .font(.system(size: 10, weight: .medium))
-                .foregroundColor(isEnabled ? .purple : .secondary)
+        Button(action: {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                isEnabled.toggle()
+            }
+        }) {
+            HStack(spacing: 4) {
+                Text("Auto")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundColor(isEnabled ? .purple : .secondary.opacity(0.8))
 
-            Toggle("", isOn: $isEnabled)
-                .labelsHidden()
-                .toggleStyle(.switch)
-                .controlSize(.mini)
-                .tint(.purple)
-                .scaleEffect(0.7)
+                // Compact toggle switch
+                ZStack {
+                    // Background pill
+                    Capsule()
+                        .fill(isEnabled ? Color.purple.opacity(0.3) : Color.secondary.opacity(0.15))
+                        .frame(width: 22, height: 12)
+
+                    // Moving circle indicator
+                    Circle()
+                        .fill(isEnabled ? Color.purple : Color.secondary.opacity(0.6))
+                        .frame(width: 8, height: 8)
+                        .offset(x: isEnabled ? 5 : -5)
+                }
+            }
+            .scaleEffect(isHovered ? 1.05 : 1.0)
         }
-        .scaleEffect(isHovered ? 1.02 : 1.0)
-        .animation(.easeInOut(duration: 0.15), value: isHovered)
+        .buttonStyle(.plain)
         .onHover { hovering in
-            isHovered = hovering
+            withAnimation(.easeInOut(duration: 0.15)) {
+                isHovered = hovering
+            }
         }
     }
 }

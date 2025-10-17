@@ -212,13 +212,16 @@ class ErrorManager: ObservableObject {
 extension View {
     /// Adds error alert handling to any view
     func errorAlert(errorManager: ErrorManager = .shared) -> some View {
-        self.alert(item: Binding(
+        let binding: Binding<ErrorManager.AppError?> = Binding(
             get: { errorManager.showingError ? errorManager.currentError : nil },
             set: { _ in errorManager.clearError() }
-        )) { error in
-            Alert(
+        )
+
+        return self.alert(item: binding) { (error: ErrorManager.AppError) -> Alert in
+            let messageText: String = error.message + (error.recoveryAction != nil ? "\n\n\(error.recoveryAction!)" : "")
+            return Alert(
                 title: Text(error.title),
-                message: Text(error.message + (error.recoveryAction != nil ? "\n\n\(error.recoveryAction!)" : "")),
+                message: Text(messageText),
                 dismissButton: .default(Text("OK"))
             )
         }

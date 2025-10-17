@@ -88,6 +88,9 @@ struct ContentView: View {
             if let type = notification.object as? UpgradePromptView.PromptType {
                 upgradePromptType = type
             }
+            // Close settings and tool editor if open
+            showingSettings = false
+            showingToolEditor = false
             showUpgradePrompt = true
         }
         .onReceive(NotificationCenter.default.publisher(for: .showLicenseActivation)) { _ in
@@ -95,6 +98,12 @@ struct ContentView: View {
         }
         .onDisappear {
             systemMonitor.stopMonitoring()
+        }
+        .onChange(of: viewModel.searchQuery) { newQuery in
+            // Clear semantic match highlighting when search is cleared
+            if newQuery.isEmpty {
+                semanticMatchText = ""
+            }
         }
     }
 
@@ -238,63 +247,56 @@ struct ContentView: View {
             .help("Translate text (⌘T)")
             .disabled(viewModel.selectedNote == nil || viewModel.isTranslating)
 
-            // Custom tools section
-            if licenseManager.isPro || !toolManager.customTools.isEmpty {
-                Rectangle()
-                    .fill(Color.secondary.opacity(0.2))
-                    .frame(width: 1, height: 14)
+            // Divider before custom tools
+            Rectangle()
+                .fill(Color.secondary.opacity(0.2))
+                .frame(width: 1, height: 14)
 
-                // Show custom tools (Pro only)
-                if licenseManager.isPro {
-                    ForEach(toolManager.customTools.prefix(3)) { tool in
-                        ToolButton(
-                            tool: tool,
-                            isLoading: viewModel.executingToolId == tool.id,
-                            action: {
-                                if let note = viewModel.selectedNote {
-                                    Task {
-                                        await viewModel.executeTool(tool, for: note)
-                                    }
+            // Show custom tools (Pro only)
+            if licenseManager.isPro && !toolManager.customTools.isEmpty {
+                ForEach(toolManager.customTools.prefix(3)) { tool in
+                    ToolButton(
+                        tool: tool,
+                        isLoading: viewModel.executingToolId == tool.id,
+                        action: {
+                            if let note = viewModel.selectedNote {
+                                Task {
+                                    await viewModel.executeTool(tool, for: note)
                                 }
                             }
-                        )
-                        .keyboardShortcut(KeyEquivalent(Character(tool.keyboardShortcut)), modifiers: .command)
-                        .help("\(tool.name) (⌘\(tool.keyboardShortcut))")
-                        .disabled(viewModel.selectedNote == nil || viewModel.executingToolId == tool.id)
-                    }
-                }
-
-                // "+" button to add new custom tool
-                Button(action: {
-                    if licenseManager.isPro {
-                        editingTool = nil
-                        showingToolEditor = true
-                    } else {
-                        NotificationCenter.default.post(
-                            name: .showUpgradePrompt,
-                            object: UpgradePromptView.PromptType.general
-                        )
-                    }
-                }) {
-                    HStack(spacing: 4) {
-                        if !licenseManager.isPro {
-                            Image(systemName: "lock.fill")
-                                .font(.system(size: 9))
-                                .foregroundColor(.orange)
                         }
-                        Image(systemName: "plus.circle.fill")
-                            .font(.system(size: 12))
-                    }
-                    .foregroundColor(licenseManager.isPro ? .blue : .orange)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 4)
-                    .background(licenseManager.isPro ? Color.blue.opacity(0.1) : Color.orange.opacity(0.1))
-                    .cornerRadius(6)
+                    )
+                    .keyboardShortcut(KeyEquivalent(Character(tool.keyboardShortcut)), modifiers: .command)
+                    .help("\(tool.name) (⌘\(tool.keyboardShortcut))")
+                    .disabled(viewModel.selectedNote == nil || viewModel.executingToolId == tool.id)
                 }
-                .buttonStyle(.plain)
-                .help(licenseManager.isPro ? "Add custom tool" : "Upgrade to Pro for custom tools")
-                .padding(.trailing, 8)
             }
+
+            // "+" button to add new custom tool (always visible)
+            Button(action: {
+                if licenseManager.isPro {
+                    editingTool = nil
+                    showingToolEditor = true
+                } else {
+                    NotificationCenter.default.post(
+                        name: .showUpgradePrompt,
+                        object: UpgradePromptView.PromptType.general
+                    )
+                }
+            }) {
+                HStack(spacing: 4) {
+                    if !licenseManager.isPro {
+                        Image(systemName: "lock.fill")
+                            .font(.system(size: 9))
+                            .foregroundColor(.orange)
+                    }
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 14))
+                        .foregroundColor(licenseManager.isPro ? .blue : .orange)
+                }
+            }
+            .buttonStyle(.plain)
+            .help(licenseManager.isPro ? "Add custom tool" : "Upgrade to Pro for custom tools")
         }
         .padding(.horizontal, 8)
         .controlSize(.small)

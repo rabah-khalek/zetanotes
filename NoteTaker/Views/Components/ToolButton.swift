@@ -33,16 +33,12 @@ struct ToolButton: View {
                     Text(tool.keyboardShortcut)
                         .font(.system(size: 9, weight: .bold))
                 }
-                .foregroundColor(foregroundColor)
+                .foregroundColor(.white)
                 .padding(.horizontal, 3)
                 .padding(.vertical, 1)
                 .background(
                     RoundedRectangle(cornerRadius: 3)
-                        .strokeBorder(foregroundColor.opacity(0.4), lineWidth: 0.5)
-                        .background(
-                            RoundedRectangle(cornerRadius: 3)
-                                .fill(foregroundColor.opacity(isHovered && isEnabled ? 0.08 : 0.03))
-                        )
+                        .fill(solidBackgroundColor)
                 )
 
                 // Full tool name
@@ -70,5 +66,18 @@ struct ToolButton: View {
             return tool.color.color
         }
         return tool.color.color.opacity(0.8)
+    }
+
+    private var solidBackgroundColor: Color {
+        if !isEnabled {
+            return .secondary.opacity(0.2)
+        }
+        if isLoading {
+            return tool.color.color.opacity(0.7)
+        }
+        if isHovered {
+            return tool.color.color
+        }
+        return tool.color.color.opacity(0.85)
     }
 }

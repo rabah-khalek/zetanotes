@@ -133,6 +133,7 @@ struct AISettingsView: View {
                             )
                         case .tools:
                             ToolsSettingsContent(
+                                viewModel: viewModel,
                                 toolManager: toolManager,
                                 licenseManager: licenseManager,
                                 toolEditorState: $toolEditorState
@@ -870,6 +871,7 @@ struct ProStatusSection: View {
 // MARK: - Tools Settings Content (Unified)
 
 struct ToolsSettingsContent: View {
+    @ObservedObject var viewModel: NoteViewModel
     @ObservedObject var toolManager: ToolManager
     @ObservedObject var licenseManager: LicenseManager
     @Binding var toolEditorState: ToolEditorState?
@@ -991,34 +993,22 @@ struct ToolRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            // Icon and color indicator
-            ZStack {
-                Circle()
-                    .fill(tool.color.color.opacity(0.15))
-                    .frame(width: 36, height: 36)
-
-                Image(systemName: tool.icon)
-                    .font(.system(size: 16))
-                    .foregroundColor(tool.color.color)
+            // Colored keyboard shortcut indicator
+            HStack(spacing: 2) {
+                Text("⌘")
+                    .font(.system(size: 12, weight: .medium))
+                Text(tool.keyboardShortcut)
+                    .font(.system(size: 13, weight: .bold))
             }
+            .foregroundColor(.white)
+            .frame(width: 36, height: 36)
+            .background(tool.color.color)
+            .cornerRadius(6)
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 8) {
                     Text(tool.name)
                         .font(.system(size: 14, weight: .semibold))
-
-                    // Keyboard shortcut badge
-                    HStack(spacing: 2) {
-                        Text("⌘")
-                            .font(.system(size: 10))
-                        Text(tool.keyboardShortcut)
-                            .font(.system(size: 10, weight: .bold))
-                    }
-                    .foregroundColor(.secondary)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(Color.secondary.opacity(0.1))
-                    .cornerRadius(4)
                 }
 
                 Text(tool.prompt.prefix(100) + (tool.prompt.count > 100 ? "..." : ""))
@@ -1067,6 +1057,49 @@ struct ToolRow: View {
                     .help("Delete tool")
                 }
             }
+        }
+        .padding(12)
+        .background(Color(nsColor: .controlBackgroundColor).opacity(0.3))
+        .cornerRadius(8)
+    }
+}
+
+// MARK: - Autocomplete Settings Row
+
+struct AutocompleteSettingsRow: View {
+    @EnvironmentObject var viewModel: NoteViewModel
+
+    var body: some View {
+        HStack(spacing: 12) {
+            // Purple indicator icon
+            ZStack {
+                Circle()
+                    .fill(Color.purple.opacity(0.15))
+                    .frame(width: 36, height: 36)
+                Image(systemName: "wand.and.stars")
+                    .font(.system(size: 16))
+                    .foregroundColor(.purple)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 8) {
+                    Text("AI Autocomplete")
+                        .font(.system(size: 14, weight: .semibold))
+                }
+
+                Text("Provides intelligent text suggestions as you type")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .lineLimit(2)
+            }
+
+            Spacer()
+
+            // Toggle
+            Toggle("", isOn: $viewModel.isAutocompleteEnabled)
+                .labelsHidden()
+                .toggleStyle(.switch)
+                .tint(.purple)
         }
         .padding(12)
         .background(Color(nsColor: .controlBackgroundColor).opacity(0.3))

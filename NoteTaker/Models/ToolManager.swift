@@ -65,7 +65,7 @@ class ToolManager: ObservableObject {
 
     /// Ensures all default tools exist (for migration/updates)
     private func ensureDefaultToolsExist() {
-        let defaultToolShortcuts = ["P", "R", "S", "T"]
+        let defaultToolShortcuts = ["A", "P", "R", "S", "T"]
         let existingShortcuts = Set(tools.filter { $0.isDefault }.map { $0.keyboardShortcut })
 
         for defaultTool in AITool.createDefaultTools() {

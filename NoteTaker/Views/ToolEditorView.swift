@@ -30,167 +30,90 @@ struct ToolEditorView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Header
-            HStack(spacing: 12) {
-                ZStack {
-                    Circle()
-                        .fill(Color.blue.opacity(0.1))
-                        .frame(width: 36, height: 36)
-                    Image(systemName: tool.name.isEmpty ? "plus.circle.fill" : "pencil.circle.fill")
-                        .font(.system(size: 18))
-                        .foregroundColor(.blue)
-                }
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(isReadOnly ? tool.name : (tool.name.isEmpty ? "New Custom Tool" : "Edit Tool"))
-                        .font(.title3)
-                        .fontWeight(.bold)
-                    Text(isReadOnly ? "View tool settings" : (tool.name.isEmpty ? "Create a custom AI tool" : "Modify your tool"))
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-
-                if isReadOnly && tool.isDefault && !licenseManager.isPro {
-                    HStack(spacing: 4) {
-                        Image(systemName: "lock.fill")
-                            .font(.system(size: 10))
-                        Text("Pro required to edit")
-                            .font(.caption)
-                    }
-                    .foregroundColor(.orange)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
-                    .background(Color.orange.opacity(0.1))
-                    .cornerRadius(6)
-                }
-
-                Spacer()
-
-                Button(action: { isPresented = false }) {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.secondary)
-                        .font(.system(size: 20))
-                }
-                .buttonStyle(.plain)
-                .keyboardShortcut(.cancelAction)
-            }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 16)
-            .background(Color(nsColor: .controlBackgroundColor).opacity(0.3))
-
+            headerSection
             Divider()
+            formContent
+        }
+        .frame(width: 600)
+        .frame(minHeight: 500, maxHeight: 700)
+    }
 
-            // Form Content
-            ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    // Name Field
-                    VStack(alignment: .leading, spacing: 10) {
-                        HStack {
-                            Label("Tool Name", systemImage: "tag")
-                                .font(.system(size: 14, weight: .semibold))
-                            Spacer()
-                            Text("\(tool.name.count)/20")
-                                .font(.caption)
-                                .foregroundColor(tool.name.count > 15 ? .orange : .secondary)
-                        }
+    // MARK: - Header
 
-                        TextField("e.g., 'Make Concise', 'Add Emojis'", text: $tool.name)
-                            .textFieldStyle(.roundedBorder)
-                            .disabled(isReadOnly)
-                            .onChange(of: tool.name) { _ in validateName() }
+    private var headerSection: some View {
+        HStack(spacing: 12) {
+            headerIcon
+            headerTitle
+            if isReadOnly && tool.isDefault && !licenseManager.isPro {
+                proRequiredBadge
+            }
+            Spacer()
+            closeButton
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 16)
+        .background(Color(nsColor: .controlBackgroundColor).opacity(0.3))
+    }
 
-                        if let error = nameError {
-                            HStack(spacing: 4) {
-                                Image(systemName: "exclamationmark.triangle.fill")
-                                    .font(.caption)
-                                Text(error)
-                                    .font(.caption)
-                            }
-                            .foregroundColor(.red)
-                        } else {
-                            Text("A short, descriptive name for your tool")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 8)
+    private var headerIcon: some View {
+        ZStack {
+            Circle()
+                .fill(Color.blue.opacity(0.1))
+                .frame(width: 36, height: 36)
+            Image(systemName: tool.name.isEmpty ? "plus.circle.fill" : "pencil.circle.fill")
+                .font(.system(size: 18))
+                .foregroundColor(.blue)
+        }
+    }
 
-                    // Color Picker
-                    VStack(alignment: .leading, spacing: 10) {
-                        Label("Color", systemImage: "paintpalette")
-                            .font(.system(size: 14, weight: .semibold))
+    private var headerTitle: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(isReadOnly ? tool.name : (tool.name.isEmpty ? "New Custom Tool" : "Edit Tool"))
+                .font(.title3)
+                .fontWeight(.bold)
+            Text(isReadOnly ? "View tool settings" : (tool.name.isEmpty ? "Create a custom AI tool" : "Modify your tool"))
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+    }
 
-                        HStack(spacing: 8) {
-                            ForEach(ToolColor.allCases, id: \.self) { colorOption in
-                                Button(action: { tool.color = colorOption }) {
-                                    ZStack {
-                                        Circle()
-                                            .fill(colorOption.color)
-                                            .frame(width: 32, height: 32)
+    private var proRequiredBadge: some View {
+        HStack(spacing: 4) {
+            Image(systemName: "lock.fill")
+                .font(.system(size: 10))
+            Text("Pro required to edit")
+                .font(.caption)
+        }
+        .foregroundColor(.orange)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 4)
+        .background(Color.orange.opacity(0.1))
+        .cornerRadius(6)
+    }
 
-                                        if tool.color == colorOption {
-                                            Circle()
-                                                .strokeBorder(Color.primary, lineWidth: 2)
-                                                .frame(width: 36, height: 36)
+    private var closeButton: some View {
+        Button(action: { isPresented = false }) {
+            Image(systemName: "xmark.circle.fill")
+                .foregroundColor(.secondary)
+                .font(.system(size: 20))
+        }
+        .buttonStyle(.plain)
+        .keyboardShortcut(.cancelAction)
+    }
 
-                                            Image(systemName: "checkmark")
-                                                .font(.system(size: 12, weight: .bold))
-                                                .foregroundColor(.white)
-                                        }
-                                    }
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 20)
+    // MARK: - Form Content
 
-                    // Keyboard Shortcut
-                    VStack(alignment: .leading, spacing: 10) {
-                        Label("Keyboard Shortcut", systemImage: "command")
-                            .font(.system(size: 14, weight: .semibold))
+    private var formContent: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                nameField
+                colorPicker
+                keyboardShortcutField
 
-                        HStack(spacing: 8) {
-                            HStack(spacing: 4) {
-                                Text("⌘")
-                                    .font(.system(size: 16, weight: .semibold))
-                                Text("+")
-                                    .font(.system(size: 12))
-                                    .foregroundColor(.secondary)
-                            }
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
-                            .background(Color(nsColor: .controlBackgroundColor))
-                            .cornerRadius(6)
-
-                            TextField("Letter", text: $tool.keyboardShortcut)
-                                .textFieldStyle(.roundedBorder)
-                                .frame(width: 60)
-                                .disabled(isReadOnly)
-                                .onChange(of: tool.keyboardShortcut) { newValue in
-                                    tool.keyboardShortcut = String(newValue.uppercased().prefix(1))
-                                    validateShortcut()
-                                }
-                        }
-
-                        if let error = shortcutError {
-                            HStack(spacing: 4) {
-                                Image(systemName: "exclamationmark.triangle.fill")
-                                    .font(.caption)
-                                Text(error)
-                                    .font(.caption)
-                            }
-                            .foregroundColor(.red)
-                        }
-                    }
+                Divider()
                     .padding(.horizontal, 20)
 
-                    Divider()
-                        .padding(.horizontal, 20)
-
-                    // Prompt Field
-                    VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: 10) {
                         HStack {
                             Label("AI Prompt", systemImage: "text.bubble")
                                 .font(.system(size: 14, weight: .semibold))
@@ -426,7 +349,6 @@ struct ToolEditorView: View {
                     .padding(.horizontal, 20)
                     .padding(.top, -16)
                     .padding(.bottom, 16)
-                }
             }
 
             Divider()
@@ -475,8 +397,118 @@ struct ToolEditorView: View {
             .padding(.horizontal, 20)
             .padding(.vertical, 14)
         }
-        .frame(width: 600, height: 700)
     }
+
+    // MARK: - Form Fields
+
+    private var nameField: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Label("Tool Name", systemImage: "tag")
+                    .font(.system(size: 14, weight: .semibold))
+                Spacer()
+                Text("\(tool.name.count)/20")
+                    .font(.caption)
+                    .foregroundColor(tool.name.count > 15 ? .orange : .secondary)
+            }
+
+            TextField("e.g., 'Make Concise', 'Add Emojis'", text: $tool.name)
+                .textFieldStyle(.roundedBorder)
+                .disabled(isReadOnly)
+                .onChange(of: tool.name) { _ in validateName() }
+
+            if let error: String = nameError {
+                HStack(spacing: 4) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.caption)
+                    Text(error)
+                        .font(.caption)
+                }
+                .foregroundColor(.red)
+            } else {
+                Text("A short, descriptive name for your tool")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 8)
+    }
+
+    private var colorPicker: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label("Color", systemImage: "paintpalette")
+                .font(.system(size: 14, weight: .semibold))
+
+            HStack(spacing: 8) {
+                ForEach(ToolColor.allCases, id: \.self) { colorOption in
+                    Button(action: { tool.color = colorOption }) {
+                        ZStack {
+                            Circle()
+                                .fill(colorOption.color)
+                                .frame(width: 32, height: 32)
+
+                            if tool.color == colorOption {
+                                Circle()
+                                    .strokeBorder(Color.primary, lineWidth: 2)
+                                    .frame(width: 36, height: 36)
+
+                                Image(systemName: "checkmark")
+                                    .font(.system(size: 12, weight: .bold))
+                                    .foregroundColor(.white)
+                            }
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(isReadOnly)
+                }
+            }
+        }
+        .padding(.horizontal, 20)
+    }
+
+    private var keyboardShortcutField: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label("Keyboard Shortcut", systemImage: "command")
+                .font(.system(size: 14, weight: .semibold))
+
+            HStack(spacing: 8) {
+                HStack(spacing: 4) {
+                    Text("⌘")
+                        .font(.system(size: 16, weight: .semibold))
+                    Text("+")
+                        .font(.system(size: 12))
+                        .foregroundColor(.secondary)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(Color(nsColor: .controlBackgroundColor))
+                .cornerRadius(6)
+
+                TextField("Letter", text: $tool.keyboardShortcut)
+                    .textFieldStyle(.roundedBorder)
+                    .frame(width: 60)
+                    .disabled(isReadOnly)
+                    .onChange(of: tool.keyboardShortcut) { newValue in
+                        tool.keyboardShortcut = String(newValue.uppercased().prefix(1))
+                        validateShortcut()
+                    }
+            }
+
+            if let error: String = shortcutError {
+                HStack(spacing: 4) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.caption)
+                    Text(error)
+                        .font(.caption)
+                }
+                .foregroundColor(.red)
+            }
+        }
+        .padding(.horizontal, 20)
+    }
+
+    // MARK: - Validation
 
     private var isValid: Bool {
         !tool.name.isEmpty &&

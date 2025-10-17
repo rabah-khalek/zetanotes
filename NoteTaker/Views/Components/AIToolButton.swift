@@ -33,27 +33,21 @@ struct AIToolButton: View {
                 HStack(spacing: 1) {
                     Text("⌘")
                         .font(.system(size: 8, weight: .medium))
-                    Text(String(label.prefix(1)))
+                    Text(shortcut)
                         .font(.system(size: 9, weight: .bold))
                 }
-                .foregroundColor(foregroundColor)
+                .foregroundColor(.white)
                 .padding(.horizontal, 3)
                 .padding(.vertical, 1)
                 .background(
                     RoundedRectangle(cornerRadius: 3)
-                        .strokeBorder(foregroundColor.opacity(0.4), lineWidth: 0.5)
-                        .background(
-                            RoundedRectangle(cornerRadius: 3)
-                                .fill(foregroundColor.opacity(isHovered && isEnabled ? 0.08 : 0.03))
-                        )
+                        .fill(solidBackgroundColor)
                 )
 
-                // Rest of label
-                if label.count > 1 {
-                    Text(String(label.dropFirst()))
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(foregroundColor)
-                }
+                // Full tool name
+                Text(label)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundColor(foregroundColor)
             }
             .scaleEffect(isHovered && isEnabled ? 1.02 : 1.0)
             .animation(.easeInOut(duration: 0.12), value: isHovered)
@@ -75,5 +69,18 @@ struct AIToolButton: View {
             return color
         }
         return color.opacity(0.8)
+    }
+
+    private var solidBackgroundColor: Color {
+        if !isEnabled {
+            return .secondary.opacity(0.2)
+        }
+        if isLoading {
+            return color.opacity(0.7)
+        }
+        if isHovered {
+            return color
+        }
+        return color.opacity(0.85)
     }
 }
