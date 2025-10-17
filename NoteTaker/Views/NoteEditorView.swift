@@ -270,8 +270,8 @@ struct NoteEditorView: View {
                             .frame(width: 16, height: 16)
                     } else {
                         Image(systemName: "arrow.triangle.2.circlepath")
-                            .font(.system(size: 14))
-                            .foregroundColor(.secondary)
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(.blue)
                     }
                 }
                 .buttonStyle(.plain)
