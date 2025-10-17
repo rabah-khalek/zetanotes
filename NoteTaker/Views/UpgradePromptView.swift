@@ -14,12 +14,14 @@ struct UpgradePromptView: View {
     enum PromptType {
         case modelSwitching
         case promptEditing
+        case chat
         case general
 
         var title: String {
             switch self {
             case .modelSwitching: return "Unlock Premium AI Models"
             case .promptEditing: return "Customize AI Prompts"
+            case .chat: return "Unlock AI Chat"
             case .general: return "Upgrade to NoteTaker Pro"
             }
         }
@@ -30,8 +32,10 @@ struct UpgradePromptView: View {
                 return "Access to 8 open-source AI models including Phi-3, Qwen 2.5, Llama 3.2, and Gemma 2."
             case .promptEditing:
                 return "Build custom tools tailored to your workflow."
+            case .chat:
+                return "Have natural conversations with AI using the selected model with customizable parameters."
             case .general:
-                return "Access 8 open-source AI models and build custom tools."
+                return "Access 8 open-source AI models, build custom tools, and chat with AI."
             }
         }
 
@@ -39,6 +43,7 @@ struct UpgradePromptView: View {
             switch self {
             case .modelSwitching: return "cpu.fill"
             case .promptEditing: return "text.alignleft"
+            case .chat: return "bubble.left.and.bubble.right.fill"
             case .general: return "bolt.fill"
             }
         }
@@ -93,6 +98,11 @@ struct UpgradePromptView: View {
                     icon: "cpu.fill",
                     text: "8 Open-Source AI Models",
                     subtitle: "Phi-3, Qwen 2.5, Llama 3.2, Gemma 2 & more"
+                )
+                FeatureRow(
+                    icon: "bubble.left.and.bubble.right.fill",
+                    text: "AI Chat Assistant",
+                    subtitle: "Natural conversations with customizable parameters"
                 )
                 FeatureRow(
                     icon: "wrench.and.screwdriver.fill",

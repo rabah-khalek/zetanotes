@@ -11,6 +11,7 @@ enum SettingsSection: String, CaseIterable, Identifiable {
     case general = "General"
     case model = "AI Model"
     case tools = "Tools"
+    case chat = "Chat"
 
     var id: String { rawValue }
 
@@ -19,6 +20,7 @@ enum SettingsSection: String, CaseIterable, Identifiable {
         case .general: return "gearshape"
         case .model: return "cpu"
         case .tools: return "wand.and.stars"
+        case .chat: return "bubble.left.and.bubble.right"
         }
     }
 }
@@ -138,6 +140,8 @@ struct AISettingsView: View {
                                 licenseManager: licenseManager,
                                 toolEditorState: $toolEditorState
                             )
+                        case .chat:
+                            ChatSettingsContent()
                         }
                     }
                     .padding()
@@ -1110,6 +1114,279 @@ struct AutocompleteSettingsRow: View {
         .padding(12)
         .background(Color(nsColor: .controlBackgroundColor).opacity(0.3))
         .cornerRadius(8)
+    }
+}
+
+// MARK: - Chat Settings Content
+
+struct ChatSettingsContent: View {
+    @ObservedObject private var chatManager = ChatManager.shared
+    @StateObject private var licenseManager = LicenseManager.shared
+    @State private var settings: ChatSettings
+
+    init() {
+        _settings = State(initialValue: ChatSettings.load())
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            // Header
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 8) {
+                    Image(systemName: "bubble.left.and.bubble.right.fill")
+                        .font(.system(size: 24))
+                        .foregroundColor(.blue)
+                    Text("Chat Settings")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                }
+
+                Text("Configure AI chat parameters for conversations")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+            }
+
+            // Pro Check
+            if !licenseManager.isPro {
+                ProFeaturePrompt(
+                    icon: "bubble.left.and.bubble.right.fill",
+                    title: "Chat is a Pro Feature",
+                    description: "Upgrade to Pro to access AI chat conversations with customizable parameters"
+                )
+            } else {
+                // Temperature
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Temperature")
+                            .font(.headline)
+                        Spacer()
+                        Text(String(format: "%.2f", settings.temperature))
+                            .font(.system(size: 13, weight: .medium, design: .monospaced))
+                            .foregroundColor(.secondary)
+                    }
+
+                    Slider(value: $settings.temperature, in: 0.01...2.0, step: 0.05)
+                        .onChange(of: settings.temperature) { _ in
+                            saveSettings()
+                        }
+
+                    Text("Controls randomness: 0.01 = focused, 2 = creative")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                Divider()
+
+                // Max Tokens
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Max Tokens")
+                            .font(.headline)
+                        Spacer()
+                        Text("\(settings.maxTokens)")
+                            .font(.system(size: 13, weight: .medium, design: .monospaced))
+                            .foregroundColor(.secondary)
+                    }
+
+                    Slider(value: Binding(
+                        get: { Double(settings.maxTokens) },
+                        set: { settings.maxTokens = Int($0) }
+                    ), in: 256...2048, step: 128)
+                    .onChange(of: settings.maxTokens) { _ in
+                        saveSettings()
+                    }
+
+                    Text("Maximum length of AI responses")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                Divider()
+
+                // Top P
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Top P")
+                            .font(.headline)
+                        Spacer()
+                        Text(String(format: "%.2f", settings.topP))
+                            .font(.system(size: 13, weight: .medium, design: .monospaced))
+                            .foregroundColor(.secondary)
+                    }
+
+                    Slider(value: $settings.topP, in: 0.0...1.0, step: 0.05)
+                        .onChange(of: settings.topP) { _ in
+                            saveSettings()
+                        }
+
+                    Text("Nucleus sampling: limits token choices to top probability mass")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                Divider()
+
+                // Top K
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Top K")
+                            .font(.headline)
+                        Spacer()
+                        Text("\(settings.topK)")
+                            .font(.system(size: 13, weight: .medium, design: .monospaced))
+                            .foregroundColor(.secondary)
+                    }
+
+                    Slider(value: Binding(
+                        get: { Double(settings.topK) },
+                        set: { settings.topK = Int($0) }
+                    ), in: 1...100, step: 1)
+                    .onChange(of: settings.topK) { _ in
+                        saveSettings()
+                    }
+
+                    Text("Limits token choices to top K most likely tokens")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                Divider()
+
+                // Repeat Penalty
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Repeat Penalty")
+                            .font(.headline)
+                        Spacer()
+                        Text(String(format: "%.2f", settings.repeatPenalty))
+                            .font(.system(size: 13, weight: .medium, design: .monospaced))
+                            .foregroundColor(.secondary)
+                    }
+
+                    Slider(value: $settings.repeatPenalty, in: 1.0...2.0, step: 0.05)
+                        .onChange(of: settings.repeatPenalty) { _ in
+                            saveSettings()
+                        }
+
+                    Text("Penalizes repetition: higher values reduce repeated phrases")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                Divider()
+
+                // System Prompt
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("System Prompt")
+                        .font(.headline)
+
+                    TextEditor(text: $settings.systemPrompt)
+                        .font(.system(size: 13, design: .monospaced))
+                        .frame(minHeight: 100)
+                        .padding(8)
+                        .background(Color(nsColor: .textBackgroundColor))
+                        .cornerRadius(6)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6)
+                                .strokeBorder(Color.secondary.opacity(0.2), lineWidth: 1)
+                        )
+                        .onChange(of: settings.systemPrompt) { _ in
+                            saveSettings()
+                        }
+
+                    Text("Sets the AI's behavior and personality for chat conversations")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                Divider()
+
+                // Reset Button
+                HStack {
+                    Spacer()
+                    Button(action: {
+                        settings = .default
+                        saveSettings()
+                    }) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "arrow.counterclockwise")
+                                .font(.system(size: 11))
+                            Text("Reset to Defaults")
+                                .font(.system(size: 13, weight: .medium))
+                        }
+                        .foregroundColor(.blue)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(Color.blue.opacity(0.1))
+                        )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
+    private func saveSettings() {
+        chatManager.updateSettings(settings)
+    }
+}
+
+// MARK: - Pro Feature Prompt
+
+struct ProFeaturePrompt: View {
+    let icon: String
+    let title: String
+    let description: String
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Image(systemName: icon)
+                .font(.system(size: 48))
+                .foregroundColor(.orange.opacity(0.8))
+
+            VStack(spacing: 8) {
+                Text(title)
+                    .font(.headline)
+                    .foregroundColor(.primary)
+
+                Text(description)
+                    .font(.body)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+
+            Button(action: {
+                NotificationCenter.default.post(
+                    name: .showUpgradePrompt,
+                    object: UpgradePromptView.PromptType.chat
+                )
+            }) {
+                HStack(spacing: 6) {
+                    Image(systemName: "lock.open.fill")
+                        .font(.system(size: 12))
+                    Text("Upgrade to Pro")
+                        .font(.system(size: 14, weight: .semibold))
+                }
+                .foregroundColor(.white)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 10)
+                .background(Color.orange)
+                .cornerRadius(8)
+            }
+            .buttonStyle(.plain)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(40)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.orange.opacity(0.05))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .strokeBorder(Color.orange.opacity(0.2), lineWidth: 1)
+                )
+        )
     }
 }
 

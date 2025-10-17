@@ -44,6 +44,10 @@ struct ContentView: View {
     @State private var isSearching = false
     @State private var semanticMatchText = "" // Stores the matched text for highlighting
 
+    // Chat state
+    @State private var showingChat = false
+    @State private var chatSidebarWidth: CGFloat = 350
+
     var body: some View {
         NavigationSplitView {
             // Sidebar: Note list (minimal Mac Notes style)
@@ -100,6 +104,16 @@ struct ContentView: View {
                 viewModel.flushPendingSaves()
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .insertTextIntoNote)) { notification in
+            if let text = notification.object as? String,
+               let note = viewModel.selectedNote {
+                // Append the text to the current note
+                let currentContent = note.content ?? ""
+                let newContent = currentContent + "\n\n" + text
+                note.content = newContent
+                viewModel.saveNote(note)
+            }
+        }
         .onReceive(NotificationCenter.default.publisher(for: .showUpgradePrompt)) { notification in
             if let type = notification.object as? UpgradePromptView.PromptType {
                 upgradePromptType = type
@@ -136,23 +150,40 @@ struct ContentView: View {
     @ViewBuilder
     private var detailView: some View {
         ZStack(alignment: .bottom) {
-            VStack(spacing: 0) {
-                mainContentView
-                    .padding(.bottom, 32) // Space for bottom status bar
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .toolbar {
-                // Center: AI Tools
-                ToolbarItemGroup(placement: .principal) {
-                    toolbarCenterItems
+            HStack(spacing: 0) {
+                // Chat Sidebar (if visible)
+                if showingChat {
+                    ChatView(
+                        isPresented: $showingChat,
+                        sidebarWidth: $chatSidebarWidth
+                    )
+                    .environmentObject(aiEngine)
                 }
 
-                // Far Right: Settings and New Note
-                ToolbarItemGroup(placement: .primaryAction) {
-                    toolbarRightItems
+                // Main Content
+                VStack(spacing: 0) {
+                    mainContentView
+                        .padding(.bottom, 32) // Space for bottom status bar
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .toolbar {
+                    // Far Left: Chat button
+                    ToolbarItemGroup(placement: .navigation) {
+                        toolbarLeftItems
+                    }
+
+                    // Center: AI Tools
+                    ToolbarItemGroup(placement: .principal) {
+                        toolbarCenterItems
+                    }
+
+                    // Far Right: Settings and New Note
+                    ToolbarItemGroup(placement: .primaryAction) {
+                        toolbarRightItems
+                    }
+                }
+                .toolbarBackground(.visible, for: .windowToolbar)
             }
-            .toolbarBackground(.visible, for: .windowToolbar)
 
             // Bottom center status bar
             bottomStatusBar
@@ -465,6 +496,40 @@ struct ContentView: View {
         default:
             return .red
         }
+    }
+
+    @ViewBuilder
+    private var toolbarLeftItems: some View {
+        HStack(spacing: 8) {
+            // Chat button with Pro lock
+            Button(action: {
+                if licenseManager.isPro {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                        showingChat.toggle()
+                    }
+                } else {
+                    NotificationCenter.default.post(
+                        name: .showUpgradePrompt,
+                        object: UpgradePromptView.PromptType.chat
+                    )
+                }
+            }) {
+                HStack(spacing: 4) {
+                    if !licenseManager.isPro {
+                        Image(systemName: "lock.fill")
+                            .font(.system(size: 9))
+                            .foregroundColor(.orange)
+                    }
+                    Image(systemName: showingChat ? "sidebar.left.fill" : "bubble.left.and.bubble.right.fill")
+                        .font(.system(size: 14))
+                        .foregroundColor(licenseManager.isPro ? .secondary : .orange)
+                }
+            }
+            .buttonStyle(.plain)
+            .help(licenseManager.isPro ? (showingChat ? "Hide Chat" : "Show Chat") : "Upgrade to Pro for AI Chat")
+        }
+        .padding(.horizontal, 8)
+        .controlSize(.small)
     }
 
     @ViewBuilder
