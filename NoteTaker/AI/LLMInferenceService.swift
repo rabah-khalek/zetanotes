@@ -25,7 +25,7 @@ enum AIModel: String, CaseIterable, Codable {
     case phiThreeFiveMini = "Phi-3.5 Mini 3.8B"
 
     var displayName: String {
-        self.rawValue
+        rawValue
     }
 
     var fileName: String {
@@ -193,10 +193,9 @@ enum AIModel: String, CaseIterable, Codable {
 /// Service handling direct LLM inference
 /// Wraps llama.cpp or Core ML for running quantized GGUF models
 class LLMInferenceService: @unchecked Sendable {
-
     // MARK: - Configuration
 
-    private struct ModelConfig {
+    private enum ModelConfig {
         static let contextSize: Int32 = 2048
         static let batchSize: Int32 = 512
         static let threads: Int32 = 0 // 0 = auto-detect optimal threads
@@ -219,12 +218,12 @@ class LLMInferenceService: @unchecked Sendable {
     /// - Parameter modelType: The AI model to load (defaults to TinyLlama)
     func loadModel(_ modelType: AIModel = .tinyLlama) async throws {
         // If already loaded with same model, skip
-        if isLoaded && currentModel == modelType {
+        if isLoaded, currentModel == modelType {
             return
         }
 
         // If different model requested, unload current model first
-        if isLoaded && currentModel != modelType {
+        if isLoaded, currentModel != modelType {
             print("🔄 Switching from \(currentModel.displayName) to \(modelType.displayName)")
             unloadModel()
         }
@@ -287,13 +286,13 @@ class LLMInferenceService: @unchecked Sendable {
 
                     // Add samplers to the chain with TinyLlama-optimized parameters
                     // Based on official HuggingFace recommendations: top_k=50, top_p=0.95
-                    if let topK = llama_sampler_init_top_k(50) {  // Increased from 40
+                    if let topK = llama_sampler_init_top_k(50) { // Increased from 40
                         llama_sampler_chain_add(samplerChain, topK)
                     }
-                    if let topP = llama_sampler_init_top_p(0.95, 1) {  // Increased from 0.9
+                    if let topP = llama_sampler_init_top_p(0.95, 1) { // Increased from 0.9
                         llama_sampler_chain_add(samplerChain, topP)
                     }
-                    if let temp = llama_sampler_init_temp(0.7) {  // Default, will be overridden per request
+                    if let temp = llama_sampler_init_temp(0.7) { // Default, will be overridden per request
                         llama_sampler_chain_add(samplerChain, temp)
                     }
                     if let dist = llama_sampler_init_dist(LLAMA_DEFAULT_SEED) {
@@ -362,7 +361,8 @@ class LLMInferenceService: @unchecked Sendable {
                 guard let self = self,
                       let ctx = self.context,
                       let mdl = self.model,
-                      let smpl = self.sampler else {
+                      let smpl = self.sampler
+                else {
                     continuation.resume(returning: nil)
                     return
                 }
@@ -476,7 +476,9 @@ class LLMInferenceService: @unchecked Sendable {
                         let tokensGenerated = Int(nCur - tokenCount)
                         if now.timeIntervalSince(lastProgressPrint) >= progressInterval {
                             let progress = Double(tokensGenerated) / Double(maxGenTokens) * 100
-                            print("⏳ Progress: \(tokensGenerated)/\(maxGenTokens) tokens (\(String(format: "%.1f", progress))%) - \(generatedText.count) chars")
+                            print(
+                                "⏳ Progress: \(tokensGenerated)/\(maxGenTokens) tokens (\(String(format: "%.1f", progress))%) - \(generatedText.count) chars"
+                            )
                             lastProgressPrint = now
                         }
 
@@ -489,9 +491,8 @@ class LLMInferenceService: @unchecked Sendable {
                                 print("🛑 Stop sequence '\(stopSeq)' detected")
                                 print("✅ Generated \(tokensGenerated) tokens → \(generatedText.count) chars")
                                 print("=== Generation Complete ===\n")
-                                    continuation.resume(returning: generatedText)
-                                    return
-                                }
+                                continuation.resume(returning: generatedText)
+                                return
                             }
                         }
                     }
@@ -534,7 +535,8 @@ class LLMInferenceService: @unchecked Sendable {
             inferenceQueue.async { [weak self] in
                 guard let self = self,
                       let ctx = self.context,
-                      let mdl = self.model else {
+                      let mdl = self.model
+                else {
                     continuation.resume(returning: nil)
                     return
                 }
@@ -676,7 +678,8 @@ class LLMInferenceService: @unchecked Sendable {
 
     /// Returns the Application Support directory path for storing models
     func getModelsDirectory() -> URL? {
-        guard let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+        guard let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+        else {
             return nil
         }
         return appSupport.appendingPathComponent("NoteTaker/Models")

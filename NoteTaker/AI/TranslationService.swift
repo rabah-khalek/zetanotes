@@ -19,16 +19,16 @@ class TranslationService: AIService {
 
     init(llmService: LLMInferenceService) {
         self.llmService = llmService
-        self.config = AIGenerationConfig(
-            temperature: 0.1,  // REDUCED from 0.3 - translation needs high accuracy, low creativity
-            maxTokens: 512,  // Will be overridden dynamically per request
+        config = AIGenerationConfig(
+            temperature: 0.1, // REDUCED from 0.3 - translation needs high accuracy, low creativity
+            maxTokens: 512, // Will be overridden dynamically per request
             stopSequences: [
                 // Note: </s> is handled natively by llama.cpp (llama_vocab_is_eog)
-                "<|user|>",     // Prevent fake user messages
-                "<|system|>",   // Prevent fake system messages
-                "\n\nText:",    // Stop if it tries to repeat the input prompt
-                "\n\nOutput:",  // Stop if it hallucinates continuation
-                "\n---\n`"      // Service delimiter start
+                "<|user|>", // Prevent fake user messages
+                "<|system|>", // Prevent fake system messages
+                "\n\nText:", // Stop if it tries to repeat the input prompt
+                "\n\nOutput:", // Stop if it hallucinates continuation
+                "\n---\n`" // Service delimiter start
             ]
         )
     }
@@ -38,7 +38,7 @@ class TranslationService: AIService {
     /// Sets the target language for translation
     /// - Parameter language: The language to translate to (e.g., "English", "Spanish")
     func setTargetLanguage(_ language: String) {
-        self.targetLanguage = language
+        targetLanguage = language
     }
 
     /// Gets the current target language

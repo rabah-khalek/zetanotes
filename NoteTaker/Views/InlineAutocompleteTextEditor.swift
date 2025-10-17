@@ -1,5 +1,5 @@
-import SwiftUI
 import AppKit
+import SwiftUI
 
 /// A SwiftUI wrapper for NSTextView that supports inline autocomplete ghost text at the cursor
 /// Features:
@@ -51,7 +51,11 @@ struct InlineAutocompleteTextEditor: NSViewRepresentable {
             }
         }
 
-        func textView(_ textView: NSTextView, shouldChangeTextIn affectedCharRange: NSRange, replacementString: String?) -> Bool {
+        func textView(
+            _ textView: NSTextView,
+            shouldChangeTextIn affectedCharRange: NSRange,
+            replacementString: String?
+        ) -> Bool {
             // Handle Tab key to accept suggestion
             if replacementString == "\t", let suggestion = parent.suggestion, !suggestion.isEmpty {
                 parent.onAccept?()
@@ -95,7 +99,10 @@ struct InlineAutocompleteTextEditor: NSViewRepresentable {
         textView.isVerticallyResizable = true
         textView.isHorizontallyResizable = false
         textView.textContainer?.widthTracksTextView = true
-        textView.textContainer?.containerSize = NSSize(width: scrollView.contentSize.width, height: .greatestFiniteMagnitude)
+        textView.textContainer?.containerSize = NSSize(
+            width: scrollView.contentSize.width,
+            height: .greatestFiniteMagnitude
+        )
 
         scrollView.hasVerticalScroller = true
         scrollView.hasHorizontalScroller = false
@@ -150,7 +157,10 @@ struct InlineAutocompleteTextEditor: NSViewRepresentable {
         attributedString.addAttributes(normalAttributes, range: NSRange(location: 0, length: text.count))
 
         // Apply ghost style to suggestion with proper alpha
-        attributedString.addAttributes(context.coordinator.ghostTextAttributes, range: NSRange(location: text.count, length: suggestion.count))
+        attributedString.addAttributes(
+            context.coordinator.ghostTextAttributes,
+            range: NSRange(location: text.count, length: suggestion.count)
+        )
 
         // Update text storage safely
         textView.textStorage?.setAttributedString(attributedString)

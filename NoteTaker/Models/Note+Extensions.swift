@@ -5,8 +5,8 @@
 //  Extensions for Core Data Note entity
 //
 
-import Foundation
 import CoreData
+import Foundation
 
 // MARK: - Note Extensions
 
@@ -147,7 +147,7 @@ extension NoteEmbedding {
         guard let data = embeddingData else { return nil }
 
         // Check cache first
-        if let cached = Self.vectorCache.object(forKey: self.objectID) as? [Float] {
+        if let cached = Self.vectorCache.object(forKey: objectID) as? [Float] {
             return cached
         }
 
@@ -161,7 +161,7 @@ extension NoteEmbedding {
 
         // Store in cache with cost = array byte size
         let cost = array.count * MemoryLayout<Float>.stride
-        Self.vectorCache.setObject(array as NSArray, forKey: self.objectID, cost: cost)
+        Self.vectorCache.setObject(array as NSArray, forKey: objectID, cost: cost)
 
         return array
     }
@@ -181,7 +181,7 @@ extension NoteEmbedding {
     /// - Parameter other: Another embedding to compare with
     /// - Returns: Similarity score between -1 and 1 (higher is more similar)
     func cosineSimilarity(with other: NoteEmbedding) -> Float {
-        guard let vec1 = self.vector, let vec2 = other.vector, vec1.count == vec2.count else {
+        guard let vec1 = vector, let vec2 = other.vector, vec1.count == vec2.count else {
             return 0
         }
 
@@ -189,7 +189,7 @@ extension NoteEmbedding {
         var magnitude1: Float = 0
         var magnitude2: Float = 0
 
-        for index in 0..<vec1.count {
+        for index in 0 ..< vec1.count {
             dotProduct += vec1[index] * vec2[index]
             magnitude1 += vec1[index] * vec1[index]
             magnitude2 += vec2[index] * vec2[index]

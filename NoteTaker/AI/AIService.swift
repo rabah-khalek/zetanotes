@@ -88,7 +88,7 @@ extension AIService {
             "\n\nThe ",
             "\n\nHere is",
             "\n\nNote:",
-            "\n\n---\n`"  // New service delimiter format
+            "\n\n---\n`" // New service delimiter format
         ]
 
         for marker in stopMarkers {
@@ -160,7 +160,7 @@ extension AIService {
     /// - Returns: First paragraph if substantial, otherwise original text
     func keepFirstParagraph(from text: String, minLength: Int = 10) -> String {
         // Find all occurrences of "\n\n"
-        var searchRange = text.startIndex..<text.endIndex
+        var searchRange = text.startIndex ..< text.endIndex
 
         while let doubleNewline = text.range(of: "\n\n", range: searchRange) {
             // Check if this is part of a service delimiter ("\n\n---\n`")
@@ -169,7 +169,7 @@ extension AIService {
                 let remainingText = text[afterNewlines...]
                 // Skip if this "\n\n" is followed by "---\n`" (service delimiter)
                 if remainingText.hasPrefix("---\n`") {
-                    searchRange = afterNewlines..<text.endIndex
+                    searchRange = afterNewlines ..< text.endIndex
                     continue
                 }
             }
@@ -193,7 +193,7 @@ extension AIService {
     /// - Returns: Text after first paragraph if first paragraph is short, otherwise original text
     func skipPrefixParagraph(from text: String, maxPrefixLength: Int = 50) -> String {
         // Find first real paragraph break (not service delimiter)
-        var searchRange = text.startIndex..<text.endIndex
+        var searchRange = text.startIndex ..< text.endIndex
 
         while let doubleNewline = text.range(of: "\n\n", range: searchRange) {
             // Check if this is part of a service delimiter ("\n\n---\n`")
@@ -202,7 +202,7 @@ extension AIService {
                 let remainingText = text[afterNewlines...]
                 // Skip if this "\n\n" is followed by "---\n`" (service delimiter)
                 if remainingText.hasPrefix("---\n`") {
-                    searchRange = afterNewlines..<text.endIndex
+                    searchRange = afterNewlines ..< text.endIndex
                     continue
                 }
             }
@@ -339,7 +339,7 @@ extension AIService {
 
         for prefix in hallucinationPrefixes where cleaned.hasPrefix(prefix) {
             cleaned = String(cleaned.dropFirst(prefix.count))
-            break  // Only remove first match
+            break // Only remove first match
         }
 
         return cleaned.trimmingCharacters(in: .whitespacesAndNewlines)

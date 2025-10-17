@@ -6,8 +6,8 @@
 //  Optimized for <3GB RAM usage on Apple Silicon
 //
 
-import Foundation
 import Combine
+import Foundation
 
 /// Central AI engine coordinating all ML operations
 /// Singleton pattern ensures single model instance for memory efficiency
@@ -16,37 +16,21 @@ class AIEngine: ObservableObject {
 
     // MARK: - Services
 
-    private(set) lazy var llmService: LLMInferenceService = {
-        LLMInferenceService()
-    }()
+    private(set) lazy var llmService: LLMInferenceService = .init()
 
-    private(set) lazy var embeddingService: EmbeddingService = {
-        EmbeddingService(llmService: llmService)
-    }()
+    private(set) lazy var embeddingService: EmbeddingService = .init(llmService: llmService)
 
-    private(set) lazy var autocompleteService: AutocompleteService = {
-        AutocompleteService(llmService: llmService)
-    }()
+    private(set) lazy var autocompleteService: AutocompleteService = .init(llmService: llmService)
 
-    private(set) lazy var summarizationService: SummarizationService = {
-        SummarizationService(llmService: llmService)
-    }()
+    private(set) lazy var summarizationService: SummarizationService = .init(llmService: llmService)
 
-    private(set) lazy var translationService: TranslationService = {
-        TranslationService(llmService: llmService)
-    }()
+    private(set) lazy var translationService: TranslationService = .init(llmService: llmService)
 
-    private(set) lazy var autoCorrectService: AutoCorrectService = {
-        AutoCorrectService(llmService: llmService)
-    }()
+    private(set) lazy var autoCorrectService: AutoCorrectService = .init(llmService: llmService)
 
-    private(set) lazy var reformulationService: ReformulationService = {
-        ReformulationService(llmService: llmService)
-    }()
+    private(set) lazy var reformulationService: ReformulationService = .init(llmService: llmService)
 
-    private(set) lazy var titleGenerationService: TitleGenerationService = {
-        TitleGenerationService(llmService: llmService)
-    }()
+    private(set) lazy var titleGenerationService: TitleGenerationService = .init(llmService: llmService)
 
     // MARK: - State
 
@@ -85,7 +69,7 @@ class AIEngine: ObservableObject {
     /// - Parameter modelType: The AI model to load
     func loadModel(_ modelType: AIModel) async {
         // If already loaded with the same model, skip
-        if isModelLoaded && llmService.getCurrentModel() == modelType {
+        if isModelLoaded, llmService.getCurrentModel() == modelType {
             return
         }
 

@@ -202,10 +202,7 @@ class LicenseManager: ObservableObject {
     /// Saves license to Keychain
     private func saveLicense(key: String, email: String) async {
         // Save to Keychain (background thread is fine for Security framework)
-        guard let licenseData = "\(email):\(key)".data(using: .utf8) else {
-            print("❌ Failed to encode license data")
-            return
-        }
+        let licenseData = Data("\(email):\(key)".utf8)
 
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
@@ -253,7 +250,6 @@ class LicenseManager: ObservableObject {
         if status == errSecSuccess,
            let data = result as? Data,
            let licenseString = String(data: data, encoding: .utf8) {
-
             let components = licenseString.split(separator: ":")
             if components.count == 2 {
                 DispatchQueue.main.async {

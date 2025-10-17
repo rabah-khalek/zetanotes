@@ -50,7 +50,7 @@ struct MarkdownRenderer: View {
             if trimmedLine.hasPrefix("```") {
                 var codeLines: [String] = []
                 lineIndex += 1
-                while lineIndex < lines.count && !lines[lineIndex].trimmingCharacters(in: .whitespaces).hasPrefix("```") {
+                while lineIndex < lines.count, !lines[lineIndex].trimmingCharacters(in: .whitespaces).hasPrefix("```") {
                     codeLines.append(lines[lineIndex])
                     lineIndex += 1
                 }
@@ -70,7 +70,8 @@ struct MarkdownRenderer: View {
             // Check for numbered lists
             if let firstChar = trimmedLine.first, firstChar.isNumber {
                 if let dotIndex = trimmedLine.firstIndex(of: ".") {
-                    let item = String(trimmedLine[trimmedLine.index(after: dotIndex)...]).trimmingCharacters(in: .whitespaces)
+                    let item = String(trimmedLine[trimmedLine.index(after: dotIndex)...])
+                        .trimmingCharacters(in: .whitespaces)
                     elements.append(MarkdownElement(type: .numberedItem(text: item)))
                     lineIndex += 1
                     continue
@@ -103,29 +104,29 @@ struct MarkdownRenderer: View {
     @ViewBuilder
     private func renderElement(_ element: MarkdownElement) -> some View {
         switch element.type {
-        case .heading(let level, let text):
+        case let .heading(level, text):
             headingView(level: level, text: text)
-        case .paragraph(let text):
+        case let .paragraph(text):
             // Use SwiftUI's native Markdown rendering via LocalizedStringKey
             Text(LocalizedStringKey(text))
                 .textSelection(.enabled)
-        case .codeBlock(let code):
+        case let .codeBlock(code):
             codeBlockView(code: code)
-        case .bulletItem(let text):
+        case let .bulletItem(text):
             HStack(alignment: .top, spacing: 8) {
                 Text("•")
                     .font(.body)
                 Text(LocalizedStringKey(text))
                     .textSelection(.enabled)
             }
-        case .numberedItem(let text):
+        case let .numberedItem(text):
             HStack(alignment: .top, spacing: 8) {
                 Text("1.")
                     .font(.body)
                 Text(LocalizedStringKey(text))
                     .textSelection(.enabled)
             }
-        case .blockquote(let text):
+        case let .blockquote(text):
             HStack(spacing: 12) {
                 Rectangle()
                     .fill(Color.gray.opacity(0.3))

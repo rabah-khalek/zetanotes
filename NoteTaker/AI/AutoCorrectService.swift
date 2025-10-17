@@ -17,15 +17,15 @@ class AutoCorrectService: AIService {
 
     init(llmService: LLMInferenceService) {
         self.llmService = llmService
-        self.config = AIGenerationConfig(
-            temperature: 0.05,  // Very low for deterministic corrections
-            maxTokens: nil,     // Will be calculated dynamically
+        config = AIGenerationConfig(
+            temperature: 0.05, // Very low for deterministic corrections
+            maxTokens: nil, // Will be calculated dynamically
             stopSequences: [
                 // Note: </s> is handled natively by llama.cpp (llama_vocab_is_eog)
-                "<|user|>",     // Prevent fake user messages
-                "<|system|>",   // Prevent fake system messages
-                "\n\nText:",    // Stop if it tries to repeat the input prompt
-                "\n---\n`"      // Service delimiter start
+                "<|user|>", // Prevent fake user messages
+                "<|system|>", // Prevent fake system messages
+                "\n\nText:", // Stop if it tries to repeat the input prompt
+                "\n---\n`" // Service delimiter start
             ]
         )
     }
@@ -59,7 +59,7 @@ class AutoCorrectService: AIService {
         }
 
         return postProcess(rawOutput)
-    }    // MARK: - Public API
+    } // MARK: - Public API
 
     /// Corrects spelling and grammar in the given text
     /// - Parameter text: The text to correct

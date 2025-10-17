@@ -137,7 +137,8 @@ class ModelDownloader: NSObject, ObservableObject {
     // MARK: - Helpers
 
     private func getModelsDirectory() -> URL? {
-        guard let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+        guard let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+        else {
             return nil
         }
         return appSupport.appendingPathComponent("NoteTaker/Models")
@@ -151,7 +152,13 @@ extension ModelDownloader: URLSessionDownloadDelegate {
         // Handled in completion block
     }
 
-    func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didWriteData bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
+    func urlSession(
+        _ session: URLSession,
+        downloadTask: URLSessionDownloadTask,
+        didWriteData bytesWritten: Int64,
+        totalBytesWritten: Int64,
+        totalBytesExpectedToWrite: Int64
+    ) {
         let progress = Double(totalBytesWritten) / Double(totalBytesExpectedToWrite)
         DispatchQueue.main.async {
             self.downloadProgress = progress

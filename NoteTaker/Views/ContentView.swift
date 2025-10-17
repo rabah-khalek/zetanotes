@@ -59,7 +59,13 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showingToolEditor) {
             ToolEditorView(
-                tool: editingTool ?? AITool(name: "", icon: "star.fill", prompt: "", keyboardShortcut: "", color: .purple),
+                tool: editingTool ?? AITool(
+                    name: "",
+                    icon: "star.fill",
+                    prompt: "",
+                    keyboardShortcut: "",
+                    color: .purple
+                ),
                 isPresented: $showingToolEditor,
                 onSave: { tool in
                     if editingTool != nil {
@@ -421,11 +427,11 @@ struct ContentView: View {
                     )
             )
             .help("""
-                CPU: \(Int(systemMonitor.cpuUsage))% of \(systemMonitor.cpuCoreCount) cores • \
-                Memory: \(Int(systemMonitor.memoryUsage))MB \
-                (\(String(format: "%.1f", systemMonitor.memoryUsagePercentage))% of \
-                \(Int(systemMonitor.totalSystemMemory / 1024))GB)
-                """)
+            CPU: \(Int(systemMonitor.cpuUsage))% of \(systemMonitor.cpuCoreCount) cores • \
+            Memory: \(Int(systemMonitor.memoryUsage))MB \
+            (\(String(format: "%.1f", systemMonitor.memoryUsagePercentage))% of \
+            \(Int(systemMonitor.totalSystemMemory / 1024))GB)
+            """)
         }
         .padding(.vertical, 6)
         .frame(maxWidth: .infinity)
@@ -435,9 +441,9 @@ struct ContentView: View {
 
     private var cpuColor: Color {
         switch systemMonitor.cpuUsage {
-        case 0..<30:
+        case 0 ..< 30:
             return .green
-        case 30..<70:
+        case 30 ..< 70:
             return .yellow
         default:
             return .red
@@ -446,9 +452,9 @@ struct ContentView: View {
 
     private var memoryColor: Color {
         switch systemMonitor.memoryUsagePercentage {
-        case 0..<60:
+        case 0 ..< 60:
             return .green
-        case 60..<80:
+        case 60 ..< 80:
             return .yellow
         default:
             return .red
@@ -493,19 +499,19 @@ struct ContentView: View {
                 isSearching: showingSearch,
                 semanticMatchText: $semanticMatchText
             )
-                .id(selectedNote.id) // Force new view instance for each note
-                .onChange(of: selectedNote.content) { newContent in
-                    // Update word and character counts
-                    let words = (newContent ?? "").components(separatedBy: .whitespacesAndNewlines)
-                    currentWordCount = words.filter { !$0.isEmpty }.count
-                    currentCharacterCount = (newContent ?? "").count
-                }
-                .onAppear {
-                    // Initialize counts when note appears
-                    let words = (selectedNote.content ?? "").components(separatedBy: .whitespacesAndNewlines)
-                    currentWordCount = words.filter { !$0.isEmpty }.count
-                    currentCharacterCount = (selectedNote.content ?? "").count
-                }
+            .id(selectedNote.id) // Force new view instance for each note
+            .onChange(of: selectedNote.content) { newContent in
+                // Update word and character counts
+                let words = (newContent ?? "").components(separatedBy: .whitespacesAndNewlines)
+                currentWordCount = words.filter { !$0.isEmpty }.count
+                currentCharacterCount = (newContent ?? "").count
+            }
+            .onAppear {
+                // Initialize counts when note appears
+                let words = (selectedNote.content ?? "").components(separatedBy: .whitespacesAndNewlines)
+                currentWordCount = words.filter { !$0.isEmpty }.count
+                currentCharacterCount = (selectedNote.content ?? "").count
+            }
         } else {
             EmptyStateView()
                 .onAppear {
@@ -671,7 +677,13 @@ struct ContentView: View {
                 return
             }
 
-            var bestMatches: [(text: String, similarity: Float, range: Range<String.Index>)] = []
+            struct SearchMatch {
+                let text: String
+                let similarity: Float
+                let range: Range<String.Index>
+            }
+
+            var bestMatches: [SearchMatch] = []
 
             // Generate embeddings for each chunk and compute similarity
             for chunk in chunks {
@@ -681,7 +693,7 @@ struct ContentView: View {
                     let similarity = aiEngine.embeddingService.cosineSimilarity(queryEmbedding, chunkEmbedding)
 
                     // Store all results for comparison
-                    bestMatches.append((text: chunk.text, similarity: similarity, range: chunk.range))
+                    bestMatches.append(SearchMatch(text: chunk.text, similarity: similarity, range: chunk.range))
                 }
             }
 
@@ -699,10 +711,12 @@ struct ContentView: View {
             let minSimilarity = bestMatches.last?.similarity ?? 0
             let similarityRange = maxSimilarity - minSimilarity
 
-            print("📊 Similarity range: \(String(format: "%.2f", minSimilarity)) to \(String(format: "%.2f", maxSimilarity)) (range: \(String(format: "%.2f", similarityRange)))")
+            print(
+                "📊 Similarity range: \(String(format: "%.2f", minSimilarity)) to \(String(format: "%.2f", maxSimilarity)) (range: \(String(format: "%.2f", similarityRange)))"
+            )
 
             // Only keep top results that are meaningfully different from the rest
-            var topMatches: [(text: String, similarity: Float, range: Range<String.Index>)] = []
+            var topMatches: [SearchMatch] = []
 
             if similarityRange > 0.01 { // If there's meaningful variation
                 // Take matches that are significantly above average
@@ -723,7 +737,9 @@ struct ContentView: View {
 
             print("Found \(topMatches.count) distinct semantic matches:")
             for (index, match) in topMatches.enumerated() {
-                print("  \(index + 1). Similarity: \(String(format: "%.2f%%", match.similarity * 100)) - \(match.text.prefix(60))...")
+                print(
+                    "  \(index + 1). Similarity: \(String(format: "%.2f%%", match.similarity * 100)) - \(match.text.prefix(60))..."
+                )
             }
 
             // Highlight the most relevant match
@@ -803,7 +819,7 @@ struct ContentView: View {
                 let trimmed = line.trimmingCharacters(in: .whitespaces)
 
                 if trimmed.count >= 10 {
-                    if let range = text.range(of: trimmed, range: currentIndex..<text.endIndex) {
+                    if let range = text.range(of: trimmed, range: currentIndex ..< text.endIndex) {
                         chunks.append((text: trimmed, range: range))
                         currentIndex = range.upperBound
                     }
@@ -835,11 +851,12 @@ struct ContentView: View {
 
         // Fallback: split by paragraphs if no sentences found
         if chunks.isEmpty {
-            let paragraphs = text.components(separatedBy: .newlines).filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+            let paragraphs = text.components(separatedBy: .newlines)
+                .filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
             var currentIndex = text.startIndex
 
             for paragraph in paragraphs {
-                if let range = text.range(of: paragraph, range: currentIndex..<text.endIndex) {
+                if let range = text.range(of: paragraph, range: currentIndex ..< text.endIndex) {
                     chunks.append((text: paragraph, range: range))
                     currentIndex = range.upperBound
                 }
@@ -854,11 +871,11 @@ struct ContentView: View {
 extension String {
     func ranges(of searchString: String, options: String.CompareOptions = []) -> [Range<String.Index>] {
         var ranges: [Range<String.Index>] = []
-        var searchRange = self.startIndex..<self.endIndex
+        var searchRange = startIndex ..< endIndex
 
-        while let range = self.range(of: searchString, options: options, range: searchRange) {
+        while let range = range(of: searchString, options: options, range: searchRange) {
             ranges.append(range)
-            searchRange = range.upperBound..<self.endIndex
+            searchRange = range.upperBound ..< endIndex
         }
 
         return ranges

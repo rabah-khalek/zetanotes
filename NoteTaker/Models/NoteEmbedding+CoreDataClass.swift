@@ -5,10 +5,8 @@
 //  Core Data managed object subclass for NoteEmbedding entity
 //
 
-import Foundation
 import CoreData
+import Foundation
 
 @objc(NoteEmbedding)
-public class NoteEmbedding: NSManagedObject {
-
-}
+public class NoteEmbedding: NSManagedObject {}

@@ -34,15 +34,15 @@ class ErrorManager: ObservableObject {
 
         var id: String {
             switch self {
-            case .modelLoadFailed(let msg): return "modelLoad_\(msg)"
-            case .modelDownloadFailed(let msg): return "modelDownload_\(msg)"
-            case .noteOperationFailed(let msg): return "noteOp_\(msg)"
-            case .searchFailed(let msg): return "search_\(msg)"
-            case .aiInferenceFailed(let msg): return "aiInference_\(msg)"
-            case .databaseError(let msg): return "database_\(msg)"
-            case .networkError(let msg): return "network_\(msg)"
-            case .fileSystemError(let msg): return "fileSystem_\(msg)"
-            case .unknown(let msg): return "unknown_\(msg)"
+            case let .modelLoadFailed(msg): return "modelLoad_\(msg)"
+            case let .modelDownloadFailed(msg): return "modelDownload_\(msg)"
+            case let .noteOperationFailed(msg): return "noteOp_\(msg)"
+            case let .searchFailed(msg): return "search_\(msg)"
+            case let .aiInferenceFailed(msg): return "aiInference_\(msg)"
+            case let .databaseError(msg): return "database_\(msg)"
+            case let .networkError(msg): return "network_\(msg)"
+            case let .fileSystemError(msg): return "fileSystem_\(msg)"
+            case let .unknown(msg): return "unknown_\(msg)"
             }
         }
 
@@ -62,15 +62,15 @@ class ErrorManager: ObservableObject {
 
         var message: String {
             switch self {
-            case .modelLoadFailed(let msg): return msg
-            case .modelDownloadFailed(let msg): return msg
-            case .noteOperationFailed(let msg): return msg
-            case .searchFailed(let msg): return msg
-            case .aiInferenceFailed(let msg): return msg
-            case .databaseError(let msg): return msg
-            case .networkError(let msg): return msg
-            case .fileSystemError(let msg): return msg
-            case .unknown(let msg): return msg
+            case let .modelLoadFailed(msg): return msg
+            case let .modelDownloadFailed(msg): return msg
+            case let .noteOperationFailed(msg): return msg
+            case let .searchFailed(msg): return msg
+            case let .aiInferenceFailed(msg): return msg
+            case let .databaseError(msg): return msg
+            case let .networkError(msg): return msg
+            case let .fileSystemError(msg): return msg
+            case let .unknown(msg): return msg
             }
         }
 
@@ -124,7 +124,13 @@ class ErrorManager: ObservableObject {
     ///   - file: Source file (for logging)
     ///   - function: Source function (for logging)
     ///   - line: Source line (for logging)
-    func handle(_ error: AppError, showToUser: Bool = true, file: String = #file, function: String = #function, line: Int = #line) {
+    func handle(
+        _ error: AppError,
+        showToUser: Bool = true,
+        file: String = #file,
+        function: String = #function,
+        line: Int = #line
+    ) {
         // Log the error
         Logger.shared.error("\(error.title): \(error.message)", file: file, function: function, line: line)
 
@@ -138,7 +144,14 @@ class ErrorManager: ObservableObject {
     }
 
     /// Handles a generic Swift error and converts it to AppError
-    func handle(_ error: Error, context: String, showToUser: Bool = true, file: String = #file, function: String = #function, line: Int = #line) {
+    func handle(
+        _ error: Error,
+        context: String,
+        showToUser: Bool = true,
+        file: String = #file,
+        function: String = #function,
+        line: Int = #line
+    ) {
         let appError: AppError
 
         // Convert known error types
@@ -217,8 +230,9 @@ extension View {
             set: { _ in errorManager.clearError() }
         )
 
-        return self.alert(item: binding) { (error: ErrorManager.AppError) -> Alert in
-            let messageText: String = error.message + (error.recoveryAction != nil ? "\n\n\(error.recoveryAction!)" : "")
+        return alert(item: binding) { (error: ErrorManager.AppError) -> Alert in
+            let messageText: String = error
+                .message + (error.recoveryAction != nil ? "\n\n\(error.recoveryAction!)" : "")
             return Alert(
                 title: Text(error.title),
                 message: Text(messageText),

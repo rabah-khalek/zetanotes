@@ -77,6 +77,7 @@ struct NoteTakerApp: App {
 }
 
 // MARK: - Notification Names
+
 extension Notification.Name {
     static let createNewNote = Notification.Name("createNewNote")
     static let deleteNote = Notification.Name("deleteNote")

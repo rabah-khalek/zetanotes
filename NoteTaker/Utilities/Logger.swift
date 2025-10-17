@@ -57,9 +57,9 @@ class Logger {
     private init() {
         // Set minimum log level based on build configuration
         #if DEBUG
-        self.minimumLogLevel = .debug
+        minimumLogLevel = .debug
         #else
-        self.minimumLogLevel = .info
+        minimumLogLevel = .info
         #endif
 
         setupLogFile()
@@ -94,7 +94,13 @@ class Logger {
     // MARK: - Logging Methods
 
     /// Logs a message with the specified level
-    func log(_ message: String, level: LogLevel, file: String = #file, function: String = #function, line: Int = #line) {
+    func log(
+        _ message: String,
+        level: LogLevel,
+        file: String = #file,
+        function: String = #function,
+        line: Int = #line
+    ) {
         guard level.priority >= minimumLogLevel.priority else { return }
 
         let timestamp = dateFormatter.string(from: Date())

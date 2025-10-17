@@ -6,8 +6,8 @@
 //  Provides performance metrics for display in UI
 //
 
-import Foundation
 import Combine
+import Foundation
 
 /// Monitors system resources (CPU, Memory, GPU) in real-time
 /// Provides data for the system monitor widget and diagnostics view
@@ -16,27 +16,33 @@ class SystemMonitor: ObservableObject {
 
     // MARK: - Published Properties
 
-    @Published var cpuUsage: Double = 0.0           // CPU usage percentage (0-100+)
-    @Published var memoryUsage: Double = 0.0        // Memory usage in MB
+    @Published var cpuUsage: Double = 0.0 // CPU usage percentage (0-100+)
+    @Published var memoryUsage: Double = 0.0 // Memory usage in MB
     @Published var memoryPressure: MemoryPressure = .normal
-    @Published var inferenceTime: Double = 0.0      // Last AI inference time in ms
-    @Published var activeModel: String = ""         // Currently loaded model name
+    @Published var inferenceTime: Double = 0.0 // Last AI inference time in ms
+    @Published var activeModel: String = "" // Currently loaded model name
 
     // System capabilities
-    var totalSystemMemory: Double = 0.0             // Total RAM in MB
-    var cpuCoreCount: Int = 0                       // Number of CPU cores
+    var totalSystemMemory: Double = 0.0 // Total RAM in MB
+    var cpuCoreCount: Int = 0 // Number of CPU cores
 
     // MARK: - Performance History
 
+    struct PerformanceSnapshot {
+        let cpu: Double
+        let memory: Double
+        let timestamp: Date
+    }
+
     private var cpuHistory: [Double] = []
     private var memoryHistory: [Double] = []
-    private let maxHistoryCount = 60  // Keep 1 minute of data (at 1 sample/sec)
+    private let maxHistoryCount = 60 // Keep 1 minute of data (at 1 sample/sec)
 
-    var performanceHistory: [(cpu: Double, memory: Double, timestamp: Date)] {
+    var performanceHistory: [PerformanceSnapshot] {
         let now = Date()
         return zip(cpuHistory, memoryHistory).enumerated().map { index, values in
             let timestamp = now.addingTimeInterval(-Double(cpuHistory.count - index))
-            return (cpu: values.0, memory: values.1, timestamp: timestamp)
+            return PerformanceSnapshot(cpu: values.0, memory: values.1, timestamp: timestamp)
         }
     }
 
@@ -81,7 +87,7 @@ class SystemMonitor: ObservableObject {
         totalSystemMemory = Double(size) / 1024 / 1024 // Convert to MB
 
         // Get CPU core count
-        var count: Int = 0
+        var count = 0
         var countSize = MemoryLayout<Int>.size
         sysctlbyname("hw.ncpu", &count, &countSize, nil, 0)
         cpuCoreCount = count
@@ -147,7 +153,7 @@ class SystemMonitor: ObservableObject {
     // MARK: - CPU Usage
 
     private func getCPUUsage() -> Double {
-        var totalUsageOfCPU: Double = 0.0
+        var totalUsageOfCPU = 0.0
         var threadsList: thread_act_array_t?
         var threadsCount = mach_msg_type_number_t(0)
 
@@ -161,7 +167,7 @@ class SystemMonitor: ObservableObject {
             return 0.0
         }
 
-        for index in 0..<threadsCount {
+        for index in 0 ..< threadsCount {
             var threadInfo = thread_basic_info()
             var threadInfoCount = mach_msg_type_number_t(THREAD_INFO_MAX)
 
@@ -180,7 +186,11 @@ class SystemMonitor: ObservableObject {
         }
 
         // Clean up
-        vm_deallocate(mach_task_self_, vm_address_t(bitPattern: threadsList), vm_size_t(Int(threadsCount) * MemoryLayout<thread_t>.stride))
+        vm_deallocate(
+            mach_task_self_,
+            vm_address_t(bitPattern: threadsList),
+            vm_size_t(Int(threadsCount) * MemoryLayout<thread_t>.stride)
+        )
 
         return totalUsageOfCPU
     }
@@ -212,9 +222,9 @@ class SystemMonitor: ObservableObject {
         let memoryPercentage = (memoryUsage / totalSystemMemory) * 100
 
         switch memoryPercentage {
-        case 0..<60:
+        case 0 ..< 60:
             return .normal
-        case 60..<80:
+        case 60 ..< 80:
             return .warning
         default:
             return .critical
@@ -258,8 +268,8 @@ class SystemMonitor: ObservableObject {
     /// Returns status color based on CPU usage
     var cpuStatusColor: String {
         switch cpuUsage {
-        case 0..<30: return "green"
-        case 30..<70: return "yellow"
+        case 0 ..< 30: return "green"
+        case 30 ..< 70: return "yellow"
         default: return "red"
         }
     }

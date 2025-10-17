@@ -6,8 +6,8 @@
 //  Uses TinyLlama to create dense vector representations
 //
 
-import Foundation
 import CoreData
+import Foundation
 
 /// Service for generating text embeddings using the LLM
 /// Embeddings enable semantic search across notes
@@ -17,7 +17,7 @@ class EmbeddingService {
 
     // MARK: - Configuration
 
-    private struct Config {
+    private enum Config {
         static let embeddingDimensions = 2048 // TinyLlama embedding size
         static let maxCacheSize = 100 // Cache up to 100 embeddings
     }
@@ -136,7 +136,7 @@ class EmbeddingService {
         var magnitude1: Float = 0
         var magnitude2: Float = 0
 
-        for index in 0..<embedding1.count {
+        for index in 0 ..< embedding1.count {
             dotProduct += embedding1[index] * embedding2[index]
             magnitude1 += embedding1[index] * embedding1[index]
             magnitude2 += embedding2[index] * embedding2[index]

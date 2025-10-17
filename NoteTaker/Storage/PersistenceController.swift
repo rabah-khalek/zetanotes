@@ -27,7 +27,10 @@ class PersistenceController: ObservableObject {
 
         // Configure for performance on Apple Silicon
         container.persistentStoreDescriptions.first?.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
-        container.persistentStoreDescriptions.first?.setOption(true as NSNumber, forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey)
+        container.persistentStoreDescriptions.first?.setOption(
+            true as NSNumber,
+            forKey: NSPersistentStoreRemoteChangeNotificationPostOptionKey
+        )
 
         // Enable data encryption at rest for security (macOS)
         // On macOS, Core Data encryption is handled at the file system level
@@ -49,7 +52,7 @@ class PersistenceController: ObservableObject {
                 do {
                     // Set file attributes to protect the database file
                     let attributes: [FileAttributeKey: Any] = [
-                        .posixPermissions: 0o600  // Owner read/write only
+                        .posixPermissions: 0o600 // Owner read/write only
                     ]
                     try FileManager.default.setAttributes(attributes, ofItemAtPath: storeURL.path)
                     print("✅ Core Data store secured with restricted permissions")
@@ -75,7 +78,7 @@ class PersistenceController: ObservableObject {
         let context = controller.container.viewContext
 
         // Create sample notes for preview
-        for noteNumber in 1...5 {
+        for noteNumber in 1 ... 5 {
             let note = Note(context: context)
             note.id = UUID()
             note.title = "Sample Note \(noteNumber)"
@@ -109,14 +112,16 @@ class PersistenceController: ObservableObject {
         while retryCount < maxRetries {
             do {
                 try targetContext.save()
-                return  // Success!
+                return // Success!
             } catch let error as NSError {
                 // Check if it's a merge conflict
-                if error.domain == NSCocoaErrorDomain && error.code == NSManagedObjectMergeError {
-                    print("⚠️ Merge conflict detected, attempting to resolve (attempt \(retryCount + 1)/\(maxRetries))...")
+                if error.domain == NSCocoaErrorDomain, error.code == NSManagedObjectMergeError {
+                    print(
+                        "⚠️ Merge conflict detected, attempting to resolve (attempt \(retryCount + 1)/\(maxRetries))..."
+                    )
 
                     // Refresh all objects to get latest data and merge changes
-                    targetContext.registeredObjects.forEach { object in
+                    for object in targetContext.registeredObjects {
                         targetContext.refresh(object, mergeChanges: true)
                     }
 
@@ -158,7 +163,11 @@ class PersistenceController: ObservableObject {
     /// - Parameter fetchRequest: The fetch request defining what to delete
     func batchDelete<T: NSManagedObject>(_ fetchRequest: NSFetchRequest<T>) async throws {
         guard let fetchRequest = fetchRequest as? NSFetchRequest<NSFetchRequestResult> else {
-            throw NSError(domain: "PersistenceController", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid fetch request"])
+            throw NSError(
+                domain: "PersistenceController",
+                code: -1,
+                userInfo: [NSLocalizedDescriptionKey: "Invalid fetch request"]
+            )
         }
         let deleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
         deleteRequest.resultType = .resultTypeObjectIDs

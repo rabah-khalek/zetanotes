@@ -18,13 +18,13 @@ struct AITool: Identifiable, Codable, Equatable {
     var prompt: String
     var keyboardShortcut: String // Single character (e.g., "P", "R", "S", "T")
     var color: ToolColor
-    var isDefault: Bool          // true for built-in tools (Patch, Rephrase, etc.)
-    var isEditable: Bool         // false for default tools on free tier
+    var isDefault: Bool // true for built-in tools (Patch, Rephrase, etc.)
+    var isEditable: Bool // false for default tools on free tier
 
     // LLM Generation Parameters
-    var temperature: Float       // Randomness (0.0 = deterministic, 1.0 = creative)
-    var maxTokens: Int?          // Max tokens to generate (nil = dynamic)
-    var stopSequences: [String]  // Sequences that stop generation
+    var temperature: Float // Randomness (0.0 = deterministic, 1.0 = creative)
+    var maxTokens: Int? // Max tokens to generate (nil = dynamic)
+    var stopSequences: [String] // Sequences that stop generation
 
     var createdAt: Date
     var modifiedAt: Date
@@ -107,10 +107,10 @@ extension AITool {
     static func createDefaultTools() -> [AITool] {
         // Stop sequences optimized for TinyLlama (llama.cpp handles </s> natively)
         let defaultStopSequences = [
-            "<|user|>",     // Prevent fake user messages
-            "<|system|>",   // Prevent fake system messages
-            "\n\nText:",    // Stop if it tries to repeat the input prompt
-            "\n---\n`"      // Service delimiter start
+            "<|user|>", // Prevent fake user messages
+            "<|system|>", // Prevent fake system messages
+            "\n\nText:", // Stop if it tries to repeat the input prompt
+            "\n---\n`" // Service delimiter start
         ]
 
         return [
@@ -123,9 +123,9 @@ extension AITool {
                 color: .purple,
                 isDefault: true,
                 isEditable: false,
-                temperature: 0.7,   // Moderate for natural continuations
-                maxTokens: 50,      // Short completions
-                stopSequences: ["\n", ".", "!", "?"]  // Stop at sentence boundaries
+                temperature: 0.7, // Moderate for natural continuations
+                maxTokens: 50, // Short completions
+                stopSequences: ["\n", ".", "!", "?"] // Stop at sentence boundaries
             ),
 
             // Patch (Auto-correct)
@@ -137,8 +137,8 @@ extension AITool {
                 color: .green,
                 isDefault: true,
                 isEditable: false,
-                temperature: 0.05,  // Very low for deterministic corrections
-                maxTokens: nil,     // Dynamic based on input
+                temperature: 0.05, // Very low for deterministic corrections
+                maxTokens: nil, // Dynamic based on input
                 stopSequences: defaultStopSequences
             ),
 
@@ -151,8 +151,8 @@ extension AITool {
                 color: .orange,
                 isDefault: true,
                 isEditable: false,
-                temperature: 0.2,   // Low temp to avoid hallucinations
-                maxTokens: nil,     // Dynamic based on input
+                temperature: 0.2, // Low temp to avoid hallucinations
+                maxTokens: nil, // Dynamic based on input
                 stopSequences: defaultStopSequences
             ),
 
@@ -165,8 +165,8 @@ extension AITool {
                 color: .blue,
                 isDefault: true,
                 isEditable: false,
-                temperature: 0.2,   // Low temp for focused summaries
-                maxTokens: 150,     // Fixed max for summaries
+                temperature: 0.2, // Low temp for focused summaries
+                maxTokens: 150, // Fixed max for summaries
                 stopSequences: defaultStopSequences
             ),
 
@@ -179,9 +179,9 @@ extension AITool {
                 color: .pink,
                 isDefault: true,
                 isEditable: false,
-                temperature: 0.1,   // Very low for translation accuracy
-                maxTokens: nil,     // Dynamic based on input
-                stopSequences: defaultStopSequences + ["\n\nOutput:"]  // Extra stop for translation
+                temperature: 0.1, // Very low for translation accuracy
+                maxTokens: nil, // Dynamic based on input
+                stopSequences: defaultStopSequences + ["\n\nOutput:"] // Extra stop for translation
             )
         ]
     }

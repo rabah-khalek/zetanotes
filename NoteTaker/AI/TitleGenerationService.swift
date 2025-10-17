@@ -15,22 +15,22 @@ class TitleGenerationService: AIService {
 
     // MARK: - Configuration
 
-    private struct Config {
-        static let contextLimit = 300  // Only use first 300 chars
-        static let maxTokens = 15      // Keep titles short
+    private enum Config {
+        static let contextLimit = 300 // Only use first 300 chars
+        static let maxTokens = 15 // Keep titles short
     }
 
     // MARK: - Initialization
 
     init(llmService: LLMInferenceService) {
         self.llmService = llmService
-        self.config = AIGenerationConfig(
-            temperature: 0.2,  // REDUCED from 0.3 for more focused titles
+        config = AIGenerationConfig(
+            temperature: 0.2, // REDUCED from 0.3 for more focused titles
             maxTokens: Config.maxTokens,
             stopSequences: [
-                "\n",           // Stop at first newline for single-line titles
-                "<|user|>",     // Prevent fake user messages
-                "<|system|>"   // Prevent fake system messages
+                "\n", // Stop at first newline for single-line titles
+                "<|user|>", // Prevent fake user messages
+                "<|system|>" // Prevent fake system messages
             ]
         )
     }
@@ -59,7 +59,7 @@ class TitleGenerationService: AIService {
 
         guard let rawOutput = await llmService.generate(
             prompt: prompt,
-            maxTokens: config.maxTokens,  // Use fixed 15 tokens from config
+            maxTokens: config.maxTokens, // Use fixed 15 tokens from config
             temperature: config.temperature,
             stopSequences: config.stopSequences
         ) else {
@@ -128,14 +128,29 @@ class TitleGenerationService: AIService {
 
         // Remove trailing punctuation
         while cleaned.hasSuffix(".") || cleaned.hasSuffix(":") ||
-              cleaned.hasSuffix("!") || cleaned.hasSuffix("?") {
+            cleaned.hasSuffix("!") || cleaned.hasSuffix("?") {
             cleaned = String(cleaned.dropLast())
         }
 
         // Apply title case
         cleaned = cleaned.split(separator: " ")
             .map { word in
-                let lowercased = ["a", "an", "the", "and", "but", "or", "for", "nor", "on", "at", "to", "by", "in", "of"]
+                let lowercased = [
+                    "a",
+                    "an",
+                    "the",
+                    "and",
+                    "but",
+                    "or",
+                    "for",
+                    "nor",
+                    "on",
+                    "at",
+                    "to",
+                    "by",
+                    "in",
+                    "of"
+                ]
                 let wordStr = String(word)
                 let isFirstWord = word == cleaned.split(separator: " ").first
                 return lowercased.contains(wordStr.lowercased()) && !isFirstWord

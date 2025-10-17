@@ -5,6 +5,10 @@
 
 set -e
 
+echo "🎨 Running SwiftFormat to auto-format code..."
+/opt/homebrew/bin/swiftformat NoteTaker/ --quiet
+
+echo ""
 echo "🔧 Running SwiftLint auto-fix on NoteTaker/ directory..."
 /opt/homebrew/bin/swiftlint --fix NoteTaker/
 

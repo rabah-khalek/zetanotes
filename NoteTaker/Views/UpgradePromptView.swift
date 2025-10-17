@@ -80,10 +80,22 @@ struct UpgradePromptView: View {
                     .font(.headline)
                     .padding(.bottom, 4)
 
-                FeatureRow(icon: "cpu.fill", text: "8 Premium AI Models", subtitle: "Phi-3, Qwen 2.5, Llama 3.2, Gemma 2 & more")
-                FeatureRow(icon: "arrow.down.circle.fill", text: "Download Any Model", subtitle: "Switch between models anytime")
+                FeatureRow(
+                    icon: "cpu.fill",
+                    text: "8 Premium AI Models",
+                    subtitle: "Phi-3, Qwen 2.5, Llama 3.2, Gemma 2 & more"
+                )
+                FeatureRow(
+                    icon: "arrow.down.circle.fill",
+                    text: "Download Any Model",
+                    subtitle: "Switch between models anytime"
+                )
                 FeatureRow(icon: "sparkles", text: "Better AI Quality", subtitle: "Larger models = smarter results")
-                FeatureRow(icon: "text.alignleft", text: "Custom Prompt Editing", subtitle: "Fine-tune all AI responses")
+                FeatureRow(
+                    icon: "text.alignleft",
+                    text: "Custom Prompt Editing",
+                    subtitle: "Fine-tune all AI responses"
+                )
                 FeatureRow(icon: "gift.fill", text: "Future Model Updates", subtitle: "New models added regularly")
             }
             .padding()
@@ -345,7 +357,7 @@ struct LicenseActivationView: View {
         // Email validation - allow test credentials in DEBUG mode
         #if DEBUG
         let isTestCredential = trimmedEmail.lowercased() == "admin" && trimmedKey.lowercased() == "test"
-        if !trimmedEmail.contains("@") && !isTestCredential {
+        if !trimmedEmail.contains("@"), !isTestCredential {
             errorMessage = "Please enter a valid email address."
             return
         }

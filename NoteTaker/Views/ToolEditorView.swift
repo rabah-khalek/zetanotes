@@ -71,7 +71,8 @@ struct ToolEditorView: View {
             Text(isReadOnly ? tool.name : (tool.name.isEmpty ? "New Custom Tool" : "Edit Tool"))
                 .font(.title3)
                 .fontWeight(.bold)
-            Text(isReadOnly ? "View tool settings" : (tool.name.isEmpty ? "Create a custom AI tool" : "Modify your tool"))
+            Text(isReadOnly ? "View tool settings" :
+                (tool.name.isEmpty ? "Create a custom AI tool" : "Modify your tool"))
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
@@ -114,241 +115,244 @@ struct ToolEditorView: View {
                     .padding(.horizontal, 20)
 
                 VStack(alignment: .leading, spacing: 10) {
-                        HStack {
-                            Label("AI Prompt", systemImage: "text.bubble")
-                                .font(.system(size: 14, weight: .semibold))
-                            Spacer()
-                            Text("\(tool.prompt.count) characters")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-
-                        Text("Instructions sent to the AI. Be specific about format and style.")
+                    HStack {
+                        Label("AI Prompt", systemImage: "text.bubble")
+                            .font(.system(size: 14, weight: .semibold))
+                        Spacer()
+                        Text("\(tool.prompt.count) characters")
                             .font(.caption)
                             .foregroundColor(.secondary)
+                    }
 
-                        if isReadOnly {
-                            ScrollView {
-                                Text(tool.prompt)
-                                    .font(.system(size: 13))
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding(12)
-                                    .background(Color(nsColor: .controlBackgroundColor).opacity(0.3))
-                                    .cornerRadius(8)
-                            }
-                            .frame(height: 160)
-                        } else {
-                            TextEditor(text: $tool.prompt)
+                    Text("Instructions sent to the AI. Be specific about format and style.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    if isReadOnly {
+                        ScrollView {
+                            Text(tool.prompt)
                                 .font(.system(size: 13))
-                                .frame(height: 160)
-                                .padding(8)
-                                .background(Color(nsColor: .textBackgroundColor))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(12)
+                                .background(Color(nsColor: .controlBackgroundColor).opacity(0.3))
                                 .cornerRadius(8)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .strokeBorder(Color.gray.opacity(0.3), lineWidth: 1)
-                                )
+                        }
+                        .frame(height: 160)
+                    } else {
+                        TextEditor(text: $tool.prompt)
+                            .font(.system(size: 13))
+                            .frame(height: 160)
+                            .padding(8)
+                            .background(Color(nsColor: .textBackgroundColor))
+                            .cornerRadius(8)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .strokeBorder(Color.gray.opacity(0.3), lineWidth: 1)
+                            )
+                    }
+                }
+                .padding(.horizontal, 20)
+
+                // Advanced Settings (Collapsible)
+                VStack(alignment: .leading, spacing: 0) {
+                    // Clickable header
+                    HStack {
+                        Label("Advanced Settings", systemImage: "slider.horizontal.3")
+                            .font(.system(size: 14, weight: .semibold))
+                        Spacer()
+                        Image(systemName: showAdvanced ? "chevron.up" : "chevron.down")
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                    }
+                    .foregroundColor(.primary)
+                    .padding(12)
+                    .background(Color(nsColor: .controlBackgroundColor).opacity(0.3))
+                    .cornerRadius(8)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            showAdvanced.toggle()
                         }
                     }
-                    .padding(.horizontal, 20)
 
-                    // Advanced Settings (Collapsible)
-                    VStack(alignment: .leading, spacing: 0) {
-                        // Clickable header
-                        HStack {
-                            Label("Advanced Settings", systemImage: "slider.horizontal.3")
-                                .font(.system(size: 14, weight: .semibold))
-                            Spacer()
-                            Image(systemName: showAdvanced ? "chevron.up" : "chevron.down")
-                                .font(.system(size: 12))
-                                .foregroundColor(.secondary)
-                        }
-                        .foregroundColor(.primary)
-                        .padding(12)
-                        .background(Color(nsColor: .controlBackgroundColor).opacity(0.3))
-                        .cornerRadius(8)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            withAnimation(.easeInOut(duration: 0.2)) {
-                                showAdvanced.toggle()
-                            }
-                        }
-
-                        if showAdvanced {
-                            VStack(alignment: .leading, spacing: 20) {
-                                // Temperature
-                                VStack(alignment: .leading, spacing: 8) {
-                                    HStack {
-                                        Text("Temperature")
-                                            .font(.system(size: 13, weight: .medium))
-                                        Spacer()
-                                        Text(String(format: "%.2f", tool.temperature))
-                                            .font(.system(size: 12))
-                                            .foregroundColor(.secondary)
-                                            .padding(.horizontal, 8)
-                                            .padding(.vertical, 3)
-                                            .background(Color.secondary.opacity(0.1))
-                                            .cornerRadius(4)
-                                    }
-
-                                    if !isReadOnly {
-                                        Slider(value: Binding(
-                                            get: { Double(tool.temperature) },
-                                            set: { tool.temperature = Float($0) }
-                                        ), in: 0...1, step: 0.05)
-                                    }
-
-                                    Text("Lower = more focused/deterministic. Higher = more creative/random.")
-                                        .font(.caption)
+                    if showAdvanced {
+                        VStack(alignment: .leading, spacing: 20) {
+                            // Temperature
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+                                    Text("Temperature")
+                                        .font(.system(size: 13, weight: .medium))
+                                    Spacer()
+                                    Text(String(format: "%.2f", tool.temperature))
+                                        .font(.system(size: 12))
                                         .foregroundColor(.secondary)
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 3)
+                                        .background(Color.secondary.opacity(0.1))
+                                        .cornerRadius(4)
                                 }
 
-                                // Max Tokens
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text("Max Tokens")
-                                        .font(.system(size: 13, weight: .medium))
+                                if !isReadOnly {
+                                    Slider(value: Binding(
+                                        get: { Double(tool.temperature) },
+                                        set: { tool.temperature = Float($0) }
+                                    ), in: 0 ... 1, step: 0.05)
+                                }
 
-                                    HStack {
-                                        if isReadOnly {
-                                            Text(tool.maxTokens.map { String($0) } ?? "Dynamic")
-                                                .font(.system(size: 13))
-                                                .padding(.horizontal, 12)
-                                                .padding(.vertical, 6)
-                                                .background(Color(nsColor: .controlBackgroundColor).opacity(0.3))
-                                                .cornerRadius(6)
-                                        } else {
-                                            Toggle("Use fixed limit", isOn: Binding(
-                                                get: { tool.maxTokens != nil },
-                                                set: { tool.maxTokens = $0 ? 500 : nil }
-                                            ))
+                                Text("Lower = more focused/deterministic. Higher = more creative/random.")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
 
-                                            if tool.maxTokens != nil {
-                                                TextField("Tokens", value: Binding(
-                                                    get: { tool.maxTokens ?? 500 },
-                                                    set: { tool.maxTokens = $0 }
-                                                ), format: .number)
+                            // Max Tokens
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Max Tokens")
+                                    .font(.system(size: 13, weight: .medium))
+
+                                HStack {
+                                    if isReadOnly {
+                                        Text(tool.maxTokens.map { String($0) } ?? "Dynamic")
+                                            .font(.system(size: 13))
+                                            .padding(.horizontal, 12)
+                                            .padding(.vertical, 6)
+                                            .background(Color(nsColor: .controlBackgroundColor).opacity(0.3))
+                                            .cornerRadius(6)
+                                    } else {
+                                        Toggle("Use fixed limit", isOn: Binding(
+                                            get: { tool.maxTokens != nil },
+                                            set: { tool.maxTokens = $0 ? 500 : nil }
+                                        ))
+
+                                        if tool.maxTokens != nil {
+                                            TextField("Tokens", value: Binding(
+                                                get: { tool.maxTokens ?? 500 },
+                                                set: { tool.maxTokens = $0 }
+                                            ), format: .number)
                                                 .textFieldStyle(.roundedBorder)
                                                 .frame(width: 100)
-                                            }
                                         }
                                     }
-
-                                    Text(tool.maxTokens == nil ? "Dynamically calculated based on input length" : "Fixed maximum output length")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
                                 }
 
-                                // Stop Sequences
-                                VStack(alignment: .leading, spacing: 8) {
-                                    HStack {
-                                        Text("Stop Sequences")
-                                            .font(.system(size: 13, weight: .medium))
+                                Text(tool
+                                    .maxTokens == nil ? "Dynamically calculated based on input length" :
+                                    "Fixed maximum output length")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
 
-                                        Spacer()
+                            // Stop Sequences
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+                                    Text("Stop Sequences")
+                                        .font(.system(size: 13, weight: .medium))
 
-                                        if !isReadOnly {
-                                            Button(action: {
-                                                if !newStopSequence.isEmpty {
-                                                    tool.stopSequences.append(newStopSequence)
-                                                    newStopSequence = ""
-                                                }
-                                            }) {
-                                                Image(systemName: "plus.circle.fill")
-                                                    .font(.system(size: 14))
-                                                    .foregroundColor(.blue)
+                                    Spacer()
+
+                                    if !isReadOnly {
+                                        Button(action: {
+                                            if !newStopSequence.isEmpty {
+                                                tool.stopSequences.append(newStopSequence)
+                                                newStopSequence = ""
                                             }
-                                            .buttonStyle(.plain)
-                                            .help("Add stop sequence")
-                                            .disabled(newStopSequence.isEmpty)
+                                        }) {
+                                            Image(systemName: "plus.circle.fill")
+                                                .font(.system(size: 14))
+                                                .foregroundColor(.blue)
+                                        }
+                                        .buttonStyle(.plain)
+                                        .help("Add stop sequence")
+                                        .disabled(newStopSequence.isEmpty)
+                                    }
+                                }
+
+                                Text("Generation stops when these patterns are encountered")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+
+                                // Add new stop sequence field
+                                if !isReadOnly {
+                                    HStack(spacing: 8) {
+                                        TextField("e.g., \"\\n\\n\" or \"</s>\"", text: $newStopSequence)
+                                            .textFieldStyle(.roundedBorder)
+                                            .font(.system(size: 12, design: .monospaced))
+
+                                        Button(action: {
+                                            if !newStopSequence.isEmpty {
+                                                tool.stopSequences.append(newStopSequence)
+                                                newStopSequence = ""
+                                            }
+                                        }) {
+                                            Text("Add")
+                                                .font(.system(size: 12, weight: .medium))
+                                                .padding(.horizontal, 12)
+                                                .padding(.vertical, 4)
+                                                .background(newStopSequence.isEmpty ? Color.secondary
+                                                    .opacity(0.2) : Color.blue)
+                                                .foregroundColor(newStopSequence.isEmpty ? .secondary : .white)
+                                                .cornerRadius(6)
+                                        }
+                                        .buttonStyle(.plain)
+                                        .disabled(newStopSequence.isEmpty)
+                                    }
+                                }
+
+                                // Existing sequences
+                                if !tool.stopSequences.isEmpty {
+                                    VStack(alignment: .leading, spacing: 6) {
+                                        ForEach(Array(tool.stopSequences.enumerated()), id: \.offset) { index, seq in
+                                            HStack(spacing: 8) {
+                                                Text(seq)
+                                                    .font(.system(size: 11, design: .monospaced))
+                                                    .padding(.horizontal, 10)
+                                                    .padding(.vertical, 6)
+                                                    .background(Color.blue.opacity(0.1))
+                                                    .foregroundColor(.blue)
+                                                    .cornerRadius(6)
+                                                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                                                if !isReadOnly {
+                                                    Button(action: {
+                                                        tool.stopSequences.remove(at: index)
+                                                    }) {
+                                                        Image(systemName: "xmark.circle.fill")
+                                                            .font(.system(size: 14))
+                                                            .foregroundColor(.secondary)
+                                                    }
+                                                    .buttonStyle(.plain)
+                                                    .help("Remove")
+                                                }
+                                            }
                                         }
                                     }
-
-                                    Text("Generation stops when these patterns are encountered")
+                                    .padding(8)
+                                    .background(Color(nsColor: .controlBackgroundColor).opacity(0.3))
+                                    .cornerRadius(6)
+                                } else {
+                                    Text("No stop sequences defined")
                                         .font(.caption)
                                         .foregroundColor(.secondary)
-
-                                    // Add new stop sequence field
-                                    if !isReadOnly {
-                                        HStack(spacing: 8) {
-                                            TextField("e.g., \"\\n\\n\" or \"</s>\"", text: $newStopSequence)
-                                                .textFieldStyle(.roundedBorder)
-                                                .font(.system(size: 12, design: .monospaced))
-
-                                            Button(action: {
-                                                if !newStopSequence.isEmpty {
-                                                    tool.stopSequences.append(newStopSequence)
-                                                    newStopSequence = ""
-                                                }
-                                            }) {
-                                                Text("Add")
-                                                    .font(.system(size: 12, weight: .medium))
-                                                    .padding(.horizontal, 12)
-                                                    .padding(.vertical, 4)
-                                                    .background(newStopSequence.isEmpty ? Color.secondary.opacity(0.2) : Color.blue)
-                                                    .foregroundColor(newStopSequence.isEmpty ? .secondary : .white)
-                                                    .cornerRadius(6)
-                                            }
-                                            .buttonStyle(.plain)
-                                            .disabled(newStopSequence.isEmpty)
-                                        }
-                                    }
-
-                                    // Existing sequences
-                                    if !tool.stopSequences.isEmpty {
-                                        VStack(alignment: .leading, spacing: 6) {
-                                            ForEach(Array(tool.stopSequences.enumerated()), id: \.offset) { index, seq in
-                                                HStack(spacing: 8) {
-                                                    Text(seq)
-                                                        .font(.system(size: 11, design: .monospaced))
-                                                        .padding(.horizontal, 10)
-                                                        .padding(.vertical, 6)
-                                                        .background(Color.blue.opacity(0.1))
-                                                        .foregroundColor(.blue)
-                                                        .cornerRadius(6)
-                                                        .frame(maxWidth: .infinity, alignment: .leading)
-
-                                                    if !isReadOnly {
-                                                        Button(action: {
-                                                            tool.stopSequences.remove(at: index)
-                                                        }) {
-                                                            Image(systemName: "xmark.circle.fill")
-                                                                .font(.system(size: 14))
-                                                                .foregroundColor(.secondary)
-                                                        }
-                                                        .buttonStyle(.plain)
-                                                        .help("Remove")
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        .padding(8)
-                                        .background(Color(nsColor: .controlBackgroundColor).opacity(0.3))
-                                        .cornerRadius(6)
-                                    } else {
-                                        Text("No stop sequences defined")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                            .italic()
-                                            .padding(.vertical, 8)
-                                    }
+                                        .italic()
+                                        .padding(.vertical, 8)
                                 }
                             }
-                            .padding(16)
-                            .background(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(Color(nsColor: .controlBackgroundColor).opacity(0.15))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .strokeBorder(Color.blue.opacity(0.2), lineWidth: 1)
-                                    )
-                            )
-                            .padding(.top, 8)
-                            .transition(.opacity.combined(with: .scale(scale: 0.95)))
                         }
+                        .padding(16)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(Color(nsColor: .controlBackgroundColor).opacity(0.15))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .strokeBorder(Color.blue.opacity(0.2), lineWidth: 1)
+                                )
+                        )
+                        .padding(.top, 8)
+                        .transition(.opacity.combined(with: .scale(scale: 0.95)))
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.top, -16)
-                    .padding(.bottom, 16)
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, -16)
+                .padding(.bottom, 16)
             }
 
             Divider()
@@ -512,10 +516,10 @@ struct ToolEditorView: View {
 
     private var isValid: Bool {
         !tool.name.isEmpty &&
-        !tool.keyboardShortcut.isEmpty &&
-        !tool.prompt.isEmpty &&
-        shortcutError == nil &&
-        nameError == nil
+            !tool.keyboardShortcut.isEmpty &&
+            !tool.prompt.isEmpty &&
+            shortcutError == nil &&
+            nameError == nil
     }
 
     private func validateShortcut() {

@@ -6,9 +6,9 @@
 //  All data stored locally, user can view and delete
 //
 
-import Foundation
-import Combine
 import AppKit
+import Combine
+import Foundation
 
 /// Privacy-first analytics manager
 /// Tracks app usage, feature utilization, and performance metrics locally
@@ -76,9 +76,9 @@ class AnalyticsManager: ObservableObject {
         let metadata: [String: String]
 
         init(type: EventType, sessionId: UUID, metadata: [String: String] = [:]) {
-            self.id = UUID()
+            id = UUID()
             self.type = type
-            self.timestamp = Date()
+            timestamp = Date()
             self.sessionId = sessionId
             self.metadata = metadata
         }

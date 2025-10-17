@@ -5,10 +5,8 @@
 //  Core Data managed object subclass for Tag entity
 //
 
-import Foundation
 import CoreData
+import Foundation
 
 @objc(Tag)
-public class Tag: NSManagedObject {
-
-}
+public class Tag: NSManagedObject {}

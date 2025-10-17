@@ -134,11 +134,11 @@ struct StatusFooterView: View {
                 )
         )
         .help("""
-            CPU: \(Int(systemMonitor.cpuUsage))% of \(systemMonitor.cpuCoreCount) cores • \
-            Memory: \(Int(systemMonitor.memoryUsage))MB \
-            (\(String(format: "%.1f", systemMonitor.memoryUsagePercentage))% of \
-            \(Int(systemMonitor.totalSystemMemory / 1024))GB)
-            """)
+        CPU: \(Int(systemMonitor.cpuUsage))% of \(systemMonitor.cpuCoreCount) cores • \
+        Memory: \(Int(systemMonitor.memoryUsage))MB \
+        (\(String(format: "%.1f", systemMonitor.memoryUsagePercentage))% of \
+        \(Int(systemMonitor.totalSystemMemory / 1024))GB)
+        """)
     }
 
     private var cpuIndicator: some View {
@@ -209,9 +209,9 @@ struct StatusFooterView: View {
 
     private var cpuColor: Color {
         switch systemMonitor.cpuUsage {
-        case 0..<30:
+        case 0 ..< 30:
             return .green
-        case 30..<70:
+        case 30 ..< 70:
             return .yellow
         default:
             return .red
@@ -220,9 +220,9 @@ struct StatusFooterView: View {
 
     private var memoryColor: Color {
         switch systemMonitor.memoryUsagePercentage {
-        case 0..<60:
+        case 0 ..< 60:
             return .green
-        case 60..<80:
+        case 60 ..< 80:
             return .yellow
         default:
             return .red

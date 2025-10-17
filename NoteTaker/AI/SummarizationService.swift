@@ -16,7 +16,7 @@ class SummarizationService: AIService {
 
     // MARK: - Configuration
 
-    private struct Config {
+    private enum Config {
         static let minLengthForSummary = 100 // Characters
         static let defaultSummaryLength = 100 // Characters
         static let maxTokens = 100
@@ -26,15 +26,15 @@ class SummarizationService: AIService {
 
     init(llmService: LLMInferenceService) {
         self.llmService = llmService
-        self.config = AIGenerationConfig(
-            temperature: 0.2,  // REDUCED from 0.3 - lower temp for more focused summaries
+        config = AIGenerationConfig(
+            temperature: 0.2, // REDUCED from 0.3 - lower temp for more focused summaries
             maxTokens: Config.maxTokens,
             stopSequences: [
                 // Note: </s> is handled natively by llama.cpp (llama_vocab_is_eog)
-                "<|user|>",     // Prevent fake user messages
-                "<|system|>",   // Prevent fake system messages
-                "\n\nText:",    // Stop if it tries to repeat the input prompt
-                "\n---\n`"      // Service delimiter start
+                "<|user|>", // Prevent fake user messages
+                "<|system|>", // Prevent fake system messages
+                "\n\nText:", // Stop if it tries to repeat the input prompt
+                "\n---\n`" // Service delimiter start
             ]
         )
     }
@@ -60,7 +60,7 @@ class SummarizationService: AIService {
 
         guard let rawOutput = await llmService.generate(
             prompt: prompt,
-            maxTokens: config.maxTokens,  // Use fixed 100 tokens from config
+            maxTokens: config.maxTokens, // Use fixed 100 tokens from config
             temperature: config.temperature,
             stopSequences: config.stopSequences
         ) else {

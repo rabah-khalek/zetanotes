@@ -33,7 +33,7 @@ enum ToolEditorState: Identifiable {
         switch self {
         case .create:
             return "create"
-        case .edit(let tool):
+        case let .edit(tool):
             return "edit_\(tool.id)"
         }
     }
@@ -160,7 +160,7 @@ struct AISettingsView: View {
                         toolEditorState = nil
                     }
                 )
-            case .edit(let tool):
+            case let .edit(tool):
                 ToolEditorView(
                     tool: tool,
                     isPresented: Binding(
@@ -218,7 +218,8 @@ struct SidebarButton: View {
             .padding(.vertical, 7)
             .background(
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(isSelected ? Color.blue.opacity(0.08) : (isHovered ? Color.secondary.opacity(0.06) : Color.clear))
+                    .fill(isSelected ? Color.blue
+                        .opacity(0.08) : (isHovered ? Color.secondary.opacity(0.06) : Color.clear))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
@@ -379,7 +380,7 @@ struct ModelSettingsContent: View {
                                 switch result {
                                 case .success:
                                     print("✅ Model download completed")
-                                case .failure(let error):
+                                case let .failure(error):
                                     print("❌ Download failed: \(error)")
                                 }
                             }
@@ -498,7 +499,7 @@ struct ModelSelectionSection: View {
                             switch result {
                             case .success:
                                 print("✅ Model download completed")
-                            case .failure(let error):
+                            case let .failure(error):
                                 print("❌ Download failed: \(error)")
                             }
                         }
@@ -681,23 +682,28 @@ struct TranslationPromptSection: View {
 
             // Display prompt with {language} replaced by actual language
             TextEditor(text: Binding(
-                get: { viewModel.translationPrompt.replacingOccurrences(of: "{language}", with: viewModel.targetLanguage) },
+                get: {
+                    viewModel.translationPrompt.replacingOccurrences(of: "{language}", with: viewModel.targetLanguage)
+                },
                 set: { newValue in
                     // When editing, replace the actual language back to {language} placeholder
-                    viewModel.translationPrompt = newValue.replacingOccurrences(of: viewModel.targetLanguage, with: "{language}")
+                    viewModel.translationPrompt = newValue.replacingOccurrences(
+                        of: viewModel.targetLanguage,
+                        with: "{language}"
+                    )
                 }
             ))
-                .font(.system(size: 13))
-                .frame(height: 80)
-                .padding(8)
-                .background(Color(nsColor: .controlBackgroundColor))
-                .cornerRadius(6)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 6)
-                        .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-                )
-                .disabled(!licenseManager.canEditPrompts)
-                .opacity(licenseManager.canEditPrompts ? 1.0 : 0.6)
+            .font(.system(size: 13))
+            .frame(height: 80)
+            .padding(8)
+            .background(Color(nsColor: .controlBackgroundColor))
+            .cornerRadius(6)
+            .overlay(
+                RoundedRectangle(cornerRadius: 6)
+                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+            )
+            .disabled(!licenseManager.canEditPrompts)
+            .opacity(licenseManager.canEditPrompts ? 1.0 : 0.6)
 
             if viewModel.translationPrompt.isEmpty {
                 Text("Enter prompt for translation (use {language} as placeholder)...")

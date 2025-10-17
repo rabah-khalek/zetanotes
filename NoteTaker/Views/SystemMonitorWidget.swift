@@ -257,9 +257,9 @@ struct SystemMonitorWidget: View {
 
     private var cpuColor: Color {
         switch monitor.cpuUsage {
-        case 0..<30:
+        case 0 ..< 30:
             return .green
-        case 30..<70:
+        case 30 ..< 70:
             return .yellow
         default:
             return .red
@@ -268,9 +268,9 @@ struct SystemMonitorWidget: View {
 
     private var memoryColor: Color {
         switch monitor.memoryUsage {
-        case 0..<2000:
+        case 0 ..< 2000:
             return .green
-        case 2000..<2500:
+        case 2000 ..< 2500:
             return .yellow
         default:
             return .red

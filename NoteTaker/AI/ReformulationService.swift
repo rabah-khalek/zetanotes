@@ -17,15 +17,15 @@ class ReformulationService: AIService {
 
     init(llmService: LLMInferenceService) {
         self.llmService = llmService
-        self.config = AIGenerationConfig(
-            temperature: 0.2,   // REDUCED from 0.4 - TinyLlama needs lower temp to avoid hallucinations
-            maxTokens: nil,     // Will be calculated dynamically
+        config = AIGenerationConfig(
+            temperature: 0.2, // REDUCED from 0.4 - TinyLlama needs lower temp to avoid hallucinations
+            maxTokens: nil, // Will be calculated dynamically
             stopSequences: [
                 // Note: </s> is handled natively by llama.cpp (llama_vocab_is_eog)
-                "<|user|>",     // Prevent fake user messages
-                "<|system|>",   // Prevent fake system messages
-                "\n\nText:",    // Stop if it tries to repeat the input prompt
-                "\n---\n`"      // Service delimiter start
+                "<|user|>", // Prevent fake user messages
+                "<|system|>", // Prevent fake system messages
+                "\n\nText:", // Stop if it tries to repeat the input prompt
+                "\n---\n`" // Service delimiter start
             ]
         )
     }
@@ -59,7 +59,7 @@ class ReformulationService: AIService {
         }
 
         return postProcess(rawOutput)
-    }    // MARK: - Public API
+    } // MARK: - Public API
 
     /// Reformulates the given text to be clearer and more professional
     /// - Parameter text: The text to reformulate

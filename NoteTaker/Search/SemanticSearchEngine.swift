@@ -6,8 +6,8 @@
 //  Lightweight implementation without external dependencies
 //
 
-import Foundation
 import CoreData
+import Foundation
 
 /// Search engine for finding semantically similar notes
 /// Uses cosine similarity on cached embeddings for fast retrieval
@@ -28,7 +28,7 @@ class SemanticSearchEngine {
 
     // MARK: - Configuration
 
-    private struct Config {
+    private enum Config {
         static let defaultResultLimit = 10
         static let minimumSimilarityThreshold: Float = 0.5
     }
@@ -48,7 +48,11 @@ class SemanticSearchEngine {
     ///   - limit: Maximum number of results to return
     ///   - threshold: Minimum similarity threshold (0-1)
     /// - Returns: Array of search results sorted by relevance
-    func search(query: String, limit: Int = Config.defaultResultLimit, threshold: Float = Config.minimumSimilarityThreshold) async -> [SearchResult] {
+    func search(
+        query: String,
+        limit: Int = Config.defaultResultLimit,
+        threshold: Float = Config.minimumSimilarityThreshold
+    ) async -> [SearchResult] {
         // Check cache first
         let cacheKey = "\(query)_\(limit)_\(threshold)"
         if let cached = searchCache[cacheKey],
@@ -314,11 +318,11 @@ struct SearchResult: Identifiable {
     /// Human-readable relevance description
     var relevanceDescription: String {
         switch similarity {
-        case 0.9...1.0:
+        case 0.9 ... 1.0:
             return "Highly relevant"
-        case 0.7..<0.9:
+        case 0.7 ..< 0.9:
             return "Very relevant"
-        case 0.5..<0.7:
+        case 0.5 ..< 0.7:
             return "Relevant"
         default:
             return "Somewhat relevant"

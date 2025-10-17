@@ -41,7 +41,8 @@ class ToolManager: ObservableObject {
 
         // Load from storage
         guard let data = UserDefaults.standard.data(forKey: storageKey),
-              let decoded = try? JSONDecoder().decode([AITool].self, from: data) else {
+              let decoded = try? JSONDecoder().decode([AITool].self, from: data)
+        else {
             // Fallback: Re-initialize if load fails
             tools = AITool.createDefaultTools()
             saveTools()
@@ -141,7 +142,9 @@ class ToolManager: ObservableObject {
         guard tool.isDefault else { return }
 
         // Find the factory default
-        guard let factoryTool = AITool.createDefaultTools().first(where: { $0.keyboardShortcut == tool.keyboardShortcut }) else {
+        guard let factoryTool = AITool.createDefaultTools()
+            .first(where: { $0.keyboardShortcut == tool.keyboardShortcut })
+        else {
             return
         }
 
@@ -173,7 +176,7 @@ class ToolManager: ObservableObject {
         // Check against all tools (default + custom)
         return !tools.contains { tool in
             tool.keyboardShortcut.uppercased() == normalizedShortcut &&
-            tool.id != toolId
+                tool.id != toolId
         }
     }
 

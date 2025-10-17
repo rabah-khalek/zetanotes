@@ -6,8 +6,8 @@
 //  Implements debouncing to avoid excessive inference calls
 //
 
-import Foundation
 import Combine
+import Foundation
 
 /// Service providing intelligent autocomplete suggestions
 /// Uses debouncing to ensure smooth, non-blocking experience
@@ -21,7 +21,7 @@ class AutocompleteService: AIService {
 
     // MARK: - Configuration
 
-    private struct Config {
+    private enum Config {
         static let minCharacters = 10 // Minimum characters before suggesting
         static let maxTokens: Int = 100 // Maximum tokens to generate (allows full sentences)
         static let contextLength = 500 // Characters of context to use
@@ -31,13 +31,13 @@ class AutocompleteService: AIService {
 
     init(llmService: LLMInferenceService) {
         self.llmService = llmService
-        self.config = AIGenerationConfig(
-            temperature: 0.5,  // Moderate creativity for natural continuations
+        config = AIGenerationConfig(
+            temperature: 0.5, // Moderate creativity for natural continuations
             maxTokens: Config.maxTokens,
             stopSequences: [
-                ". ",       // Stop after completing a sentence
-                ".\n",      // Stop after sentence with newline
-                "\n\n\n",   // Stop at major paragraph breaks
+                ". ", // Stop after completing a sentence
+                ".\n", // Stop after sentence with newline
+                "\n\n\n", // Stop at major paragraph breaks
                 "<|user|>", // Prevent fake user messages
                 "<|system|>" // Prevent fake system messages
             ]
@@ -186,12 +186,13 @@ class AutocompleteService: AIService {
         return Future<String?, Never> { [weak self] promise in
             self?.debounceTimer?.invalidate()
 
-            self?.debounceTimer = Timer.scheduledTimer(withTimeInterval: self?.debounceDelay ?? 0.2, repeats: false) { _ in
-                Task {
-                    let suggestion = await self?.generateSuggestion(for: text)
-                    promise(.success(suggestion))
+            self?.debounceTimer = Timer
+                .scheduledTimer(withTimeInterval: self?.debounceDelay ?? 0.2, repeats: false) { _ in
+                    Task {
+                        let suggestion = await self?.generateSuggestion(for: text)
+                        promise(.success(suggestion))
+                    }
                 }
-            }
         }
         .eraseToAnyPublisher()
     }

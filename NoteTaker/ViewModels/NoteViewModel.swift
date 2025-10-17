@@ -5,9 +5,9 @@
 //  ViewModel coordinating note operations and AI features
 //
 
-import Foundation
-import CoreData
 import Combine
+import CoreData
+import Foundation
 import SwiftUI
 
 /// ViewModel managing note state and AI operations
@@ -33,11 +33,13 @@ class NoteViewModel: ObservableObject {
             }
         }
     }
+
     @Published var selectedNoteID: UUID? {
         didSet {
             updateSelectedNote()
         }
     }
+
     @Published var searchQuery = ""
     @Published var isSearching = false
     @Published var searchResults: [SearchResult] = []
@@ -66,12 +68,10 @@ class NoteViewModel: ObservableObject {
     private let persistenceController: PersistenceController
     private let aiEngine: AIEngine
     private let repository: NoteRepository
-    private lazy var searchEngine: SemanticSearchEngine = {
-        SemanticSearchEngine(
-            embeddingService: aiEngine.embeddingService,
-            persistenceController: persistenceController
-        )
-    }()
+    private lazy var searchEngine: SemanticSearchEngine = .init(
+        embeddingService: aiEngine.embeddingService,
+        persistenceController: persistenceController
+    )
 
     private var noteCache: [UUID: Note] = [:]
     private var cancellables = Set<AnyCancellable>()
@@ -84,7 +84,7 @@ class NoteViewModel: ObservableObject {
     init(persistenceController: PersistenceController = .shared, aiEngine: AIEngine = .shared) {
         self.persistenceController = persistenceController
         self.aiEngine = aiEngine
-        self.repository = NoteRepository(persistenceController: persistenceController)
+        repository = NoteRepository(persistenceController: persistenceController)
 
         setupObservers()
         loadNotes()
@@ -441,7 +441,10 @@ class NoteViewModel: ObservableObject {
         // Use custom prompt if provided, otherwise use service default
         let summary: String?
         if !summarizationPrompt.isEmpty {
-            summary = await aiEngine.summarizationService.process(sections.baseContent, customPrompt: summarizationPrompt)
+            summary = await aiEngine.summarizationService.process(
+                sections.baseContent,
+                customPrompt: summarizationPrompt
+            )
         } else {
             summary = await aiEngine.summarizationService.summarize(sections.baseContent)
         }
@@ -487,7 +490,10 @@ class NoteViewModel: ObservableObject {
         // Use custom prompt if provided, otherwise use default
         let translation: String?
         if !translationPrompt.isEmpty {
-            translation = await aiEngine.translationService.translate(sections.baseContent, withPrompt: translationPrompt)
+            translation = await aiEngine.translationService.translate(
+                sections.baseContent,
+                withPrompt: translationPrompt
+            )
         } else {
             translation = await aiEngine.translationService.translate(sections.baseContent)
         }
@@ -495,7 +501,8 @@ class NoteViewModel: ObservableObject {
         if let translation = translation {
             await MainActor.run {
                 let timestamp = self.generateTimestamp()
-                let translationBlock = "\n\n---\n`Translation to \(targetLanguage) • \(timestamp)`\n---\n\n" + translation
+                let translationBlock = "\n\n---\n`Translation to \(targetLanguage) • \(timestamp)`\n---\n\n" +
+                    translation
                 note.content = reconstructContent(
                     base: sections.baseContent,
                     summary: sections.summaryBlock,
@@ -565,7 +572,10 @@ class NoteViewModel: ObservableObject {
         // Use custom prompt if provided, otherwise use service default
         let reformulated: String?
         if !reformulatePrompt.isEmpty {
-            reformulated = await aiEngine.reformulationService.process(sections.baseContent, customPrompt: reformulatePrompt)
+            reformulated = await aiEngine.reformulationService.process(
+                sections.baseContent,
+                customPrompt: reformulatePrompt
+            )
         } else {
             reformulated = await aiEngine.reformulationService.reformulate(sections.baseContent)
         }
@@ -614,7 +624,10 @@ class NoteViewModel: ObservableObject {
         // Use custom prompt if provided, otherwise use service default
         let title: String
         if !titleGenerationPrompt.isEmpty {
-            title = await aiEngine.titleGenerationService.generateTitleWithFallback(for: sections.baseContent, customPrompt: titleGenerationPrompt)
+            title = await aiEngine.titleGenerationService.generateTitleWithFallback(
+                for: sections.baseContent,
+                customPrompt: titleGenerationPrompt
+            )
         } else {
             title = await aiEngine.titleGenerationService.generateTitleWithFallback(for: sections.baseContent)
         }
@@ -794,7 +807,14 @@ class NoteViewModel: ObservableObject {
         )
     }
 
-    private func reconstructContent(base: String, summary: String, translation: String, autoCorrect: String = "", reformulated: String = "", customServices: [String: String] = [:]) -> String {
+    private func reconstructContent(
+        base: String,
+        summary: String,
+        translation: String,
+        autoCorrect: String = "",
+        reformulated: String = "",
+        customServices: [String: String] = [:]
+    ) -> String {
         var result = base + autoCorrect + reformulated + summary + translation
 
         // Append custom service blocks in a consistent order (alphabetically by service name)

@@ -5,8 +5,8 @@
 //  Centralized Core Data access for Note entities
 //
 
-import Foundation
 import CoreData
+import Foundation
 
 struct NoteListItem: Identifiable, Hashable {
     let id: UUID

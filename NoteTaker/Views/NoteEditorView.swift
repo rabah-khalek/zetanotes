@@ -5,8 +5,8 @@
 //  Rich text editor with AI autocomplete suggestions
 //
 
-import SwiftUI
 import AppKit
+import SwiftUI
 
 // MARK: - Custom Text View with Key Handling
 
@@ -62,7 +62,10 @@ class AutocompleteTextView: NSTextView {
               let textContainer = textContainer else { return }
 
         let glyphIndex = layoutManager.glyphIndexForCharacter(at: cursorRange.location)
-        let glyphRect = layoutManager.boundingRect(forGlyphRange: NSRange(location: glyphIndex, length: 0), in: textContainer)
+        let glyphRect = layoutManager.boundingRect(
+            forGlyphRange: NSRange(location: glyphIndex, length: 0),
+            in: textContainer
+        )
 
         // Create attributed string for ghost text
         let attributes: [NSAttributedString.Key: Any] = [
@@ -88,13 +91,13 @@ class AutocompleteTextView: NSTextView {
 struct SimpleTextEditor: NSViewRepresentable {
     @Binding var text: String
     var ghostText: String?
-    var desiredCursorPosition: Int?  // New: optional desired cursor position
-    var onChange: ((String, Int) -> Void)?  // Now includes cursor position
+    var desiredCursorPosition: Int? // New: optional desired cursor position
+    var onChange: ((String, Int) -> Void)? // Now includes cursor position
     var onTabPressed: (() -> Void)?
     var onEscapePressed: (() -> Void)?
     var onRightArrowPressed: (() -> Void)?
-    var searchQuery: String?  // Search query for highlighting
-    var semanticMatchText: String?  // Matched text for semantic search
+    var searchQuery: String? // Search query for highlighting
+    var semanticMatchText: String? // Matched text for semantic search
 
     class Coordinator: NSObject, NSTextViewDelegate {
         var parent: SimpleTextEditor
@@ -142,7 +145,10 @@ struct SimpleTextEditor: NSViewRepresentable {
         textView.isVerticallyResizable = true
         textView.isHorizontallyResizable = false
         textView.textContainer?.widthTracksTextView = true
-        textView.textContainer?.containerSize = NSSize(width: scrollView.contentSize.width, height: .greatestFiniteMagnitude)
+        textView.textContainer?.containerSize = NSSize(
+            width: scrollView.contentSize.width,
+            height: .greatestFiniteMagnitude
+        )
 
         // Set up key handlers
         textView.onTabPressed = onTabPressed
@@ -212,9 +218,13 @@ struct SimpleTextEditor: NSViewRepresentable {
         var searchStart = text.startIndex
 
         while searchStart < text.endIndex,
-              let range = text.range(of: query, options: searchOptions, range: searchStart..<text.endIndex) {
+              let range = text.range(of: query, options: searchOptions, range: searchStart ..< text.endIndex) {
             let nsRange = NSRange(range, in: text)
-            textStorage.addAttribute(.backgroundColor, value: NSColor.systemYellow.withAlphaComponent(0.4), range: nsRange)
+            textStorage.addAttribute(
+                .backgroundColor,
+                value: NSColor.systemYellow.withAlphaComponent(0.4),
+                range: nsRange
+            )
             searchStart = range.upperBound
         }
     }
@@ -297,7 +307,10 @@ struct NoteEditorView: View {
                             .fill((showMarkdownPreview ? Color.orange : Color.blue).opacity(0.08))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 4)
-                                    .strokeBorder((showMarkdownPreview ? Color.orange : Color.blue).opacity(0.2), lineWidth: 0.5)
+                                    .strokeBorder(
+                                        (showMarkdownPreview ? Color.orange : Color.blue).opacity(0.2),
+                                        lineWidth: 0.5
+                                    )
                             )
                     )
                     .animation(.spring(response: 0.3, dampingFraction: 0.7), value: showMarkdownPreview)
@@ -329,14 +342,14 @@ struct NoteEditorView: View {
                         // Update both the state and note content
                         content = newValue
                         note.content = newValue
-                        viewModel.saveNoteDebounced(note)  // ✅ Use debounced save for typing
+                        viewModel.saveNoteDebounced(note) // ✅ Use debounced save for typing
 
                         // Check if cursor is in base content (not in AI-generated sections)
                         if isInBaseContent(content: newValue, cursorPosition: cursorPosition) {
                             // Smart triggering: only suggest at natural pause points
                             if shouldTriggerAutocomplete(text: newValue, cursorPosition: cursorPosition) {
                                 // Request autocomplete only if model is loaded
-                                if aiEngine.isModelLoaded && newValue.count >= 10 {
+                                if aiEngine.isModelLoaded, newValue.count >= 10 {
                                     // Extract text up to cursor for better autocomplete accuracy
                                     let textUpToCursor = String(newValue.prefix(min(cursorPosition, newValue.count)))
                                     viewModel.requestAutocomplete(for: textUpToCursor)
@@ -454,10 +467,10 @@ struct NoteEditorView: View {
 
             content = newContent
             note.content = newContent
-            viewModel.saveNoteDebounced(note)  // ✅ Use debounced save
+            viewModel.saveNoteDebounced(note) // ✅ Use debounced save
 
             // Request new autocomplete with updated text
-            if aiEngine.isModelLoaded && shouldTriggerAutocomplete(text: newContent, cursorPosition: newCursorPos) {
+            if aiEngine.isModelLoaded, shouldTriggerAutocomplete(text: newContent, cursorPosition: newCursorPos) {
                 let textUpToCursor = String(newContent.prefix(min(newCursorPos, newContent.count)))
                 viewModel.requestAutocomplete(for: textUpToCursor)
             }
@@ -501,14 +514,14 @@ struct NoteEditorView: View {
 
         content = newContent
         note.content = newContent
-        viewModel.saveNoteDebounced(note)  // ✅ Use debounced save
+        viewModel.saveNoteDebounced(note) // ✅ Use debounced save
 
         // Update the suggestion to remove the accepted word (original, not with added space)
         viewModel.acceptPartialAutocomplete(oneWord)
 
         // Request new autocomplete with updated text (if there's no remaining suggestion)
         if viewModel.autocompleteSuggestion == nil || viewModel.autocompleteSuggestion?.isEmpty == true {
-            if aiEngine.isModelLoaded && shouldTriggerAutocomplete(text: newContent, cursorPosition: newCursorPos) {
+            if aiEngine.isModelLoaded, shouldTriggerAutocomplete(text: newContent, cursorPosition: newCursorPos) {
                 let textUpToCursor = String(newContent.prefix(min(newCursorPos, newContent.count)))
                 viewModel.requestAutocomplete(for: textUpToCursor)
             }
