@@ -123,6 +123,12 @@ struct ContentView: View {
                 semanticMatchText = ""
             }
         }
+        .onChange(of: searchQuery) { newQuery in
+            // Clear semantic match highlighting when local search query is cleared
+            if newQuery.isEmpty {
+                semanticMatchText = ""
+            }
+        }
     }
 
     // MARK: - Detail View
