@@ -113,7 +113,10 @@ struct ContentView: View {
                 // Check if this is a chat dump (starts with ---\n`Chat •)
                 if text.hasPrefix("---\n`Chat •") {
                     // Look for existing chat section to replace
-                    if let range = currentContent.range(of: #"---\n`Chat • .*?`\n---\n\n.*?(?=\n\n---|$)"#, options: .regularExpression) {
+                    if let range = currentContent.range(
+                        of: #"---\n`Chat • .*?`\n---\n\n.*?(?=\n\n---|$)"#,
+                        options: .regularExpression
+                    ) {
                         // Replace existing chat section
                         var newContent = currentContent
                         newContent.replaceSubrange(range, with: text)

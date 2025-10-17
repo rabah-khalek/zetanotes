@@ -1165,7 +1165,7 @@ struct ChatSettingsContent: View {
                             .foregroundColor(.secondary)
                     }
 
-                    Slider(value: $settings.temperature, in: 0.01...2.0, step: 0.05)
+                    Slider(value: $settings.temperature, in: 0.01 ... 2.0, step: 0.05)
                         .onChange(of: settings.temperature) { _ in
                             saveSettings()
                         }
@@ -1191,10 +1191,10 @@ struct ChatSettingsContent: View {
                     Slider(value: Binding(
                         get: { Double(settings.maxTokens) },
                         set: { settings.maxTokens = Int($0) }
-                    ), in: 256...2048, step: 128)
-                    .onChange(of: settings.maxTokens) { _ in
-                        saveSettings()
-                    }
+                    ), in: 256 ... 2048, step: 128)
+                        .onChange(of: settings.maxTokens) { _ in
+                            saveSettings()
+                        }
 
                     Text("Maximum length of AI responses")
                         .font(.caption)
@@ -1214,7 +1214,7 @@ struct ChatSettingsContent: View {
                             .foregroundColor(.secondary)
                     }
 
-                    Slider(value: $settings.topP, in: 0.0...1.0, step: 0.05)
+                    Slider(value: $settings.topP, in: 0.0 ... 1.0, step: 0.05)
                         .onChange(of: settings.topP) { _ in
                             saveSettings()
                         }
@@ -1240,10 +1240,10 @@ struct ChatSettingsContent: View {
                     Slider(value: Binding(
                         get: { Double(settings.topK) },
                         set: { settings.topK = Int($0) }
-                    ), in: 1...100, step: 1)
-                    .onChange(of: settings.topK) { _ in
-                        saveSettings()
-                    }
+                    ), in: 1 ... 100, step: 1)
+                        .onChange(of: settings.topK) { _ in
+                            saveSettings()
+                        }
 
                     Text("Limits token choices to top K most likely tokens")
                         .font(.caption)
@@ -1263,7 +1263,7 @@ struct ChatSettingsContent: View {
                             .foregroundColor(.secondary)
                     }
 
-                    Slider(value: $settings.repeatPenalty, in: 1.0...2.0, step: 0.05)
+                    Slider(value: $settings.repeatPenalty, in: 1.0 ... 2.0, step: 0.05)
                         .onChange(of: settings.repeatPenalty) { _ in
                             saveSettings()
                         }

@@ -11,10 +11,10 @@ import Security
 
 /// Subscription tier options
 enum SubscriptionTier: String, Codable {
-    case free = "free"
-    case monthly = "monthly"
-    case annual = "annual"
-    case lifetime = "lifetime"
+    case free
+    case monthly
+    case annual
+    case lifetime
 
     var displayName: String {
         switch self {
@@ -269,7 +269,12 @@ class LicenseManager: ObservableObject {
     // MARK: - License Storage
 
     /// Saves license to Keychain
-    private func saveLicense(key: String, email: String, tier: SubscriptionTier = .lifetime, expiryDate: Date? = nil) async {
+    private func saveLicense(
+        key: String,
+        email: String,
+        tier: SubscriptionTier = .lifetime,
+        expiryDate: Date? = nil
+    ) async {
         // Create license data with tier and expiry
         var licenseDict: [String: String] = [
             "email": email,
@@ -282,7 +287,8 @@ class LicenseManager: ObservableObject {
         }
 
         guard let jsonData = try? JSONSerialization.data(withJSONObject: licenseDict),
-              let jsonString = String(data: jsonData, encoding: .utf8) else {
+              let jsonString = String(data: jsonData, encoding: .utf8)
+        else {
             print("❌ Failed to encode license data")
             return
         }
@@ -359,14 +365,12 @@ class LicenseManager: ObservableObject {
         if status == errSecSuccess,
            let data = result as? Data,
            let licenseString = String(data: data, encoding: .utf8) {
-
             // Try to parse as JSON (new format)
             if let jsonData = licenseString.data(using: .utf8),
                let licenseDict = try? JSONSerialization.jsonObject(with: jsonData) as? [String: String],
                let email = licenseDict["email"],
                let key = licenseDict["key"],
                let tierString = licenseDict["tier"] {
-
                 let tier = SubscriptionTier(rawValue: tierString) ?? .lifetime
                 var expiryDate: Date?
 
@@ -460,7 +464,7 @@ class LicenseManager: ObservableObject {
 
     /// Check if subscription needs renewal
     func checkSubscriptionStatus() {
-        guard subscriptionTier != .lifetime && subscriptionTier != .free else {
+        guard subscriptionTier != .lifetime, subscriptionTier != .free else {
             return // Lifetime and free don't need checking
         }
 

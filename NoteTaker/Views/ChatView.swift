@@ -163,7 +163,7 @@ struct ChatView: View {
                 TextField("Message...", text: $inputText, axis: .vertical)
                     .textFieldStyle(.plain)
                     .font(.system(size: 13))
-                    .lineLimit(1...5)
+                    .lineLimit(1 ... 5)
                     .disabled(isGenerating)
                     .onSubmit {
                         sendMessage()
@@ -244,7 +244,7 @@ struct ChatView: View {
             let response = await chatService.generateResponse(
                 messages: chatManager.messages,
                 settings: chatManager.settings,
-                onToken: { token in
+                onToken: { _ in
                     // For future streaming implementation
                 }
             )
