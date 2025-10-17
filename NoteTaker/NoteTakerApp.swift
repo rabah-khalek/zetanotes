@@ -20,7 +20,7 @@ struct NoteTakerApp: App {
     @StateObject private var licenseManager = LicenseManager.shared
 
     // Appearance preference
-    @AppStorage("preferredAppearance") private var preferredAppearance: String = "auto"
+    @AppStorage("preferredAppearance") private var preferredAppearance: String = "light"
 
     var body: some Scene {
         WindowGroup {

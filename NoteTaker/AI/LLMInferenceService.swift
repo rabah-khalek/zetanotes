@@ -284,14 +284,15 @@ class LLMInferenceService: @unchecked Sendable {
                         throw LLMError.modelLoadFailed
                     }
 
-                    // Add samplers to the chain
-                    if let topK = llama_sampler_init_top_k(40) {
+                    // Add samplers to the chain with TinyLlama-optimized parameters
+                    // Based on official HuggingFace recommendations: top_k=50, top_p=0.95
+                    if let topK = llama_sampler_init_top_k(50) {  // Increased from 40
                         llama_sampler_chain_add(samplerChain, topK)
                     }
-                    if let topP = llama_sampler_init_top_p(0.9, 1) {
+                    if let topP = llama_sampler_init_top_p(0.95, 1) {  // Increased from 0.9
                         llama_sampler_chain_add(samplerChain, topP)
                     }
-                    if let temp = llama_sampler_init_temp(0.7) {
+                    if let temp = llama_sampler_init_temp(0.7) {  // Default, will be overridden per request
                         llama_sampler_chain_add(samplerChain, temp)
                     }
                     if let dist = llama_sampler_init_dist(LLAMA_DEFAULT_SEED) {
@@ -365,15 +366,16 @@ class LLMInferenceService: @unchecked Sendable {
                     return
                 }
 
-                print("\n� === Text Generation Started ===")
+                print("\n🚀 === Text Generation Started ===")
                 print("📝 Prompt: \(prompt.prefix(150))\(prompt.count > 150 ? "..." : "")")
                 print("📊 Prompt length: \(prompt.count) chars")
 
-                // Clear KV cache and reset sampler before generation to ensure clean context
+                // CRITICAL: Fully clear KV cache and reset sampler to prevent cross-contamination between requests
+                // This ensures each generation starts with a completely clean slate
                 let mem = llama_get_memory(ctx)
-                llama_memory_clear(mem, false) // Clear metadata only, keep data buffer
+                llama_memory_clear(mem, true) // Clear both metadata AND data buffer for complete reset
                 llama_sampler_reset(smpl) // Reset sampler state
-                print("🧹 Context prepared (KV cache cleared, sampler reset)")
+                print("🧹 Context fully reset (KV cache + data cleared, sampler reset)")
 
                 // Determine max generation length
                 let contextSize = Int32(ModelConfig.contextSize)

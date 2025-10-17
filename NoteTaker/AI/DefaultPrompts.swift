@@ -19,42 +19,52 @@ Continue the following text naturally. Write only the next few words that would 
 """
 
     // MARK: - Summarization
-
+    // TinyLlama works better with instructions in user message
     static let summarization = """
-Task: Write a brief 1-2 sentence summary of the following text. Only include information from the original text.
+<|system|>
+You are a helpful assistant.</s>
+<|user|>
+Summarize in 1-2 sentences:
 
-Text:
 """
 
     // MARK: - Translation
-
+    // TinyLlama works better with instructions in user message
     static let translation = """
-Task: Translate the following text to {language}. Output only the translated text.
+<|system|>
+You are a translator.</s>
+<|user|>
+Translate to {language}:
 
-Text to translate:
 """
 
     // MARK: - Title Generation
-
+    // TinyLlama works better with instructions in user message
     static let titleGeneration = """
-Task: Create a short title (5-8 words) that captures the main idea of the following text.
+<|system|>
+You are a helpful assistant.</s>
+<|user|>
+Create a short title (5-8 words) that captures the main idea of the following text:
 
-Text:
 """
 
     // MARK: - Auto-Correct
-
+    // TinyLlama works better with instructions in user message
     static let autoCorrect = """
-Task: Fix all spelling and grammar errors in the following text. Keep the same meaning and tone. Output only the corrected text.
+<|system|>
+You are a helpful assistant.</s>
+<|user|>
+Fix spelling and grammar:
 
-Text:
 """
 
     // MARK: - Reformulation
-
+    // TinyLlama works better with instructions in user message
     static let reformulate = """
-Task: Rewrite the following text to be clearer and more professional. Keep all the same information. Output only the rewritten text.
+<|system|>
+You are a helpful assistant.</s>
+<|user|>
+Rewrite more clearly:
 
-Text:
 """
 }

@@ -20,18 +20,15 @@ class TranslationService: AIService {
     init(llmService: LLMInferenceService) {
         self.llmService = llmService
         self.config = AIGenerationConfig(
-            temperature: 0.3,
+            temperature: 0.1,  // REDUCED from 0.3 - translation needs high accuracy, low creativity
             maxTokens: 512,  // Will be overridden dynamically per request
             stopSequences: [
-                "\n\n\n",  // Triple newline
-                "\n---",   // Separator
-                "\nNote:",
-                "\nTranslation:",
-                "\nThe translation",
-                "\nHere is",
-                "\nLet me",
-                "\nI'll",
-                "\nTo align"
+                // Note: </s> is handled natively by llama.cpp (llama_vocab_is_eog)
+                "<|user|>",     // Prevent fake user messages
+                "<|system|>",   // Prevent fake system messages
+                "\n\nText:",    // Stop if it tries to repeat the input prompt
+                "\n\nOutput:",  // Stop if it hallucinates continuation
+                "\n---\n`"      // Service delimiter start
             ]
         )
     }
@@ -52,14 +49,17 @@ class TranslationService: AIService {
     // MARK: - AIService Protocol
 
     func buildPrompt(for text: String, customPrompt: String? = nil) -> String {
-        // Use custom prompt if provided, otherwise use default from DefaultPrompts
+        // Use custom prompt as-is if provided (user controls the format)
+        // Otherwise use default prompt with proper chat template
+        // Always close with the assistant tag
         let instruction = if let customPrompt = customPrompt, !customPrompt.isEmpty {
             customPrompt.replacingOccurrences(of: "{language}", with: targetLanguage)
         } else {
             DefaultPrompts.translation.replacingOccurrences(of: "{language}", with: targetLanguage)
         }
 
-        let prompt = "\(instruction)\(text)\n\nTranslation:"
+        let prompt = "\(instruction)\(text)</s>\n<|assistant|>\n"
+
 
         print("🌍 Translation prompt built:")
         print("📝 Using: \(customPrompt != nil && !customPrompt!.isEmpty ? "custom prompt" : "default prompt")")
@@ -114,7 +114,8 @@ class TranslationService: AIService {
             : customPrompt
         let finalInstruction = instruction.replacingOccurrences(of: "{language}", with: targetLanguage)
 
-        let prompt = "\(finalInstruction)\n\n\(text)\n\n"
+        // CRITICAL FIX: Use proper chat template closing like other services
+        let prompt = "\(finalInstruction)\(text)</s>\n<|assistant|>\n"
 
         // Calculate dynamic max tokens with 50% buffer
         let maxTokens = calculateMaxTokens(for: text, bufferPercent: 50, maxLimit: 512)
@@ -142,47 +143,34 @@ class TranslationService: AIService {
     /// Custom post-processing for translation output
     /// Cleans up common artifacts from LLM output
     func postProcess(_ output: String) -> String {
-        let stopMarkers = [
-            "\n\nThe ",
-            "\n\nHere is",
-            "\n\nNote:",
-            "\n\nTranslation:",
-            "\n\nTo align",
-            "\n\nLet me",
-            "\n\nI'll",
-            "\n\nThis translation",
-            "\n\n---",
+        var cleaned = output.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // First apply default TinyLlama artifact removal
+        cleaned = cleaned.replacingOccurrences(of: "<|assistant|>", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "</s>", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "<|user|>", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "<|system|>", with: "")
+
+        // Remove common hallucination prefixes (especially important for translation)
+        let hallucinationPrefixes = [
+            "Sure! ", "Sure, ", "Certainly! ", "Certainly, ",
+            "Here is ", "Here's ", "Here is the ",
+            "The translation is: ", "Translation: ", "Translated text: ",
+            "In \(targetLanguage): ", "The \(targetLanguage) translation is: "
         ]
-
-        let prefixes = [
-            "\(targetLanguage):",
-            "Translation:",
-            "Here is the translation:",
-            "Here is the content:",
-            "The translation is:",
-            "Translated text:",
-            "\(targetLanguage.lowercased()):",
-            "translation:",
-        ]
-
-        // Use standard post-processing
-        var cleaned = standardPostProcess(
-            output,
-            stopMarkers: stopMarkers,
-            prefixes: prefixes,
-            keepOnlyFirstParagraph: true
-        )
-
-        // Translation-specific: Remove garbage tokens at start (like "es:", "lsh:")
-        if let colonIndex = cleaned.firstIndex(of: ":"),
-           colonIndex.utf16Offset(in: cleaned) < 10 {
-            let potentialPrefix = String(cleaned[..<colonIndex])
-            if potentialPrefix.count < 6 && !potentialPrefix.contains(" ") {
-                cleaned = String(cleaned[cleaned.index(after: colonIndex)...])
-                    .trimmingCharacters(in: .whitespaces)
+        for prefix in hallucinationPrefixes {
+            if cleaned.hasPrefix(prefix) {
+                cleaned = String(cleaned.dropFirst(prefix.count))
+                break
             }
         }
 
+        // Remove leading markdown quote character if present
+        if cleaned.hasPrefix(">") {
+            cleaned = cleaned.dropFirst().trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
+        cleaned = cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
         print("🧹 Post-process cleaned output: \(cleaned)")
         return cleaned
     }

@@ -88,7 +88,7 @@ extension AIService {
             "\n\nThe ",
             "\n\nHere is",
             "\n\nNote:",
-            "\n\n---"
+            "\n\n---\n`"  // New service delimiter format
         ]
 
         for marker in stopMarkers {
@@ -102,12 +102,13 @@ extension AIService {
     }
 
     /// Removes common prefixes that LLMs add to outputs
+    /// Handles both exact matches and continuations (e.g., "Summary:" matching "Summarize the...")
     /// - Parameters:
     ///   - text: The text to clean
     ///   - prefixes: Custom prefixes (uses defaults if nil)
     /// - Returns: Cleaned text
     func removePrefixes(from text: String, prefixes: [String]? = nil) -> String {
-        var cleaned = text
+        var cleaned = text.trimmingCharacters(in: .whitespaces)
 
         let commonPrefixes = prefixes ?? [
             "Here is",
@@ -117,18 +118,34 @@ extension AIService {
         ]
 
         for prefix in commonPrefixes {
-            let variations = [
-                prefix,
-                prefix.lowercased(),
-                prefix + ":"
-            ]
+            // Remove trailing colon and spaces from prefix for base matching
+            let basePrefix = prefix.trimmingCharacters(in: CharacterSet(charactersIn: ": "))
+            let basePrefixLower = basePrefix.lowercased()
+            let cleanedLower = cleaned.lowercased()
 
-            for variation in variations {
-                if cleaned.hasPrefix(variation) {
-                    cleaned = String(cleaned.dropFirst(variation.count))
-                        .trimmingCharacters(in: .whitespaces)
-                    break
+            // Check if text starts with this prefix (case-insensitive)
+            if cleanedLower.hasPrefix(basePrefixLower) {
+                // Find the first word boundary in the ENTIRE string
+                // This removes the first word completely, handling extended forms like "Summarize"
+                if let firstBoundary = cleaned.firstIndex(where: { $0.isWhitespace || $0 == ":" || $0 == "\n" }) {
+                    // Remove everything up to (and including) the first word boundary
+                    cleaned = String(cleaned[firstBoundary...]).trimmingCharacters(in: .whitespaces)
+                } else {
+                    // No boundary found - the entire text is just the prefix word
+                    cleaned = ""
                 }
+                break
+            }
+        }
+
+        // Remove any remaining standalone colons or punctuation at the start
+        while !cleaned.isEmpty {
+            let firstChar = cleaned.first!
+            if firstChar == ":" || (firstChar.isPunctuation && !firstChar.isLetter) {
+                cleaned = String(cleaned.dropFirst())
+                    .trimmingCharacters(in: .whitespaces)
+            } else {
+                break
             }
         }
 
@@ -142,12 +159,66 @@ extension AIService {
     ///   - minLength: Minimum length to consider keeping just first paragraph
     /// - Returns: First paragraph if substantial, otherwise original text
     func keepFirstParagraph(from text: String, minLength: Int = 10) -> String {
-        if let doubleNewline = text.range(of: "\n\n") {
+        // Find all occurrences of "\n\n"
+        var searchRange = text.startIndex..<text.endIndex
+
+        while let doubleNewline = text.range(of: "\n\n", range: searchRange) {
+            // Check if this is part of a service delimiter ("\n\n---\n`")
+            let afterNewlines = doubleNewline.upperBound
+            if afterNewlines < text.endIndex {
+                let remainingText = text[afterNewlines...]
+                // Skip if this "\n\n" is followed by "---\n`" (service delimiter)
+                if remainingText.hasPrefix("---\n`") {
+                    searchRange = afterNewlines..<text.endIndex
+                    continue
+                }
+            }
+
+            // This is a real paragraph break, not a service delimiter
             let firstParagraph = String(text[..<doubleNewline.lowerBound])
             if firstParagraph.count > minLength {
                 return firstParagraph
             }
+            break
         }
+
+        return text
+    }
+
+    /// Skips first paragraph if it looks like a label/prefix and keeps the actual content
+    /// Useful when LLM outputs "Summary:\n\nActual summary..." and you want just the summary
+    /// - Parameters:
+    ///   - text: The text to process
+    ///   - maxPrefixLength: Maximum length of prefix paragraph to skip (defaults to 50)
+    /// - Returns: Text after first paragraph if first paragraph is short, otherwise original text
+    func skipPrefixParagraph(from text: String, maxPrefixLength: Int = 50) -> String {
+        // Find first real paragraph break (not service delimiter)
+        var searchRange = text.startIndex..<text.endIndex
+
+        while let doubleNewline = text.range(of: "\n\n", range: searchRange) {
+            // Check if this is part of a service delimiter ("\n\n---\n`")
+            let afterNewlines = doubleNewline.upperBound
+            if afterNewlines < text.endIndex {
+                let remainingText = text[afterNewlines...]
+                // Skip if this "\n\n" is followed by "---\n`" (service delimiter)
+                if remainingText.hasPrefix("---\n`") {
+                    searchRange = afterNewlines..<text.endIndex
+                    continue
+                }
+            }
+
+            // Found a real paragraph break
+            let firstParagraph = String(text[..<doubleNewline.lowerBound])
+
+            // If first paragraph is short (likely a label like "Summary:"), skip it
+            if firstParagraph.count <= maxPrefixLength {
+                return String(text[afterNewlines...]).trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+
+            // First paragraph is substantial, keep everything
+            break
+        }
+
         return text
     }
 
@@ -157,22 +228,31 @@ extension AIService {
     ///   - stopMarkers: Custom stop markers
     ///   - prefixes: Custom prefixes to remove
     ///   - keepOnlyFirstParagraph: Whether to keep only first paragraph
+    ///   - skipLabelParagraph: Whether to skip label-like first paragraphs (e.g., "Summary:\n\n")
     /// - Returns: Cleaned output
     func standardPostProcess(
         _ output: String,
         stopMarkers: [String]? = nil,
         prefixes: [String]? = nil,
-        keepOnlyFirstParagraph: Bool = true
+        keepOnlyFirstParagraph: Bool = true,
+        skipLabelParagraph: Bool = false
     ) -> String {
         var cleaned = output.trimmingCharacters(in: .whitespacesAndNewlines)
 
         // Remove hallucination markers
         cleaned = removeHallucinationMarkers(from: cleaned, markers: stopMarkers)
 
-        // Remove common prefixes
+        // Skip prefix paragraph if present (e.g., "Summary:\n\nActual content")
+        // This removes label-like first paragraphs that LLMs sometimes add
+        if skipLabelParagraph {
+            cleaned = skipPrefixParagraph(from: cleaned)
+        }
+
+        // Remove common prefixes from remaining text
         cleaned = removePrefixes(from: cleaned, prefixes: prefixes)
 
         // Keep only first paragraph if requested
+        // This is done AFTER prefix removal to get the actual content paragraph
         if keepOnlyFirstParagraph {
             cleaned = keepFirstParagraph(from: cleaned)
         }
@@ -237,8 +317,33 @@ extension AIService {
         return postProcess(rawOutput)
     }
 
-    /// Default post-processing: trim whitespace
+    /// Default post-processing: trim whitespace and remove TinyLlama artifacts
     func postProcess(_ output: String) -> String {
-        return output.trimmingCharacters(in: .whitespacesAndNewlines)
+        var cleaned = output.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // Remove TinyLlama chat template artifacts that may leak into output
+        cleaned = cleaned.replacingOccurrences(of: "<|assistant|>", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "</s>", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "<|user|>", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "<|system|>", with: "")
+
+        // Remove common hallucination prefixes that small models add
+        let hallucinationPrefixes = [
+            "Sure! ", "Sure, ", "Certainly! ", "Certainly, ",
+            "Here is ", "Here's ", "Here is the ",
+            "The translation is: ", "Translation: ", "Translated text: ",
+            "Summary: ", "The summary is: ",
+            "Corrected: ", "Corrected text: ",
+            "Rewritten: ", "Rewritten text: "
+        ]
+
+        for prefix in hallucinationPrefixes {
+            if cleaned.hasPrefix(prefix) {
+                cleaned = String(cleaned.dropFirst(prefix.count))
+                break  // Only remove first match
+            }
+        }
+
+        return cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }

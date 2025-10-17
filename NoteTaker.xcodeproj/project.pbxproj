@@ -24,6 +24,10 @@
 		81DE4F662EA18C90006293FC /* CustomService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F632EA18C90006293FC /* CustomService.swift */; };
 		81DE4F672EA18C90006293FC /* NotesDataModel.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F642EA18C90006293FC /* NotesDataModel.xcdatamodeld */; };
 		81DE4F692EA18EA3006293FC /* CustomServiceEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F682EA18EA3006293FC /* CustomServiceEditorView.swift */; };
+		81DE4F6B2EA1A524006293FC /* MarkdownRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F6A2EA1A524006293FC /* MarkdownRenderer.swift */; };
+		81DE4F6E2EA1CE1A006293FC /* AITool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F6C2EA1CE1A006293FC /* AITool.swift */; };
+		81DE4F6F2EA1CE1A006293FC /* ToolManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F6D2EA1CE1A006293FC /* ToolManager.swift */; };
+		81DE4F712EA1CE2D006293FC /* ToolEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F702EA1CE2D006293FC /* ToolEditorView.swift */; };
 		81EFBE2E2E9B05C700F7E48B /* libllama.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 81EFBE282E9B05C700F7E48B /* libllama.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		81EFBE2F2E9B05C700F7E48B /* libggml-base.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 81EFBE292E9B05C700F7E48B /* libggml-base.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		81EFBE302E9B05C700F7E48B /* libggml-metal.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 81EFBE2A2E9B05C700F7E48B /* libggml-metal.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -52,9 +56,9 @@
 		A1000065000000000000001 /* SystemMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000064000000000000001 /* SystemMonitor.swift */; };
 		A1000067000000000000001 /* SystemMonitorWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000066000000000000001 /* SystemMonitorWidget.swift */; };
 		A1000070000000000000001 /* ErrorLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000069000000000000001 /* ErrorLogView.swift */; };
+		A1000072000000000000001 /* SystemMonitorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000071000000000000001 /* SystemMonitorView.swift */; };
 		A1000093000000000000001 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000091000000000000001 /* Logger.swift */; };
 		A1000094000000000000001 /* ErrorManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000092000000000000001 /* ErrorManager.swift */; };
-		A1000072000000000000001 /* SystemMonitorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000071000000000000001 /* SystemMonitorView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -93,6 +97,10 @@
 		81DE4F632EA18C90006293FC /* CustomService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomService.swift; sourceTree = "<group>"; };
 		81DE4F652EA18C90006293FC /* NotesDataModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = NotesDataModel.xcdatamodel; sourceTree = "<group>"; };
 		81DE4F682EA18EA3006293FC /* CustomServiceEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomServiceEditorView.swift; sourceTree = "<group>"; };
+		81DE4F6A2EA1A524006293FC /* MarkdownRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownRenderer.swift; sourceTree = "<group>"; };
+		81DE4F6C2EA1CE1A006293FC /* AITool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AITool.swift; sourceTree = "<group>"; };
+		81DE4F6D2EA1CE1A006293FC /* ToolManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolManager.swift; sourceTree = "<group>"; };
+		81DE4F702EA1CE2D006293FC /* ToolEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolEditorView.swift; sourceTree = "<group>"; };
 		81EFBE282E9B05C700F7E48B /* libllama.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libllama.dylib; path = llama.cpp/build/bin/libllama.dylib; sourceTree = "<group>"; };
 		81EFBE292E9B05C700F7E48B /* libggml-base.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libggml-base.dylib"; path = "llama.cpp/build/bin/libggml-base.dylib"; sourceTree = "<group>"; };
 		81EFBE2A2E9B05C700F7E48B /* libggml-metal.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libggml-metal.dylib"; path = "llama.cpp/build/bin/libggml-metal.dylib"; sourceTree = "<group>"; };
@@ -122,10 +130,10 @@
 		A1000063000000000000001 /* NoteRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteRepository.swift; sourceTree = "<group>"; };
 		A1000064000000000000001 /* SystemMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMonitor.swift; sourceTree = "<group>"; };
 		A1000066000000000000001 /* SystemMonitorWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMonitorWidget.swift; sourceTree = "<group>"; };
-		A1000091000000000000001 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
-		A1000092000000000000001 /* ErrorManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorManager.swift; sourceTree = "<group>"; };
 		A1000069000000000000001 /* ErrorLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorLogView.swift; sourceTree = "<group>"; };
 		A1000071000000000000001 /* SystemMonitorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMonitorView.swift; sourceTree = "<group>"; };
+		A1000091000000000000001 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
+		A1000092000000000000001 /* ErrorManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -139,7 +147,7 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		81111F6D2EA0896E00D7317B /* Managers */ = {
+		81111F6D2EA0896E00D7317B /* NoteTaker/Managers */ = {
 			isa = PBXGroup;
 			children = (
 				81111F6B2EA0896E00D7317B /* AnalyticsManager.swift */,
@@ -151,7 +159,7 @@
 		A1000038000000000000001 = {
 			isa = PBXGroup;
 			children = (
-				81111F6D2EA0896E00D7317B /* Managers */,
+				81111F6D2EA0896E00D7317B /* NoteTaker/Managers */,
 				81EFBE2C2E9B05C700F7E48B /* libggml.dylib */,
 				81EFBE292E9B05C700F7E48B /* libggml-base.dylib */,
 				81EFBE2D2E9B05C700F7E48B /* libggml-blas.dylib */,
@@ -192,6 +200,8 @@
 		A1000041000000000000001 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				81DE4F702EA1CE2D006293FC /* ToolEditorView.swift */,
+				81DE4F6A2EA1A524006293FC /* MarkdownRenderer.swift */,
 				81DE4F682EA18EA3006293FC /* CustomServiceEditorView.swift */,
 				81111F622EA0891A00D7317B /* InlineAutocompleteTextEditor.swift */,
 				81111F632EA0891A00D7317B /* UpgradePromptView.swift */,
@@ -218,6 +228,8 @@
 		A1000043000000000000001 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				81DE4F6C2EA1CE1A006293FC /* AITool.swift */,
+				81DE4F6D2EA1CE1A006293FC /* ToolManager.swift */,
 				81DE4F632EA18C90006293FC /* CustomService.swift */,
 				81DE4F642EA18C90006293FC /* NotesDataModel.xcdatamodeld */,
 				810418062E9AF4770086B1B2 /* Note+CoreDataClass.swift */,
@@ -372,11 +384,14 @@
 				81111F6F2EA0896E00D7317B /* AnalyticsManager.swift in Sources */,
 				A1000021000000000000001 /* LLMInferenceService.swift in Sources */,
 				81DE21652E9B3C2400692788 /* ModelDownloader.swift in Sources */,
+				81DE4F6B2EA1A524006293FC /* MarkdownRenderer.swift in Sources */,
 				81111F5B2E9F348400D7317B /* AIService.swift in Sources */,
 				81111F5C2E9F348400D7317B /* ReformulationService.swift in Sources */,
 				81111F5D2E9F348400D7317B /* AutoCorrectService.swift in Sources */,
 				81111F5E2E9F348400D7317B /* TitleGenerationService.swift in Sources */,
 				81111F5F2E9F348400D7317B /* TranslationService.swift in Sources */,
+				81DE4F6E2EA1CE1A006293FC /* AITool.swift in Sources */,
+				81DE4F6F2EA1CE1A006293FC /* ToolManager.swift in Sources */,
 				A1000023000000000000001 /* EmbeddingService.swift in Sources */,
 				A1000025000000000000001 /* SemanticSearchEngine.swift in Sources */,
 				A1000027000000000000001 /* AutocompleteService.swift in Sources */,
@@ -386,16 +401,17 @@
 				A1000031000000000000001 /* Note+Extensions.swift in Sources */,
 				81111F642EA0891A00D7317B /* InlineAutocompleteTextEditor.swift in Sources */,
 				81111F652EA0891A00D7317B /* UpgradePromptView.swift in Sources */,
+				81DE4F712EA1CE2D006293FC /* ToolEditorView.swift in Sources */,
 				A1000033000000000000001 /* NoteViewModel.swift in Sources */,
 				A1000060000000000000001 /* AISettingsView.swift in Sources */,
-			A1000070000000000000001 /* ErrorLogView.swift in Sources */,
-			A1000065000000000000001 /* SystemMonitor.swift in Sources */,
-			A1000067000000000000001 /* SystemMonitorWidget.swift in Sources */,
-			A1000072000000000000001 /* SystemMonitorView.swift in Sources */,
-			A1000093000000000000001 /* Logger.swift in Sources */,
-			A1000094000000000000001 /* ErrorManager.swift in Sources */,
-		);
-		runOnlyForDeploymentPostprocessing = 0;
+				A1000070000000000000001 /* ErrorLogView.swift in Sources */,
+				A1000065000000000000001 /* SystemMonitor.swift in Sources */,
+				A1000067000000000000001 /* SystemMonitorWidget.swift in Sources */,
+				A1000072000000000000001 /* SystemMonitorView.swift in Sources */,
+				A1000093000000000000001 /* Logger.swift in Sources */,
+				A1000094000000000000001 /* ErrorManager.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 

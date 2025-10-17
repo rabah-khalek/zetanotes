@@ -21,12 +21,11 @@ class AutoCorrectService: AIService {
             temperature: 0.05,  // Very low for deterministic corrections
             maxTokens: nil,     // Will be calculated dynamically
             stopSequences: [
-                "\n\n\n",
-                "\n---",
-                "\nNote:",
-                "\nHere is",
-                "\nCorrected:",
-                "\nThe corrected"
+                // Note: </s> is handled natively by llama.cpp (llama_vocab_is_eog)
+                "<|user|>",     // Prevent fake user messages
+                "<|system|>",   // Prevent fake system messages
+                "\n\nText:",    // Stop if it tries to repeat the input prompt
+                "\n---\n`"      // Service delimiter start
             ]
         )
     }
@@ -34,7 +33,7 @@ class AutoCorrectService: AIService {
     // MARK: - AIService Protocol
 
     func buildPrompt(for text: String) -> String {
-        return "\(DefaultPrompts.autoCorrect)\(text)\n\nCorrected text:"
+        return "\(DefaultPrompts.autoCorrect)\(text)</s>\n<|assistant|>\n"
     }
 
     // MARK: - AIService Override
@@ -44,8 +43,11 @@ class AutoCorrectService: AIService {
         // Calculate dynamic max tokens with 20% buffer for corrections
         let maxTokens = calculateMaxTokens(for: text, bufferPercent: 20, maxLimit: 1024)
 
-        let instruction = customPrompt.isEmpty ? DefaultPrompts.autoCorrect : customPrompt + "\n\n"
-        let prompt = "\(instruction)\(text)\n\nCorrected text:"
+        // Use custom prompt as-is if provided (user controls the format)
+        // Otherwise use default prompt with proper chat template
+        // Always close with the assistant tag
+        let instruction = customPrompt.isEmpty ? DefaultPrompts.autoCorrect : customPrompt
+        let prompt = "\(instruction)\(text)</s>\n<|assistant|>\n"
 
         guard let rawOutput = await llmService.generate(
             prompt: prompt,
@@ -69,28 +71,31 @@ class AutoCorrectService: AIService {
     // MARK: - Post-processing
 
     func postProcess(_ output: String) -> String {
-        let stopMarkers = [
-            "\n\nThe ",
-            "\n\nHere is",
-            "\n\nNote:",
-            "\n\nCorrected:",
-            "\n\nThis text",
-            "\n\n---"
-        ]
+        var cleaned = output.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        let prefixes = [
-            "Corrected:",
-            "Corrected text:",
-            "Here is the corrected text:",
-            "The corrected text is:",
-            "corrected:"
-        ]
+        // First apply default TinyLlama artifact removal
+        cleaned = cleaned.replacingOccurrences(of: "<|assistant|>", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "</s>", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "<|user|>", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "<|system|>", with: "")
 
-        return standardPostProcess(
-            output,
-            stopMarkers: stopMarkers,
-            prefixes: prefixes,
-            keepOnlyFirstParagraph: false  // Don't limit to first paragraph for corrections
-        )
+        // Remove common hallucination prefixes
+        let hallucinationPrefixes = [
+            "Sure! ", "Sure, ", "Certainly! ", "Certainly, ",
+            "Here is ", "Here's ", "Corrected: ", "Corrected text: "
+        ]
+        for prefix in hallucinationPrefixes {
+            if cleaned.hasPrefix(prefix) {
+                cleaned = String(cleaned.dropFirst(prefix.count))
+                break
+            }
+        }
+
+        // Remove leading markdown quote character if present
+        if cleaned.hasPrefix(">") {
+            cleaned = cleaned.dropFirst().trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
+        return cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }

@@ -37,9 +37,8 @@ class AutocompleteTextView: NSTextView {
         }
         // Handle Right Arrow key (keyCode 124) - accept one word
         else if event.keyCode == 124 {
-            // Only intercept if we're at end of text and have a suggestion
-            let cursorPosition = selectedRange().location
-            if cursorPosition == string.count, ghostText != nil, let onRightArrow = onRightArrowPressed {
+            // Intercept if we have a suggestion (regardless of cursor position)
+            if ghostText != nil, let onRightArrow = onRightArrowPressed {
                 onRightArrow()
                 return // Don't call super - we handled it
             }
@@ -89,6 +88,7 @@ class AutocompleteTextView: NSTextView {
 struct SimpleTextEditor: NSViewRepresentable {
     @Binding var text: String
     var ghostText: String?
+    var desiredCursorPosition: Int?  // New: optional desired cursor position
     var onChange: ((String, Int) -> Void)?  // Now includes cursor position
     var onTabPressed: (() -> Void)?
     var onEscapePressed: (() -> Void)?
@@ -96,6 +96,7 @@ struct SimpleTextEditor: NSViewRepresentable {
 
     class Coordinator: NSObject, NSTextViewDelegate {
         var parent: SimpleTextEditor
+        var isUpdatingProgrammatically = false
 
         init(_ parent: SimpleTextEditor) {
             self.parent = parent
@@ -104,6 +105,10 @@ struct SimpleTextEditor: NSViewRepresentable {
 
         func textDidChange(_ notification: Notification) {
             guard let textView = notification.object as? NSTextView else { return }
+
+            // Don't notify onChange if we're updating programmatically
+            guard !isUpdatingProgrammatically else { return }
+
             let currentText = textView.string
             let cursorPosition = textView.selectedRange().location
 
@@ -153,18 +158,21 @@ struct SimpleTextEditor: NSViewRepresentable {
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
         guard let textView = scrollView.documentView as? AutocompleteTextView else { return }
 
-        // Update text if it differs from what's in the view
-        // This handles both programmatic updates (like accepting autocomplete) and external changes
+        // Update text if it differs (from switching notes or autocomplete acceptance)
         if textView.string != text {
-            let oldLength = textView.string.count
+            // Set flag to prevent textDidChange from triggering
+            context.coordinator.isUpdatingProgrammatically = true
 
-            // Update the text
             textView.string = text
 
-            // Move cursor to the end if we appended text (autocomplete case)
-            if text.count > oldLength {
-                textView.setSelectedRange(NSRange(location: text.count, length: 0))
+            // Set cursor position if specified (for autocomplete acceptance)
+            if let desiredPosition = desiredCursorPosition {
+                let newCursorPosition = min(desiredPosition, text.count)
+                textView.setSelectedRange(NSRange(location: newCursorPosition, length: 0))
             }
+
+            // Reset flag after update
+            context.coordinator.isUpdatingProgrammatically = false
         }
 
         // Update ghost text
@@ -173,22 +181,26 @@ struct SimpleTextEditor: NSViewRepresentable {
         // Update key handlers
         textView.onTabPressed = onTabPressed
         textView.onEscapePressed = onEscapePressed
+        textView.onRightArrowPressed = onRightArrowPressed
     }
 }
 
 // MARK: - Note Editor View
 
 struct NoteEditorView: View {
-    let note: Note
     @ObservedObject var viewModel: NoteViewModel
-    @EnvironmentObject var aiEngine: AIEngine
+    @ObservedObject var aiEngine: AIEngine
+    var note: Note
 
     @State private var title: String = ""
     @State private var content: String = ""
+    @State private var showMarkdownPreview: Bool = false
+    @State private var currentCursorPosition: Int = 0
+    @State private var desiredCursorPosition: Int? = nil
 
     var body: some View {
         VStack(spacing: 0) {
-            // Title Field with AI Generate Button
+            // Title Field with AI Generate Button and Markdown Toggle
             HStack(spacing: 8) {
                 // Generate Title Button (Recycle icon) - LEFT SIDE
                 Button(action: {
@@ -218,58 +230,95 @@ struct NoteEditorView: View {
                         note.title = newValue
                         viewModel.saveNote(note)
                     }
+
+                // Markdown Preview Toggle - RIGHT SIDE
+                Button(action: {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        showMarkdownPreview.toggle()
+                    }
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: showMarkdownPreview ? "doc.plaintext" : "doc.richtext")
+                            .font(.system(size: 13))
+                        Text(showMarkdownPreview ? "Edit" : "Preview")
+                            .font(.system(size: 12, weight: .medium))
+                    }
+                    .foregroundColor(showMarkdownPreview ? .blue : .secondary)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(showMarkdownPreview ? Color.blue.opacity(0.1) : Color.clear)
+                    .cornerRadius(6)
+                }
+                .buttonStyle(.plain)
+                .help(showMarkdownPreview ? "Switch to edit mode" : "Preview Markdown formatting")
             }
             .padding(.horizontal, 24)
             .padding(.top, 24)
             .padding(.bottom, 12)
 
-            // Content Editor (Clean, minimal Mac style with ghost text)
-            SimpleTextEditor(
-                text: $content,
-                ghostText: viewModel.autocompleteSuggestion,
-                onChange: { newValue, cursorPosition in
-                    // Update both the state and note content
-                    content = newValue
-                    note.content = newValue
-                    viewModel.saveNote(note)
+            // Content Editor or Markdown Preview
+            if showMarkdownPreview {
+                MarkdownRenderer(text: content)
+                    .frame(minHeight: 200)
+                    .transition(.opacity)
+            } else {
+                SimpleTextEditor(
+                    text: $content,
+                    ghostText: viewModel.autocompleteSuggestion,
+                    desiredCursorPosition: desiredCursorPosition,
+                    onChange: { newValue, cursorPosition in
+                        // Track cursor position
+                        currentCursorPosition = cursorPosition
 
-                    // Check if cursor is in base content (not in AI-generated sections)
-                    if isInBaseContent(content: newValue, cursorPosition: cursorPosition) {
-                        // Smart triggering: only suggest at natural pause points
-                        if shouldTriggerAutocomplete(text: newValue, cursorPosition: cursorPosition) {
-                            // Request autocomplete only if model is loaded
-                            if aiEngine.isModelLoaded && newValue.count >= 10 {
-                                viewModel.requestAutocomplete(for: newValue)
+                        // Clear desired cursor position once it's been applied
+                        desiredCursorPosition = nil
+
+                        // Update both the state and note content
+                        content = newValue
+                        note.content = newValue
+                        viewModel.saveNote(note)
+
+                        // Check if cursor is in base content (not in AI-generated sections)
+                        if isInBaseContent(content: newValue, cursorPosition: cursorPosition) {
+                            // Smart triggering: only suggest at natural pause points
+                            if shouldTriggerAutocomplete(text: newValue, cursorPosition: cursorPosition) {
+                                // Request autocomplete only if model is loaded
+                                if aiEngine.isModelLoaded && newValue.count >= 10 {
+                                    // Extract text up to cursor for better autocomplete accuracy
+                                    let textUpToCursor = String(newValue.prefix(min(cursorPosition, newValue.count)))
+                                    viewModel.requestAutocomplete(for: textUpToCursor)
+                                } else {
+                                    viewModel.dismissAutocomplete()
+                                }
                             } else {
                                 viewModel.dismissAutocomplete()
                             }
                         } else {
+                            // Dismiss autocomplete when in AI-generated sections
                             viewModel.dismissAutocomplete()
                         }
-                    } else {
-                        // Dismiss autocomplete when in AI-generated sections
-                        viewModel.dismissAutocomplete()
+                    },
+                    onTabPressed: {
+                        if viewModel.autocompleteSuggestion != nil {
+                            acceptAutocomplete()
+                        }
+                    },
+                    onEscapePressed: {
+                        if viewModel.autocompleteSuggestion != nil {
+                            viewModel.dismissAutocomplete()
+                        }
+                    },
+                    onRightArrowPressed: {
+                        if viewModel.autocompleteSuggestion != nil {
+                            acceptOneWord()
+                        }
                     }
-                },
-                onTabPressed: {
-                    if viewModel.autocompleteSuggestion != nil {
-                        acceptAutocomplete()
-                    }
-                },
-                onEscapePressed: {
-                    if viewModel.autocompleteSuggestion != nil {
-                        viewModel.dismissAutocomplete()
-                    }
-                },
-                onRightArrowPressed: {
-                    if viewModel.autocompleteSuggestion != nil {
-                        acceptOneWord()
-                    }
-                }
-            )
-            .frame(minHeight: 200)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+                )
+                .frame(minHeight: 200)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .transition(.opacity)
+            }
 
             // Bottom Toolbar (Minimal Mac Notes style - Stats only)
             HStack(spacing: 0) {
@@ -358,11 +407,27 @@ struct NoteEditorView: View {
 
     private func acceptAutocomplete() {
         if let suggestion = viewModel.acceptAutocomplete() {
-            // Append suggestion to content
-            let newContent = content + suggestion
+            // Insert suggestion at current cursor position, followed by a space
+            let insertPosition = min(currentCursorPosition, content.count)
+            let index = content.index(content.startIndex, offsetBy: insertPosition)
+            var newContent = content
+            let suggestionWithSpace = suggestion + " "
+            newContent.insert(contentsOf: suggestionWithSpace, at: index)
+
+            // Set desired cursor position to be after the inserted suggestion + space
+            let newCursorPos = insertPosition + suggestionWithSpace.count
+            desiredCursorPosition = newCursorPos
+            currentCursorPosition = newCursorPos
+
             content = newContent
             note.content = newContent
             viewModel.saveNote(note)
+
+            // Request new autocomplete with updated text
+            if aiEngine.isModelLoaded && shouldTriggerAutocomplete(text: newContent, cursorPosition: newCursorPos) {
+                let textUpToCursor = String(newContent.prefix(min(newCursorPos, newContent.count)))
+                viewModel.requestAutocomplete(for: textUpToCursor)
+            }
         }
     }
 
@@ -383,14 +448,38 @@ struct NoteEditorView: View {
 
         let oneWord = String(suggestion[..<(firstWordEnd ?? suggestion.endIndex)])
 
-        // Append the word to content
-        let newContent = content + oneWord
+        // Insert the word at current cursor position
+        let insertPosition = min(currentCursorPosition, content.count)
+        let index = content.index(content.startIndex, offsetBy: insertPosition)
+        var newContent = content
+
+        // If the word ends with a sentence-ending punctuation, add a space
+        var wordToInsert = oneWord
+        if oneWord.last == "." || oneWord.last == "!" || oneWord.last == "?" {
+            wordToInsert = oneWord + " "
+        }
+
+        newContent.insert(contentsOf: wordToInsert, at: index)
+
+        // Set desired cursor position to be after the inserted word
+        let newCursorPos = insertPosition + wordToInsert.count
+        desiredCursorPosition = newCursorPos
+        currentCursorPosition = newCursorPos
+
         content = newContent
         note.content = newContent
         viewModel.saveNote(note)
 
-        // Update the suggestion to remove the accepted word
+        // Update the suggestion to remove the accepted word (original, not with added space)
         viewModel.acceptPartialAutocomplete(oneWord)
+
+        // Request new autocomplete with updated text (if there's no remaining suggestion)
+        if viewModel.autocompleteSuggestion == nil || viewModel.autocompleteSuggestion?.isEmpty == true {
+            if aiEngine.isModelLoaded && shouldTriggerAutocomplete(text: newContent, cursorPosition: newCursorPos) {
+                let textUpToCursor = String(newContent.prefix(min(newCursorPos, newContent.count)))
+                viewModel.requestAutocomplete(for: textUpToCursor)
+            }
+        }
     }
 
     /// Smart triggering: only suggest autocomplete at natural pause points

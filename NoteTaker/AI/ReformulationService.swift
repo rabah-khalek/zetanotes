@@ -18,15 +18,14 @@ class ReformulationService: AIService {
     init(llmService: LLMInferenceService) {
         self.llmService = llmService
         self.config = AIGenerationConfig(
-            temperature: 0.4,   // Moderate creativity for better phrasing
+            temperature: 0.2,   // REDUCED from 0.4 - TinyLlama needs lower temp to avoid hallucinations
             maxTokens: nil,     // Will be calculated dynamically
             stopSequences: [
-                "\n\n\n",
-                "\n---",
-                "\nNote:",
-                "\nHere is",
-                "\nRewritten:",
-                "\nThe rewritten"
+                // Note: </s> is handled natively by llama.cpp (llama_vocab_is_eog)
+                "<|user|>",     // Prevent fake user messages
+                "<|system|>",   // Prevent fake system messages
+                "\n\nText:",    // Stop if it tries to repeat the input prompt
+                "\n---\n`"      // Service delimiter start
             ]
         )
     }
@@ -34,7 +33,7 @@ class ReformulationService: AIService {
     // MARK: - AIService Protocol
 
     func buildPrompt(for text: String) -> String {
-        return "\(DefaultPrompts.reformulate)\(text)\n\nRewritten text:"
+        return "\(DefaultPrompts.reformulate)\(text)</s>\n<|assistant|>\n"
     }
 
     // MARK: - AIService Override
@@ -44,8 +43,11 @@ class ReformulationService: AIService {
         // Calculate dynamic max tokens with 30% buffer for expansion
         let maxTokens = calculateMaxTokens(for: text, bufferPercent: 30, maxLimit: 1024)
 
-        let instruction = customPrompt.isEmpty ? DefaultPrompts.reformulate : customPrompt + "\n\n"
-        let prompt = "\(instruction)\(text)\n\nRewritten text:"
+        // Use custom prompt as-is if provided (user controls the format)
+        // Otherwise use default prompt with proper chat template
+        // Always close with the assistant tag
+        let instruction = customPrompt.isEmpty ? DefaultPrompts.reformulate : customPrompt
+        let prompt = "\(instruction)\(text)</s>\n<|assistant|>\n"
 
         guard let rawOutput = await llmService.generate(
             prompt: prompt,
@@ -69,28 +71,32 @@ class ReformulationService: AIService {
     // MARK: - Post-processing
 
     func postProcess(_ output: String) -> String {
-        let stopMarkers = [
-            "\n\nThe ",
-            "\n\nHere is",
-            "\n\nNote:",
-            "\n\nRewritten:",
-            "\n\nThis version",
-            "\n\n---"
-        ]
+        var cleaned = output.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        let prefixes = [
-            "Rewritten:",
-            "Rewritten version:",
-            "Here is the rewritten text:",
-            "The rewritten version is:",
-            "rewritten:"
-        ]
+        // First apply default TinyLlama artifact removal
+        cleaned = cleaned.replacingOccurrences(of: "<|assistant|>", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "</s>", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "<|user|>", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "<|system|>", with: "")
 
-        return standardPostProcess(
-            output,
-            stopMarkers: stopMarkers,
-            prefixes: prefixes,
-            keepOnlyFirstParagraph: false  // Don't limit to first paragraph for reformulation
-        )
+        // Remove common hallucination prefixes
+        let hallucinationPrefixes = [
+            "Sure! ", "Sure, ", "Certainly! ", "Certainly, ",
+            "Here is ", "Here's ", "Rewritten: ", "Rewritten text: ",
+            "Reformulated: ", "Reformulated text: "
+        ]
+        for prefix in hallucinationPrefixes {
+            if cleaned.hasPrefix(prefix) {
+                cleaned = String(cleaned.dropFirst(prefix.count))
+                break
+            }
+        }
+
+        // Remove leading markdown quote character if present
+        if cleaned.hasPrefix(">") {
+            cleaned = cleaned.dropFirst().trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
+        return cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }

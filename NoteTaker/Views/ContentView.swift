@@ -14,13 +14,13 @@ struct ContentView: View {
     @StateObject private var errorLogger = ErrorLogger.shared
     @EnvironmentObject var aiEngine: AIEngine
     @StateObject private var licenseManager = LicenseManager.shared
-    @StateObject private var customServiceManager = CustomServiceManager.shared
+    @StateObject private var toolManager = ToolManager.shared
     @State private var showingSettings = false
     @State private var showingErrorLog = false
 
-    // Custom Service Editor state
-    @State private var showingCustomServiceEditor = false
-    @State private var editingService: CustomService?
+    // Tool Editor state
+    @State private var showingToolEditor = false
+    @State private var editingTool: AITool?
 
     // License/Upgrade state
     @State private var showUpgradePrompt = false
@@ -35,7 +35,7 @@ struct ContentView: View {
         } detail: {
             // Main content: Note editor
             if let selectedNote = viewModel.selectedNote {
-                NoteEditorView(note: selectedNote, viewModel: viewModel)
+                NoteEditorView(viewModel: viewModel, aiEngine: aiEngine, note: selectedNote)
                     .id(selectedNote.id) // Force new view instance for each note
             } else {
                 EmptyStateView()
@@ -159,8 +159,8 @@ struct ContentView: View {
                         .help("Translate text (⌘T)")
                         .disabled(viewModel.selectedNote == nil || viewModel.isTranslating)
 
-                        // Custom Services section
-                        customServicesSection
+                        // Custom Tools section
+                        customToolsSection
                     }
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
@@ -212,15 +212,15 @@ struct ContentView: View {
             AISettingsView(viewModel: viewModel)
                 .environmentObject(aiEngine)
         }
-        .sheet(isPresented: $showingCustomServiceEditor) {
-            CustomServiceEditorView(
-                service: editingService ?? CustomService(),
-                isPresented: $showingCustomServiceEditor,
-                onSave: { service in
-                    if editingService != nil {
-                        customServiceManager.updateService(service)
+        .sheet(isPresented: $showingToolEditor) {
+            ToolEditorView(
+                tool: editingTool ?? AITool(name: "", icon: "star.fill", prompt: "", keyboardShortcut: "", color: .purple),
+                isPresented: $showingToolEditor,
+                onSave: { tool in
+                    if editingTool != nil {
+                        toolManager.updateTool(tool)
                     } else {
-                        customServiceManager.addService(service)
+                        toolManager.addTool(tool)
                     }
                 }
             )
@@ -273,40 +273,40 @@ struct ContentView: View {
         }
     }
 
-    // MARK: - Custom Services Section
+    // MARK: - Custom Tools Section
 
     @ViewBuilder
-    private var customServicesSection: some View {
-        if licenseManager.isPro || !customServiceManager.services.isEmpty {
+    private var customToolsSection: some View {
+        if licenseManager.isPro || !toolManager.customTools.isEmpty {
             Rectangle()
                 .fill(Color.secondary.opacity(0.2))
                 .frame(width: 1, height: 14)
 
-            // Show custom services (Pro only)
+            // Show custom tools (Pro only)
             if licenseManager.isPro {
-                ForEach(customServiceManager.services.prefix(3)) { service in
-                    CustomServiceButton(
-                        service: service,
-                        isLoading: viewModel.executingCustomServiceId == service.id,
+                ForEach(toolManager.customTools.prefix(3)) { tool in
+                    ToolButton(
+                        tool: tool,
+                        isLoading: viewModel.executingToolId == tool.id,
                         action: {
                             if let note = viewModel.selectedNote {
                                 Task {
-                                    await viewModel.executeCustomService(service, for: note)
+                                    await viewModel.executeTool(tool, for: note)
                                 }
                             }
                         }
                     )
-                    .keyboardShortcut(KeyEquivalent(Character(service.keyboardShortcut)), modifiers: .command)
-                    .help("\(service.name) (⌘\(service.keyboardShortcut))")
-                    .disabled(viewModel.selectedNote == nil || viewModel.executingCustomServiceId == service.id)
+                    .keyboardShortcut(KeyEquivalent(Character(tool.keyboardShortcut)), modifiers: .command)
+                    .help("\(tool.name) (⌘\(tool.keyboardShortcut))")
+                    .disabled(viewModel.selectedNote == nil || viewModel.executingToolId == tool.id)
                 }
             }
 
-            // "+" button to add new custom service (always on the right)
+            // "+" button to add new custom tool (always on the right)
             Button(action: {
                 if licenseManager.isPro {
-                    editingService = nil
-                    showingCustomServiceEditor = true
+                    editingTool = nil
+                    showingToolEditor = true
                 } else {
                     NotificationCenter.default.post(
                         name: .showUpgradePrompt,
@@ -330,7 +330,7 @@ struct ContentView: View {
                 .cornerRadius(6)
             }
             .buttonStyle(.plain)
-            .help(licenseManager.isPro ? "Add custom service" : "Upgrade to Pro for custom services")
+            .help(licenseManager.isPro ? "Add custom tool" : "Upgrade to Pro for custom tools")
         }
     }
 }
@@ -435,10 +435,10 @@ struct AIToolButton: View {
     }
 }
 
-// MARK: - Custom Service Button Component
+// MARK: - Tool Button Component
 
-struct CustomServiceButton: View {
-    let service: CustomService
+struct ToolButton: View {
+    let tool: AITool
     let isLoading: Bool
     let action: () -> Void
 
@@ -460,7 +460,7 @@ struct CustomServiceButton: View {
                 HStack(spacing: 1) {
                     Text("⌘")
                         .font(.system(size: 8, weight: .medium))
-                    Text(service.keyboardShortcut)
+                    Text(tool.keyboardShortcut)
                         .font(.system(size: 9, weight: .bold))
                 }
                 .foregroundColor(foregroundColor)
@@ -475,8 +475,8 @@ struct CustomServiceButton: View {
                         )
                 )
 
-                // Full service name
-                Text(service.name)
+                // Full tool name
+                Text(tool.name)
                     .font(.system(size: 10, weight: .medium))
                     .foregroundColor(foregroundColor)
             }
@@ -494,12 +494,12 @@ struct CustomServiceButton: View {
             return .secondary.opacity(0.3)
         }
         if isLoading {
-            return service.color.color.opacity(0.85)
+            return tool.color.color.opacity(0.85)
         }
         if isHovered {
-            return service.color.color
+            return tool.color.color
         }
-        return service.color.color.opacity(0.8)
+        return tool.color.color.opacity(0.8)
     }
 }
 

@@ -25,15 +25,12 @@ class TitleGenerationService: AIService {
     init(llmService: LLMInferenceService) {
         self.llmService = llmService
         self.config = AIGenerationConfig(
-            temperature: 0.3,
+            temperature: 0.2,  // REDUCED from 0.3 for more focused titles
             maxTokens: Config.maxTokens,
             stopSequences: [
-                "\n",
-                "\n\n",
-                ".",
-                ":",
-                "\nHere is",
-                "\nTitle:"
+                "\n",           // Stop at first newline for single-line titles
+                "<|user|>",     // Prevent fake user messages
+                "<|system|>",   // Prevent fake system messages
             ]
         )
     }
@@ -44,7 +41,7 @@ class TitleGenerationService: AIService {
         // Limit context to first 300 characters
         let limitedText = String(text.prefix(Config.contextLimit))
 
-        return "\(DefaultPrompts.titleGeneration)\(limitedText)\n\nTitle:"
+        return "\(DefaultPrompts.titleGeneration)\(limitedText)</s>\n<|assistant|>\n"
     }
 
     // MARK: - AIService Override
@@ -54,8 +51,11 @@ class TitleGenerationService: AIService {
         // Limit context to first 300 characters
         let limitedText = String(text.prefix(Config.contextLimit))
 
-        let instruction = customPrompt.isEmpty ? DefaultPrompts.titleGeneration : customPrompt + "\n\n"
-        let prompt = "\(instruction)\(limitedText)\n\nTitle:"
+        // Use custom prompt as-is if provided (user controls the format)
+        // Otherwise use default prompt with proper chat template
+        // Always close with the assistant tag
+        let instruction = customPrompt.isEmpty ? DefaultPrompts.titleGeneration : customPrompt
+        let prompt = "\(instruction)\(limitedText)</s>\n<|assistant|>\n"
 
         guard let rawOutput = await llmService.generate(
             prompt: prompt,
@@ -108,21 +108,19 @@ class TitleGenerationService: AIService {
     // MARK: - Post-processing
 
     func postProcess(_ output: String) -> String {
-        let prefixes = [
-            "Title:",
-            "Here is the title:",
-            "The title is:",
-            "title:",
-            "\""
-        ]
+        // Start with trimmed output
+        var cleaned = output.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        // Use standard post-processing first
-        var cleaned = standardPostProcess(
-            output,
-            stopMarkers: nil,  // Use defaults
-            prefixes: prefixes,
-            keepOnlyFirstParagraph: false
-        )
+        // Remove TinyLlama chat template artifacts
+        cleaned = cleaned.replacingOccurrences(of: "<|assistant|>", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "</s>", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "<|user|>", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "<|system|>", with: "")
+
+        // Remove leading markdown quote character if present
+        if cleaned.hasPrefix(">") {
+            cleaned = cleaned.dropFirst().trimmingCharacters(in: .whitespacesAndNewlines)
+        }
 
         // Title-specific post-processing
         // Remove quotes

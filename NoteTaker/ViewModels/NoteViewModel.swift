@@ -43,8 +43,8 @@ class NoteViewModel: ObservableObject {
     @Published var isAutoCorrecting = false
     @Published var isReformulating = false
     @Published var isAutocompleteEnabled = true
-    @Published var isExecutingCustomService = false
-    @Published var executingCustomServiceId: UUID? = nil
+    @Published var isExecutingTool = false
+    @Published var executingToolId: UUID? = nil
 
     // AI Prompt Customization
     @Published var autocompletePrompt = DefaultPrompts.autocomplete
@@ -325,7 +325,7 @@ class NoteViewModel: ObservableObject {
         if let summary = summary {
             await MainActor.run {
                 let timestamp = self.generateTimestamp()
-                let summaryBlock = "\n\n--- Summary (\(timestamp)) ---\n\n" + summary
+                let summaryBlock = "\n\n---\n`Summary • \(timestamp)`\n---\n\n" + summary
                 note.content = reconstructContent(
                     base: sections.baseContent,
                     summary: summaryBlock,
@@ -371,7 +371,7 @@ class NoteViewModel: ObservableObject {
         if let translation = translation {
             await MainActor.run {
                 let timestamp = self.generateTimestamp()
-                let translationBlock = "\n\n--- Translation to \(targetLanguage) (\(timestamp)) ---\n\n" + translation
+                let translationBlock = "\n\n---\n`Translation to \(targetLanguage) • \(timestamp)`\n---\n\n" + translation
                 note.content = reconstructContent(
                     base: sections.baseContent,
                     summary: sections.summaryBlock,
@@ -410,7 +410,7 @@ class NoteViewModel: ObservableObject {
         if let corrected = corrected {
             await MainActor.run {
                 let timestamp = self.generateTimestamp()
-                let correctedBlock = "\n\n--- Patched (\(timestamp)) ---\n\n" + corrected
+                let correctedBlock = "\n\n---\n`Patched • \(timestamp)`\n---\n\n" + corrected
                 note.content = reconstructContent(
                     base: sections.baseContent,
                     summary: sections.summaryBlock,
@@ -449,7 +449,7 @@ class NoteViewModel: ObservableObject {
         if let reformulated = reformulated {
             await MainActor.run {
                 let timestamp = self.generateTimestamp()
-                let reformulatedBlock = "\n\n--- Reformulated (\(timestamp)) ---\n\n" + reformulated
+                let reformulatedBlock = "\n\n---\n`Reformulated • \(timestamp)`\n---\n\n" + reformulated
                 note.content = reconstructContent(
                     base: sections.baseContent,
                     summary: sections.summaryBlock,
@@ -506,43 +506,49 @@ class NoteViewModel: ObservableObject {
         await searchEngine.reindexNote(note)
     }
 
-    /// Execute a custom service on a note
-    func executeCustomService(_ service: CustomService, for note: Note) async {
+    /// Execute a custom tool on a note
+    func executeTool(_ tool: AITool, for note: Note) async {
         guard let content = note.content, !content.isEmpty else { return }
 
         let sections = extractContentSections(from: content)
 
         await MainActor.run {
-            self.isExecutingCustomService = true
-            self.executingCustomServiceId = service.id
+            self.isExecutingTool = true
+            self.executingToolId = tool.id
         }
 
-        // Format prompt like other services: instruction + content + trigger
-        // The custom prompt is the instruction, followed by the content to process
-        let prompt = "\(service.prompt)\n\n\(sections.baseContent)\n\nResult:"
+        // Format prompt: use tool prompt with proper chat template closing
+        let prompt = "\(tool.prompt)\(sections.baseContent)</s>\n<|assistant|>\n"
 
-        // Calculate dynamic max tokens based on input length (with buffer for potential expansion)
-        let estimatedInputTokens = sections.baseContent.count / 4 // Rough estimate: 1 token ≈ 4 chars
-        let maxTokens = min(max(estimatedInputTokens + 200, 300), 1024) // At least 300, at most 1024
+        // Use tool-specific max tokens or calculate dynamically
+        let maxTokens: Int
+        if let fixedMaxTokens = tool.maxTokens {
+            maxTokens = fixedMaxTokens
+        } else {
+            // Calculate dynamic max tokens based on input length (with buffer for potential expansion)
+            let estimatedInputTokens = sections.baseContent.count / 4 // Rough estimate: 1 token ≈ 4 chars
+            maxTokens = min(max(estimatedInputTokens + 200, 300), 1024) // At least 300, at most 1024
+        }
 
         let result = await aiEngine.llmService.generate(
             prompt: prompt,
             maxTokens: maxTokens,
-            temperature: 0.7
+            temperature: tool.temperature,
+            stopSequences: tool.stopSequences
         )
 
         if let result = result, !result.isEmpty {
             // Post-process the result to remove common unwanted prefixes/suffixes
-            let cleanedResult = cleanCustomServiceOutput(result)
+            let cleanedResult = cleanToolOutput(result)
 
             if !cleanedResult.isEmpty {
                 await MainActor.run {
                     let timestamp = self.generateTimestamp()
-                    let resultBlock = "\n\n--- \(service.name) (\(timestamp)) ---\n\n" + cleanedResult
+                    let resultBlock = "\n\n---\n`\(tool.name) • \(timestamp)`\n---\n\n" + cleanedResult
 
-                    // Update custom service blocks, replacing existing block for this service
+                    // Update custom tool blocks, replacing existing block for this tool
                     var updatedCustomServices = sections.customServiceBlocks
-                    updatedCustomServices[service.name] = resultBlock
+                    updatedCustomServices[tool.name] = resultBlock
 
                     // Reconstruct content with updated custom service block
                     note.content = reconstructContent(
@@ -554,62 +560,34 @@ class NoteViewModel: ObservableObject {
                         customServices: updatedCustomServices
                     )
                     self.saveNote(note)
-                    self.isExecutingCustomService = false
-                    self.executingCustomServiceId = nil
+                    self.isExecutingTool = false
+                    self.executingToolId = nil
                 }
             } else {
                 await MainActor.run {
-                    self.isExecutingCustomService = false
-                    self.executingCustomServiceId = nil
+                    self.isExecutingTool = false
+                    self.executingToolId = nil
                 }
             }
         } else {
             await MainActor.run {
-                self.isExecutingCustomService = false
-                self.executingCustomServiceId = nil
+                self.isExecutingTool = false
+                self.executingToolId = nil
             }
         }
     }
 
-    // MARK: - Custom Service Post-processing
+    // MARK: - Tool Post-processing
 
-    private func cleanCustomServiceOutput(_ output: String) -> String {
+    private func cleanToolOutput(_ output: String) -> String {
         var cleaned = output.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        // Remove common unwanted prefixes
-        let prefixes = [
-            "Result:",
-            "Here is the result:",
-            "The result is:",
-            "Output:",
-            "Here is:",
-            "Here's the",
-            "Here's",
-            "result:"
-        ]
-
-        for prefix in prefixes {
-            if cleaned.lowercased().hasPrefix(prefix.lowercased()) {
-                cleaned = String(cleaned.dropFirst(prefix.count))
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-            }
+        // Remove leading markdown quote character if present
+        if cleaned.hasPrefix(">") {
+            cleaned = String(cleaned.dropFirst()).trimmingCharacters(in: .whitespacesAndNewlines)
         }
 
-        // Stop at common ending markers
-        let stopMarkers = [
-            "\n\nNote:",
-            "\n\nThe ",
-            "\n\nHere is",
-            "\n\n---"
-        ]
-
-        for marker in stopMarkers {
-            if let range = cleaned.range(of: marker) {
-                cleaned = String(cleaned[..<range.lowerBound])
-            }
-        }
-
-        return cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
+        return cleaned
     }
 
 
@@ -630,8 +608,8 @@ class NoteViewModel: ObservableObject {
         var reformulatedBlock = ""
         var customServiceBlocks: [String: String] = [:]
 
-        // Find the first AI-generated section marker
-        let markerPrefix = "\n\n--- "
+        // Find the first AI-generated section marker (new format: ---\n`ServiceName • timestamp`\n---)
+        let markerPrefix = "\n\n---\n`"
         var firstAIIndex: String.Index? = nil
 
         if let range = content.range(of: markerPrefix) {
@@ -643,35 +621,42 @@ class NoteViewModel: ObservableObject {
             let aiSections = String(content[firstIndex...])
 
             // Split by section markers
-            let sectionPattern = "\n\n--- "
+            let sectionPattern = "\n\n---\n`"
             let parts = aiSections.components(separatedBy: sectionPattern)
 
             for (index, part) in parts.enumerated() {
                 if index == 0 && part.isEmpty { continue } // Skip empty first part
 
-                // Extract section name from the header line
+                // Extract section name from the header line (format: "ServiceName • timestamp`\n---")
                 let lines = part.components(separatedBy: "\n")
                 guard let headerLine = lines.first else { continue }
+
+                // Remove the closing backtick if present
+                let cleanHeader = headerLine.replacingOccurrences(of: "`", with: "")
 
                 // Reconstruct the full block with marker
                 let fullBlock = (index > 0 || !part.isEmpty) ? sectionPattern + part : part
 
-                // Categorize the block by its header
-                if headerLine.hasPrefix("Summary") {
+                // Categorize the block by its header (look for text before the bullet •)
+                let sectionName: String
+                if let bulletIndex = cleanHeader.range(of: " • ") {
+                    sectionName = String(cleanHeader[..<bulletIndex.lowerBound])
+                } else {
+                    sectionName = cleanHeader
+                }
+
+                // Categorize the block
+                if sectionName == "Summary" {
                     summaryBlock = fullBlock
-                } else if headerLine.hasPrefix("Translation to ") {
+                } else if sectionName.hasPrefix("Translation to ") {
                     translationBlock = fullBlock
-                } else if headerLine.hasPrefix("Patched") {
+                } else if sectionName == "Patched" {
                     autoCorrectedBlock = fullBlock
-                } else if headerLine.hasPrefix("Reformulated") {
+                } else if sectionName == "Reformulated" {
                     reformulatedBlock = fullBlock
                 } else {
                     // This is a custom service block
-                    // Extract service name from "ServiceName (timestamp) ---"
-                    if let nameEnd = headerLine.range(of: " (") {
-                        let serviceName = String(headerLine[..<nameEnd.lowerBound])
-                        customServiceBlocks[serviceName] = fullBlock
-                    }
+                    customServiceBlocks[sectionName] = fullBlock
                 }
             }
         }

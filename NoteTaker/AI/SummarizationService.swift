@@ -27,15 +27,14 @@ class SummarizationService: AIService {
     init(llmService: LLMInferenceService) {
         self.llmService = llmService
         self.config = AIGenerationConfig(
-            temperature: 0.3,
+            temperature: 0.2,  // REDUCED from 0.3 - lower temp for more focused summaries
             maxTokens: Config.maxTokens,
             stopSequences: [
-                "\n\n\n",
-                "\n---",
-                "\nNote:",
-                "\nHere is",
-                "\nThe summary",
-                "\nIn summary"
+                // Note: </s> is handled natively by llama.cpp (llama_vocab_is_eog)
+                "<|user|>",     // Prevent fake user messages
+                "<|system|>",   // Prevent fake system messages
+                "\n\nText:",    // Stop if it tries to repeat the input prompt
+                "\n---\n`"      // Service delimiter start
             ]
         )
     }
@@ -43,7 +42,7 @@ class SummarizationService: AIService {
     // MARK: - AIService Protocol
 
     func buildPrompt(for text: String) -> String {
-        return "\(DefaultPrompts.summarization)\(text)\n\nSummary:"
+        return "\(DefaultPrompts.summarization)\(text)</s>\n<|assistant|>\n"
     }
 
     // MARK: - AIService Override
@@ -53,8 +52,11 @@ class SummarizationService: AIService {
         // For very long text, truncate to first 2000 characters for performance
         let textToProcess = text.count > 2000 ? String(text.prefix(2000)) : text
 
-        let instruction = customPrompt.isEmpty ? DefaultPrompts.summarization : customPrompt + "\n\n"
-        let prompt = "\(instruction)\(textToProcess)\n\nSummary:"
+        // Use custom prompt as-is if provided (user controls the format)
+        // Otherwise use default prompt with proper chat template
+        // Always close with the assistant tag
+        let instruction = customPrompt.isEmpty ? DefaultPrompts.summarization : customPrompt
+        let prompt = "\(instruction)\(textToProcess)</s>\n<|assistant|>\n"
 
         guard let rawOutput = await llmService.generate(
             prompt: prompt,
@@ -122,28 +124,33 @@ class SummarizationService: AIService {
     // MARK: - Post-processing
 
     func postProcess(_ output: String) -> String {
-        let stopMarkers = [
-            "\n\nThe ",
-            "\n\nHere is",
-            "\n\nNote:",
-            "\n\nIn summary",
-            "\n\nThis summary",
-            "\n\n---"
-        ]
+        var cleaned = output.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        let prefixes = [
-            "Summary:",
-            "Here is the summary:",
-            "The summary is:",
-            "summary:"
-        ]
+        // First apply default TinyLlama artifact removal
+        cleaned = cleaned.replacingOccurrences(of: "<|assistant|>", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "</s>", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "<|user|>", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "<|system|>", with: "")
 
-        return standardPostProcess(
-            output,
-            stopMarkers: stopMarkers,
-            prefixes: prefixes,
-            keepOnlyFirstParagraph: true
-        )
+        // Remove common hallucination prefixes
+        let hallucinationPrefixes = [
+            "Sure! ", "Sure, ", "Certainly! ", "Certainly, ",
+            "Here is ", "Here's ", "Summary: ", "The summary is: ",
+            "In summary, ", "To summarize, "
+        ]
+        for prefix in hallucinationPrefixes {
+            if cleaned.hasPrefix(prefix) {
+                cleaned = String(cleaned.dropFirst(prefix.count))
+                break
+            }
+        }
+
+        // Remove leading markdown quote character if present
+        if cleaned.hasPrefix(">") {
+            cleaned = cleaned.dropFirst().trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
+        return cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     /// Generates summaries for multiple notes in batch

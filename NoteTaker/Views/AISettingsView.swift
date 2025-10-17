@@ -10,8 +10,7 @@ import SwiftUI
 enum SettingsSection: String, CaseIterable, Identifiable {
     case general = "General"
     case model = "AI Model"
-    case prompts = "Prompts"
-    case customServices = "Custom Services"
+    case tools = "Tools"
 
     var id: String { rawValue }
 
@@ -19,8 +18,23 @@ enum SettingsSection: String, CaseIterable, Identifiable {
         switch self {
         case .general: return "gearshape"
         case .model: return "cpu"
-        case .prompts: return "text.alignleft"
-        case .customServices: return "wand.and.stars"
+        case .tools: return "wand.and.stars"
+        }
+    }
+}
+
+// MARK: - Tool Editor State
+
+enum ToolEditorState: Identifiable {
+    case create
+    case edit(AITool)
+
+    var id: String {
+        switch self {
+        case .create:
+            return "create"
+        case .edit(let tool):
+            return "edit_\(tool.id)"
         }
     }
 }
@@ -29,12 +43,12 @@ struct AISettingsView: View {
     @ObservedObject var viewModel: NoteViewModel
     @EnvironmentObject var aiEngine: AIEngine
     @StateObject private var modelDownloader = ModelDownloader()
-    @StateObject private var customServiceManager = CustomServiceManager.shared
+    @StateObject private var toolManager = ToolManager.shared
+    @StateObject private var licenseManager = LicenseManager.shared
     @Environment(\.dismiss) var dismiss
 
     @State private var selectedSection: SettingsSection = .general
-    @State private var showingCustomServiceEditor = false
-    @State private var editingService: CustomService?
+    @State private var toolEditorState: ToolEditorState?
 
     var body: some View {
         HStack(spacing: 0) {
@@ -111,50 +125,54 @@ struct AISettingsView: View {
                     VStack(alignment: .leading, spacing: 24) {
                         switch selectedSection {
                         case .general:
-                        GeneralSettingsContent(dismiss: dismiss)
-                    case .model:
-                        ModelSettingsContent(
-                            aiEngine: aiEngine,
-                            modelDownloader: modelDownloader
-                        )
-                    case .prompts:
-                        PromptsSettingsContent(viewModel: viewModel)
-                    case .customServices:
-                        CustomServicesContent(
-                            customServiceManager: customServiceManager,
-                            showingEditor: $showingCustomServiceEditor,
-                            editingService: $editingService
-                        )
+                            GeneralSettingsContent(dismiss: dismiss)
+                        case .model:
+                            ModelSettingsContent(
+                                aiEngine: aiEngine,
+                                modelDownloader: modelDownloader
+                            )
+                        case .tools:
+                            ToolsSettingsContent(
+                                toolManager: toolManager,
+                                licenseManager: licenseManager,
+                                toolEditorState: $toolEditorState
+                            )
+                        }
                     }
-                }
-                .padding()
+                    .padding()
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(width: 850, height: 650)
-        .sheet(item: $editingService) { service in
-            CustomServiceEditorView(
-                service: service,
-                isPresented: Binding(
-                    get: { editingService != nil },
-                    set: { if !$0 { editingService = nil } }
-                ),
-                onSave: { updatedService in
-                    customServiceManager.updateService(updatedService)
-                    editingService = nil
-                }
-            )
-        }
-        .sheet(isPresented: $showingCustomServiceEditor) {
-            CustomServiceEditorView(
-                service: CustomService(),
-                isPresented: $showingCustomServiceEditor,
-                onSave: { service in
-                    customServiceManager.addService(service)
-                    showingCustomServiceEditor = false
-                }
-            )
+        .sheet(item: $toolEditorState) { state in
+            switch state {
+            case .create:
+                ToolEditorView(
+                    tool: AITool(name: "", icon: "star.fill", prompt: "", keyboardShortcut: "", color: .purple),
+                    isPresented: Binding(
+                        get: { toolEditorState != nil },
+                        set: { if !$0 { toolEditorState = nil } }
+                    ),
+                    onSave: { tool in
+                        toolManager.addTool(tool)
+                        toolEditorState = nil
+                    }
+                )
+            case .edit(let tool):
+                ToolEditorView(
+                    tool: tool,
+                    isPresented: Binding(
+                        get: { toolEditorState != nil },
+                        set: { if !$0 { toolEditorState = nil } }
+                    ),
+                    isReadOnly: tool.isDefault && !licenseManager.isPro,
+                    onSave: { updatedTool in
+                        toolManager.updateTool(updatedTool)
+                        toolEditorState = nil
+                    }
+                )
+            }
         }
     }
 }
@@ -251,7 +269,7 @@ struct CloseButton: View {
 struct GeneralSettingsContent: View {
     let dismiss: DismissAction
     @ObservedObject var licenseManager = LicenseManager.shared
-    @AppStorage("preferredAppearance") private var preferredAppearance: String = "auto"
+    @AppStorage("preferredAppearance") private var preferredAppearance: String = "light"
 
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
@@ -275,9 +293,10 @@ struct GeneralSettingsContent: View {
                     .foregroundColor(.secondary)
 
                 Picker("", selection: $preferredAppearance) {
-                    Text("🌗 Auto").tag("auto")
-                    Text("☀️ Light").tag("light")
-                    Text("🌙 Dark").tag("dark")
+                    Label("Light", systemImage: "sun.max.fill")
+                        .tag("light")
+                    Label("Dark", systemImage: "moon.fill")
+                        .tag("dark")
                 }
                 .pickerStyle(.segmented)
                 .labelsHidden()
@@ -1091,6 +1110,213 @@ struct ProStatusSection: View {
             }
         }
         .padding(.horizontal)
+    }
+}
+
+// MARK: - Tools Settings Content (Unified)
+
+struct ToolsSettingsContent: View {
+    @ObservedObject var toolManager: ToolManager
+    @ObservedObject var licenseManager: LicenseManager
+    @Binding var toolEditorState: ToolEditorState?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            // Header
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("AI Tools")
+                        .font(.title2)
+                        .fontWeight(.semibold)
+
+                    Text("Manage default and custom AI tools")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                Spacer()
+
+                // Add Custom Tool button
+                Button(action: {
+                    if licenseManager.isPro {
+                        toolEditorState = .create
+                    } else {
+                        NotificationCenter.default.post(
+                            name: .showUpgradePrompt,
+                            object: UpgradePromptView.PromptType.general
+                        )
+                    }
+                }) {
+                    HStack(spacing: 6) {
+                        if !licenseManager.isPro {
+                            Image(systemName: "lock.fill")
+                                .font(.system(size: 11))
+                        }
+                        Image(systemName: "plus.circle.fill")
+                            .font(.system(size: 14))
+                        Text(licenseManager.isPro ? "Add Custom Tool" : "Upgrade to Add")
+                            .font(.system(size: 13, weight: .semibold))
+                    }
+                    .foregroundColor(licenseManager.isPro ? .white : .orange)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 7)
+                    .background(licenseManager.isPro ? Color.blue : Color.orange.opacity(0.15))
+                    .cornerRadius(8)
+                }
+                .buttonStyle(.plain)
+            }
+
+            // Default Tools Section
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Text("Default Tools")
+                        .font(.headline)
+
+                    if !licenseManager.isPro {
+                        HStack(spacing: 4) {
+                            Image(systemName: "lock.fill")
+                                .font(.system(size: 10))
+                            Text("Pro required to edit")
+                                .font(.caption)
+                        }
+                        .foregroundColor(.orange)
+                    }
+                }
+
+                ForEach(toolManager.defaultTools) { tool in
+                    ToolRow(
+                        tool: tool,
+                        canEdit: licenseManager.isPro,
+                        onEdit: {
+                            toolEditorState = .edit(tool)
+                        },
+                        onReset: {
+                            toolManager.resetDefaultTool(tool)
+                        }
+                    )
+                }
+            }
+
+            if !toolManager.customTools.isEmpty {
+                Divider()
+                    .padding(.vertical, 8)
+
+                // Custom Tools Section
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Custom Tools")
+                        .font(.headline)
+
+                    ForEach(toolManager.customTools) { tool in
+                        ToolRow(
+                            tool: tool,
+                            canEdit: true,
+                            canDelete: true,
+                            onEdit: {
+                                toolEditorState = .edit(tool)
+                            },
+                            onDelete: {
+                                toolManager.deleteTool(tool)
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Tool Row
+
+struct ToolRow: View {
+    let tool: AITool
+    let canEdit: Bool
+    var canDelete: Bool = false
+    let onEdit: () -> Void
+    var onReset: (() -> Void)? = nil
+    var onDelete: (() -> Void)? = nil
+
+    var body: some View {
+        HStack(spacing: 12) {
+            // Icon and color indicator
+            ZStack {
+                Circle()
+                    .fill(tool.color.color.opacity(0.15))
+                    .frame(width: 36, height: 36)
+
+                Image(systemName: tool.icon)
+                    .font(.system(size: 16))
+                    .foregroundColor(tool.color.color)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 8) {
+                    Text(tool.name)
+                        .font(.system(size: 14, weight: .semibold))
+
+                    // Keyboard shortcut badge
+                    HStack(spacing: 2) {
+                        Text("⌘")
+                            .font(.system(size: 10))
+                        Text(tool.keyboardShortcut)
+                            .font(.system(size: 10, weight: .bold))
+                    }
+                    .foregroundColor(.secondary)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Color.secondary.opacity(0.1))
+                    .cornerRadius(4)
+                }
+
+                Text(tool.prompt.prefix(100) + (tool.prompt.count > 100 ? "..." : ""))
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .lineLimit(2)
+            }
+
+            Spacer()
+
+            HStack(spacing: 8) {
+                // Reset button (default tools only)
+                if tool.isDefault, let reset = onReset, canEdit {
+                    Button(action: reset) {
+                        Image(systemName: "arrow.counterclockwise")
+                            .font(.system(size: 12))
+                            .foregroundColor(.blue)
+                    }
+                    .buttonStyle(.plain)
+                    .help("Reset to default")
+                }
+
+                // View/Edit button
+                Button(action: onEdit) {
+                    if canEdit {
+                        Image(systemName: "pencil")
+                            .font(.system(size: 12))
+                            .foregroundColor(.blue)
+                    } else {
+                        Image(systemName: "eye")
+                            .font(.system(size: 12))
+                            .foregroundColor(.blue)
+                    }
+                }
+                .buttonStyle(.plain)
+                .help(canEdit ? "Edit tool" : "View tool settings")
+
+                // Delete button (custom tools only)
+                if canDelete, let delete = onDelete {
+                    Button(action: delete) {
+                        Image(systemName: "trash")
+                            .font(.system(size: 12))
+                            .foregroundColor(.red)
+                    }
+                    .buttonStyle(.plain)
+                    .help("Delete tool")
+                }
+            }
+        }
+        .padding(12)
+        .background(Color(nsColor: .controlBackgroundColor).opacity(0.3))
+        .cornerRadius(8)
     }
 }
 

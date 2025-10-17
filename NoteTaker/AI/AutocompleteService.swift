@@ -23,7 +23,7 @@ class AutocompleteService: AIService {
 
     private struct Config {
         static let minCharacters = 10 // Minimum characters before suggesting
-        static let maxTokens: Int = 20 // Maximum tokens to generate
+        static let maxTokens: Int = 100 // Maximum tokens to generate (allows full sentences)
         static let contextLength = 500 // Characters of context to use
     }
 
@@ -32,9 +32,15 @@ class AutocompleteService: AIService {
     init(llmService: LLMInferenceService) {
         self.llmService = llmService
         self.config = AIGenerationConfig(
-            temperature: 0.3,
+            temperature: 0.5,  // Moderate creativity for natural continuations
             maxTokens: Config.maxTokens,
-            stopSequences: ["\n\n", "\n\n\n"]  // Stop at paragraph breaks only
+            stopSequences: [
+                ". ",       // Stop after completing a sentence
+                ".\n",      // Stop after sentence with newline
+                "\n\n\n",   // Stop at major paragraph breaks
+                "<|user|>", // Prevent fake user messages
+                "<|system|>" // Prevent fake system messages
+            ]
         )
     }
 
@@ -61,7 +67,8 @@ class AutocompleteService: AIService {
 
     // Post-process to clean the autocomplete output
     func postProcess(_ output: String) -> String {
-        var cleaned = output.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Don't trim yet - we need to detect if there's a period at the end
+        var cleaned = output
 
         // Remove common prefixes that models add
         let prefixes = [
@@ -108,12 +115,57 @@ class AutocompleteService: AIService {
             }
         }
 
-        // Stop at double newlines (paragraph breaks)
-        if let doubleNewline = cleaned.range(of: "\n\n") {
-            cleaned = String(cleaned[..<doubleNewline.lowerBound])
+        // Allow single newlines in autocomplete (for natural continuation)
+        // Only stop at triple newlines (major paragraph breaks)
+        if let tripleNewline = cleaned.range(of: "\n\n\n") {
+            cleaned = String(cleaned[..<tripleNewline.lowerBound])
         }
 
-        return cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Trim only leading whitespace (don't trim trailing - we need it for sentence detection)
+        while cleaned.first?.isWhitespace == true || cleaned.first?.isNewline == true {
+            cleaned.removeFirst()
+        }
+
+        // Handle sentence completion:
+        // If the output doesn't end with sentence-ending punctuation, add a period
+        if !cleaned.isEmpty {
+            let lastChar = cleaned.last!
+            let hasSentenceEnd = lastChar == "." || lastChar == "!" || lastChar == "?"
+
+            if !hasSentenceEnd {
+                // Find the last complete sentence if output was truncated
+                // Look for the last period, question mark, or exclamation point
+                if let lastPeriod = cleaned.lastIndex(of: "."),
+                   lastPeriod != cleaned.index(before: cleaned.endIndex) {
+                    // There's a period in the middle - truncate to last complete sentence
+                    let afterPeriod = cleaned.index(after: lastPeriod)
+                    if afterPeriod < cleaned.endIndex {
+                        // Keep text up to and including the period
+                        cleaned = String(cleaned[..<afterPeriod])
+                    }
+                } else if let lastQuestion = cleaned.lastIndex(of: "?") {
+                    let afterQuestion = cleaned.index(after: lastQuestion)
+                    if afterQuestion < cleaned.endIndex {
+                        cleaned = String(cleaned[..<afterQuestion])
+                    }
+                } else if let lastExclamation = cleaned.lastIndex(of: "!") {
+                    let afterExclamation = cleaned.index(after: lastExclamation)
+                    if afterExclamation < cleaned.endIndex {
+                        cleaned = String(cleaned[..<afterExclamation])
+                    }
+                } else {
+                    // No sentence ending found - add a period to complete the sentence
+                    cleaned = cleaned + "."
+                }
+            }
+        }
+
+        // Finally, trim trailing whitespace (but we already trimmed leading)
+        while cleaned.last?.isWhitespace == true || cleaned.last?.isNewline == true {
+            cleaned.removeLast()
+        }
+
+        return cleaned
     }
 
     // MARK: - Autocomplete
