@@ -12,94 +12,138 @@
             box-sizing: border-box;
         }
 
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, sans-serif;
             line-height: 1.6;
-            color: #333;
-            background: #fafafa;
+            color: #e4e4e7;
+            background: #111111;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            scroll-behavior: smooth;
+        }
+
+        html {
+            scroll-behavior: smooth;
         }
 
         .container {
             max-width: 900px;
             margin: 0 auto;
-            padding: 40px 20px;
+            padding: 48px 24px;
+            animation: fadeIn 0.6s ease-out;
         }
 
         h1 {
-            font-size: 42px;
-            margin-bottom: 20px;
-            color: #222;
+            font-size: 48px;
+            margin-bottom: 16px;
+            color: #ffffff;
+            font-weight: 650;
+            letter-spacing: -0.03em;
+            animation: fadeInUp 0.8s ease-out;
         }
 
         h2 {
-            font-size: 28px;
-            margin: 40px 0 20px;
-            color: #222;
+            font-size: 32px;
+            margin: 56px 0 24px;
+            color: #ffffff;
+            font-weight: 650;
+            letter-spacing: -0.02em;
         }
 
         h3 {
-            font-size: 22px;
-            margin: 30px 0 15px;
-            color: #444;
+            font-size: 20px;
+            margin: 32px 0 16px;
+            color: #ffffff;
+            font-weight: 600;
+            letter-spacing: -0.01em;
         }
 
         p,
         li {
-            font-size: 18px;
-            line-height: 1.8;
-            color: #666;
+            font-size: 16px;
+            line-height: 1.7;
+            color: #a1a1aa;
         }
 
         .download-box {
-            background: white;
-            padding: 40px;
-            border-radius: 16px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            background: #1a1a1a;
+            padding: 48px 40px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             text-align: center;
-            margin: 40px 0;
+            margin: 48px 0;
+            animation: fadeInUp 0.8s ease-out 0.1s backwards;
         }
 
         .btn {
             display: inline-block;
-            padding: 16px 40px;
-            background: #007AFF;
-            color: white;
+            padding: 14px 32px;
+            background: rgba(56, 189, 248, 0.15);
+            color: #ffffff;
             text-decoration: none;
-            border-radius: 12px;
-            font-size: 20px;
-            font-weight: 600;
-            transition: all 0.3s;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             margin: 10px;
+            border: 1px solid rgba(56, 189, 248, 0.5);
         }
 
         .btn:hover {
-            background: #0056b3;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 122, 255, 0.3);
+            background: rgba(56, 189, 248, 0.25);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+            border-color: rgba(56, 189, 248, 0.7);
         }
 
         .checksum {
-            background: #f8f9fa;
+            background: #1e1e1e;
             padding: 20px;
             border-radius: 8px;
-            font-family: 'Monaco', 'Courier New', monospace;
-            font-size: 14px;
-            color: #666;
+            font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            color: #a1a1aa;
             margin: 20px 0;
             word-break: break-all;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .steps {
-            background: white;
+            background: #1a1a1a;
             padding: 40px;
-            border-radius: 16px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-            margin: 40px 0;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin: 48px 0;
+            animation: fadeInUp 0.8s ease-out 0.2s backwards;
         }
 
         .step {
-            margin: 30px 0;
-            padding-left: 40px;
+            margin: 32px 0;
+            padding-left: 44px;
             position: relative;
         }
 
@@ -108,60 +152,218 @@
             position: absolute;
             left: 0;
             top: 0;
-            width: 30px;
-            height: 30px;
-            background: #007AFF;
-            color: white;
+            width: 32px;
+            height: 32px;
+            background: #ffffff;
+            color: #0a0a0a;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
+            font-weight: 600;
+            font-size: 14px;
         }
 
         .warning {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 20px;
+            background: rgba(245, 166, 35, 0.08);
+            border-left: 3px solid #f5a623;
+            padding: 20px 24px;
             border-radius: 8px;
-            margin: 30px 0;
+            margin: 32px 0;
         }
 
         .info {
-            background: #d1ecf1;
-            border-left: 4px solid #17a2b8;
-            padding: 20px;
+            background: rgba(56, 189, 248, 0.08);
+            border-left: 3px solid #38bdf8;
+            padding: 20px 24px;
             border-radius: 8px;
-            margin: 30px 0;
+            margin: 32px 0;
         }
 
         code {
-            background: #f8f9fa;
+            background: #1e1e1e;
             padding: 3px 8px;
             border-radius: 4px;
-            font-family: 'Monaco', 'Courier New', monospace;
-            font-size: 16px;
+            font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            color: #e4e4e7;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         ul {
             margin: 20px 0;
-            padding-left: 30px;
+            padding-left: 0;
+            list-style: none;
         }
 
-        li {
-            margin: 10px 0;
+        ul li {
+            margin: 12px 0;
+            padding-left: 32px;
+            position: relative;
+            padding-top: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        ul li:last-child {
+            border-bottom: none;
+        }
+
+        ul li::before {
+            content: "✓";
+            position: absolute;
+            left: 8px;
+            color: #34C759;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        ol {
+            margin: 20px 0;
+            padding-left: 24px;
+        }
+
+        ol li {
+            margin: 12px 0;
         }
 
         .back-link {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
             margin: 20px 0;
-            color: #007AFF;
+            color: #a1a1aa;
             text-decoration: none;
-            font-weight: 600;
+            font-weight: 500;
+            font-size: 15px;
+            transition: color 0.2s ease;
         }
 
         .back-link:hover {
-            text-decoration: underline;
+            color: #ffffff;
+        }
+
+        /* Accent highlights */
+        .highlight {
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            background: transparent;
+            color: inherit;
+            font-weight: inherit;
+            white-space: nowrap;
+        }
+
+        .file-size {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(56, 189, 248, 0.05);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            border-radius: 8px;
+            color: #a1a1aa;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .file-size:hover {
+            border-color: rgba(56, 189, 248, 0.4);
+            background: rgba(56, 189, 248, 0.08);
+        }
+
+        .file-size::before {
+            content: "📦";
+            font-size: 16px;
+        }
+
+        .file-size strong {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .pricing-inline {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin: 32px 0;
+            flex-wrap: wrap;
+        }
+
+        .pricing-box {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px 16px;
+            text-align: center;
+            flex: 0 1 180px;
+            max-width: 180px;
+            background: #1e1e1e;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .pricing-box:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.15);
+            border-color: rgba(56, 189, 248, 0.3);
+        }
+
+        .pricing-box.featured {
+            border: 2px solid rgba(56, 189, 248, 0.5);
+            position: relative;
+        }
+
+        .pricing-box.featured::before {
+            content: "BEST VALUE";
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(56, 189, 248, 0.9);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+
+        .pricing-box h3 {
+            margin: 0 0 12px 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .pricing-box .price {
+            font-size: 32px;
+            font-weight: 650;
+            color: #ffffff;
+            margin: 8px 0;
+            letter-spacing: -0.02em;
+        }
+
+        .pricing-box .period {
+            color: #a1a1aa;
+            margin-bottom: 16px;
+            font-size: 13px;
+        }
+
+        .pricing-box .btn {
+            padding: 10px 20px;
+            font-size: 14px;
+            margin: 0;
+            width: 100%;
+        }
+
+        .pricing-box.featured .btn {
+            background: rgba(56, 189, 248, 0.2);
+            border-color: rgba(56, 189, 248, 0.6);
+        }
+
+        .pricing-box.featured .btn:hover {
+            background: rgba(56, 189, 248, 0.3);
+            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.4);
+            border-color: rgba(56, 189, 248, 0.8);
         }
     </style>
 </head>
@@ -171,18 +373,20 @@
         <a href="index.html" class="back-link">← Back to Home</a>
 
         <h1>Download & Install OffNotes</h1>
-        <p>Get started with private, offline AI note-taking in minutes.</p>
+        <p style="animation: fadeInUp 0.8s ease-out 0.1s backwards;">Get started with private, offline AI note-taking in
+            minutes.</p>
 
         <!-- Download Section -->
         <div class="download-box">
-            <h2 style="margin-top: 0;">Latest Version: v1.0.0</h2>
-            <p style="margin-bottom: 30px;">macOS 13.0+ • Apple Silicon Optimized</p>
+            <h2 style="margin-top: 0;">Latest Version: <span class="highlight">v1.0.0</span></h2>
+            <p style="margin-bottom: 30px;"><span class="highlight">macOS 13.0+</span> • <span class="highlight">Apple
+                    Silicon</span> Optimized</p>
             <a href="https://github.com/YOUR_USERNAME/offnotes/releases/latest/download/OffNotes.dmg" class="btn">
                 Download OffNotes.dmg
             </a>
-            <p style="margin-top: 20px; font-size: 14px; color: #999;">
-                Size: ~800 MB (includes TinyLlama model)
-            </p>
+            <div class="file-size" style="margin: 20px auto 0; width: fit-content;">
+                <span>Download size: <strong>~800 MB</strong> (includes TinyLlama model)</span>
+            </div>
         </div>
 
         <!-- Installation Steps -->
@@ -227,39 +431,30 @@
             <h2>Upgrade to Pro</h2>
             <p>Want access to open-source features? Choose your plan:</p>
 
-            <div style="display: flex; justify-content: center; gap: 16px; margin: 30px 0; flex-wrap: wrap;">
-                <div
-                    style="border: 2px solid #ddd; border-radius: 10px; padding: 18px 14px; text-align: center; flex: 0 1 180px; max-width: 180px;">
-                    <h3 style="margin: 0 0 8px 0; font-size: 18px;">Monthly</h3>
-                    <div style="font-size: 1.8em; font-weight: bold; color: #007AFF; margin: 8px 0;">$1</div>
-                    <div style="color: #666; margin-bottom: 12px; font-size: 14px;">/month</div>
-                    <a href="https://offnotes.lemonsqueezy.com/checkout" class="btn"
-                        style="padding: 10px 20px; font-size: 16px; margin: 0;">
+            <div class="pricing-inline">
+                <div class="pricing-box">
+                    <h3>Monthly</h3>
+                    <div class="price">$1</div>
+                    <div class="period">/month</div>
+                    <a href="https://offnotes.lemonsqueezy.com/checkout" class="btn">
                         Subscribe
                     </a>
                 </div>
 
-                <div
-                    style="border: 3px solid #34C759; border-radius: 10px; padding: 18px 14px; text-align: center; position: relative; flex: 0 1 180px; max-width: 180px;">
-                    <div
-                        style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #34C759; color: white; padding: 4px 10px; border-radius: 10px; font-size: 11px; font-weight: bold;">
-                        BEST VALUE</div>
-                    <h3 style="margin: 0 0 8px 0; font-size: 18px;">Annual</h3>
-                    <div style="font-size: 1.8em; font-weight: bold; color: #007AFF; margin: 8px 0;">$10</div>
-                    <div style="color: #666; margin-bottom: 12px; font-size: 14px;">/year</div>
-                    <a href="https://offnotes.lemonsqueezy.com/checkout" class="btn"
-                        style="background: #34C759; padding: 10px 20px; font-size: 16px; margin: 0;">
+                <div class="pricing-box featured">
+                    <h3>Annual</h3>
+                    <div class="price">$10</div>
+                    <div class="period">/year</div>
+                    <a href="https://offnotes.lemonsqueezy.com/checkout" class="btn">
                         Subscribe
                     </a>
                 </div>
 
-                <div
-                    style="border: 2px solid #ddd; border-radius: 10px; padding: 18px 14px; text-align: center; flex: 0 1 180px; max-width: 180px;">
-                    <h3 style="margin: 0 0 8px 0; font-size: 18px;">Lifetime</h3>
-                    <div style="font-size: 1.8em; font-weight: bold; color: #007AFF; margin: 8px 0;">$30</div>
-                    <div style="color: #666; margin-bottom: 12px; font-size: 14px;">one-time</div>
-                    <a href="https://offnotes.lemonsqueezy.com/checkout" class="btn"
-                        style="padding: 10px 20px; font-size: 16px; margin: 0;">
+                <div class="pricing-box">
+                    <h3>Lifetime</h3>
+                    <div class="price">$30</div>
+                    <div class="period">one-time</div>
+                    <a href="https://offnotes.lemonsqueezy.com/checkout" class="btn">
                         Buy Once
                     </a>
                 </div>
@@ -292,9 +487,10 @@
         <div class="steps">
             <h2>System Requirements</h2>
             <ul>
-                <li><strong>Operating System:</strong> macOS 13.0 (Ventura) or later</li>
-                <li><strong>Processor:</strong> Apple Silicon (M1/M2/M3/M4) recommended for best performance</li>
-                <li><strong>Memory:</strong> 4 GB RAM minimum, 8 GB+ recommended</li>
+                <li><strong>Operating System:</strong> <span class="highlight">macOS 13.0</span> (Ventura) or later</li>
+                <li><strong>Processor:</strong> <span class="highlight">Apple Silicon</span> (M1/M2/M3/M4) recommended
+                    for best performance</li>
+                <li><strong>Memory:</strong> 4 GB RAM minimum, <span class="highlight">8 GB+</span> recommended</li>
                 <li><strong>Storage:</strong> 1 GB for app + TinyLlama model
                     <ul>
                         <li>Open-Source models: 0.7-2.3 GB each (optional)</li>
@@ -342,10 +538,10 @@
         <div class="steps">
             <h2>Privacy</h2>
             <ul>
-                <li><strong>100% Offline:</strong> All AI processing happens locally on your Mac</li>
-                <li><strong>No Cloud Sync:</strong> Notes are stored only on your device</li>
-                <li><strong>No Analytics:</strong> We don't collect usage data or telemetry</li>
-                <li><strong>No Account Required:</strong> No sign-up, no tracking</li>
+                <li><span class="highlight">100% Offline</span>: All AI processing happens locally on your Mac</li>
+                <li><span class="highlight">No Cloud Sync</span>: Notes are stored only on your device</li>
+                <li><span class="highlight">No Analytics</span>: We don't collect usage data or telemetry</li>
+                <li><span class="highlight">No Account</span> Required: No sign-up, no tracking</li>
             </ul>
         </div>
 

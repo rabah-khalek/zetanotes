@@ -15,27 +15,71 @@
             box-sizing: border-box;
         }
 
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes gradientShift {
+
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             line-height: 1.6;
-            color: #1a1a1a;
-            background: #ffffff;
+            color: #e4e4e7;
+            background: #0a0a0a;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            scroll-behavior: smooth;
+        }
+
+        html {
+            scroll-behavior: smooth;
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 0 20px;
+            padding: 0 24px;
         }
 
         /* Header */
         header {
-            background: white;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            padding: 20px 0;
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 16px 0;
             position: sticky;
             top: 0;
             z-index: 100;
+            animation: fadeIn 0.6s ease-out;
         }
 
         .header-content {
@@ -45,33 +89,115 @@
         }
 
         .logo {
-            font-size: 24px;
-            font-weight: 700;
-            color: #2d3748;
+            font-size: 20px;
+            font-weight: 600;
+            color: #ffffff;
+            letter-spacing: -0.02em;
         }
 
         .nav-links {
             display: flex;
-            gap: 30px;
+            gap: 32px;
             list-style: none;
         }
 
         .nav-links a {
             text-decoration: none;
-            color: #4a5568;
+            color: #a1a1aa;
             font-weight: 500;
-            transition: color 0.3s;
+            font-size: 15px;
+            transition: color 0.2s ease;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #ffffff;
+            transition: width 0.2s ease;
         }
 
         .nav-links a:hover {
-            color: #2d3748;
+            color: #ffffff;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        /* Accent highlights */
+        .highlight {
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            background: transparent;
+            color: inherit;
+            font-weight: inherit;
+            white-space: nowrap;
+        }
+
+        .file-size {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 30px;
+            padding: 8px 16px;
+            background: rgba(56, 189, 248, 0.05);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            border-radius: 8px;
+            color: #a1a1aa;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .file-size:hover {
+            border-color: rgba(56, 189, 248, 0.4);
+            background: rgba(56, 189, 248, 0.08);
+        }
+
+        .file-size::before {
+            content: "📦";
+            font-size: 16px;
+        }
+
+        .file-size strong {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        /* Demo iframe container */
+        .demo-container {
+            max-width: 900px;
+            margin: 0 auto 32px;
+            padding: 0 20px;
+            animation: fadeInUp 0.8s ease-out 0.2s backwards;
+        }
+
+        .demo-frame {
+            width: 100%;
+            height: 450px;
+            border-radius: 12px;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            background: #1a1a1a;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(56, 189, 248, 0.1);
+        }
+
+        .demo-frame iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
         }
 
         /* Hero Section */
         .hero {
-            padding: 120px 0;
+            padding: 100px 0 80px;
             text-align: center;
-            background: linear-gradient(135deg, #1a202c 0%, #2d3748 50%, #4a5568 100%);
+            background: #0a0a0a;
             color: white;
             position: relative;
             overflow: hidden;
@@ -85,8 +211,23 @@
             right: 0;
             bottom: 0;
             background:
-                radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.1) 0%, transparent 50%);
+                radial-gradient(circle at 20% 30%, rgba(56, 189, 248, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(14, 165, 233, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.08) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            right: -50%;
+            bottom: -50%;
+            background:
+                linear-gradient(90deg, transparent 0%, rgba(56, 189, 248, 0.03) 50%, transparent 100%),
+                linear-gradient(0deg, transparent 0%, rgba(14, 165, 233, 0.03) 50%, transparent 100%);
+            animation: gradientShift 15s ease infinite;
             pointer-events: none;
         }
 
@@ -96,93 +237,146 @@
         }
 
         .hero h1 {
-            font-size: 56px;
-            font-weight: 800;
+            font-size: 64px;
+            font-weight: 650;
             margin-bottom: 20px;
-            line-height: 1.2;
+            line-height: 1.1;
+            letter-spacing: -0.04em;
+            animation: fadeInUp 0.8s ease-out;
         }
 
         .hero .subtitle {
-            font-size: 24px;
-            margin-bottom: 40px;
-            opacity: 0.95;
+            font-size: 20px;
+            margin-bottom: 32px;
+            opacity: 0.85;
             font-weight: 400;
+            letter-spacing: -0.01em;
+            color: rgba(255, 255, 255, 0.9);
+            animation: fadeInUp 0.8s ease-out 0.1s backwards;
         }
 
         .cta-buttons {
             display: flex;
-            gap: 20px;
+            gap: 16px;
             justify-content: center;
             flex-wrap: wrap;
+            animation: fadeInUp 0.8s ease-out 0.2s backwards;
         }
 
         .btn {
-            padding: 14px 28px;
-            font-size: 16px;
-            font-weight: 600;
-            border-radius: 12px;
+            padding: 12px 24px;
+            font-size: 15px;
+            font-weight: 500;
+            border-radius: 8px;
             text-decoration: none;
-            display: inline-block;
-            transition: all 0.3s;
-            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(56, 189, 248, 0.5);
             cursor: pointer;
             margin-top: auto;
+            background: rgba(56, 189, 248, 0.15);
+            color: #ffffff;
         }
 
         .btn-primary {
-            background: white;
-            color: #1a202c;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+            background: rgba(56, 189, 248, 0.15);
+            color: #ffffff;
+            border: 1px solid rgba(56, 189, 248, 0.5);
         }
 
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            transform: translateY(-1px);
+            background: rgba(56, 189, 248, 0.25);
+            border-color: rgba(56, 189, 248, 0.7);
+            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
         }
 
         .btn-secondary {
-            background: transparent;
+            background: rgba(56, 189, 248, 0.15);
             color: white;
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(56, 189, 248, 0.5);
         }
 
         .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.5);
+            background: rgba(56, 189, 248, 0.25);
+            border-color: rgba(56, 189, 248, 0.7);
+            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
         }
 
         /* Features Section */
         .features {
-            padding: 100px 0;
-            background: #f7fafc;
+            padding: 80px 0;
+            background: #111111;
         }
 
         .section-title {
             text-align: center;
-            font-size: 42px;
-            font-weight: 700;
-            margin-bottom: 60px;
-            color: #1a202c;
+            font-size: 48px;
+            font-weight: 650;
+            margin-bottom: 56px;
+            color: #ffffff;
+            letter-spacing: -0.03em;
+            animation: fadeInUp 0.8s ease-out;
         }
 
         .features-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 40px;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
         }
 
         .feature-card {
-            padding: 40px 30px;
-            border-radius: 16px;
-            background: white;
-            transition: transform 0.3s, box-shadow 0.3s;
-            border: 1px solid #e2e8f0;
+            padding: 32px 28px;
+            border-radius: 12px;
+            background: #1a1a1a;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: fadeInUp 0.6s ease-out backwards;
+        }
+
+        .feature-card:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .feature-card:nth-child(2) {
+            animation-delay: 0.15s;
+        }
+
+        .feature-card:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+
+        .feature-card:nth-child(4) {
+            animation-delay: 0.25s;
+        }
+
+        .feature-card:nth-child(5) {
+            animation-delay: 0.3s;
+        }
+
+        .feature-card:nth-child(6) {
+            animation-delay: 0.35s;
+        }
+
+        .feature-card:nth-child(7) {
+            animation-delay: 0.4s;
+        }
+
+        .feature-card:nth-child(8) {
+            animation-delay: 0.45s;
+        }
+
+        .feature-card:nth-child(9) {
+            animation-delay: 0.5s;
         }
 
         .feature-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
-            border-color: #cbd5e0;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(56, 189, 248, 0.12);
+            border-color: rgba(56, 189, 248, 0.3);
+            background: #1e1e1e;
         }
 
         .feature-icon {
@@ -191,98 +385,128 @@
         }
 
         .feature-card h3 {
-            font-size: 24px;
+            font-size: 18px;
             margin-bottom: 12px;
-            color: #2d3748;
+            color: #ffffff;
             text-align: center;
+            font-weight: 600;
+            letter-spacing: -0.01em;
         }
 
         .feature-card p {
-            color: #4a5568;
-            line-height: 1.7;
+            color: #a1a1aa;
+            line-height: 1.6;
+            font-size: 15px;
+        }
+
+        .feature-card strong {
+            color: #ffffff;
+            font-weight: 400;
         }
 
         /* Pricing Section */
         .pricing {
-            padding: 100px 0;
-            background: white;
+            padding: 80px 0;
+            background: #0a0a0a;
         }
 
         .pricing-cards {
             display: flex;
             justify-content: center;
             align-items: stretch;
-            gap: 20px;
+            gap: 16px;
             max-width: 960px;
             margin: 0 auto;
             flex-wrap: wrap;
         }
 
         .pricing-card {
-            background: white;
-            border-radius: 16px;
-            padding: 30px 20px;
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: 32px 20px;
             text-align: center;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            border: 2px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             position: relative;
-            transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             flex-direction: column;
             flex: 0 1 220px;
             max-width: 220px;
+            animation: fadeInUp 0.6s ease-out backwards;
+        }
+
+        .pricing-card:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .pricing-card:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .pricing-card:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        .pricing-card:nth-child(4) {
+            animation-delay: 0.4s;
         }
 
         .pricing-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
-            border-color: #cbd5e0;
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(56, 189, 248, 0.15);
+            border-color: rgba(56, 189, 248, 0.3);
+            background: #1e1e1e;
         }
 
         .pricing-card.featured {
-            border: 2px solid #2d3748;
-            background: linear-gradient(135deg, #f7fafc 0%, #ffffff 100%);
+            border: 1px solid rgba(56, 189, 248, 0.5);
+            background: #1e1e1e;
         }
 
         .pricing-card.featured:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 12px 40px rgba(45, 55, 72, 0.2);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(56, 189, 248, 0.25);
+            border-color: rgba(56, 189, 248, 0.7);
         }
 
         .plan-name {
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 10px;
-            color: #2d3748;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #ffffff;
+            letter-spacing: -0.01em;
         }
 
         .plan-price {
             font-size: 36px;
-            font-weight: 800;
-            color: #1a202c;
+            font-weight: 650;
+            color: #ffffff;
             margin-bottom: 10px;
+            letter-spacing: -0.02em;
         }
 
         .plan-price span {
-            font-size: 12px;
-            color: #718096;
+            font-size: 13px;
+            color: #a1a1aa;
             font-weight: 400;
         }
 
         .plan-features {
             list-style: none;
-            margin: 15px 0;
+            margin: 20px 0;
             text-align: left;
             flex: 1;
             font-size: 13px;
         }
 
         .plan-features li {
-            padding: 6px 0;
-            border-bottom: 1px solid #eee;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
+            color: #a1a1aa;
         }
 
         .plan-features li:last-child {
@@ -297,7 +521,7 @@
         }
 
         .cross-icon {
-            color: #ccc;
+            color: #52525b;
             font-size: 12px;
             flex-shrink: 0;
         }
@@ -307,85 +531,107 @@
             top: -12px;
             left: 50%;
             transform: translateX(-50%);
-            background: #2d3748;
+            background: rgba(56, 189, 248, 0.9);
             color: white;
             padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: bold;
-            letter-spacing: 0.5px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
         }
 
         /* Download Section */
         .download {
-            padding: 100px 0;
-            background: #f7fafc;
+            padding: 80px 0;
+            background: #111111;
             text-align: center;
         }
 
         .download-info {
             max-width: 700px;
-            margin: 0 auto 40px;
-            color: #4a5568;
-            font-size: 18px;
+            margin: 0 auto 32px;
+            color: #a1a1aa;
+            font-size: 17px;
+            line-height: 1.6;
         }
 
         .system-requirements {
-            background: white;
-            padding: 30px;
-            border-radius: 16px;
+            background: #1a1a1a;
+            padding: 36px;
+            border-radius: 12px;
             max-width: 600px;
             margin: 40px auto 0;
             text-align: left;
-            border: 1px solid #e2e8f0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: fadeInUp 0.8s ease-out 0.3s backwards;
         }
 
         .system-requirements h3 {
-            margin-bottom: 15px;
-            color: #2d3748;
+            margin-bottom: 20px;
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: -0.01em;
         }
 
         .system-requirements ul {
             list-style: none;
-            color: #4a5568;
+            color: #a1a1aa;
         }
 
         .system-requirements li {
-            padding: 8px 0;
-            padding-left: 25px;
+            padding: 12px 0;
+            padding-left: 32px;
             position: relative;
+            font-size: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .system-requirements li:last-child {
+            border-bottom: none;
         }
 
         .system-requirements li::before {
-            content: "•";
+            content: "✓";
             position: absolute;
-            left: 0;
-            color: #2d3748;
+            left: 8px;
+            color: #34C759;
             font-weight: bold;
+            font-size: 14px;
         }
 
         /* Footer */
         footer {
-            background: #1a202c;
-            color: #e2e8f0;
+            background: #0a0a0a;
+            color: #a1a1aa;
             padding: 40px 0;
             text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         footer a {
-            color: #cbd5e0;
+            color: #71717a;
             text-decoration: none;
-            transition: color 0.3s;
+            transition: color 0.2s ease;
         }
 
         footer a:hover {
             color: white;
         }
 
+        footer p {
+            font-size: 14px;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
+            .hero {
+                padding: 80px 0 60px;
+            }
+
             .hero h1 {
-                font-size: 36px;
+                font-size: 42px;
             }
 
             .hero .subtitle {
@@ -393,11 +639,20 @@
             }
 
             .nav-links {
-                gap: 15px;
+                gap: 20px;
             }
 
             .section-title {
-                font-size: 32px;
+                font-size: 36px;
+            }
+
+            .features {
+                padding: 60px 0;
+            }
+
+            .pricing,
+            .download {
+                padding: 60px 0;
             }
 
             .pricing-cards {
@@ -408,6 +663,10 @@
             .pricing-card {
                 max-width: 280px;
                 flex: 0 1 280px;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -434,10 +693,22 @@
     <section class="hero">
         <div class="container">
             <h1>Offline AI Note-Taking for Mac</h1>
-            <p class="subtitle">All processing happens locally on your device. No internet required.</p>
+            <p class="subtitle">AI that runs <span class="highlight">entirely offline</span>. Your notes never leave
+                your Mac.</p>
+
+            <!-- Demo/GIF Container -->
+            <div class="demo-container">
+                <div class="demo-frame">
+                    <!-- Replace src with your actual gif/video URL -->
+                    <iframe src="" title="OffNotes Demo" allowfullscreen></iframe>
+                    <!-- Alternative: For direct gif embed, uncomment below and remove iframe above -->
+                    <!-- <img src="your-demo.gif" alt="OffNotes Demo" style="width: 100%; height: 100%; object-fit: cover;"> -->
+                </div>
+            </div>
+
             <div class="cta-buttons">
                 <a href="#download" class="btn btn-primary">Download Free</a>
-                <a href="#pricing" class="btn btn-secondary">View Pricing</a>
+                <a href="#pricing" class="btn btn-primary">View Pricing</a>
             </div>
         </div>
     </section>
@@ -449,47 +720,54 @@
             <div class="features-grid">
                 <div class="feature-card">
                     <h3>Completely Offline</h3>
-                    <p>All AI processing runs <strong>locally on your Mac</strong>. No internet connection required.
+                    <p>All AI processing runs <span class="highlight">locally</span> on your Mac. No internet connection
+                        required.
                         Your notes stay on your device.</p>
                 </div>
                 <div class="feature-card">
                     <h3>Lightweight App</h3>
-                    <p>Native macOS application optimized for <strong>Apple Silicon</strong>. Minimal resource usage
+                    <p>Native macOS application optimized for <span class="highlight">Apple Silicon</span>. Minimal
+                        resource usage
                         with efficient memory management.</p>
                 </div>
                 <div class="feature-card">
                     <h3>Fast Performance</h3>
-                    <p><strong>Metal GPU acceleration</strong> provides quick AI responses. Instant search across all
+                    <p><span class="highlight">Metal GPU</span> acceleration provides quick AI responses. Instant search
+                        across all
                         notes with semantic understanding.</p>
                 </div>
                 <div class="feature-card">
                     <h3>Expandable</h3>
-                    <p>Create <strong>custom AI tools</strong> with your own prompts. Configure temperature, tokens, and
+                    <p>Create <span class="highlight">custom tools</span> with your own prompts. Configure temperature,
+                        tokens, and
                         stop sequences for each tool.</p>
                 </div>
                 <div class="feature-card">
                     <h3>Instant AI Support</h3>
-                    <p>Built-in <strong>autocomplete</strong>, text correction, rephrasing, summarization, and
+                    <p>Built-in <span class="highlight">autocomplete</span>, text correction, rephrasing, summarization,
+                        and
                         translation available in every note.</p>
                 </div>
                 <div class="feature-card">
                     <h3>Multiple Models</h3>
-                    <p>Choose from <strong>8 different language models</strong>. TinyLlama included by default, larger
+                    <p>Choose from <span class="highlight">8 models</span>. TinyLlama included by default, larger
                         models available for Pro users.</p>
                 </div>
                 <div class="feature-card">
                     <h3>Chat Interface</h3>
                     <p>Conversational AI assistant within the app. Ask questions, get help with writing, or brainstorm
-                        ideas with <strong>context-aware responses</strong>.</p>
+                        ideas with <span class="highlight">context-aware</span> responses.</p>
                 </div>
                 <div class="feature-card">
                     <h3>Persistent Storage</h3>
-                    <p><strong>Notes and AI conversations</strong> are automatically saved. Access your entire history
+                    <p>Notes and <span class="highlight">AI conversations</span> are automatically saved. Access your
+                        entire history
                         anytime with full-text and semantic search.</p>
                 </div>
                 <div class="feature-card">
                     <h3>Markdown Support</h3>
-                    <p>Write using <strong>Markdown syntax</strong> with live preview. Export notes to various formats
+                    <p>Write using <span class="highlight">Markdown syntax</span> with live preview. Export notes to
+                        various formats
                         while maintaining formatting.</p>
                 </div>
             </div>
@@ -531,7 +809,7 @@
                         <li><span class="check-icon">✓</span> Custom tools</li>
                         <li><span class="check-icon">✓</span> Edit prompts</li>
                     </ul>
-                    <a href="https://offnotes.lemonsqueezy.com/checkout" class="btn btn-secondary">Subscribe</a>
+                    <a href="https://offnotes.lemonsqueezy.com/checkout" class="btn btn-primary">Subscribe</a>
                 </div>
 
                 <!-- Annual Plan - Featured -->
@@ -563,10 +841,7 @@
                     </ul>
                     <a href="https://offnotes.lemonsqueezy.com/checkout" class="btn btn-primary">Buy Once</a>
                 </div>
-                </ul>
-                <a href="https://offnotes.lemonsqueezy.com/checkout" class="btn btn-secondary">Buy Now</a>
             </div>
-        </div>
         </div>
     </section>
 
@@ -575,23 +850,20 @@
         <div class="container">
             <h2 class="section-title">Download</h2>
             <p class="download-info">
-                Native macOS application optimized for Apple Silicon. Includes the TinyLlama model.
+                Native macOS application optimized for <span class="highlight">Apple Silicon</span>. Includes the
+                TinyLlama model.
             </p>
             <div class="cta-buttons">
                 <a href="download.html" class="btn btn-primary">
-                    Download OffNotes.dmg
+                    Download OffNotes.dmg (~800 MB)
                 </a>
             </div>
-
-            <p style="margin-top: 30px; color: #718096; font-size: 16px;">
-                Size: ~800 MB
-            </p>
 
             <div class="system-requirements">
                 <h3>System Requirements</h3>
                 <ul>
-                    <li>macOS 13.0 (Ventura) or later</li>
-                    <li>Apple Silicon (M1/M2/M3/M4) recommended</li>
+                    <li><span class="highlight">macOS 13.0</span> (Ventura) or later</li>
+                    <li><span class="highlight">Apple Silicon</span> (M1/M2/M3/M4) recommended</li>
                     <li>4 GB RAM minimum (8 GB+ recommended)</li>
                     <li>1 GB disk space (+ space for additional models)</li>
                 </ul>
@@ -609,7 +881,9 @@
                 <a href="mailto:support@offnotes.app">Support</a>
             </p>
             <p style="margin-top: 20px; font-size: 14px; opacity: 0.7;">
-                100% Offline • No Data Collection • No Tracking
+                <span class="highlight">100% Offline</span> •
+                <span class="highlight">No Data Collection</span> •
+                <span class="highlight">No Tracking</span>
             </p>
         </div>
     </footer>
