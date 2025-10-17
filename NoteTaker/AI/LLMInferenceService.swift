@@ -267,6 +267,7 @@ class LLMInferenceService: @unchecked Sendable {
                     contextParams.n_threads = ModelConfig.threads
                     contextParams.n_threads_batch = ModelConfig.threads
                     contextParams.embeddings = true // Enable embeddings extraction
+                    contextParams.pooling_type = LLAMA_POOLING_TYPE_MEAN // Use mean pooling for embeddings
 
                     // Create the context using the new API
                     guard let ctx = llama_init_from_model(loadedModel, contextParams) else {
@@ -583,18 +584,26 @@ class LLMInferenceService: @unchecked Sendable {
                     print("❌ Failed to decode for embeddings")
                     continuation.resume(returning: nil)
                     return
-                }                // Get embeddings
+                }
+
+                // Get embeddings using sequence-level extraction (works with mean pooling)
                 let embeddingSize = llama_model_n_embd(mdl)
-                guard let embeddingsPtr = llama_get_embeddings(ctx) else {
+                guard let embeddingsPtr = llama_get_embeddings_seq(ctx, 0) else {
                     print("❌ Failed to get embeddings")
                     continuation.resume(returning: nil)
                     return
                 }
 
                 // Convert to Swift array
-                let embedding = Array(UnsafeBufferPointer(start: embeddingsPtr, count: Int(embeddingSize)))
+                var embedding = Array(UnsafeBufferPointer(start: embeddingsPtr, count: Int(embeddingSize)))
 
-                print("✅ Generated embedding with \(embedding.count) dimensions")
+                // Normalize embeddings (L2 normalization)
+                let magnitude = sqrt(embedding.map { $0 * $0 }.reduce(0, +))
+                if magnitude > 0 {
+                    embedding = embedding.map { $0 / magnitude }
+                }
+
+                print("✅ Generated embedding with \(embedding.count) dimensions (normalized)")
                 continuation.resume(returning: embedding)
             }
         }

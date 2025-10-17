@@ -93,6 +93,8 @@ struct SimpleTextEditor: NSViewRepresentable {
     var onTabPressed: (() -> Void)?
     var onEscapePressed: (() -> Void)?
     var onRightArrowPressed: (() -> Void)?
+    var searchQuery: String?  // Search query for highlighting
+    var semanticMatchText: String?  // Matched text for semantic search
 
     class Coordinator: NSObject, NSTextViewDelegate {
         var parent: SimpleTextEditor
@@ -182,6 +184,45 @@ struct SimpleTextEditor: NSViewRepresentable {
         textView.onTabPressed = onTabPressed
         textView.onEscapePressed = onEscapePressed
         textView.onRightArrowPressed = onRightArrowPressed
+
+        // Apply search highlighting if needed
+        if let matchText = semanticMatchText, !matchText.isEmpty {
+            // Semantic result: highlight the matched text
+            highlightSearchResults(in: textView, query: matchText)
+        } else if let searchQuery = searchQuery, !searchQuery.isEmpty {
+            // Keyword: highlight search query as you type
+            highlightSearchResults(in: textView, query: searchQuery)
+        } else {
+            // Clear highlighting
+            clearHighlighting(in: textView)
+        }
+    }
+
+    private func highlightSearchResults(in textView: NSTextView, query: String) {
+        guard let textStorage = textView.textStorage else { return }
+
+        let text = textStorage.string
+        let searchRange = NSRange(location: 0, length: text.utf16.count)
+
+        // First, remove any existing background colors
+        textStorage.removeAttribute(.backgroundColor, range: searchRange)
+
+        // Find all matches
+        let searchOptions: NSString.CompareOptions = .caseInsensitive
+        var searchStart = text.startIndex
+
+        while searchStart < text.endIndex,
+              let range = text.range(of: query, options: searchOptions, range: searchStart..<text.endIndex) {
+            let nsRange = NSRange(range, in: text)
+            textStorage.addAttribute(.backgroundColor, value: NSColor.systemYellow.withAlphaComponent(0.4), range: nsRange)
+            searchStart = range.upperBound
+        }
+    }
+
+    private func clearHighlighting(in textView: NSTextView) {
+        guard let textStorage = textView.textStorage else { return }
+        let range = NSRange(location: 0, length: textStorage.length)
+        textStorage.removeAttribute(.backgroundColor, range: range)
     }
 }
 
@@ -191,6 +232,11 @@ struct NoteEditorView: View {
     @ObservedObject var viewModel: NoteViewModel
     @ObservedObject var aiEngine: AIEngine
     var note: Note
+
+    // Search parameters
+    @Binding var searchQuery: String
+    var isSearching: Bool
+    @Binding var semanticMatchText: String
 
     @State private var title: String = ""
     @State private var content: String = ""
@@ -233,27 +279,34 @@ struct NoteEditorView: View {
 
                 // Markdown Preview Toggle - RIGHT SIDE
                 Button(action: {
-                    withAnimation(.easeInOut(duration: 0.2)) {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                         showMarkdownPreview.toggle()
                     }
                 }) {
                     HStack(spacing: 4) {
-                        Image(systemName: showMarkdownPreview ? "doc.plaintext" : "doc.richtext")
-                            .font(.system(size: 13))
+                        Image(systemName: showMarkdownPreview ? "pencil" : "eye")
+                            .font(.system(size: 11))
                         Text(showMarkdownPreview ? "Edit" : "Preview")
-                            .font(.system(size: 12, weight: .medium))
+                            .font(.system(size: 11, weight: .medium))
                     }
-                    .foregroundColor(showMarkdownPreview ? .blue : .secondary)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(showMarkdownPreview ? Color.blue.opacity(0.1) : Color.clear)
-                    .cornerRadius(6)
+                    .foregroundColor(showMarkdownPreview ? .orange : .blue)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill((showMarkdownPreview ? Color.orange : Color.blue).opacity(0.08))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 4)
+                                    .strokeBorder((showMarkdownPreview ? Color.orange : Color.blue).opacity(0.2), lineWidth: 0.5)
+                            )
+                    )
+                    .animation(.spring(response: 0.3, dampingFraction: 0.7), value: showMarkdownPreview)
                 }
                 .buttonStyle(.plain)
                 .help(showMarkdownPreview ? "Switch to edit mode" : "Preview Markdown formatting")
             }
             .padding(.horizontal, 24)
-            .padding(.top, 24)
+            .padding(.top, isSearching ? 70 : 24) // Extra space when search bar is showing
             .padding(.bottom, 12)
 
             // Content Editor or Markdown Preview
@@ -312,7 +365,9 @@ struct NoteEditorView: View {
                         if viewModel.autocompleteSuggestion != nil {
                             acceptOneWord()
                         }
-                    }
+                    },
+                    searchQuery: isSearching ? searchQuery : nil,
+                    semanticMatchText: isSearching ? semanticMatchText : nil
                 )
                 .frame(minHeight: 200)
                 .padding(.horizontal, 16)

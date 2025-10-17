@@ -35,7 +35,7 @@ struct ToolButton: View {
                 }
                 .foregroundColor(foregroundColor)
                 .padding(.horizontal, 3)
-                .padding(.vertical, 2)
+                .padding(.vertical, 1)
                 .background(
                     RoundedRectangle(cornerRadius: 3)
                         .strokeBorder(foregroundColor.opacity(0.4), lineWidth: 0.5)

@@ -1,0 +1,19 @@
+#!/bin/zsh
+
+# Clean, build, and run NoteTaker
+# This script will clean the project, build it, and then run the built application
+
+set -e
+
+echo "Cleaning project..."
+xcodebuild -project NoteTaker.xcodeproj -scheme NoteTaker clean
+
+echo "Building project..."
+xcodebuild -project NoteTaker.xcodeproj -scheme NoteTaker build
+
+echo "Running NoteTaker..."
+cd /Users/projects/Library/Developer/Xcode/DerivedData/NoteTaker-*/Build/Products/Debug
+./NoteTaker.app/Contents/MacOS/NoteTaker 2>&1
+
+# Return to project root
+cd /Users/projects/Documents/notetaker

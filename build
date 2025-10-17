@@ -1,0 +1,6 @@
+#!/bin/zsh
+
+# Build NoteTaker and show summary of errors/warnings
+# This script builds the project and filters output to show only errors, warnings, and build status
+
+xcodebuild -project NoteTaker.xcodeproj -scheme NoteTaker build 2>&1 | grep -E "(error:|warning:|BUILD SUCCEEDED|BUILD FAILED)" | head -20

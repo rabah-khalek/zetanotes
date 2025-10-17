@@ -16,26 +16,43 @@ struct StatusFooterView: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            // Left side: Word and Character count
-            HStack(spacing: 6) {
-                Text("\(wordCount)w")
-                    .font(.system(size: 10, weight: .medium, design: .monospaced))
-                    .foregroundColor(.secondary)
-
-                Text("•")
-                    .font(.system(size: 8))
-                    .foregroundColor(.secondary.opacity(0.5))
-
-                Text("\(characterCount)c")
-                    .font(.system(size: 10, weight: .medium, design: .monospaced))
-                    .foregroundColor(.secondary)
-            }
-            .padding(.horizontal, 12)
-            .opacity(wordCount > 0 || characterCount > 0 ? 1.0 : 0.0)
-
             Spacer()
 
             HStack(alignment: .center, spacing: 8) {
+                // Word and Character count badge (blue)
+                HStack(spacing: 6) {
+                    Image(systemName: "doc.text")
+                        .font(.system(size: 9))
+                        .foregroundColor(.blue)
+
+                    Text("\(wordCount)w")
+                        .font(.system(size: 10, weight: .medium, design: .monospaced))
+                        .foregroundColor(.primary)
+
+                    Text("•")
+                        .font(.system(size: 8))
+                        .foregroundColor(.secondary.opacity(0.5))
+
+                    Text("\(characterCount)c")
+                        .font(.system(size: 10, weight: .medium, design: .monospaced))
+                        .foregroundColor(.primary)
+                }
+                .padding(.horizontal, 7)
+                .padding(.vertical, 4)
+                .background(
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.blue.opacity(0.08))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 4)
+                                .strokeBorder(Color.blue.opacity(0.2), lineWidth: 0.5)
+                        )
+                )
+                .help("\(wordCount) words, \(characterCount) characters")
+
+                Rectangle()
+                    .fill(Color.secondary.opacity(0.2))
+                    .frame(width: 1, height: 14)
+
                 // Active AI Model
                 if !systemMonitor.activeModel.isEmpty {
                     HStack(spacing: 4) {

@@ -30,8 +30,8 @@
 		81DE4F792EA25B10006293FC /* AIToolButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F722EA25B10006293FC /* AIToolButton.swift */; };
 		81DE4F7A2EA25B10006293FC /* AutocompleteToggle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F732EA25B10006293FC /* AutocompleteToggle.swift */; };
 		81DE4F7B2EA25B10006293FC /* StatusFooterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F752EA25B10006293FC /* StatusFooterView.swift */; };
-		81DE4F7C2EA25B10006293FC /* ToolButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F762EA25B10006293FC /* ToolButton.swift */; };
-		81EFBE2E2E9B05C700F7E48B /* libllama.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 81EFBE282E9B05C700F7E48B /* libllama.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+	81DE4F7C2EA25B10006293FC /* ToolButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F762EA25B10006293FC /* ToolButton.swift */; };
+	81EFBE2E2E9B05C700F7E48B /* libllama.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 81EFBE282E9B05C700F7E48B /* libllama.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		81EFBE2F2E9B05C700F7E48B /* libggml-base.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 81EFBE292E9B05C700F7E48B /* libggml-base.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		81EFBE302E9B05C700F7E48B /* libggml-metal.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 81EFBE2A2E9B05C700F7E48B /* libggml-metal.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		81EFBE312E9B05C700F7E48B /* libggml-cpu.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 81EFBE2B2E9B05C700F7E48B /* libggml-cpu.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -106,8 +106,8 @@
 		81DE4F732EA25B10006293FC /* AutocompleteToggle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutocompleteToggle.swift; sourceTree = "<group>"; };
 		81DE4F742EA25B10006293FC /* EmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateView.swift; sourceTree = "<group>"; };
 		81DE4F752EA25B10006293FC /* StatusFooterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusFooterView.swift; sourceTree = "<group>"; };
-		81DE4F762EA25B10006293FC /* ToolButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolButton.swift; sourceTree = "<group>"; };
-		81EFBE282E9B05C700F7E48B /* libllama.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libllama.dylib; path = llama.cpp/build/bin/libllama.dylib; sourceTree = "<group>"; };
+	81DE4F762EA25B10006293FC /* ToolButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolButton.swift; sourceTree = "<group>"; };
+	81EFBE282E9B05C700F7E48B /* libllama.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libllama.dylib; path = llama.cpp/build/bin/libllama.dylib; sourceTree = "<group>"; };
 		81EFBE292E9B05C700F7E48B /* libggml-base.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libggml-base.dylib"; path = "llama.cpp/build/bin/libggml-base.dylib"; sourceTree = "<group>"; };
 		81EFBE2A2E9B05C700F7E48B /* libggml-metal.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libggml-metal.dylib"; path = "llama.cpp/build/bin/libggml-metal.dylib"; sourceTree = "<group>"; };
 		81EFBE2B2E9B05C700F7E48B /* libggml-cpu.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libggml-cpu.dylib"; path = "llama.cpp/build/bin/libggml-cpu.dylib"; sourceTree = "<group>"; };
@@ -406,13 +406,12 @@
 				81111F5D2E9F348400D7317B /* AutoCorrectService.swift in Sources */,
 				81111F5E2E9F348400D7317B /* TitleGenerationService.swift in Sources */,
 				81111F5F2E9F348400D7317B /* TranslationService.swift in Sources */,
-				81DE4F6E2EA1CE1A006293FC /* AITool.swift in Sources */,
-				81DE4F6F2EA1CE1A006293FC /* ToolManager.swift in Sources */,
-				A1000023000000000000001 /* EmbeddingService.swift in Sources */,
-				A1000025000000000000001 /* SemanticSearchEngine.swift in Sources */,
-				A1000027000000000000001 /* AutocompleteService.swift in Sources */,
-				81DE4F672EA18C90006293FC /* NotesDataModel.xcdatamodeld in Sources */,
-				A1000029000000000000001 /* SummarizationService.swift in Sources */,
+			81DE4F6E2EA1CE1A006293FC /* AITool.swift in Sources */,
+			81DE4F6F2EA1CE1A006293FC /* ToolManager.swift in Sources */,
+			A1000023000000000000001 /* EmbeddingService.swift in Sources */,
+			A1000025000000000000001 /* SemanticSearchEngine.swift in Sources */,
+			A1000027000000000000001 /* AutocompleteService.swift in Sources */,
+			A1000029000000000000001 /* SummarizationService.swift in Sources */,
 				A1000031000000000000001 /* Note+Extensions.swift in Sources */,
 				81111F642EA0891A00D7317B /* InlineAutocompleteTextEditor.swift in Sources */,
 				81111F652EA0891A00D7317B /* UpgradePromptView.swift in Sources */,
@@ -423,9 +422,9 @@
 				A1000065000000000000001 /* SystemMonitor.swift in Sources */,
 				A1000067000000000000001 /* SystemMonitorWidget.swift in Sources */,
 				81DE4F782EA25B10006293FC /* EmptyStateView.swift in Sources */,
-				81DE4F792EA25B10006293FC /* AIToolButton.swift in Sources */,
-				81DE4F7A2EA25B10006293FC /* AutocompleteToggle.swift in Sources */,
-				81DE4F7B2EA25B10006293FC /* StatusFooterView.swift in Sources */,
+			81DE4F792EA25B10006293FC /* AIToolButton.swift in Sources */,
+			81DE4F7A2EA25B10006293FC /* AutocompleteToggle.swift in Sources */,
+			81DE4F7B2EA25B10006293FC /* StatusFooterView.swift in Sources */,
 				81DE4F7C2EA25B10006293FC /* ToolButton.swift in Sources */,
 				A1000072000000000000001 /* SystemMonitorView.swift in Sources */,
 				A1000093000000000000001 /* Logger.swift in Sources */,
