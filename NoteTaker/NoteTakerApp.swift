@@ -22,6 +22,27 @@ struct NoteTakerApp: App {
     // Appearance preference
     @AppStorage("preferredAppearance") private var preferredAppearance: String = "light"
 
+    init() {
+        // Setup memory pressure monitoring
+        setupMemoryPressureHandler()
+
+        // Configure vector cache limits
+        NoteEmbedding.configureVectorCache()
+    }
+
+    private func setupMemoryPressureHandler() {
+        // Monitor memory warnings (macOS doesn't have UIApplication memory warnings,
+        // but we can handle this proactively)
+        NotificationCenter.default.addObserver(
+            forName: NSNotification.Name("MemoryWarning"),
+            object: nil,
+            queue: .main
+        ) { _ in
+            print("⚠️ Memory pressure detected, clearing caches...")
+            NoteEmbedding.clearVectorCache()
+        }
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()

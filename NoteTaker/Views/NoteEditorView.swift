@@ -329,7 +329,7 @@ struct NoteEditorView: View {
                         // Update both the state and note content
                         content = newValue
                         note.content = newValue
-                        viewModel.saveNote(note)
+                        viewModel.saveNoteDebounced(note)  // ✅ Use debounced save for typing
 
                         // Check if cursor is in base content (not in AI-generated sections)
                         if isInBaseContent(content: newValue, cursorPosition: cursorPosition) {
@@ -454,7 +454,7 @@ struct NoteEditorView: View {
 
             content = newContent
             note.content = newContent
-            viewModel.saveNote(note)
+            viewModel.saveNoteDebounced(note)  // ✅ Use debounced save
 
             // Request new autocomplete with updated text
             if aiEngine.isModelLoaded && shouldTriggerAutocomplete(text: newContent, cursorPosition: newCursorPos) {
@@ -501,7 +501,7 @@ struct NoteEditorView: View {
 
         content = newContent
         note.content = newContent
-        viewModel.saveNote(note)
+        viewModel.saveNoteDebounced(note)  // ✅ Use debounced save
 
         // Update the suggestion to remove the accepted word (original, not with added space)
         viewModel.acceptPartialAutocomplete(oneWord)

@@ -83,6 +83,16 @@ struct ContentView: View {
             // Start system monitoring for CPU/GPU usage
             systemMonitor.startMonitoring()
             systemMonitor.setActiveModel(aiEngine.selectedModel.displayName)
+
+            // Register for app termination notification to flush saves
+            NotificationCenter.default.addObserver(
+                forName: NSApplication.willTerminateNotification,
+                object: nil,
+                queue: .main
+            ) { _ in
+                print("💾 App terminating, flushing pending saves...")
+                viewModel.flushPendingSaves()
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: .showUpgradePrompt)) { notification in
             if let type = notification.object as? UpgradePromptView.PromptType {
@@ -98,6 +108,8 @@ struct ContentView: View {
         }
         .onDisappear {
             systemMonitor.stopMonitoring()
+            // Flush any pending saves when view disappears
+            viewModel.flushPendingSaves()
         }
         .onChange(of: viewModel.searchQuery) { newQuery in
             // Clear semantic match highlighting when search is cleared

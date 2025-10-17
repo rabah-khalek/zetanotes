@@ -239,6 +239,9 @@ class SemanticSearchEngine {
     /// Updates the embedding for a specific note
     /// - Parameter note: The note to reindex
     func reindexNote(_ note: Note) async {
+        // Invalidate cache since note content changed
+        invalidateCache()
+
         let context = persistenceController.newBackgroundContext()
 
         // Get the note in the background context

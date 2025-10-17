@@ -94,6 +94,38 @@ extension Note {
             title = trimmed
         }
     }
+
+    // MARK: - Content Validation
+
+    /// Maximum content length (1MB of text ≈ 500K words)
+    static let maxContentLength = 1_000_000
+
+    /// Maximum title length
+    static let maxTitleLength = 500
+
+    /// Validates and truncates content/title if they exceed limits
+    /// Call this before saving to prevent extremely large notes
+    func validateAndTruncate() {
+        var didTruncate = false
+
+        // Validate content length
+        if let content = content, content.count > Self.maxContentLength {
+            self.content = String(content.prefix(Self.maxContentLength))
+            didTruncate = true
+            print("⚠️ Content truncated to \(Self.maxContentLength) characters (\(Self.maxContentLength / 1000)KB)")
+        }
+
+        // Validate title length
+        if let title = title, title.count > Self.maxTitleLength {
+            self.title = String(title.prefix(Self.maxTitleLength))
+            didTruncate = true
+            print("⚠️ Title truncated to \(Self.maxTitleLength) characters")
+        }
+
+        if didTruncate {
+            print("ℹ️ Note '\(displayTitle)' had content truncated for safety")
+        }
+    }
 }
 
 // MARK: - NoteEmbedding Extensions

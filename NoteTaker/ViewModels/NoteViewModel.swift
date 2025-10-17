@@ -20,9 +20,15 @@ class NoteViewModel: ObservableObject {
     @Published private(set) var searchItemResults: [NoteListItem] = []
     @Published private(set) var selectedNote: Note? {
         willSet {
-            // Save the current note before switching to a new one
+            // Save the current note before switching to a new one (immediate, not debounced)
             if let currentNote = selectedNote, newValue?.id != currentNote.id {
-                persistenceController.save()
+                // Flush any pending saves for this note
+                if let noteID = currentNote.id {
+                    saveDebounceTimers[noteID]?.invalidate()
+                    saveDebounceTimers.removeValue(forKey: noteID)
+                }
+                // Save immediately
+                saveNoteImmediately(currentNote)
                 print("💾 Saved note before switching: \(currentNote.displayTitle)")
             }
         }
@@ -70,6 +76,8 @@ class NoteViewModel: ObservableObject {
     private var noteCache: [UUID: Note] = [:]
     private var cancellables = Set<AnyCancellable>()
     private var debounceTimer: Timer?
+    private var saveDebounceTimers: [UUID: Timer] = [:]
+    private var lastEmbeddingContent: [UUID: String] = [:]
 
     // MARK: - Initialization
 
@@ -178,6 +186,32 @@ class NoteViewModel: ObservableObject {
     }
 
     func saveNote(_ note: Note) {
+        saveNoteImmediately(note)
+    }
+
+    /// Debounced save - waits 1 second after last change before saving
+    /// Use this for frequent operations like typing
+    func saveNoteDebounced(_ note: Note, delay: TimeInterval = 1.0) {
+        guard let noteID = note.id else {
+            saveNoteImmediately(note)
+            return
+        }
+
+        // Cancel existing timer for this note
+        saveDebounceTimers[noteID]?.invalidate()
+
+        // Schedule new save
+        saveDebounceTimers[noteID] = Timer.scheduledTimer(withTimeInterval: delay, repeats: false) { [weak self] _ in
+            self?.saveNoteImmediately(note)
+            self?.saveDebounceTimers.removeValue(forKey: noteID)
+        }
+    }
+
+    /// Immediate save - used for critical operations
+    /// Use this before switching notes, closing app, or other critical moments
+    private func saveNoteImmediately(_ note: Note) {
+        // Validate content before saving
+        note.validateAndTruncate()
         note.touch()
         repository.saveContext()
 
@@ -199,9 +233,36 @@ class NoteViewModel: ObservableObject {
             updateSearchItemIfNeeded(updatedItem)
         }
 
-        Task {
-            await searchEngine.reindexNote(note)
+        // Smart embedding regeneration - only reindex if content changed significantly
+        reindexIfNeeded(note)
+    }
+
+    /// Only regenerate embeddings if content changed by >100 characters
+    private func reindexIfNeeded(_ note: Note) {
+        guard let noteID = note.id, let content = note.content else { return }
+
+        let lastContent = lastEmbeddingContent[noteID] ?? ""
+        let contentDiff = abs(content.count - lastContent.count)
+
+        // Only reindex if content changed significantly (>100 chars)
+        if contentDiff > 100 || lastContent.isEmpty {
+            lastEmbeddingContent[noteID] = content
+            Task {
+                await searchEngine.reindexNote(note)
+            }
         }
+    }
+
+    /// Flush all pending saves - call before app quits or critical operations
+    func flushPendingSaves() {
+        // Invalidate all timers and save immediately
+        for (noteID, timer) in saveDebounceTimers {
+            timer.invalidate()
+            if let note = noteCache[noteID] {
+                saveNoteImmediately(note)
+            }
+        }
+        saveDebounceTimers.removeAll()
     }
 
     // MARK: - Search

@@ -96,18 +96,54 @@ class PersistenceController: ObservableObject {
     // MARK: - Core Data Operations
 
     /// Saves the context if there are changes
+    /// Implements retry logic for merge conflicts
     /// - Parameter context: The managed object context to save (defaults to view context)
     func save(context: NSManagedObjectContext? = nil) {
         let targetContext = context ?? container.viewContext
 
         guard targetContext.hasChanges else { return }
 
-        do {
-            try targetContext.save()
-        } catch {
-            print("Failed to save context: \(error)")
-            // In production, implement proper error handling
+        var retryCount = 0
+        let maxRetries = 3
+
+        while retryCount < maxRetries {
+            do {
+                try targetContext.save()
+                return  // Success!
+            } catch let error as NSError {
+                // Check if it's a merge conflict
+                if error.domain == NSCocoaErrorDomain && error.code == NSManagedObjectMergeError {
+                    print("⚠️ Merge conflict detected, attempting to resolve (attempt \(retryCount + 1)/\(maxRetries))...")
+
+                    // Refresh all objects to get latest data and merge changes
+                    targetContext.registeredObjects.forEach { object in
+                        targetContext.refresh(object, mergeChanges: true)
+                    }
+
+                    retryCount += 1
+
+                    // If still have changes after refresh, try again
+                    if !targetContext.hasChanges {
+                        print("✅ Merge conflict resolved, no changes after refresh")
+                        return
+                    }
+                    continue
+                } else {
+                    // Non-recoverable error
+                    print("❌ Failed to save context: \(error.localizedDescription)")
+                    print("   Error details: \(error)")
+
+                    // For critical errors, we must handle gracefully
+                    // Don't crash the app, but ensure data integrity
+                    targetContext.rollback()
+                    return
+                }
+            }
         }
+
+        // If we exhausted retries, roll back to prevent corruption
+        print("❌ Failed to save after \(maxRetries) attempts, rolling back changes")
+        targetContext.rollback()
     }
 
     /// Creates a background context for heavy operations (like embedding generation)
