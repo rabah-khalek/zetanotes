@@ -21,9 +21,7 @@
 		81111F6E2EA0896E00D7317B /* LicenseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F6C2EA0896E00D7317B /* LicenseManager.swift */; };
 		81111F6F2EA0896E00D7317B /* AnalyticsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F6B2EA0896E00D7317B /* AnalyticsManager.swift */; };
 		81DE21652E9B3C2400692788 /* ModelDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE21642E9B3C2400692788 /* ModelDownloader.swift */; };
-		81DE4F662EA18C90006293FC /* CustomService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F632EA18C90006293FC /* CustomService.swift */; };
 		81DE4F672EA18C90006293FC /* NotesDataModel.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F642EA18C90006293FC /* NotesDataModel.xcdatamodeld */; };
-		81DE4F692EA18EA3006293FC /* CustomServiceEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F682EA18EA3006293FC /* CustomServiceEditorView.swift */; };
 		81DE4F6B2EA1A524006293FC /* MarkdownRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F6A2EA1A524006293FC /* MarkdownRenderer.swift */; };
 		81DE4F6E2EA1CE1A006293FC /* AITool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F6C2EA1CE1A006293FC /* AITool.swift */; };
 		81DE4F6F2EA1CE1A006293FC /* ToolManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F6D2EA1CE1A006293FC /* ToolManager.swift */; };
@@ -94,9 +92,7 @@
 		81111F6B2EA0896E00D7317B /* AnalyticsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsManager.swift; sourceTree = "<group>"; };
 		81111F6C2EA0896E00D7317B /* LicenseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseManager.swift; sourceTree = "<group>"; };
 		81DE21642E9B3C2400692788 /* ModelDownloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelDownloader.swift; sourceTree = "<group>"; };
-		81DE4F632EA18C90006293FC /* CustomService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomService.swift; sourceTree = "<group>"; };
 		81DE4F652EA18C90006293FC /* NotesDataModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = NotesDataModel.xcdatamodel; sourceTree = "<group>"; };
-		81DE4F682EA18EA3006293FC /* CustomServiceEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomServiceEditorView.swift; sourceTree = "<group>"; };
 		81DE4F6A2EA1A524006293FC /* MarkdownRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownRenderer.swift; sourceTree = "<group>"; };
 		81DE4F6C2EA1CE1A006293FC /* AITool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AITool.swift; sourceTree = "<group>"; };
 		81DE4F6D2EA1CE1A006293FC /* ToolManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolManager.swift; sourceTree = "<group>"; };
@@ -202,7 +198,6 @@
 			children = (
 				81DE4F702EA1CE2D006293FC /* ToolEditorView.swift */,
 				81DE4F6A2EA1A524006293FC /* MarkdownRenderer.swift */,
-				81DE4F682EA18EA3006293FC /* CustomServiceEditorView.swift */,
 				81111F622EA0891A00D7317B /* InlineAutocompleteTextEditor.swift */,
 				81111F632EA0891A00D7317B /* UpgradePromptView.swift */,
 				A1000004000000000000001 /* ContentView.swift */,
@@ -230,7 +225,6 @@
 			children = (
 				81DE4F6C2EA1CE1A006293FC /* AITool.swift */,
 				81DE4F6D2EA1CE1A006293FC /* ToolManager.swift */,
-				81DE4F632EA18C90006293FC /* CustomService.swift */,
 				81DE4F642EA18C90006293FC /* NotesDataModel.xcdatamodeld */,
 				810418062E9AF4770086B1B2 /* Note+CoreDataClass.swift */,
 				810418082E9AF4770086B1B2 /* NoteEmbedding+CoreDataClass.swift */,
@@ -378,7 +372,6 @@
 				810418102E9AF4770086B1B2 /* Note+CoreDataClass.swift in Sources */,
 				A1000017000000000000001 /* PersistenceController.swift in Sources */,
 				A1000062000000000000001 /* NoteRepository.swift in Sources */,
-				81DE4F692EA18EA3006293FC /* CustomServiceEditorView.swift in Sources */,
 				A1000019000000000000001 /* AIEngine.swift in Sources */,
 				81111F6E2EA0896E00D7317B /* LicenseManager.swift in Sources */,
 				81111F6F2EA0896E00D7317B /* AnalyticsManager.swift in Sources */,
@@ -395,7 +388,6 @@
 				A1000023000000000000001 /* EmbeddingService.swift in Sources */,
 				A1000025000000000000001 /* SemanticSearchEngine.swift in Sources */,
 				A1000027000000000000001 /* AutocompleteService.swift in Sources */,
-				81DE4F662EA18C90006293FC /* CustomService.swift in Sources */,
 				81DE4F672EA18C90006293FC /* NotesDataModel.xcdatamodeld in Sources */,
 				A1000029000000000000001 /* SummarizationService.swift in Sources */,
 				A1000031000000000000001 /* Note+Extensions.swift in Sources */,

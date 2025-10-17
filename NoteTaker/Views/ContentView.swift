@@ -633,39 +633,41 @@ struct StatusFooterView: View {
                 )
                 .help("CPU: \(Int(systemMonitor.cpuUsage))% of \(systemMonitor.cpuCoreCount) cores • Memory: \(Int(systemMonitor.memoryUsage))MB (\(String(format: "%.1f", systemMonitor.memoryUsagePercentage))% of \(Int(systemMonitor.totalSystemMemory / 1024))GB)")
 
-                Rectangle()
-                    .fill(Color.secondary.opacity(0.2))
-                    .frame(width: 1, height: 14)
+                // Error log button - only show when there are errors
+                if !errorLogger.errors.isEmpty {
+                    Rectangle()
+                        .fill(Color.secondary.opacity(0.2))
+                        .frame(width: 1, height: 14)
 
-                // Error log button with badge and expand indicator
-                Button(action: {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                        showingErrorLog.toggle()
+                    Button(action: {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            showingErrorLog.toggle()
+                        }
+                    }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .font(.system(size: 11))
+                                .foregroundColor(.orange)
+
+                            Text("\(errorLogger.errors.count)")
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundColor(.orange)
+
+                            // Chevron to indicate expandable
+                            Image(systemName: showingErrorLog ? "chevron.down.circle.fill" : "chevron.up.circle.fill")
+                                .font(.system(size: 9))
+                                .foregroundColor(.secondary.opacity(0.7))
+                        }
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 3)
+                        .background(
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(Color.orange.opacity(0.12))
+                        )
                     }
-                }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: errorLogger.errors.isEmpty ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
-                            .font(.system(size: 11))
-                            .foregroundColor(errorLogger.errors.isEmpty ? .green : .orange)
-
-                        Text(errorLogger.errors.isEmpty ? "No Errors" : "\(errorLogger.errors.count)")
-                            .font(.system(size: 10, weight: .medium))
-                            .foregroundColor(errorLogger.errors.isEmpty ? .secondary : .orange)
-
-                        // Chevron to indicate expandable
-                        Image(systemName: showingErrorLog ? "chevron.down.circle.fill" : "chevron.up.circle.fill")
-                            .font(.system(size: 9))
-                            .foregroundColor(.secondary.opacity(0.7))
-                    }
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 3)
-                    .background(
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(errorLogger.errors.isEmpty ? Color.green.opacity(0.08) : Color.orange.opacity(0.12))
-                    )
+                    .buttonStyle(.plain)
+                    .help("Click to view \(errorLogger.errors.count) error\(errorLogger.errors.count == 1 ? "" : "s")")
                 }
-                .buttonStyle(.plain)
-                .help(errorLogger.errors.isEmpty ? "No errors" : "Click to view \(errorLogger.errors.count) error\(errorLogger.errors.count == 1 ? "" : "s")")
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
