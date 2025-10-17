@@ -189,26 +189,31 @@ class NoteViewModel: ObservableObject {
         saveNoteImmediately(note)
     }
 
-    /// Debounced save - waits 1 second after last change before saving
-    /// Use this for frequent operations like typing
-    func saveNoteDebounced(_ note: Note, delay: TimeInterval = 1.0) {
-        guard let noteID = note.id else {
-            saveNoteImmediately(note)
-            return
-        }
+    /// Debounced save - waits for typing to pause before saving
+    /// Reduces save frequency and improves performance
+    /// Uses background context to avoid blocking UI
+    func saveNoteDebounced(_ note: Note) {
+        guard let noteID = note.id else { return }
 
         // Cancel existing timer for this note
         saveDebounceTimers[noteID]?.invalidate()
 
-        // Schedule new save
-        saveDebounceTimers[noteID] = Timer.scheduledTimer(withTimeInterval: delay, repeats: false) { [weak self] _ in
-            self?.saveNoteImmediately(note)
-            self?.saveDebounceTimers.removeValue(forKey: noteID)
+        // Create new timer
+        let timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { [weak self] _ in
+            // Use background save for non-critical operation
+            Task { @MainActor in
+                guard let self = self else { return }
+                await self.saveNoteInBackground(note)
+                self.saveDebounceTimers[noteID] = nil
+            }
         }
+
+        saveDebounceTimers[noteID] = timer
     }
 
     /// Immediate save - used for critical operations
     /// Use this before switching notes, closing app, or other critical moments
+    /// Saves on main thread for immediate persistence
     private func saveNoteImmediately(_ note: Note) {
         // Validate content before saving
         note.validateAndTruncate()
@@ -234,26 +239,84 @@ class NoteViewModel: ObservableObject {
         }
 
         // Smart embedding regeneration - only reindex if content changed significantly
-        reindexIfNeeded(note)
+        Task {
+            await reindexIfNeeded(note)
+        }
+    }
+
+    /// Background save - performs save on background thread to avoid UI blocking
+    /// Use this for non-critical saves during typing
+    private func saveNoteInBackground(_ note: Note) async {
+        let noteObjectID = note.objectID
+        let noteID = note.id
+
+        // Perform save on background context
+        let backgroundContext = persistenceController.newBackgroundContext()
+
+        await backgroundContext.perform {
+            do {
+                // Get note in background context
+                guard let bgNote = try? backgroundContext.existingObject(with: noteObjectID) as? Note else {
+                    return
+                }
+
+                // Validate and save
+                bgNote.validateAndTruncate()
+                bgNote.touch()
+
+                if bgNote.title?.isEmpty ?? true {
+                    bgNote.generateTitleFromContent()
+                }
+
+                try backgroundContext.save()
+            } catch {
+                print("❌ Background save failed: \(error)")
+            }
+        }
+
+        // Update UI on main thread
+        await MainActor.run {
+            if let noteID = noteID {
+                NotificationCenter.default.post(
+                    name: Notification.Name("NoteUpdated"),
+                    object: noteID
+                )
+            }
+
+            if let updatedItem = self.repository.makeListItem(from: note) {
+                self.noteCache[updatedItem.id] = note
+                self.upsertListItem(updatedItem)
+                self.updateSearchItemIfNeeded(updatedItem)
+            }
+        }
+
+        // Reindex if needed (already async)
+        await reindexIfNeeded(note)
     }
 
     /// Only regenerate embeddings if content changed by >100 characters
-    private func reindexIfNeeded(_ note: Note) {
+    /// Runs on background thread to avoid UI blocking
+    private func reindexIfNeeded(_ note: Note) async {
         guard let noteID = note.id, let content = note.content else { return }
 
-        let lastContent = lastEmbeddingContent[noteID] ?? ""
+        let lastContent = await MainActor.run { lastEmbeddingContent[noteID] ?? "" }
         let contentDiff = abs(content.count - lastContent.count)
 
         // Only reindex if content changed significantly (>100 chars)
         if contentDiff > 100 || lastContent.isEmpty {
-            lastEmbeddingContent[noteID] = content
-            Task {
-                await searchEngine.reindexNote(note)
+            await MainActor.run {
+                lastEmbeddingContent[noteID] = content
             }
+
+            // Perform reindexing in background
+            await Task.detached(priority: .utility) {
+                await self.searchEngine.reindexNote(note)
+            }.value
         }
     }
 
     /// Flush all pending saves - call before app quits or critical operations
+    @MainActor
     func flushPendingSaves() {
         // Invalidate all timers and save immediately
         for (noteID, timer) in saveDebounceTimers {
