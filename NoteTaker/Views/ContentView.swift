@@ -157,7 +157,7 @@ struct ContentView: View {
 
     @ViewBuilder
     private var toolbarCenterItems: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 8) {
             // Autocomplete Toggle
             AutocompleteToggle(isEnabled: $viewModel.isAutocompleteEnabled)
                 .help("Toggle Autocomplete")

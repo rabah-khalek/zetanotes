@@ -89,7 +89,13 @@ class ToolManager: ObservableObject {
     // MARK: - Computed Properties
 
     var defaultTools: [AITool] {
-        tools.filter { $0.isDefault }
+        let defaults = tools.filter { $0.isDefault }
+        // Sort to ensure Autocomplete (shortcut "A") appears first, then alphabetically
+        return defaults.sorted { tool1, tool2 in
+            if tool1.keyboardShortcut == "A" { return true }
+            if tool2.keyboardShortcut == "A" { return false }
+            return tool1.name < tool2.name
+        }
     }
 
     var customTools: [AITool] {
