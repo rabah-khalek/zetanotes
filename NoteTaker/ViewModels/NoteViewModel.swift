@@ -50,7 +50,7 @@ class NoteViewModel: ObservableObject {
     @Published var isReformulating = false
     @Published var isAutocompleteEnabled = true
     @Published var isExecutingTool = false
-    @Published var executingToolId: UUID? = nil
+    @Published var executingToolId: UUID?
 
     // AI Prompt Customization
     @Published var autocompletePrompt = DefaultPrompts.autocomplete
@@ -714,7 +714,6 @@ class NoteViewModel: ObservableObject {
         return cleaned
     }
 
-
     private struct ContentSections {
         var baseContent: String
         var summaryBlock: String
@@ -734,7 +733,7 @@ class NoteViewModel: ObservableObject {
 
         // Find the first AI-generated section marker (new format: ---\n`ServiceName • timestamp`\n---)
         let markerPrefix = "\n\n---\n`"
-        var firstAIIndex: String.Index? = nil
+        var firstAIIndex: String.Index?
 
         if let range = content.range(of: markerPrefix) {
             firstAIIndex = range.lowerBound

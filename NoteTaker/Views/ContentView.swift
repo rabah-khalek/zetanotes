@@ -420,7 +420,12 @@ struct ContentView: View {
                             .strokeBorder(Color.secondary.opacity(0.2), lineWidth: 0.5)
                     )
             )
-            .help("CPU: \(Int(systemMonitor.cpuUsage))% of \(systemMonitor.cpuCoreCount) cores • Memory: \(Int(systemMonitor.memoryUsage))MB (\(String(format: "%.1f", systemMonitor.memoryUsagePercentage))% of \(Int(systemMonitor.totalSystemMemory / 1024))GB)")
+            .help("""
+                CPU: \(Int(systemMonitor.cpuUsage))% of \(systemMonitor.cpuCoreCount) cores • \
+                Memory: \(Int(systemMonitor.memoryUsage))MB \
+                (\(String(format: "%.1f", systemMonitor.memoryUsagePercentage))% of \
+                \(Int(systemMonitor.totalSystemMemory / 1024))GB)
+                """)
         }
         .padding(.vertical, 6)
         .frame(maxWidth: .infinity)
@@ -747,7 +752,7 @@ struct ContentView: View {
         ]
 
         // Find the earliest AI section marker
-        var firstAIIndex: String.Index? = nil
+        var firstAIIndex: String.Index?
 
         for marker in markers {
             if let range = content.range(of: marker) {

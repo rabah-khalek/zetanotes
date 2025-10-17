@@ -242,7 +242,7 @@ struct NoteEditorView: View {
     @State private var content: String = ""
     @State private var showMarkdownPreview: Bool = false
     @State private var currentCursorPosition: Int = 0
-    @State private var desiredCursorPosition: Int? = nil
+    @State private var desiredCursorPosition: Int?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -418,7 +418,7 @@ struct NoteEditorView: View {
         ]
 
         // Find the earliest AI section marker
-        var firstAIPosition: Int? = nil
+        var firstAIPosition: Int?
 
         for marker in markers {
             if let range = content.range(of: marker) {

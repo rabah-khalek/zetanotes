@@ -12,7 +12,7 @@ class ModelDownloader: NSObject, ObservableObject {
     @Published var downloadProgress: Double = 0.0
     @Published var isDownloading = false
     @Published var downloadError: String?
-    @Published var downloadingModel: AIModel? = nil // Track which model is being downloaded
+    @Published var downloadingModel: AIModel? // Track which model is being downloaded
 
     private var downloadTask: URLSessionDownloadTask?
     private var observation: NSKeyValueObservation?
@@ -70,7 +70,7 @@ class ModelDownloader: NSObject, ObservableObject {
         }
 
         let session = URLSession(configuration: .default, delegate: self, delegateQueue: nil)
-        downloadTask = session.downloadTask(with: url) { [weak self] tempURL, response, error in
+        downloadTask = session.downloadTask(with: url) { [weak self] tempURL, _, error in
             guard let self = self else { return }
 
             DispatchQueue.main.async {

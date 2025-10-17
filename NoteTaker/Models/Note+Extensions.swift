@@ -189,10 +189,10 @@ extension NoteEmbedding {
         var magnitude1: Float = 0
         var magnitude2: Float = 0
 
-        for i in 0..<vec1.count {
-            dotProduct += vec1[i] * vec2[i]
-            magnitude1 += vec1[i] * vec1[i]
-            magnitude2 += vec2[i] * vec2[i]
+        for index in 0..<vec1.count {
+            dotProduct += vec1[index] * vec2[index]
+            magnitude1 += vec1[index] * vec1[index]
+            magnitude2 += vec2[index] * vec2[index]
         }
 
         let denominator = sqrt(magnitude1) * sqrt(magnitude2)

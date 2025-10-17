@@ -30,7 +30,7 @@ class TitleGenerationService: AIService {
             stopSequences: [
                 "\n",           // Stop at first newline for single-line titles
                 "<|user|>",     // Prevent fake user messages
-                "<|system|>",   // Prevent fake system messages
+                "<|system|>"   // Prevent fake system messages
             ]
         )
     }

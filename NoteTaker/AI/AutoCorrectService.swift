@@ -84,11 +84,9 @@ class AutoCorrectService: AIService {
             "Sure! ", "Sure, ", "Certainly! ", "Certainly, ",
             "Here is ", "Here's ", "Corrected: ", "Corrected text: "
         ]
-        for prefix in hallucinationPrefixes {
-            if cleaned.hasPrefix(prefix) {
-                cleaned = String(cleaned.dropFirst(prefix.count))
-                break
-            }
+        for prefix in hallucinationPrefixes where cleaned.hasPrefix(prefix) {
+            cleaned = String(cleaned.dropFirst(prefix.count))
+            break
         }
 
         // Remove leading markdown quote character if present

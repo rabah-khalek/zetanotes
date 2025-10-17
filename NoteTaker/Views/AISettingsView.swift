@@ -988,8 +988,8 @@ struct ToolRow: View {
     let canEdit: Bool
     var canDelete: Bool = false
     let onEdit: () -> Void
-    var onReset: (() -> Void)? = nil
-    var onDelete: (() -> Void)? = nil
+    var onReset: (() -> Void)?
+    var onDelete: (() -> Void)?
 
     var body: some View {
         HStack(spacing: 12) {

@@ -15,14 +15,14 @@ import Foundation
 /// Ordered from worst to best quality
 enum AIModel: String, CaseIterable, Codable {
     case tinyLlama = "TinyLlama 1.1B"
-    case llama32_1B = "Llama 3.2 1B"
-    case qwen25_1_5B = "Qwen2.5 1.5B"
-    case smolLM2_1_7B = "SmolLM2 1.7B"
+    case llamaThreeTwoOneB = "Llama 3.2 1B"
+    case qwenTwoFiveOneFiveB = "Qwen2.5 1.5B"
+    case smolLMTwoOneSevenB = "SmolLM2 1.7B"
     case phi2 = "Phi-2 2.7B"
-    case gemma2_2B = "Gemma 2 2B"
-    case qwen25_3B = "Qwen2.5 3B"
-    case llama32_3B = "Llama 3.2 3B"
-    case phi35_mini = "Phi-3.5 Mini 3.8B"
+    case gemmaTwoTwoB = "Gemma 2 2B"
+    case qwenTwoFiveThreeB = "Qwen2.5 3B"
+    case llamaThreeTwoThreeB = "Llama 3.2 3B"
+    case phiThreeFiveMini = "Phi-3.5 Mini 3.8B"
 
     var displayName: String {
         self.rawValue
@@ -32,21 +32,21 @@ enum AIModel: String, CaseIterable, Codable {
         switch self {
         case .tinyLlama:
             return "tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"
-        case .llama32_1B:
+        case .llamaThreeTwoOneB:
             return "Llama-3.2-1B-Instruct-Q4_K_M.gguf"
-        case .qwen25_1_5B:
+        case .qwenTwoFiveOneFiveB:
             return "qwen2.5-1.5b-instruct-q4_k_m.gguf"
-        case .smolLM2_1_7B:
+        case .smolLMTwoOneSevenB:
             return "smollm2-1.7b-instruct-q4_k_m.gguf"
-        case .gemma2_2B:
+        case .gemmaTwoTwoB:
             return "gemma-2-2b-it-Q4_K_M.gguf"
         case .phi2:
             return "phi-2.Q4_K_M.gguf"
-        case .qwen25_3B:
+        case .qwenTwoFiveThreeB:
             return "qwen2.5-3b-instruct-q4_k_m.gguf"
-        case .llama32_3B:
+        case .llamaThreeTwoThreeB:
             return "Llama-3.2-3B-Instruct-Q4_K_M.gguf"
-        case .phi35_mini:
+        case .phiThreeFiveMini:
             return "Phi-3.5-mini-instruct-Q4_K_M.gguf"
         }
     }
@@ -55,21 +55,21 @@ enum AIModel: String, CaseIterable, Codable {
         switch self {
         case .tinyLlama:
             return "0.7 GB"
-        case .llama32_1B:
+        case .llamaThreeTwoOneB:
             return "0.7 GB"
-        case .qwen25_1_5B:
+        case .qwenTwoFiveOneFiveB:
             return "0.9 GB"
-        case .smolLM2_1_7B:
+        case .smolLMTwoOneSevenB:
             return "1.0 GB"
         case .phi2:
             return "1.6 GB"
-        case .gemma2_2B:
+        case .gemmaTwoTwoB:
             return "1.4 GB"
-        case .qwen25_3B:
+        case .qwenTwoFiveThreeB:
             return "2.0 GB"
-        case .llama32_3B:
+        case .llamaThreeTwoThreeB:
             return "2.0 GB"
-        case .phi35_mini:
+        case .phiThreeFiveMini:
             return "2.3 GB"
         }
     }
@@ -78,21 +78,21 @@ enum AIModel: String, CaseIterable, Codable {
         switch self {
         case .tinyLlama:
             return "~1.5 GB"
-        case .llama32_1B:
+        case .llamaThreeTwoOneB:
             return "~1.2 GB"
-        case .qwen25_1_5B:
+        case .qwenTwoFiveOneFiveB:
             return "~1.4 GB"
-        case .smolLM2_1_7B:
+        case .smolLMTwoOneSevenB:
             return "~1.6 GB"
         case .phi2:
             return "~2.2 GB"
-        case .gemma2_2B:
+        case .gemmaTwoTwoB:
             return "~2.0 GB"
-        case .qwen25_3B:
+        case .qwenTwoFiveThreeB:
             return "~2.5 GB"
-        case .llama32_3B:
+        case .llamaThreeTwoThreeB:
             return "~2.6 GB"
-        case .phi35_mini:
+        case .phiThreeFiveMini:
             return "~2.8 GB"
         }
     }
@@ -101,21 +101,21 @@ enum AIModel: String, CaseIterable, Codable {
         switch self {
         case .tinyLlama:
             return "Very Fast"
-        case .llama32_1B:
+        case .llamaThreeTwoOneB:
             return "Very Fast"
-        case .qwen25_1_5B:
+        case .qwenTwoFiveOneFiveB:
             return "Very Fast"
-        case .smolLM2_1_7B:
+        case .smolLMTwoOneSevenB:
             return "Very Fast"
         case .phi2:
             return "Very Fast"
-        case .gemma2_2B:
+        case .gemmaTwoTwoB:
             return "Very Fast"
-        case .qwen25_3B:
+        case .qwenTwoFiveThreeB:
             return "Fast"
-        case .llama32_3B:
+        case .llamaThreeTwoThreeB:
             return "Fast"
-        case .phi35_mini:
+        case .phiThreeFiveMini:
             return "Fast"
         }
     }
@@ -124,21 +124,21 @@ enum AIModel: String, CaseIterable, Codable {
         switch self {
         case .tinyLlama:
             return "Basic"
-        case .llama32_1B:
+        case .llamaThreeTwoOneB:
             return "Basic+"
-        case .qwen25_1_5B:
+        case .qwenTwoFiveOneFiveB:
             return "Good"
-        case .smolLM2_1_7B:
+        case .smolLMTwoOneSevenB:
             return "Good"
         case .phi2:
             return "Good+"
-        case .gemma2_2B:
+        case .gemmaTwoTwoB:
             return "High"
-        case .qwen25_3B:
+        case .qwenTwoFiveThreeB:
             return "High"
-        case .llama32_3B:
+        case .llamaThreeTwoThreeB:
             return "Very High"
-        case .phi35_mini:
+        case .phiThreeFiveMini:
             return "Very High"
         }
     }
@@ -147,21 +147,21 @@ enum AIModel: String, CaseIterable, Codable {
         switch self {
         case .tinyLlama:
             return "Lightweight model, best for autocomplete and embeddings. Limited instruction-following quality."
-        case .llama32_1B:
+        case .llamaThreeTwoOneB:
             return "Meta's tiny model with latest architecture. Better than TinyLlama despite same size."
-        case .qwen25_1_5B:
+        case .qwenTwoFiveOneFiveB:
             return "Qwen's compact model. Good balance of speed and basic instruction-following capabilities."
-        case .smolLM2_1_7B:
+        case .smolLMTwoOneSevenB:
             return "Hugging Face's compact model trained on high-quality data. Better instruction-following than TinyLlama."
         case .phi2:
             return "Microsoft's small reasoning model. Good at following instructions and logical tasks."
-        case .gemma2_2B:
+        case .gemmaTwoTwoB:
             return "Google's efficient 2B model with excellent instruction-following. Great balance of speed and quality."
-        case .qwen25_3B:
+        case .qwenTwoFiveThreeB:
             return "3B parameter model with excellent instruction-following. Much better for patch, reformulate, and title generation."
-        case .llama32_3B:
+        case .llamaThreeTwoThreeB:
             return "Meta's latest 3B model. State-of-the-art quality for its size with strong multilingual support."
-        case .phi35_mini:
+        case .phiThreeFiveMini:
             return "Microsoft's latest compact model. Best-in-class quality under 4B parameters. Excellent for all tasks."
         }
     }
@@ -170,21 +170,21 @@ enum AIModel: String, CaseIterable, Codable {
         switch self {
         case .tinyLlama:
             return "https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"
-        case .llama32_1B:
+        case .llamaThreeTwoOneB:
             return "https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-Q4_K_M.gguf"
-        case .qwen25_1_5B:
+        case .qwenTwoFiveOneFiveB:
             return "https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/main/qwen2.5-1.5b-instruct-q4_k_m.gguf"
-        case .smolLM2_1_7B:
+        case .smolLMTwoOneSevenB:
             return "https://huggingface.co/HuggingFaceTB/SmolLM2-1.7B-Instruct-GGUF/resolve/main/smollm2-1.7b-instruct-q4_k_m.gguf"
         case .phi2:
             return "https://huggingface.co/microsoft/phi-2-GGUF/resolve/main/phi-2.Q4_K_M.gguf"
-        case .gemma2_2B:
+        case .gemmaTwoTwoB:
             return "https://huggingface.co/bartowski/gemma-2-2b-it-GGUF/resolve/main/gemma-2-2b-it-Q4_K_M.gguf"
-        case .qwen25_3B:
+        case .qwenTwoFiveThreeB:
             return "https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF/resolve/main/qwen2.5-3b-instruct-q4_k_m.gguf"
-        case .llama32_3B:
+        case .llamaThreeTwoThreeB:
             return "https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2-3B-Instruct-Q4_K_M.gguf"
-        case .phi35_mini:
+        case .phiThreeFiveMini:
             return "https://huggingface.co/bartowski/Phi-3.5-mini-instruct-GGUF/resolve/main/Phi-3.5-mini-instruct-Q4_K_M.gguf"
         }
     }
@@ -482,14 +482,13 @@ class LLMInferenceService: @unchecked Sendable {
 
                         // Check for stop sequences
                         if !stopSequences.isEmpty {
-                            for stopSeq in stopSequences {
-                                if generatedText.contains(stopSeq) {
-                                    if let range = generatedText.range(of: stopSeq) {
-                                        generatedText = String(generatedText[..<range.lowerBound])
-                                    }
-                                    print("🛑 Stop sequence '\(stopSeq)' detected")
-                                    print("✅ Generated \(tokensGenerated) tokens → \(generatedText.count) chars")
-                                    print("=== Generation Complete ===\n")
+                            for stopSeq in stopSequences where generatedText.contains(stopSeq) {
+                                if let range = generatedText.range(of: stopSeq) {
+                                    generatedText = String(generatedText[..<range.lowerBound])
+                                }
+                                print("🛑 Stop sequence '\(stopSeq)' detected")
+                                print("✅ Generated \(tokensGenerated) tokens → \(generatedText.count) chars")
+                                print("=== Generation Complete ===\n")
                                     continuation.resume(returning: generatedText)
                                     return
                                 }

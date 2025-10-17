@@ -136,10 +136,10 @@ class EmbeddingService {
         var magnitude1: Float = 0
         var magnitude2: Float = 0
 
-        for i in 0..<embedding1.count {
-            dotProduct += embedding1[i] * embedding2[i]
-            magnitude1 += embedding1[i] * embedding1[i]
-            magnitude2 += embedding2[i] * embedding2[i]
+        for index in 0..<embedding1.count {
+            dotProduct += embedding1[index] * embedding2[index]
+            magnitude1 += embedding1[index] * embedding1[index]
+            magnitude2 += embedding2[index] * embedding2[index]
         }
 
         let denominator = sqrt(magnitude1) * sqrt(magnitude2)
@@ -159,7 +159,7 @@ class EmbeddingService {
         ]
 
         // Find the earliest AI section marker
-        var firstAIIndex: String.Index? = nil
+        var firstAIIndex: String.Index?
 
         for marker in markers {
             if let range = content.range(of: marker) {

@@ -25,15 +25,15 @@ struct MarkdownRenderer: View {
     private func parseMarkdown() -> [MarkdownElement] {
         var elements: [MarkdownElement] = []
         let lines = text.components(separatedBy: .newlines)
-        var i = 0
+        var lineIndex = 0
 
-        while i < lines.count {
-            let line = lines[i]
+        while lineIndex < lines.count {
+            let line = lines[lineIndex]
             let trimmedLine = line.trimmingCharacters(in: .whitespaces)
 
             // Skip empty lines
             if trimmedLine.isEmpty {
-                i += 1
+                lineIndex += 1
                 continue
             }
 
@@ -42,20 +42,20 @@ struct MarkdownRenderer: View {
                 let level = trimmedLine.prefix(while: { $0 == "#" }).count
                 let title = trimmedLine.dropFirst(level).trimmingCharacters(in: .whitespaces)
                 elements.append(MarkdownElement(type: .heading(level: level, text: title)))
-                i += 1
+                lineIndex += 1
                 continue
             }
 
             // Check for code blocks
             if trimmedLine.hasPrefix("```") {
                 var codeLines: [String] = []
-                i += 1
-                while i < lines.count && !lines[i].trimmingCharacters(in: .whitespaces).hasPrefix("```") {
-                    codeLines.append(lines[i])
-                    i += 1
+                lineIndex += 1
+                while lineIndex < lines.count && !lines[lineIndex].trimmingCharacters(in: .whitespaces).hasPrefix("```") {
+                    codeLines.append(lines[lineIndex])
+                    lineIndex += 1
                 }
                 elements.append(MarkdownElement(type: .codeBlock(code: codeLines.joined(separator: "\n"))))
-                i += 1
+                lineIndex += 1
                 continue
             }
 
@@ -63,7 +63,7 @@ struct MarkdownRenderer: View {
             if trimmedLine.hasPrefix("- ") || trimmedLine.hasPrefix("* ") || trimmedLine.hasPrefix("+ ") {
                 let item = String(trimmedLine.dropFirst(2))
                 elements.append(MarkdownElement(type: .bulletItem(text: item)))
-                i += 1
+                lineIndex += 1
                 continue
             }
 
@@ -72,7 +72,7 @@ struct MarkdownRenderer: View {
                 if let dotIndex = trimmedLine.firstIndex(of: ".") {
                     let item = String(trimmedLine[trimmedLine.index(after: dotIndex)...]).trimmingCharacters(in: .whitespaces)
                     elements.append(MarkdownElement(type: .numberedItem(text: item)))
-                    i += 1
+                    lineIndex += 1
                     continue
                 }
             }
@@ -81,20 +81,20 @@ struct MarkdownRenderer: View {
             if trimmedLine.hasPrefix(">") {
                 let quote = trimmedLine.dropFirst().trimmingCharacters(in: .whitespaces)
                 elements.append(MarkdownElement(type: .blockquote(text: quote)))
-                i += 1
+                lineIndex += 1
                 continue
             }
 
             // Check for horizontal rule
             if trimmedLine == "---" || trimmedLine == "***" || trimmedLine == "___" {
                 elements.append(MarkdownElement(type: .horizontalRule))
-                i += 1
+                lineIndex += 1
                 continue
             }
 
             // Regular paragraph
             elements.append(MarkdownElement(type: .paragraph(text: line)))
-            i += 1
+            lineIndex += 1
         }
 
         return elements

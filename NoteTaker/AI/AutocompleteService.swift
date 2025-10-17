@@ -80,13 +80,11 @@ class AutocompleteService: AIService {
             "continuation:"
         ]
 
-        for prefix in prefixes {
-            if cleaned.lowercased().hasPrefix(prefix.lowercased()) {
-                cleaned = String(cleaned.dropFirst(prefix.count))
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                    .trimmingCharacters(in: CharacterSet(charactersIn: ":"))
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-            }
+        for prefix in prefixes where cleaned.lowercased().hasPrefix(prefix.lowercased()) {
+            cleaned = String(cleaned.dropFirst(prefix.count))
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .trimmingCharacters(in: CharacterSet(charactersIn: ":"))
+                .trimmingCharacters(in: .whitespacesAndNewlines)
         }
 
         // Remove leading ellipsis that models add when context seems truncated
@@ -155,7 +153,7 @@ class AutocompleteService: AIService {
                     }
                 } else {
                     // No sentence ending found - add a period to complete the sentence
-                    cleaned = cleaned + "."
+                    cleaned += "."
                 }
             }
         }

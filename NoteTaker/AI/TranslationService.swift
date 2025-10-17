@@ -60,7 +60,6 @@ class TranslationService: AIService {
 
         let prompt = "\(instruction)\(text)</s>\n<|assistant|>\n"
 
-
         print("🌍 Translation prompt built:")
         print("📝 Using: \(customPrompt != nil && !customPrompt!.isEmpty ? "custom prompt" : "default prompt")")
         print("🎯 Target language: \(targetLanguage)")
@@ -158,11 +157,9 @@ class TranslationService: AIService {
             "The translation is: ", "Translation: ", "Translated text: ",
             "In \(targetLanguage): ", "The \(targetLanguage) translation is: "
         ]
-        for prefix in hallucinationPrefixes {
-            if cleaned.hasPrefix(prefix) {
-                cleaned = String(cleaned.dropFirst(prefix.count))
-                break
-            }
+        for prefix in hallucinationPrefixes where cleaned.hasPrefix(prefix) {
+            cleaned = String(cleaned.dropFirst(prefix.count))
+            break
         }
 
         // Remove leading markdown quote character if present

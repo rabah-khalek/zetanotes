@@ -75,12 +75,12 @@ class PersistenceController: ObservableObject {
         let context = controller.container.viewContext
 
         // Create sample notes for preview
-        for i in 1...5 {
+        for noteNumber in 1...5 {
             let note = Note(context: context)
             note.id = UUID()
-            note.title = "Sample Note \(i)"
-            note.content = "This is sample content for note \(i). It demonstrates the note-taking interface."
-            note.createdAt = Date().addingTimeInterval(-Double(i * 86400))
+            note.title = "Sample Note \(noteNumber)"
+            note.content = "This is sample content for note \(noteNumber). It demonstrates the note-taking interface."
+            note.createdAt = Date().addingTimeInterval(-Double(noteNumber * 86400))
             note.updatedAt = Date()
         }
 
@@ -157,7 +157,10 @@ class PersistenceController: ObservableObject {
     /// Performs a batch delete for cleaning up old data
     /// - Parameter fetchRequest: The fetch request defining what to delete
     func batchDelete<T: NSManagedObject>(_ fetchRequest: NSFetchRequest<T>) async throws {
-        let deleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest as! NSFetchRequest<NSFetchRequestResult>)
+        guard let fetchRequest = fetchRequest as? NSFetchRequest<NSFetchRequestResult> else {
+            throw NSError(domain: "PersistenceController", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid fetch request"])
+        }
+        let deleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
         deleteRequest.resultType = .resultTypeObjectIDs
 
         let context = newBackgroundContext()

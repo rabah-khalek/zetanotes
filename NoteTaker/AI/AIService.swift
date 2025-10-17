@@ -337,11 +337,9 @@ extension AIService {
             "Rewritten: ", "Rewritten text: "
         ]
 
-        for prefix in hallucinationPrefixes {
-            if cleaned.hasPrefix(prefix) {
-                cleaned = String(cleaned.dropFirst(prefix.count))
-                break  // Only remove first match
-            }
+        for prefix in hallucinationPrefixes where cleaned.hasPrefix(prefix) {
+            cleaned = String(cleaned.dropFirst(prefix.count))
+            break  // Only remove first match
         }
 
         return cleaned.trimmingCharacters(in: .whitespacesAndNewlines)

@@ -1,0 +1,69 @@
+# SwiftLint Configuration for NoteTaker
+
+# Excluded paths
+excluded:
+  - llama.cpp
+  - build
+  - .build
+
+# Opt-in rules (enable these additional checks)
+opt_in_rules:
+  - empty_count
+  - explicit_init
+  - first_where
+  - sorted_first_last
+  - contains_over_first_not_nil
+
+# Disabled rules
+disabled_rules:
+  - todo # Allow TODOs in code
+  - trailing_comma # Allow trailing commas
+
+# Rule configurations
+type_body_length:
+  warning: 500
+  error: 700
+
+file_length:
+  warning: 600
+  error: 1200
+
+function_body_length:
+  warning: 60
+  error: 150
+
+line_length:
+  warning: 120
+  error: 200
+  ignores_comments: true
+  ignores_urls: true
+
+identifier_name:
+  min_length:
+    warning: 2
+    error: 1
+  max_length:
+    warning: 50
+    error: 60
+  excluded:
+    - id
+    - to
+    - db
+    - at
+    - by
+    - in
+    - of
+    - on
+    - up
+    - no
+
+cyclomatic_complexity:
+  warning: 12
+  error: 20
+
+# Allows more flexibility for view composition
+nesting:
+  type_level: 2
+
+# Custom reporter (optional)
+reporter: "xcode"

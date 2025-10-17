@@ -85,11 +85,9 @@ class ReformulationService: AIService {
             "Here is ", "Here's ", "Rewritten: ", "Rewritten text: ",
             "Reformulated: ", "Reformulated text: "
         ]
-        for prefix in hallucinationPrefixes {
-            if cleaned.hasPrefix(prefix) {
-                cleaned = String(cleaned.dropFirst(prefix.count))
-                break
-            }
+        for prefix in hallucinationPrefixes where cleaned.hasPrefix(prefix) {
+            cleaned = String(cleaned.dropFirst(prefix.count))
+            break
         }
 
         // Remove leading markdown quote character if present

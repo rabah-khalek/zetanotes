@@ -68,12 +68,10 @@ class ToolManager: ObservableObject {
         let defaultToolShortcuts = ["A", "P", "R", "S", "T"]
         let existingShortcuts = Set(tools.filter { $0.isDefault }.map { $0.keyboardShortcut })
 
-        for defaultTool in AITool.createDefaultTools() {
-            if !existingShortcuts.contains(defaultTool.keyboardShortcut) {
-                // Missing default tool, add it
-                tools.insert(defaultTool, at: defaultToolInsertionIndex())
-                print("➕ Added missing default tool: \(defaultTool.name)")
-            }
+        for defaultTool in AITool.createDefaultTools() where !existingShortcuts.contains(defaultTool.keyboardShortcut) {
+            // Missing default tool, add it
+            tools.insert(defaultTool, at: defaultToolInsertionIndex())
+            print("➕ Added missing default tool: \(defaultTool.name)")
         }
 
         if tools.filter({ $0.isDefault }).count != defaultToolShortcuts.count {

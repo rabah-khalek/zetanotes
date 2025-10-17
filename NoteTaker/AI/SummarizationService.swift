@@ -138,11 +138,9 @@ class SummarizationService: AIService {
             "Here is ", "Here's ", "Summary: ", "The summary is: ",
             "In summary, ", "To summarize, "
         ]
-        for prefix in hallucinationPrefixes {
-            if cleaned.hasPrefix(prefix) {
-                cleaned = String(cleaned.dropFirst(prefix.count))
-                break
-            }
+        for prefix in hallucinationPrefixes where cleaned.hasPrefix(prefix) {
+            cleaned = String(cleaned.dropFirst(prefix.count))
+            break
         }
 
         // Remove leading markdown quote character if present
@@ -169,7 +167,6 @@ class SummarizationService: AIService {
 
         return summaries
     }
-
 
     // MARK: - Fallback: Extractive Summarization
 

@@ -133,7 +133,12 @@ struct StatusFooterView: View {
                         .strokeBorder(Color.secondary.opacity(0.2), lineWidth: 0.5)
                 )
         )
-        .help("CPU: \(Int(systemMonitor.cpuUsage))% of \(systemMonitor.cpuCoreCount) cores • Memory: \(Int(systemMonitor.memoryUsage))MB (\(String(format: "%.1f", systemMonitor.memoryUsagePercentage))% of \(Int(systemMonitor.totalSystemMemory / 1024))GB)")
+        .help("""
+            CPU: \(Int(systemMonitor.cpuUsage))% of \(systemMonitor.cpuCoreCount) cores • \
+            Memory: \(Int(systemMonitor.memoryUsage))MB \
+            (\(String(format: "%.1f", systemMonitor.memoryUsagePercentage))% of \
+            \(Int(systemMonitor.totalSystemMemory / 1024))GB)
+            """)
     }
 
     private var cpuIndicator: some View {
