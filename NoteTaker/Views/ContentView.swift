@@ -335,7 +335,7 @@ struct ContentView: View {
                     .font(.system(size: 9))
                     .foregroundColor(.blue)
 
-                Text("\(currentWordCount)w")
+                Text(String(format: "%d words", currentWordCount))
                     .font(.system(size: 10, weight: .medium, design: .monospaced))
                     .foregroundColor(.primary)
 
@@ -343,7 +343,7 @@ struct ContentView: View {
                     .font(.system(size: 8))
                     .foregroundColor(.secondary.opacity(0.5))
 
-                Text("\(currentCharacterCount)c")
+                Text(String(format: "%d characters", currentCharacterCount))
                     .font(.system(size: 10, weight: .medium, design: .monospaced))
                     .foregroundColor(.primary)
             }
@@ -357,7 +357,7 @@ struct ContentView: View {
                             .strokeBorder(Color.blue.opacity(0.2), lineWidth: 0.5)
                     )
             )
-            .help("\(currentWordCount) words, \(currentCharacterCount) characters")
+            .help(String(format: "%d words, %d characters", currentWordCount, currentCharacterCount))
 
             // Active AI Model
             if !systemMonitor.activeModel.isEmpty {
