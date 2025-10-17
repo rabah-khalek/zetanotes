@@ -9,6 +9,32 @@
 import Foundation
 import Security
 
+/// Subscription tier options
+enum SubscriptionTier: String, Codable {
+    case free = "free"
+    case monthly = "monthly"
+    case annual = "annual"
+    case lifetime = "lifetime"
+
+    var displayName: String {
+        switch self {
+        case .free: return "Free"
+        case .monthly: return "Monthly"
+        case .annual: return "Annual"
+        case .lifetime: return "Lifetime"
+        }
+    }
+
+    var price: String {
+        switch self {
+        case .free: return "$0"
+        case .monthly: return "$1/month"
+        case .annual: return "$10/year"
+        case .lifetime: return "$30 one-time"
+        }
+    }
+}
+
 /// Manages Pro license validation and feature access control
 class LicenseManager: ObservableObject {
     static let shared = LicenseManager()
@@ -18,6 +44,8 @@ class LicenseManager: ObservableObject {
     @Published var isPro: Bool = false
     @Published var licenseEmail: String?
     @Published var licenseKey: String?
+    @Published var subscriptionTier: SubscriptionTier = .free
+    @Published var subscriptionExpiryDate: Date?
 
     // MARK: - Constants
 
@@ -61,8 +89,9 @@ class LicenseManager: ObservableObject {
         print("   allowTestLicense: \(allowTestLicense)")
 
         if allowTestLicense && cleanKey == testLicenseKey && cleanEmail == testLicenseEmail.lowercased() {
-            await saveLicense(key: cleanKey, email: cleanEmail)
-            print("✅ Test license activated (DEV MODE)")
+            // Test license defaults to lifetime for easy testing
+            await saveLicense(key: cleanKey, email: cleanEmail, tier: .lifetime, expiryDate: nil)
+            print("✅ Test license activated (DEV MODE - Lifetime)")
             return true
         } else if allowTestLicense {
             print("⚠️ Test credentials don't match - continuing to API validation")
@@ -73,7 +102,7 @@ class LicenseManager: ObservableObject {
         let isValid = await validateWithLemonSqueezy(key: cleanKey, email: cleanEmail)
 
         if isValid {
-            await saveLicense(key: cleanKey, email: cleanEmail)
+            // Note: tier and expiry are extracted inside validateWithLemonSqueezy and saved there
             print("✅ Pro license activated for \(cleanEmail)")
             // Note: Analytics tracking removed to avoid circular dependency
         } else {
@@ -147,7 +176,13 @@ class LicenseManager: ObservableObject {
 
                         // Valid statuses: "active", "inactive", "expired", "disabled"
                         if status == "active" {
-                            print("✅ License validated successfully")
+                            // Extract subscription info
+                            let tier = extractSubscriptionTier(from: licenseData)
+                            let expiryDate = extractExpiryDate(from: licenseData)
+
+                            await saveLicense(key: key, email: email, tier: tier, expiryDate: expiryDate)
+
+                            print("✅ License validated successfully - Tier: \(tier.displayName)")
                             return true
                         } else {
                             print("⚠️ License status: \(status)")
@@ -197,12 +232,62 @@ class LicenseManager: ObservableObject {
         }
     }
 
+    // MARK: - Helper Methods
+
+    /// Extract subscription tier from license metadata
+    private func extractSubscriptionTier(from licenseData: [String: Any]) -> SubscriptionTier {
+        // Check meta or variant_name for subscription info
+        if let meta = licenseData["meta"] as? [String: Any],
+           let variantName = meta["variant_name"] as? String {
+            let lowercased = variantName.lowercased()
+            if lowercased.contains("monthly") {
+                return .monthly
+            } else if lowercased.contains("annual") || lowercased.contains("yearly") {
+                return .annual
+            } else if lowercased.contains("lifetime") {
+                return .lifetime
+            }
+        }
+
+        // Default to lifetime for backwards compatibility
+        return .lifetime
+    }
+
+    /// Extract expiry date from license metadata
+    private func extractExpiryDate(from licenseData: [String: Any]) -> Date? {
+        // Check for expiry date in metadata
+        if let meta = licenseData["meta"] as? [String: Any],
+           let expiresAtString = meta["expires_at"] as? String {
+            let formatter = ISO8601DateFormatter()
+            return formatter.date(from: expiresAtString)
+        }
+
+        // For lifetime licenses, no expiry
+        return nil
+    }
+
     // MARK: - License Storage
 
     /// Saves license to Keychain
-    private func saveLicense(key: String, email: String) async {
-        // Save to Keychain (background thread is fine for Security framework)
-        let licenseData = Data("\(email):\(key)".utf8)
+    private func saveLicense(key: String, email: String, tier: SubscriptionTier = .lifetime, expiryDate: Date? = nil) async {
+        // Create license data with tier and expiry
+        var licenseDict: [String: String] = [
+            "email": email,
+            "key": key,
+            "tier": tier.rawValue
+        ]
+
+        if let expiry = expiryDate {
+            licenseDict["expiry"] = ISO8601DateFormatter().string(from: expiry)
+        }
+
+        guard let jsonData = try? JSONSerialization.data(withJSONObject: licenseDict),
+              let jsonString = String(data: jsonData, encoding: .utf8) else {
+            print("❌ Failed to encode license data")
+            return
+        }
+
+        let licenseData = Data(jsonString.utf8)
 
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
@@ -218,20 +303,44 @@ class LicenseManager: ObservableObject {
         let status = SecItemAdd(query as CFDictionary, nil)
 
         if status == errSecSuccess {
+            // Check if subscription is still valid
+            let isActive = isSubscriptionActive(tier: tier, expiryDate: expiryDate)
+
             // Update UI state on main thread
             await MainActor.run {
-                self.isPro = true
+                self.isPro = isActive
                 self.licenseEmail = email
                 self.licenseKey = key
+                self.subscriptionTier = tier
+                self.subscriptionExpiryDate = expiryDate
             }
 
             // Save to UserDefaults as backup
-            UserDefaults.standard.set(true, forKey: "isProUser")
+            UserDefaults.standard.set(isActive, forKey: "isProUser")
             UserDefaults.standard.set(email, forKey: "licenseEmail")
+            UserDefaults.standard.set(tier.rawValue, forKey: "subscriptionTier")
+            if let expiry = expiryDate {
+                UserDefaults.standard.set(expiry, forKey: "subscriptionExpiry")
+            }
 
-            print("✅ License saved successfully")
+            print("✅ License saved successfully - Tier: \(tier.displayName)")
         } else {
             print("❌ Failed to save license to Keychain: \(status)")
+        }
+    }
+
+    /// Check if subscription is still active
+    private func isSubscriptionActive(tier: SubscriptionTier, expiryDate: Date?) -> Bool {
+        switch tier {
+        case .lifetime:
+            return true // Lifetime never expires
+        case .monthly, .annual:
+            guard let expiry = expiryDate else {
+                return false // Subscription needs expiry date
+            }
+            return expiry > Date() // Check if not expired
+        case .free:
+            return false
         }
     }
 
@@ -250,23 +359,74 @@ class LicenseManager: ObservableObject {
         if status == errSecSuccess,
            let data = result as? Data,
            let licenseString = String(data: data, encoding: .utf8) {
+
+            // Try to parse as JSON (new format)
+            if let jsonData = licenseString.data(using: .utf8),
+               let licenseDict = try? JSONSerialization.jsonObject(with: jsonData) as? [String: String],
+               let email = licenseDict["email"],
+               let key = licenseDict["key"],
+               let tierString = licenseDict["tier"] {
+
+                let tier = SubscriptionTier(rawValue: tierString) ?? .lifetime
+                var expiryDate: Date?
+
+                if let expiryString = licenseDict["expiry"] {
+                    expiryDate = ISO8601DateFormatter().date(from: expiryString)
+                }
+
+                let isActive = isSubscriptionActive(tier: tier, expiryDate: expiryDate)
+
+                DispatchQueue.main.async {
+                    self.isPro = isActive
+                    self.licenseEmail = email
+                    self.licenseKey = key
+                    self.subscriptionTier = tier
+                    self.subscriptionExpiryDate = expiryDate
+                }
+
+                if isActive {
+                    print("✅ Pro license loaded from Keychain - Tier: \(tier.displayName)")
+                } else {
+                    print("⚠️ License expired - Tier: \(tier.displayName)")
+                }
+                return
+            }
+
+            // Fallback: Try old format (email:key)
             let components = licenseString.split(separator: ":")
             if components.count == 2 {
                 DispatchQueue.main.async {
                     self.isPro = true
                     self.licenseEmail = String(components[0])
                     self.licenseKey = String(components[1])
+                    self.subscriptionTier = .lifetime // Assume lifetime for old licenses
+                    self.subscriptionExpiryDate = nil
                 }
-                print("✅ Pro license loaded from Keychain")
+                print("✅ Pro license loaded from Keychain (legacy format)")
+                return
             }
-        } else {
-            // Check UserDefaults backup
-            if UserDefaults.standard.bool(forKey: "isProUser") {
-                DispatchQueue.main.async {
-                    self.isPro = true
-                    self.licenseEmail = UserDefaults.standard.string(forKey: "licenseEmail")
-                }
-                print("✅ Pro status loaded from UserDefaults")
+        }
+
+        // Check UserDefaults backup
+        if UserDefaults.standard.bool(forKey: "isProUser") {
+            let email = UserDefaults.standard.string(forKey: "licenseEmail")
+            let tierString = UserDefaults.standard.string(forKey: "subscriptionTier") ?? "lifetime"
+            let tier = SubscriptionTier(rawValue: tierString) ?? .lifetime
+            let expiryDate = UserDefaults.standard.object(forKey: "subscriptionExpiry") as? Date
+
+            let isActive = isSubscriptionActive(tier: tier, expiryDate: expiryDate)
+
+            DispatchQueue.main.async {
+                self.isPro = isActive
+                self.licenseEmail = email
+                self.subscriptionTier = tier
+                self.subscriptionExpiryDate = expiryDate
+            }
+
+            if isActive {
+                print("✅ Pro status loaded from UserDefaults - Tier: \(tier.displayName)")
+            } else {
+                print("⚠️ Subscription expired")
             }
         }
     }
@@ -283,15 +443,33 @@ class LicenseManager: ObservableObject {
 
         UserDefaults.standard.removeObject(forKey: "isProUser")
         UserDefaults.standard.removeObject(forKey: "licenseEmail")
+        UserDefaults.standard.removeObject(forKey: "subscriptionTier")
+        UserDefaults.standard.removeObject(forKey: "subscriptionExpiry")
 
         DispatchQueue.main.async {
             self.isPro = false
             self.licenseEmail = nil
             self.licenseKey = nil
+            self.subscriptionTier = .free
+            self.subscriptionExpiryDate = nil
         }
 
         print("✅ License removed")
         // Note: Analytics tracking removed to avoid circular dependency
+    }
+
+    /// Check if subscription needs renewal
+    func checkSubscriptionStatus() {
+        guard subscriptionTier != .lifetime && subscriptionTier != .free else {
+            return // Lifetime and free don't need checking
+        }
+
+        if !isSubscriptionActive(tier: subscriptionTier, expiryDate: subscriptionExpiryDate) {
+            DispatchQueue.main.async {
+                self.isPro = false
+            }
+            print("⚠️ Subscription expired - User downgraded to free tier")
+        }
     }
 
     #if DEBUG

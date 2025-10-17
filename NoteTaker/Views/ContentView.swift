@@ -50,11 +50,12 @@ struct ContentView: View {
 
     var body: some View {
         NavigationSplitView {
-            // Sidebar: Note list (minimal Mac Notes style)
+            // Left Sidebar: Note list
             NoteListView(viewModel: viewModel)
                 .navigationSplitViewColumnWidth(min: 200, ideal: 250, max: 350)
         } detail: {
-            detailView
+            // Main content with chat overlay
+            mainDetailView
         }
         .navigationSplitViewStyle(.balanced)
         .sheet(isPresented: $showingSettings) {
@@ -107,10 +108,25 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .insertTextIntoNote)) { notification in
             if let text = notification.object as? String,
                let note = viewModel.selectedNote {
-                // Append the text to the current note
                 let currentContent = note.content ?? ""
-                let newContent = currentContent + "\n\n" + text
-                note.content = newContent
+
+                // Check if this is a chat dump (starts with ---\n`Chat •)
+                if text.hasPrefix("---\n`Chat •") {
+                    // Look for existing chat section to replace
+                    if let range = currentContent.range(of: #"---\n`Chat • .*?`\n---\n\n.*?(?=\n\n---|$)"#, options: .regularExpression) {
+                        // Replace existing chat section
+                        var newContent = currentContent
+                        newContent.replaceSubrange(range, with: text)
+                        note.content = newContent
+                    } else {
+                        // No existing chat, append it
+                        note.content = currentContent + "\n\n" + text
+                    }
+                } else {
+                    // Not a chat dump, just append
+                    note.content = currentContent + "\n\n" + text
+                }
+
                 viewModel.saveNote(note)
             }
         }
@@ -125,6 +141,9 @@ struct ContentView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .showLicenseActivation)) { _ in
             showLicenseActivation = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .toggleChat)) { _ in
+            showingChat.toggle()
         }
         .onDisappear {
             systemMonitor.stopMonitoring()
@@ -145,54 +164,72 @@ struct ContentView: View {
         }
     }
 
-    // MARK: - Detail View
+    // MARK: - Main Detail View
 
     @ViewBuilder
-    private var detailView: some View {
-        ZStack(alignment: .bottom) {
+    private var mainDetailView: some View {
+        GeometryReader { geometry in
             HStack(spacing: 0) {
-                // Chat Sidebar (if visible)
-                if showingChat {
-                    ChatView(
-                        isPresented: $showingChat,
-                        sidebarWidth: $chatSidebarWidth
-                    )
-                    .environmentObject(aiEngine)
-                }
+                // Main content area (squeezable)
+                ZStack(alignment: .top) {
+                    VStack(spacing: 0) {
+                        mainContentView
+                            .padding(.bottom, 32) // Space for bottom status bar
+                            .padding(.top, 52) // Space for custom toolbar
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                // Main Content
-                VStack(spacing: 0) {
-                    mainContentView
-                        .padding(.bottom, 32) // Space for bottom status bar
+                    // Custom centered toolbar overlay
+                    VStack(spacing: 0) {
+                        customToolbar
+                            .frame(height: 52)
+                            .frame(maxWidth: .infinity)
+                            .background(Color(nsColor: .windowBackgroundColor).opacity(0.95))
+
+                        Spacer()
+                    }
+
+                    // Bottom overlays
+                    VStack {
+                        Spacer()
+
+                        ZStack(alignment: .bottom) {
+                            // Bottom center status bar
+                            bottomStatusBar
+
+                            // Search bar overlay
+                            searchBarOverlay
+
+                            // Error log overlay
+                            errorLogOverlay
+                        }
+                    }
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .frame(width: showingChat ? geometry.size.width - chatSidebarWidth : geometry.size.width)
+                .animation(.spring(response: 0.3, dampingFraction: 0.8), value: showingChat)
                 .toolbar {
-                    // Far Left: Chat button
+                    // Far Left: Settings and New Note
                     ToolbarItemGroup(placement: .navigation) {
                         toolbarLeftItems
                     }
 
-                    // Center: AI Tools
-                    ToolbarItemGroup(placement: .principal) {
-                        toolbarCenterItems
-                    }
-
-                    // Far Right: Settings and New Note
-                    ToolbarItemGroup(placement: .primaryAction) {
-                        toolbarRightItems
+                    // Far Right: Chat button (hidden when chat open)
+                    if !showingChat {
+                        ToolbarItemGroup(placement: .primaryAction) {
+                            toolbarRightItems
+                        }
                     }
                 }
                 .toolbarBackground(.visible, for: .windowToolbar)
+
+                // Chat sidebar (from right)
+                if showingChat {
+                    ChatSidebarView()
+                        .environmentObject(aiEngine)
+                        .frame(width: chatSidebarWidth)
+                        .transition(.move(edge: .trailing).combined(with: .opacity))
+                }
             }
-
-            // Bottom center status bar
-            bottomStatusBar
-
-            // Search bar overlay
-            searchBarOverlay
-
-            // Error log overlay
-            errorLogOverlay
         }
     }
 
@@ -498,42 +535,10 @@ struct ContentView: View {
         }
     }
 
-    @ViewBuilder
-    private var toolbarLeftItems: some View {
-        HStack(spacing: 8) {
-            // Chat button with Pro lock
-            Button(action: {
-                if licenseManager.isPro {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                        showingChat.toggle()
-                    }
-                } else {
-                    NotificationCenter.default.post(
-                        name: .showUpgradePrompt,
-                        object: UpgradePromptView.PromptType.chat
-                    )
-                }
-            }) {
-                HStack(spacing: 4) {
-                    if !licenseManager.isPro {
-                        Image(systemName: "lock.fill")
-                            .font(.system(size: 9))
-                            .foregroundColor(.orange)
-                    }
-                    Image(systemName: showingChat ? "sidebar.left.fill" : "bubble.left.and.bubble.right.fill")
-                        .font(.system(size: 14))
-                        .foregroundColor(licenseManager.isPro ? .secondary : .orange)
-                }
-            }
-            .buttonStyle(.plain)
-            .help(licenseManager.isPro ? (showingChat ? "Hide Chat" : "Show Chat") : "Upgrade to Pro for AI Chat")
-        }
-        .padding(.horizontal, 8)
-        .controlSize(.small)
-    }
+    // MARK: - Toolbar Items
 
     @ViewBuilder
-    private var toolbarRightItems: some View {
+    private var toolbarLeftItems: some View {
         HStack(spacing: 8) {
             Button(action: { showingSettings.toggle() }) {
                 Image(systemName: "gear")
@@ -553,6 +558,51 @@ struct ContentView: View {
             .buttonStyle(.plain)
             .help("New Note (⌘N)")
         }
+        .padding(.horizontal, 8)
+        .controlSize(.small)
+    }
+
+    // MARK: - Custom Toolbar
+
+    @ViewBuilder
+    private var customToolbar: some View {
+        HStack {
+            Spacer()
+
+            // Center: AI Tools
+            toolbarCenterItems
+
+            Spacer()
+        }
+    }
+
+    @ViewBuilder
+    private var toolbarRightItems: some View {
+        Button(action: {
+            if licenseManager.isPro {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                    showingChat.toggle()
+                }
+            } else {
+                NotificationCenter.default.post(
+                    name: .showUpgradePrompt,
+                    object: UpgradePromptView.PromptType.chat
+                )
+            }
+        }) {
+            HStack(spacing: 4) {
+                if !licenseManager.isPro {
+                    Image(systemName: "lock.fill")
+                        .font(.system(size: 9))
+                        .foregroundColor(.orange)
+                }
+                Image(systemName: "bubble.left.and.bubble.right.fill")
+                    .font(.system(size: 14))
+                    .foregroundColor(licenseManager.isPro ? .secondary : .orange)
+            }
+        }
+        .buttonStyle(.plain)
+        .help(licenseManager.isPro ? "Show Chat" : "Upgrade to Pro for AI Chat")
         .padding(.horizontal, 8)
         .controlSize(.small)
     }

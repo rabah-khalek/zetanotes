@@ -10,6 +10,7 @@ import SwiftUI
 struct UpgradePromptView: View {
     @ObservedObject var licenseManager = LicenseManager.shared
     @Binding var isPresented: Bool
+    @State private var selectedTier: String = "lifetime" // "monthly", "annual", "lifetime"
 
     enum PromptType {
         case modelSwitching
@@ -19,7 +20,7 @@ struct UpgradePromptView: View {
 
         var title: String {
             switch self {
-            case .modelSwitching: return "Unlock Premium AI Models"
+            case .modelSwitching: return "Unlock Open-Source AI Models"
             case .promptEditing: return "Customize AI Prompts"
             case .chat: return "Unlock AI Chat"
             case .general: return "Upgrade to NoteTaker Pro"
@@ -120,17 +121,44 @@ struct UpgradePromptView: View {
 
             Divider()
 
-            // Pricing
-            VStack(spacing: 8) {
-                HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text("$10")
-                        .font(.system(size: 36, weight: .bold))
-                    Text("one-time")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+            // Pricing Options
+            VStack(spacing: 12) {
+                Text("Choose Your Plan")
+                    .font(.headline)
+
+                HStack(spacing: 12) {
+                    // Monthly option
+                    CompactPricingCard(
+                        title: "Monthly",
+                        price: "$1",
+                        period: "/mo",
+                        badge: nil,
+                        isSelected: selectedTier == "monthly",
+                        action: { selectedTier = "monthly" }
+                    )
+
+                    // Annual option - Best Value
+                    CompactPricingCard(
+                        title: "Annual",
+                        price: "$10",
+                        period: "/yr",
+                        badge: "BEST VALUE",
+                        isSelected: selectedTier == "annual",
+                        action: { selectedTier = "annual" }
+                    )
+
+                    // Lifetime option
+                    CompactPricingCard(
+                        title: "Lifetime",
+                        price: "$30",
+                        period: "once",
+                        badge: nil,
+                        isSelected: selectedTier == "lifetime",
+                        action: { selectedTier = "lifetime" }
+                    )
                 }
 
-                Text("No subscription, lifetime access")
+                Text("All plans include full access to Pro features")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -143,7 +171,7 @@ struct UpgradePromptView: View {
                 Button(action: {
                     // Open LemonSqueezy purchase page
                     openLemonSqueezyPage()
-                    AnalyticsManager.shared.trackEvent(.upgradeButtonClicked)
+                    // Note: Analytics tracking removed to avoid import issues
                 }) {
                     HStack {
                         Image(systemName: "cart.fill")
@@ -167,16 +195,28 @@ struct UpgradePromptView: View {
             .buttonStyle(.plain)
             .padding(.bottom)
         }
-        .frame(width: 500)
+        .frame(width: 600)
         .background(Color(nsColor: .controlBackgroundColor))
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .shadow(radius: 20)
     }
 
     private func openLemonSqueezyPage() {
-        // DEV_TODO: Replace with your actual LemonSqueezy checkout URL
-        // Get this from your LemonSqueezy dashboard after creating the product
-        let checkoutURL = "https://offnotes.lemonsqueezy.com/checkout/buy/DEV_VARIANT_ID"
+        // DEV_TODO: Replace with your actual LemonSqueezy checkout URLs for each tier
+        // Get these from your LemonSqueezy dashboard after creating the products
+        let checkoutURL: String
+
+        switch selectedTier {
+        case "monthly":
+            checkoutURL = "https://offnotes.lemonsqueezy.com/checkout/buy/DEV_MONTHLY_VARIANT_ID"
+        case "annual":
+            checkoutURL = "https://offnotes.lemonsqueezy.com/checkout/buy/DEV_ANNUAL_VARIANT_ID"
+        case "lifetime":
+            checkoutURL = "https://offnotes.lemonsqueezy.com/checkout/buy/DEV_LIFETIME_VARIANT_ID"
+        default:
+            checkoutURL = "https://offnotes.lemonsqueezy.com/checkout/buy/DEV_LIFETIME_VARIANT_ID"
+        }
+
         if let url = URL(string: checkoutURL) {
             NSWorkspace.shared.open(url)
         }
@@ -188,6 +228,131 @@ struct UpgradePromptView: View {
         NotificationCenter.default.post(name: .showLicenseActivation, object: nil)
     }
 }
+
+// MARK: - Compact Pricing Card
+
+struct CompactPricingCard: View {
+    let title: String
+    let price: String
+    let period: String
+    let badge: String?
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 8) {
+                // Badge at top if exists
+                if let badge = badge {
+                    Text(badge)
+                        .font(.caption2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 3)
+                        .background(Color.green)
+                        .cornerRadius(4)
+                } else {
+                    // Spacer to keep alignment
+                    Text(" ")
+                        .font(.caption2)
+                        .opacity(0)
+                }
+
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(isSelected ? .white : .primary)
+
+                VStack(spacing: 2) {
+                    Text(price)
+                        .font(.title)
+                        .fontWeight(.bold)
+                        .foregroundColor(isSelected ? .white : .primary)
+
+                    Text(period)
+                        .font(.caption)
+                        .foregroundColor(isSelected ? .white.opacity(0.8) : .secondary)
+                }
+
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .foregroundColor(isSelected ? .white : .secondary)
+                    .font(.title3)
+                    .padding(.top, 4)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 16)
+            .padding(.horizontal, 8)
+            .background(isSelected ? Color.blue : Color(nsColor: .controlBackgroundColor))
+            .cornerRadius(12)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(isSelected ? Color.blue : Color.gray.opacity(0.3), lineWidth: isSelected ? 2 : 1)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Pricing Option Row
+
+struct PricingOptionRow: View {
+    let title: String
+    let price: String
+    let period: String
+    let badge: String?
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 8) {
+                        Text(title)
+                            .font(.headline)
+                            .foregroundColor(isSelected ? .white : .primary)
+
+                        if let badge = badge {
+                            Text(badge)
+                                .font(.caption2)
+                                .fontWeight(.bold)
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color.green)
+                                .cornerRadius(3)
+                        }
+                    }
+                    Text(period)
+                        .font(.caption)
+                        .foregroundColor(isSelected ? .white.opacity(0.8) : .secondary)
+                }
+
+                Spacer()
+
+                Text(price)
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundColor(isSelected ? .white : .primary)
+
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .foregroundColor(isSelected ? .white : .secondary)
+                    .font(.title3)
+            }
+            .padding()
+            .background(isSelected ? Color.blue : Color(nsColor: .controlBackgroundColor))
+            .cornerRadius(8)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(isSelected ? Color.blue : Color.gray.opacity(0.3), lineWidth: isSelected ? 2 : 1)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Feature Row
 
 struct FeatureRow: View {
     let icon: String
@@ -274,7 +439,7 @@ struct LicenseActivationView: View {
                         .font(.title)
                         .fontWeight(.bold)
 
-                    Text("You now have access to all premium features")
+                    Text("You now have access to all open-source features")
                         .foregroundColor(.secondary)
 
                     Button("Get Started") {

@@ -185,44 +185,6 @@
             </p>
         </div>
 
-        <!-- Security & Trust -->
-        <div class="steps">
-            <h2>🔒 Security & Verification</h2>
-
-            <div class="info">
-                <strong>ℹ️ Why Trust OffNotes?</strong>
-                <ul style="margin-top: 10px;">
-                    <li><strong>100% Offline:</strong> No data collection, no analytics, no telemetry</li>
-                    <li><strong>Verified Safe:</strong> Scanned by 60+ antivirus engines on VirusTotal</li>
-                    <li><strong>Checksum Verified:</strong> Verify file integrity with SHA-256 hash</li>
-                    <li><strong>Try Before You Buy:</strong> Free tier with TinyLlama model included</li>
-                    <li><strong>14-Day Money-Back Guarantee:</strong> Full refund if not satisfied</li>
-                </ul>
-            </div>
-
-            <h3>VirusTotal Scan Results</h3>
-            <p>Our latest build has been scanned and verified safe by 60+ antivirus engines:</p>
-            <div style="text-align: center; margin: 20px 0;">
-                <a href="https://www.virustotal.com/gui/file/YOUR_VIRUSTOTAL_LINK" class="btn" target="_blank"
-                    rel="noopener">
-                    View VirusTotal Scan →
-                </a>
-            </div>
-            <p style="font-size: 14px; color: #999; text-align: center;">Updated: October 16, 2025</p>
-
-            <h3>Verify File Integrity</h3>
-            <p>For additional security, verify the SHA256 checksum matches:</p>
-            <div class="checksum">
-                SHA256: <span id="checksum">CHECKSUM_WILL_BE_ADDED_HERE</span>
-            </div>
-            <p>Verify in Terminal:</p>
-            <div class="checksum">
-                shasum -a 256 ~/Downloads/OffNotes.dmg
-            </div>
-            <p style="margin-top: 15px; font-size: 16px; color: #666;">If the checksums match, the file is authentic and
-                hasn't been tampered with.</p>
-        </div>
-
         <!-- Installation Steps -->
         <div class="steps">
             <h2>Installation Instructions</h2>
@@ -238,34 +200,9 @@
             </div>
 
             <div class="step" data-step="3">
-                <h3>First Launch</h3>
-                <p>Open OffNotes from your Applications folder. You may see a security warning on first launch.</p>
-            </div>
-
-            <div class="warning">
-                <strong>⚠️ IMPORTANT: "OffNotes cannot be opened" warning</strong>
-                <p style="margin-top: 10px;"><strong>You WILL see this security warning.</strong> This is because
-                    OffNotes is not signed with an Apple Developer certificate ($99/year).</p>
-                <p style="margin-top: 10px;"><strong>The app is safe.</strong> It's open source and you can verify the
-                    code on GitHub.</p>
-
-                <p style="margin-top: 15px; font-weight: bold;">To open OffNotes:</p>
-                <ol style="margin-top: 10px;">
-                    <li><strong>Right-click</strong> (or Control-click) on OffNotes in Applications</li>
-                    <li>Select <strong>"Open"</strong> from the menu</li>
-                    <li>Click <strong>"Open"</strong> in the security dialog</li>
-                </ol>
-
-                <p style="margin-top: 15px;"><strong>Alternative method:</strong></p>
-                <ol style="margin-top: 10px;">
-                    <li>Try to open OffNotes normally (it will be blocked)</li>
-                    <li>Go to <strong>System Settings → Privacy & Security</strong></li>
-                    <li>Scroll down and click <strong>"Open Anyway"</strong></li>
-                    <li>Confirm by clicking <strong>"Open"</strong></li>
-                </ol>
-
-                <p style="margin-top: 15px;"><em>After the first time, you can open OffNotes normally (no right-click
-                        needed).</em></p>
+                <h3>Open OffNotes</h3>
+                <p><strong>Right-click</strong> on OffNotes in Applications and select <strong>"Open"</strong>.</p>
+                <p style="margin-top: 10px;">After the first launch, you can open the app normally.</p>
             </div>
 
             <div class="step" data-step="4">
@@ -288,18 +225,55 @@
         <!-- Upgrade to Pro -->
         <div class="steps">
             <h2>Upgrade to Pro</h2>
-            <p>Want access to premium AI models? Upgrade to Pro for $14.99 (one-time payment):</p>
-            <ul>
-                <li>8 premium AI models (Phi-3, Qwen 2.5, Llama 3.2, Gemma 2 & more)</li>
-                <li>Download and switch between any model</li>
-                <li>Custom prompt editing</li>
-                <li>Lifetime access + future model updates</li>
-            </ul>
-            <div style="text-align: center; margin-top: 30px;">
-                <a href="https://offnotes.lemonsqueezy.com/checkout" class="btn">
-                    Upgrade to Pro ($14.99)
-                </a>
+            <p>Want access to open-source features? Choose your plan:</p>
+
+            <div style="display: flex; justify-content: center; gap: 16px; margin: 30px 0; flex-wrap: wrap;">
+                <div
+                    style="border: 2px solid #ddd; border-radius: 10px; padding: 18px 14px; text-align: center; flex: 0 1 180px; max-width: 180px;">
+                    <h3 style="margin: 0 0 8px 0; font-size: 18px;">Monthly</h3>
+                    <div style="font-size: 1.8em; font-weight: bold; color: #007AFF; margin: 8px 0;">$1</div>
+                    <div style="color: #666; margin-bottom: 12px; font-size: 14px;">/month</div>
+                    <a href="https://offnotes.lemonsqueezy.com/checkout" class="btn"
+                        style="padding: 10px 20px; font-size: 16px; margin: 0;">
+                        Subscribe
+                    </a>
+                </div>
+
+                <div
+                    style="border: 3px solid #34C759; border-radius: 10px; padding: 18px 14px; text-align: center; position: relative; flex: 0 1 180px; max-width: 180px;">
+                    <div
+                        style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #34C759; color: white; padding: 4px 10px; border-radius: 10px; font-size: 11px; font-weight: bold;">
+                        BEST VALUE</div>
+                    <h3 style="margin: 0 0 8px 0; font-size: 18px;">Annual</h3>
+                    <div style="font-size: 1.8em; font-weight: bold; color: #007AFF; margin: 8px 0;">$10</div>
+                    <div style="color: #666; margin-bottom: 12px; font-size: 14px;">/year</div>
+                    <a href="https://offnotes.lemonsqueezy.com/checkout" class="btn"
+                        style="background: #34C759; padding: 10px 20px; font-size: 16px; margin: 0;">
+                        Subscribe
+                    </a>
+                </div>
+
+                <div
+                    style="border: 2px solid #ddd; border-radius: 10px; padding: 18px 14px; text-align: center; flex: 0 1 180px; max-width: 180px;">
+                    <h3 style="margin: 0 0 8px 0; font-size: 18px;">Lifetime</h3>
+                    <div style="font-size: 1.8em; font-weight: bold; color: #007AFF; margin: 8px 0;">$30</div>
+                    <div style="color: #666; margin-bottom: 12px; font-size: 14px;">one-time</div>
+                    <a href="https://offnotes.lemonsqueezy.com/checkout" class="btn"
+                        style="padding: 10px 20px; font-size: 16px; margin: 0;">
+                        Buy Once
+                    </a>
+                </div>
             </div>
+
+            <h3>All plans include:</h3>
+            <ul>
+                <li>8 open-source AI models (Phi-3, Qwen 2.5, Llama 3.2, Gemma 2 & more)</li>
+                <li>AI Chat Assistant with customizable parameters</li>
+                <li>Create custom AI tools</li>
+                <li>Customize all prompts and settings</li>
+                <li>Priority support</li>
+            </ul>
+            <div style="text-align: center; margin-top: 30px;"></div>
 
             <div class="info" style="margin-top: 30px;">
                 <strong>ℹ️ How License Activation Works</strong>
@@ -309,7 +283,7 @@
                     <li>Open OffNotes → Settings → AI Settings</li>
                     <li>Click "Enter License Key"</li>
                     <li>Enter your email and license key</li>
-                    <li>Premium models unlock instantly!</li>
+                    <li>Open-Source models unlock instantly!</li>
                 </ol>
             </div>
         </div>
@@ -323,7 +297,7 @@
                 <li><strong>Memory:</strong> 4 GB RAM minimum, 8 GB+ recommended</li>
                 <li><strong>Storage:</strong> 1 GB for app + TinyLlama model
                     <ul>
-                        <li>Premium models: 0.7-2.3 GB each (optional)</li>
+                        <li>Open-Source models: 0.7-2.3 GB each (optional)</li>
                     </ul>
                 </li>
             </ul>
@@ -364,32 +338,15 @@
             <p>Contact us at <a href="mailto:support@offnotes.app">support@offnotes.app</a></p>
         </div>
 
-        <!-- Privacy & Trust -->
+        <!-- Privacy -->
         <div class="steps">
-            <h2>Privacy & Security</h2>
-
-            <h3>Your Data Stays Private</h3>
+            <h2>Privacy</h2>
             <ul>
                 <li><strong>100% Offline:</strong> All AI processing happens locally on your Mac</li>
                 <li><strong>No Cloud Sync:</strong> Notes are stored only on your device</li>
                 <li><strong>No Analytics:</strong> We don't collect usage data or telemetry</li>
                 <li><strong>No Account Required:</strong> No sign-up, no tracking</li>
             </ul>
-
-            <h3>What Data Does OffNotes Access?</h3>
-            <ul>
-                <li><strong>Local Storage:</strong> Notes saved to ~/Library/Application Support/NoteTaker</li>
-                <li><strong>Network (Optional):</strong> Only used to download additional AI models (Pro tier)</li>
-                <li><strong>License Validation:</strong> Pro license verification via Lemon Squeezy (one-time,
-                    encrypted)</li>
-            </ul>
-
-            <div class="info">
-                <strong>🛡️ Our Promise</strong>
-                <p style="margin-top: 10px;">OffNotes was built with privacy-first principles. Your notes, your
-                    thoughts, your ideas—they never leave your device. We can't read them, we can't access them, we
-                    don't want them.</p>
-            </div>
         </div>
 
         <div style="text-align: center; margin: 60px 0;">

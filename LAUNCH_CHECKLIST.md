@@ -8,11 +8,11 @@ Complete guide to launch OffNotes to production via GitHub Pages + LemonSqueezy.
 
 - [x] Removed Qwen2.5 0.5B from model list
 - [x] Verified LicenseManager gates Pro features correctly
-- [x] Updated UpgradePromptView pricing to $14.99
-- [x] Updated AISettingsView pricing to $14.99
+- [x] Updated UpgradePromptView with new pricing tiers (Monthly $1, Annual $10, Lifetime $30)
+- [x] Updated AISettingsView pricing display
 - [x] Updated feature descriptions to focus on models + prompts
 
-**Result:** Free tier gets all AI features with TinyLlama, Pro unlocks 8 premium models + custom prompts.
+**Result:** Free tier gets all AI features with TinyLlama, Pro unlocks 8 open-source models + custom prompts with flexible pricing.
 
 ---
 
@@ -50,10 +50,13 @@ Complete guide to launch OffNotes to production via GitHub Pages + LemonSqueezy.
 
 **Next Steps:**
 1. Create LemonSqueezy account at https://lemonsqueezy.com
-2. Create product "OffNotes Pro" ($14.99)
-3. Enable license key generation
-4. Update `LicenseManager.swift` line 83-84 with your Store ID and Product ID
-5. Update `UpgradePromptView.swift` line 155 with your checkout URL
+2. Create product "OffNotes Pro" with three pricing tiers:
+   - Monthly: $1/month (recurring subscription)
+   - Annual: $10/year (recurring subscription)
+   - Lifetime: $30 (one-time payment)
+3. Enable license key generation for all variants
+4. Update `LicenseManager.swift` line 120-121 with your Store ID and Product ID
+5. Update `UpgradePromptView.swift` with your checkout URLs for each tier
 6. Update website HTML files with correct LemonSqueezy links
 
 ---
@@ -95,20 +98,34 @@ Complete guide to launch OffNotes to production via GitHub Pages + LemonSqueezy.
 3. **Create Product**
    - Products → New Product
    - Name: **OffNotes Pro**
-   - Description: "Unlock 8 premium AI models and custom prompt editing. Lifetime access."
-   - Price: **$14.99**
+   - Description: "Unlock 8 open-source AI models and custom prompt editing."
    - Type: **Digital Product**
 
-4. **Enable License Keys**
+4. **Create Three Variants**
+
+   **Variant 1: Monthly Subscription**
+   - Name: "Monthly Pro"
+   - Price: **$1/month**
+   - Billing: Recurring
+   - Save and get the **Variant ID**
+
+   **Variant 2: Annual Subscription**
+   - Name: "Annual Pro"
+   - Price: **$10/year**
+   - Billing: Recurring (yearly)
+   - Save and get the **Variant ID**
+
+   **Variant 3: Lifetime License**
+   - Name: "Lifetime Pro"
+   - Price: **$30**
+   - Type: One-time payment
+   - Save and get the **Variant ID**
+
+5. **Enable License Keys**
    - Product Settings → License Keys
-   - Enable: **Yes**
+   - Enable: **Yes** (for all variants)
    - Length: 16-32 characters (your choice)
    - Format: `XXXX-XXXX-XXXX-XXXX` (recommended)
-
-5. **Create Variant**
-   - Add Variant → "Lifetime License"
-   - Price: $14.99
-   - Save and get the **Variant ID**
 
 6. **Get API Credentials**
    - Settings → API
@@ -117,14 +134,19 @@ Complete guide to launch OffNotes to production via GitHub Pages + LemonSqueezy.
 
 7. **Update Code**
    ```swift
-   // In LicenseManager.swift line 83-84
+   // In LicenseManager.swift line 120-121
    let storeId = "YOUR_STORE_ID"
    let productId = "YOUR_PRODUCT_ID"
    ```
 
    ```swift
-   // In UpgradePromptView.swift line 155
-   let checkoutURL = "https://offnotes.lemonsqueezy.com/checkout/buy/YOUR_VARIANT_ID"
+   // In UpgradePromptView.swift - Update all three checkout URLs
+   case "monthly":
+       checkoutURL = "https://offnotes.lemonsqueezy.com/checkout/buy/MONTHLY_VARIANT_ID"
+   case "annual":
+       checkoutURL = "https://offnotes.lemonsqueezy.com/checkout/buy/ANNUAL_VARIANT_ID"
+   case "lifetime":
+       checkoutURL = "https://offnotes.lemonsqueezy.com/checkout/buy/LIFETIME_VARIANT_ID"
    ```
 
 8. **Update Website**
@@ -292,9 +314,9 @@ The script automatically:
    - [ ] Complete test purchase (or use test mode)
    - [ ] Receive license key via email
    - [ ] Activate license in app
-   - [ ] Verify premium models appear
-   - [ ] Download a premium model
-   - [ ] Switch to premium model
+   - [ ] Verify open-source models appear
+   - [ ] Download a open-source model
+   - [ ] Switch to open-source model
 
 3. **Test Website**
    - [ ] Landing page loads correctly

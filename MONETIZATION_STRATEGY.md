@@ -25,7 +25,7 @@ ye# NoteTaker Monetization Strategy
 
 **Limitations:**
 
-- ❌ **TinyLlama model only** - Can't switch to premium models
+- ❌ **TinyLlama model only** - Can't switch to open-source models
 - ❌ **No custom prompts** - Must use default prompts
 - ⚠️ **Basic quality** - TinyLlama is fast but basic
 
@@ -35,7 +35,7 @@ ye# NoteTaker Monetization Strategy
 
 **Everything in Free PLUS:**
 
-**Premium AI Models:**
+**Open-Source AI Models:**
 
 - ✨ **Phi-3 Mini (3.8B)** - Microsoft's best-in-class compact model
 - ✨ **Qwen 2.5 (1.5B)** - Excellent quality-to-size ratio
@@ -143,7 +143,7 @@ If we charged $4.99/month:
 3. **Tries AI features** - Autocomplete, summarize, translate all work!
 4. **Uses for 1-2 weeks** - Falls in love with the app
 5. **Notices quality limits** - TinyLlama is good, but not great
-6. **Sees "Try Premium Models"** - Curious about Phi-3, Qwen
+6. **Sees "Try Open-Source Models"** - Curious about Phi-3, Qwen
 7. **Clicks to upgrade** - Sees $29 one-time, no subscription
 8. **Purchases** - Gets immediate access to better models
 9. **Much happier** - AI quality noticeably better
@@ -220,7 +220,7 @@ if LicenseManager.shared.canEditPrompts {
 "AI-Powered Note-Taking for Mac. Privacy-First. Offline. Yours Forever."
 
 **Subheadline:**
-"Write smarter with local AI. Autocomplete, summarize, search by meaning—all private on your Mac. Free forever, upgrade for premium AI models."
+"Write smarter with local AI. Autocomplete, summarize, search by meaning—all private on your Mac. Free forever, upgrade for open-source AI models."
 
 **Features:**
 
@@ -230,16 +230,16 @@ if LicenseManager.shared.canEditPrompts {
 - 🎯 **Semantic Search** - Find notes by meaning, not just keywords
 - 🧠 **Smart Writing** - AI suggestions as you type
 - 📊 **Free Forever** - Full note-taking with AI, no credit card required
-- 💎 **Upgrade for Better AI** - One-time $29 for premium models
+- 💎 **Upgrade for Better AI** - One-time $29 for open-source models
 
 ### Gumroad Product Page
 
-**Title:** NoteTaker Pro - Premium AI Models
+**Title:** NoteTaker Pro - Open-Source AI Models
 
 **Price:** $29
 
 **Description:**
-Unlock premium AI models for better quality in NoteTaker.
+Unlock open-source AI models for better quality in NoteTaker.
 
 **What's Included:**
 ✓ Phi-3 Mini (3.8B parameters) - Best-in-class compact model
@@ -311,7 +311,7 @@ Unlock premium AI models for better quality in NoteTaker.
 ## FAQ for Users
 
 **Q: Why should I upgrade if everything works in free tier?**
-A: Free tier uses TinyLlama (1.1B parameters), which is fast but basic. Pro gives you access to Phi-3 (3.8B), Qwen (1.5B), and other premium models that are significantly smarter and produce better results. Plus you can customize prompts for your specific needs.
+A: Free tier uses TinyLlama (1.1B parameters), which is fast but basic. Pro gives you access to Phi-3 (3.8B), Qwen (1.5B), and other open-source models that are significantly smarter and produce better results. Plus you can customize prompts for your specific needs.
 
 **Q: Is this a subscription?**
 A: No! It's a one-time payment of $29 for lifetime access. No recurring charges, ever.

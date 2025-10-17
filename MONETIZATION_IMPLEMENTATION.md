@@ -131,12 +131,12 @@ Or in Xcode: **Cmd+B** to build
 - ✅ Semantic search
 - ✅ Grammar checking & reformulation
 - ✅ TinyLlama AI model
-- ❌ Can't switch to premium models
+- ❌ Can't switch to open-source models
 - ❌ Can't edit AI prompts
 
 ### PRO Tier ($29 one-time)
 
-- ✨ All premium models (Phi-3, Qwen, Llama 3.2, etc.)
+- ✨ All open-source models (Phi-3, Qwen, Llama 3.2, etc.)
 - ✨ Switch between models anytime
 - ✨ Edit and customize all AI prompts
 - ✨ Better AI quality (larger models)

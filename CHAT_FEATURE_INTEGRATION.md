@@ -15,10 +15,11 @@ The following files have been created for the chat feature:
 - `/Users/projects/Documents/notetaker/NoteTaker/AI/ChatService.swift`
 
 ### Views
-- `/Users/projects/Documents/notetaker/NoteTaker/Views/ChatView.swift`
+- `/Users/projects/Documents/notetaker/NoteTaker/Views/ChatView.swift` (OLD - can be removed)
+- `/Users/projects/Documents/notetaker/NoteTaker/Views/ChatSidebarView.swift` (NEW - native sidebar)
 
 ### Modified Files
-- `/Users/projects/Documents/notetaker/NoteTaker/Views/ContentView.swift` - Added chat button, sidebar, and integration
+- `/Users/projects/Documents/notetaker/NoteTaker/Views/ContentView.swift` - Uses native 3-column NavigationSplitView with chat sidebar
 - `/Users/projects/Documents/notetaker/NoteTaker/Views/AISettingsView.swift` - Added Chat settings tab
 - `/Users/projects/Documents/notetaker/NoteTaker/Views/UpgradePromptView.swift` - Added chat to Pro features
 
@@ -44,7 +45,9 @@ You need to add the newly created files to the Xcode project:
 10. Add `ChatService.swift`
 
 11. Right-click on the `Views` folder
-12. Add `ChatView.swift`
+12. Add `ChatSidebarView.swift`
+
+**Note:** The old `ChatView.swift` can be optionally removed from the project as it's been replaced by `ChatSidebarView.swift`.
 
 ### 2. Build and Test
 

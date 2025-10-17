@@ -350,10 +350,10 @@ Your NoteTaker app now has:
 The app is now in excellent shape to add:
 
 1. **StoreKit 2 Integration** - Add PurchaseManager
-2. **Feature Flags** - Gate premium models
+2. **Feature Flags** - Gate open-source models
 3. **Paywall UI** - Beautiful subscription screen
 4. **Free Tier** - TinyLlama bundled
-5. **Premium Tier** - Advanced models ($4.99/mo)
+5. **Open-Source Tier** - Advanced models ($4.99/mo)
 
 **Estimated time to add monetization: 1-2 days**
 

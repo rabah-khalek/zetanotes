@@ -51,7 +51,7 @@ func switchModel(to modelType: AIModel) async {
 
 ### 3. Update AISettingsView.swift
 
-Show Pro badge and lock icons for premium models:
+Show Pro badge and lock icons for open-source models:
 
 ```swift
 // In model picker section

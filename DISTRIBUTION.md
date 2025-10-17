@@ -309,11 +309,18 @@ Privacy-first note-taking with offline AI. Your notes never leave your device.
 - All AI features (autocomplete, summaries, translation)
 - Unlimited notes
 
-## Pro Tier ($14.99)
-- 8 premium AI models
+## Pro Tier (Flexible Pricing)
+
+**Choose your plan:**
+- **Monthly**: $1/month - Perfect for trying out
+- **Annual**: $10/year - Best value, save $2/year
+- **Lifetime**: $30 one-time - Own forever
+
+**All plans include:**
+- 8 open-source AI models
 - Download and switch between models
 - Custom prompt editing
-- Lifetime access
+- Priority support
 
 ## Installation
 1. Download `OffNotes-v1.0.0.dmg`
@@ -474,7 +481,10 @@ open ~/Library/Logs/DiagnosticReports/
 | GitHub Pages | Free | - |
 | Total First Year | $99 | - |
 
-**Break-even:** 8 Pro licenses ($14.99 × 8 = $119.92)
+**Break-even:**
+- With Lifetime ($30): 4 sales = $120
+- With Annual ($10): 10 sales = $100
+- With Monthly ($1): 100 months of subscribers = $100
 
 ---
 

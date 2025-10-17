@@ -831,7 +831,7 @@ struct ProStatusSection: View {
                                 .font(.headline)
                                 .fontWeight(.semibold)
 
-                            Text("Download premium AI models & customize prompts")
+                            Text("Download open-source AI models & customize prompts")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -852,7 +852,7 @@ struct ProStatusSection: View {
                         }) {
                             HStack {
                                 Image(systemName: "cart.fill")
-                                Text("Upgrade for $14.99")
+                                Text("Upgrade Starting at $1/month")
                             }
                         }
                         .buttonStyle(.borderedProminent)

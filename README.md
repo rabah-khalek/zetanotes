@@ -10,7 +10,7 @@ OffNotes is a native macOS note-taking app that runs AI models completely offlin
 
 🔒 **100% Private** • ✨ **AI Autocomplete** • 📝 **Instant Summaries** • 🌍 **Translate to 12+ Languages** • 🔍 **Semantic Search**
 
-**[Download Latest Release](https://github.com/YOUR_USERNAME/offnotes/releases/latest)** | **[Documentation](https://YOUR_USERNAME.github.io/offnotes/)** | **[Upgrade to Pro ($14.99)](https://offnotes.lemonsqueezy.com/checkout)**
+**[Download Latest Release](https://github.com/YOUR_USERNAME/offnotes/releases/latest)** | **[Documentation](https://YOUR_USERNAME.github.io/offnotes/)** | **[Upgrade to Pro (from $1/month)](https://offnotes.lemonsqueezy.com/checkout)**
 
 ---
 
@@ -25,13 +25,15 @@ OffNotes is a native macOS note-taking app that runs AI models completely offlin
 - ✅ **100% Offline** - All AI processing happens locally
 - ✅ **Privacy-First** - Zero telemetry, no cloud sync, no data collection
 
-### Pro Tier ($14.99 one-time)
-- 🚀 **8 Premium AI Models** - Phi-3, Qwen 2.5, Llama 3.2, Gemma 2, SmolLM2 & more
+### Pro Tier (starting at $1/month)
+- 🚀 **8 Open-Source AI Models** - Phi-3, Qwen 2.5, Llama 3.2, Gemma 2, SmolLM2 & more
+- 💬 **AI Chat Assistant** - Natural conversations with AI using selected model
 - 📥 **Download Any Model** - Switch between models anytime
-- ✏️ **Custom Prompts** - Fine-tune all AI responses to your needs
+- ✏️ **Custom Tools** - Create custom AI tools tailored to your workflow
+- ⚙️ **Customize Everything** - Fine-tune prompts, chat parameters, and more
 - ⚡ **Better Quality** - Larger models = smarter, more accurate results
-- 🎁 **Future Updates** - New models added regularly
-- 💎 **Lifetime Access** - Pay once, own forever
+- 🎁 **Future Updates** - New models and features added regularly
+- 💎 **Flexible Plans** - Monthly ($1), Annual ($10), or Lifetime ($30)
 
 ---
 
@@ -42,7 +44,7 @@ OffNotes is a native macOS note-taking app that runs AI models completely offlin
 | **Privacy** | 100% offline | ❌ Data sent to servers |
 | **AI Features** | ✅ Local models | ⚠️ Requires internet |
 | **Speed** | ⚡ Instant | 🐌 Network latency |
-| **Cost** | $0-$14.99 one-time | 💸 $10-20/month |
+| **Cost** | $0-$30 one-time or $1-10/month | 💸 $10-20/month |
 | **Data Security** | 🔒 Never leaves your Mac | ⚠️ Stored in cloud |
 | **Works Offline** | ✅ Always | ❌ Internet required |
 
@@ -54,7 +56,7 @@ OffNotes is a native macOS note-taking app that runs AI models completely offlin
 - **macOS 13.0** (Ventura) or later
 - **Apple Silicon** (M1/M2/M3/M4) recommended
 - **4 GB RAM** minimum (8 GB+ recommended)
-- **1 GB disk space** (+ more for premium models)
+- **1 GB disk space** (+ more for open-source models)
 
 ### Download
 
@@ -108,7 +110,15 @@ Or: System Settings → Privacy & Security → "Open Anyway"
 ### Included (Free)
 - **TinyLlama 1.1B** - Lightweight, fast, perfect for autocomplete and embeddings
 
-### Pro Models ($14.99)
+### Pro Models (from $1/month)
+
+**Choose your plan:**
+- **Monthly**: $1/month - Perfect for trying out Pro features
+- **Annual**: $10/year - Best value, save $2 per year
+- **Lifetime**: $30 one-time - Pay once, own forever
+
+**All plans include access to:**
+
 | Model | Size | Speed | Quality | Best For |
 |-------|------|-------|---------|----------|
 | **Llama 3.2 1B** | 0.7 GB | Very Fast | Basic+ | Quick tasks |
@@ -130,7 +140,7 @@ All models run with **Metal GPU acceleration** on Apple Silicon for maximum perf
 
 1. Open **Settings** → **AI Settings**
 2. **Change Model** (Pro only):
-   - Click "Download" next to any premium model
+   - Click "Download" next to any open-source model
    - After download, click "Use This"
 3. **Customize Prompts** (Pro only):
    - Edit prompts for autocomplete, summarization, translation, etc.

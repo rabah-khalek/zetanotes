@@ -168,7 +168,7 @@ Features implemented:
 
 ### Medium Priority
 5. **PurchaseManager** - StoreKit 2 integration
-6. **Feature Flags** - Gate premium features
+6. **Feature Flags** - Gate open-source features
 7. **Paywall UI** - Subscription screen
 8. **Resume Downloads** - Handle interrupted downloads
 
