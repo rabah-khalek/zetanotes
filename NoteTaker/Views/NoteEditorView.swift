@@ -319,28 +319,6 @@ struct NoteEditorView: View {
                 .padding(.vertical, 12)
                 .transition(.opacity)
             }
-
-            // Bottom Toolbar (Minimal Mac Notes style - Stats only)
-            HStack(spacing: 0) {
-                // Stats
-                HStack(spacing: 12) {
-                    Text("\(wordCount(content)) words")
-                        .font(.system(size: 11))
-                        .foregroundColor(.secondary)
-
-                    Text("•")
-                        .foregroundColor(.secondary.opacity(0.5))
-
-                    Text("\(content.count) characters")
-                        .font(.system(size: 11))
-                        .foregroundColor(.secondary)
-                }
-
-                Spacer()
-            }
-            .padding(.horizontal, 24)
-            .padding(.vertical, 10)
-            .background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
         }
         .onAppear {
             // Load note content when view appears
