@@ -27,11 +27,11 @@ struct UpgradePromptView: View {
         var description: String {
             switch self {
             case .modelSwitching:
-                return "Get access to Phi-3, Qwen 2.5, Llama 3.2, and 5 more premium models for better AI quality."
+                return "Access to 8 open-source AI models including Phi-3, Qwen 2.5, Llama 3.2, and Gemma 2."
             case .promptEditing:
-                return "Customize how the AI responds to your needs. Fine-tune prompts for perfect results."
+                return "Build custom tools tailored to your workflow."
             case .general:
-                return "Download premium AI models and customize prompts to match your workflow."
+                return "Access 8 open-source AI models and build custom tools."
             }
         }
 
@@ -49,7 +49,7 @@ struct UpgradePromptView: View {
     var body: some View {
         VStack(spacing: 0) {
             // Header
-            HStack {
+            HStack(alignment: .top) {
                 Image(systemName: promptType.icon)
                     .font(.system(size: 40))
                     .foregroundColor(.blue)
@@ -69,6 +69,15 @@ struct UpgradePromptView: View {
                 .padding(.leading, 8)
 
                 Spacer()
+
+                Button(action: {
+                    isPresented = false
+                }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 20))
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
             }
             .padding()
 
@@ -82,21 +91,20 @@ struct UpgradePromptView: View {
 
                 FeatureRow(
                     icon: "cpu.fill",
-                    text: "8 Premium AI Models",
+                    text: "8 Open-Source AI Models",
                     subtitle: "Phi-3, Qwen 2.5, Llama 3.2, Gemma 2 & more"
                 )
                 FeatureRow(
-                    icon: "arrow.down.circle.fill",
-                    text: "Download Any Model",
-                    subtitle: "Switch between models anytime"
+                    icon: "wrench.and.screwdriver.fill",
+                    text: "Create Custom Tools",
+                    subtitle: "Build AI tools tailored to your workflow"
                 )
-                FeatureRow(icon: "sparkles", text: "Better AI Quality", subtitle: "Larger models = smarter results")
                 FeatureRow(
-                    icon: "text.alignleft",
-                    text: "Custom Prompt Editing",
-                    subtitle: "Fine-tune all AI responses"
+                    icon: "slider.horizontal.3",
+                    text: "Customize Existing Tools",
+                    subtitle: "Fine-tune built-in tools to match your style"
                 )
-                FeatureRow(icon: "gift.fill", text: "Future Model Updates", subtitle: "New models added regularly")
+                FeatureRow(icon: "gift.fill", text: "New Models & Features", subtitle: "Updates added regularly")
             }
             .padding()
 
@@ -105,7 +113,7 @@ struct UpgradePromptView: View {
             // Pricing
             VStack(spacing: 8) {
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text("$14.99")
+                    Text("$10")
                         .font(.system(size: 36, weight: .bold))
                     Text("one-time")
                         .font(.subheadline)
@@ -121,13 +129,7 @@ struct UpgradePromptView: View {
             Divider()
 
             // Actions
-            HStack(spacing: 12) {
-                Button("Maybe Later") {
-                    isPresented = false
-                    AnalyticsManager.shared.trackEvent(.upgradePromptDismissed)
-                }
-                .buttonStyle(.bordered)
-
+            VStack(spacing: 12) {
                 Button(action: {
                     // Open LemonSqueezy purchase page
                     openLemonSqueezyPage()
