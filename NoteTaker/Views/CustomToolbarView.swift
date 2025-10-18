@@ -56,21 +56,21 @@ struct CustomToolbarView<LeftContent: View, CenterContent: View, RightContent: V
 
                 // Right items
                 rightContent
-                    .padding(.trailing, 16)
+                    .padding(.trailing, 8)
                     .allowsHitTesting(true)
             }
         }
         .frame(height: height)
         .background(
-            Color(nsColor: .windowBackgroundColor)
-                .opacity(0.98)
-                .background(.ultraThinMaterial)
+            AppTheme.Colors.toolbarBackground
+                .opacity(AppTheme.Colors.toolbarBackgroundOpacity)
+                .background(AppTheme.Effects.toolbarMaterial)
         )
         .overlay(
             // Bottom border
             Rectangle()
-                .fill(Color.secondary.opacity(0.15))
-                .frame(height: 1),
+                .fill(AppTheme.Colors.toolbarBorder)
+                .frame(height: AppTheme.Effects.borderWidth),
             alignment: .bottom
         )
         .zIndex(10) // Ensure toolbar stays on top

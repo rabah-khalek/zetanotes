@@ -92,7 +92,8 @@ struct CustomWindowLayout<Toolbar: View, LeftSidebar: View, Content: View, Right
                 CustomSidebarView(
                     position: .right,
                     width: rightSidebarWidth,
-                    isVisible: showRightSidebar
+                    isVisible: showRightSidebar,
+                    showBorder: true
                 ) {
                     rightSidebar
                 }

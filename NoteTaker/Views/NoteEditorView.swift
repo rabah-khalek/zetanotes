@@ -137,7 +137,8 @@ struct SimpleTextEditor: NSViewRepresentable {
         textView.isSelectable = true
         textView.font = NSFont.systemFont(ofSize: NSFont.systemFontSize)
         textView.delegate = context.coordinator
-        textView.backgroundColor = .clear
+        textView.backgroundColor = NSColor.textBackgroundColor
+        textView.drawsBackground = true
         textView.textColor = NSColor.labelColor
         textView.string = text
         textView.allowsUndo = true
@@ -159,6 +160,8 @@ struct SimpleTextEditor: NSViewRepresentable {
         scrollView.hasVerticalScroller = true
         scrollView.hasHorizontalScroller = false
         scrollView.autohidesScrollers = true
+        scrollView.backgroundColor = .textBackgroundColor
+        scrollView.drawsBackground = true
 
         return scrollView
     }
@@ -299,16 +302,16 @@ struct NoteEditorView: View {
                         Text(showMarkdownPreview ? "Edit" : "Preview")
                             .font(.system(size: 11, weight: .medium))
                     }
-                    .foregroundColor(showMarkdownPreview ? .orange : .blue)
+                    .foregroundColor(showMarkdownPreview ? AppTheme.Colors.accentGreen : AppTheme.Colors.accentBlue)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
                     .background(
                         RoundedRectangle(cornerRadius: 4)
-                            .fill((showMarkdownPreview ? Color.orange : Color.blue).opacity(0.08))
+                            .fill((showMarkdownPreview ? AppTheme.Colors.accentGreen : AppTheme.Colors.accentBlue).opacity(0.08))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 4)
                                     .strokeBorder(
-                                        (showMarkdownPreview ? Color.orange : Color.blue).opacity(0.2),
+                                        (showMarkdownPreview ? AppTheme.Colors.accentGreen : AppTheme.Colors.accentBlue).opacity(0.2),
                                         lineWidth: 0.5
                                     )
                             )
@@ -319,8 +322,8 @@ struct NoteEditorView: View {
                 .help(showMarkdownPreview ? "Switch to edit mode" : "Preview Markdown formatting")
             }
             .padding(.horizontal, 24)
-            .padding(.top, isSearching ? 70 : 24) // Extra space when search bar is showing
-            .padding(.bottom, 12)
+            .padding(.top, isSearching ? 70 : AppTheme.Spacing.noteTitleTopPadding) // Extra space when search bar is showing
+            .padding(.bottom, AppTheme.Spacing.noteTitleBottomPadding)
 
             // Content Editor or Markdown Preview
             if showMarkdownPreview {

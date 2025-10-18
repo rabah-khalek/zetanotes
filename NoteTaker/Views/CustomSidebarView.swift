@@ -24,16 +24,19 @@ struct CustomSidebarView<Content: View>: View {
     let position: SidebarPosition
     let width: CGFloat
     let isVisible: Bool
+    let showBorder: Bool
 
     init(
         position: SidebarPosition = .left,
         width: CGFloat = 250,
         isVisible: Bool = true,
+        showBorder: Bool = true,
         @ViewBuilder content: () -> Content
     ) {
         self.position = position
         self.width = width
         self.isVisible = isVisible
+        self.showBorder = showBorder
         self.content = content()
     }
 
@@ -43,11 +46,15 @@ struct CustomSidebarView<Content: View>: View {
                 content
             }
             .frame(width: width)
-            .background(Color(nsColor: .controlBackgroundColor))
+            .background(AppTheme.Colors.sidebarBackground)
             .overlay(
-                Rectangle()
-                    .fill(Color.secondary.opacity(0.15))
-                    .frame(width: 1),
+                Group {
+                    if showBorder {
+                        Rectangle()
+                            .fill(AppTheme.Colors.sidebarBorder)
+                            .frame(width: 1)
+                    }
+                },
                 alignment: position == .left ? .trailing : .leading
             )
             .transition(.move(edge: position == .left ? .leading : .trailing).combined(with: .opacity))

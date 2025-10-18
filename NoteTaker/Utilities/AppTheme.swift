@@ -1,0 +1,128 @@
+//
+//  AppTheme.swift
+//  NoteTaker
+//
+//  Global color theme and styling constants for consistent UI across the app
+//
+
+import SwiftUI
+
+// MARK: - App Theme
+
+struct AppTheme {
+
+    // MARK: - Colors
+
+    struct Colors {
+        // Background colors (semantic - auto-adapt to light/dark mode)
+        static let windowBackground = Color(nsColor: .windowBackgroundColor)
+        static let controlBackground = Color(nsColor: .controlBackgroundColor)
+        static let textBackground = Color(nsColor: .textBackgroundColor)
+
+        // Content area background (unified for edit and preview)
+        static let contentBackground = Color(nsColor: .textBackgroundColor)
+
+        // Note editor background (unified)
+        static let editorBackground = Color(nsColor: .textBackgroundColor)
+
+        // Toolbar colors
+        static let toolbarBackground = windowBackground
+        static let toolbarBackgroundOpacity: CGFloat = 0.98
+        static let toolbarBorder = Color.secondary.opacity(0.15)
+
+        // Sidebar colors
+        static let sidebarBackground = controlBackground
+        static let sidebarBorder = Color.secondary.opacity(0.15)
+
+        // Accent colors
+        static let accentBlue = Color.blue
+        static let accentPurple = Color.purple
+        static let accentOrange = Color.orange
+        static let accentGreen = Color.green
+        static let accentRed = Color.red
+        static let accentPink = Color.pink
+        static let accentIndigo = Color.indigo
+
+        // Text colors
+        static let primaryText = Color.primary
+        static let secondaryText = Color.secondary
+
+        // Status colors
+        static let success = Color.green
+        static let warning = Color.yellow
+        static let error = Color.red
+        static let info = Color.blue
+    }
+
+    // MARK: - Spacing
+
+    struct Spacing {
+        // Toolbar
+        static let toolbarHeight: CGFloat = 52
+        static let toolbarHorizontalPadding: CGFloat = 16
+        static let toolbarItemSpacing: CGFloat = 8
+
+        // Sidebar
+        static let sidebarWidth: CGFloat = 250
+        static let sidebarMinWidth: CGFloat = 200
+        static let sidebarMaxWidth: CGFloat = 400
+
+        // Status bar
+        static let statusBarHeight: CGFloat = 32
+        static let statusBarVerticalPadding: CGFloat = 4 // Reduced from 6
+        static let statusBarHorizontalPadding: CGFloat = 8
+
+        // Content padding
+        static let contentTopPadding: CGFloat = 52 // For toolbar
+        static let contentBottomPadding: CGFloat = 28 // For status bar (reduced from 32)
+
+        // Note title
+        static let noteTitleTopPadding: CGFloat = 8 // Reduced from 12
+        static let noteTitleBottomPadding: CGFloat = 4 // Reduced for tighter spacing to content
+
+        // Search bar
+        static let searchBarTopPadding: CGFloat = 40 // For title bar area
+        static let searchBarHorizontalPadding: CGFloat = 12
+        static let searchBarBottomPadding: CGFloat = 6
+
+        // Chat
+        static let chatWidth: CGFloat = 350
+        static let chatHeaderTopPadding: CGFloat = 16
+        static let chatHeaderBottomPadding: CGFloat = 8
+    }
+
+    // MARK: - Typography
+
+    struct Typography {
+        static let toolbarIconSize: CGFloat = 14
+        static let toolbarButtonSize: CGFloat = 11
+
+        static let statusIconSize: CGFloat = 9
+        static let statusTextSize: CGFloat = 10
+
+        static let chatTitleSize: CGFloat = 14
+        static let chatIconSize: CGFloat = 14
+    }
+
+    // MARK: - Effects
+
+    struct Effects {
+        static let toolbarMaterial: Material = .ultraThinMaterial
+        static let sidebarMaterial: Material? = nil // Use solid color
+
+        static let borderWidth: CGFloat = 1
+        static let cornerRadius: CGFloat = 8
+
+        static let standardShadow = Color.black.opacity(0.1)
+        static let shadowRadius: CGFloat = 8
+        static let shadowY: CGFloat = 4
+    }
+
+    // MARK: - Animation
+
+    struct Animation {
+        static let standard = SwiftUI.Animation.spring(response: 0.3, dampingFraction: 0.8)
+        static let quick = SwiftUI.Animation.spring(response: 0.2, dampingFraction: 0.9)
+        static let smooth = SwiftUI.Animation.easeInOut(duration: 0.25)
+    }
+}

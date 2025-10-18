@@ -310,17 +310,62 @@ struct MessageBubble: View {
                     )
                     .textSelection(.enabled)
 
-                // Timestamp
-                Text(message.formattedTimestamp)
-                    .font(.system(size: 9))
-                    .foregroundColor(.secondary.opacity(0.7))
-                    .padding(.horizontal, 4)
+                // Timestamp and dump button (on same line for assistant messages)
+                HStack(spacing: 6) {
+                    Text(message.formattedTimestamp)
+                        .font(.system(size: 9))
+                        .foregroundColor(.secondary.opacity(0.7))
+
+                    if message.role == .assistant {
+                        Button(action: {
+                            dumpMessageToNote(message: message)
+                        }) {
+                            HStack(spacing: 3) {
+                                Image(systemName: "arrow.down.doc")
+                                    .font(.system(size: 9))
+                                Text("Dump")
+                                    .font(.system(size: 9, weight: .medium))
+                            }
+                            .foregroundColor(AppTheme.Colors.accentBlue)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(AppTheme.Colors.accentBlue.opacity(0.08))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 4)
+                                            .strokeBorder(AppTheme.Colors.accentBlue.opacity(0.2), lineWidth: 0.5)
+                                    )
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        .help("Dump this message to note")
+                    }
+                }
+                .padding(.horizontal, 4)
             }
 
             if message.role == .assistant {
                 Spacer(minLength: 40)
             }
         }
+    }
+
+    private func dumpMessageToNote(message: ChatMessage) {
+        // Format the message with timestamp
+        let markdown = """
+        ---
+        `Assistant Response • \(message.formattedTimestamp)`
+        ---
+
+        \(message.content)
+        """
+
+        // Post notification to insert into current note
+        NotificationCenter.default.post(
+            name: .insertTextIntoNote,
+            object: markdown
+        )
     }
 }
 

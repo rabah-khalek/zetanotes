@@ -43,6 +43,7 @@
 		81DE4F9D2EA33EF3006293FC /* CustomWindowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F9C2EA33EF3006293FC /* CustomWindowLayout.swift */; };
 		81DE4F9E2EA33EF3006293FC /* CustomSidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F9A2EA33EF3006293FC /* CustomSidebarView.swift */; };
 		81DE4F9F2EA33EF3006293FC /* CustomToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F9B2EA33EF3006293FC /* CustomToolbarView.swift */; };
+		81DE4FA12EA34106006293FC /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4FA02EA34106006293FC /* AppTheme.swift */; };
 		81EFBE2E2E9B05C700F7E48B /* libllama.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 81EFBE282E9B05C700F7E48B /* libllama.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		81EFBE2F2E9B05C700F7E48B /* libggml-base.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 81EFBE292E9B05C700F7E48B /* libggml-base.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		81EFBE302E9B05C700F7E48B /* libggml-metal.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 81EFBE2A2E9B05C700F7E48B /* libggml-metal.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -132,6 +133,7 @@
 		81DE4F9A2EA33EF3006293FC /* CustomSidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomSidebarView.swift; sourceTree = "<group>"; };
 		81DE4F9B2EA33EF3006293FC /* CustomToolbarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomToolbarView.swift; sourceTree = "<group>"; };
 		81DE4F9C2EA33EF3006293FC /* CustomWindowLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomWindowLayout.swift; sourceTree = "<group>"; };
+		81DE4FA02EA34106006293FC /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		81EFBE282E9B05C700F7E48B /* libllama.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libllama.dylib; path = llama.cpp/build/bin/libllama.dylib; sourceTree = "<group>"; };
 		81EFBE292E9B05C700F7E48B /* libggml-base.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libggml-base.dylib"; path = "llama.cpp/build/bin/libggml-base.dylib"; sourceTree = "<group>"; };
 		81EFBE2A2E9B05C700F7E48B /* libggml-metal.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libggml-metal.dylib"; path = "llama.cpp/build/bin/libggml-metal.dylib"; sourceTree = "<group>"; };
@@ -349,6 +351,7 @@
 		A1000068000000000000001 /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
+				81DE4FA02EA34106006293FC /* AppTheme.swift */,
 				81DE4F962EA33ED6006293FC /* CustomToolbar.swift */,
 				81DE4F972EA33ED6006293FC /* WindowConfiguration.swift */,
 				A1000064000000000000001 /* SystemMonitor.swift */,
@@ -438,6 +441,7 @@
 				A1000013000000000000001 /* NoteEditorView.swift in Sources */,
 				A1000015000000000000001 /* SearchBarView.swift in Sources */,
 				8104180C2E9AF4770086B1B2 /* NoteEmbedding+CoreDataClass.swift in Sources */,
+				81DE4FA12EA34106006293FC /* AppTheme.swift in Sources */,
 				8104180D2E9AF4770086B1B2 /* Tag+CoreDataClass.swift in Sources */,
 				810418102E9AF4770086B1B2 /* Note+CoreDataClass.swift in Sources */,
 				A1000017000000000000001 /* PersistenceController.swift in Sources */,

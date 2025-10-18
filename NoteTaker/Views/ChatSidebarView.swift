@@ -19,19 +19,15 @@ struct ChatSidebarView: View {
             VStack(spacing: 0) {
                 // Header - AI Chat title (now at the top)
                 HStack(spacing: 6) {
-                    Image(systemName: "bubble.left.and.bubble.right.fill")
-                        .font(.system(size: 14))
-                        .foregroundColor(.blue)
-
                     Text("AI Chat")
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.system(size: AppTheme.Typography.chatTitleSize, weight: .semibold))
 
                     Spacer()
                 }
                 .padding(.horizontal, 12)
-                .padding(.top, 16) // Top padding to align with title bar area
-                .padding(.bottom, 8)
-                .background(Color(nsColor: .controlBackgroundColor))
+                .padding(.top, AppTheme.Spacing.chatHeaderTopPadding)
+                .padding(.bottom, AppTheme.Spacing.chatHeaderBottomPadding)
+                .background(AppTheme.Colors.controlBackground)
 
                 // Messages
                 if chatManager.messages.isEmpty {
@@ -161,33 +157,14 @@ struct ChatSidebarView: View {
                 .background(Color(nsColor: .controlBackgroundColor))
             }
             .ignoresSafeArea(edges: .top)
-            .background(Color(nsColor: .controlBackgroundColor))
-
-            // Collapse arrow button on left edge
-            VStack {
-                Spacer()
-
-                Button(action: {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                        NotificationCenter.default.post(name: .toggleChat, object: nil)
-                    }
-                }) {
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(.secondary)
-                        .padding(6)
-                        .background(
-                            Circle()
-                                .fill(Color(nsColor: .controlBackgroundColor))
-                                .shadow(color: .black.opacity(0.15), radius: 3, x: 0, y: 0)
-                        )
-                }
-                .buttonStyle(.plain)
-                .help("Close chat")
-                .offset(x: -12)
-
-                Spacer()
-            }
+            .background(AppTheme.Colors.controlBackground)
+            .overlay(
+                // Top border matching toolbar
+                Rectangle()
+                    .fill(AppTheme.Colors.toolbarBorder)
+                    .frame(height: AppTheme.Effects.borderWidth),
+                alignment: .top
+            )
         }
     }
 

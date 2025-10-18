@@ -194,11 +194,7 @@ struct ContentView: View {
             toolbarCenterItems
         } rightContent: {
             // Right items
-            if !showingChat {
-                toolbarRightItems
-            } else {
-                Color.clear.frame(width: 60)
-            }
+            toolbarRightItems
         }
     }
 
@@ -209,7 +205,7 @@ struct ContentView: View {
         ZStack(alignment: .bottom) {
             // Main content view
             mainContentView
-                .padding(.bottom, 32) // Space for bottom status bar
+                .padding(.bottom, AppTheme.Spacing.contentBottomPadding) // Space for bottom status bar
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             // Bottom overlays
@@ -576,7 +572,7 @@ struct ContentView: View {
             \(Int(systemMonitor.totalSystemMemory / 1024))GB)
             """)
         }
-        .padding(.vertical, 6)
+        .padding(.vertical, AppTheme.Spacing.statusBarVerticalPadding)
         .frame(maxWidth: .infinity)
     }
 
@@ -611,13 +607,13 @@ struct ContentView: View {
         HStack(spacing: 8) {
             // Sidebar toggle
             Button(action: {
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                withAnimation(AppTheme.Animation.standard) {
                     showingSidebar.toggle()
                 }
             }) {
                 Image(systemName: "sidebar.left")
-                    .font(.system(size: 14))
-                    .foregroundColor(showingSidebar ? .blue : .secondary)
+                    .font(.system(size: AppTheme.Typography.toolbarIconSize))
+                    .foregroundColor(showingSidebar ? AppTheme.Colors.accentBlue : AppTheme.Colors.secondaryText)
             }
             .buttonStyle(.plain)
             .help("Toggle Sidebar (⌘B)")
@@ -625,8 +621,8 @@ struct ContentView: View {
 
             Button(action: { showingSettings.toggle() }) {
                 Image(systemName: "gear")
-                    .font(.system(size: 14))
-                    .foregroundColor(.secondary)
+                    .font(.system(size: AppTheme.Typography.toolbarIconSize))
+                    .foregroundColor(AppTheme.Colors.secondaryText)
             }
             .buttonStyle(.plain)
             .help("AI Settings & Prompts")
@@ -635,8 +631,8 @@ struct ContentView: View {
                 NotificationCenter.default.post(name: .createNewNote, object: nil)
             }) {
                 Image(systemName: "square.and.pencil")
-                    .font(.system(size: 14))
-                    .foregroundColor(.secondary)
+                    .font(.system(size: AppTheme.Typography.toolbarIconSize))
+                    .foregroundColor(AppTheme.Colors.secondaryText)
             }
             .buttonStyle(.plain)
             .help("New Note (⌘N)")
@@ -691,32 +687,29 @@ struct ContentView: View {
 
     @ViewBuilder
     private var toolbarRightItems: some View {
-        Button(action: {
-            if licenseManager.isPro {
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                    showingChat.toggle()
+        HStack(spacing: 8) {
+            // Chat toggle (symmetric to sidebar toggle)
+            Button(action: {
+                if licenseManager.isPro {
+                    withAnimation(AppTheme.Animation.standard) {
+                        showingChat.toggle()
+                    }
+                } else {
+                    NotificationCenter.default.post(
+                        name: .showUpgradePrompt,
+                        object: UpgradePromptView.PromptType.chat
+                    )
                 }
-            } else {
-                NotificationCenter.default.post(
-                    name: .showUpgradePrompt,
-                    object: UpgradePromptView.PromptType.chat
-                )
+            }) {
+                Image(systemName: "bubble.left.and.bubble.right")
+                    .font(.system(size: AppTheme.Typography.toolbarIconSize))
+                    .foregroundColor(showingChat ? AppTheme.Colors.accentBlue : AppTheme.Colors.secondaryText)
             }
-        }) {
-            HStack(spacing: 4) {
-                if !licenseManager.isPro {
-                    Image(systemName: "lock.fill")
-                        .font(.system(size: 9))
-                        .foregroundColor(.orange)
-                }
-                Image(systemName: "bubble.left.and.bubble.right.fill")
-                    .font(.system(size: 14))
-                    .foregroundColor(licenseManager.isPro ? .secondary : .orange)
-            }
+            .buttonStyle(.plain)
+            .help("Toggle Chat (⌘⇧C)")
+            .keyboardShortcut("c", modifiers: [.command, .shift])
         }
-        .buttonStyle(.plain)
-        .help(licenseManager.isPro ? "Show Chat" : "Upgrade to Pro for AI Chat")
-        .padding(.horizontal, 8)
+        .padding(.horizontal, 4)
         .controlSize(.small)
     }
 
@@ -733,6 +726,7 @@ struct ContentView: View {
                 isSearching: showingSearch,
                 semanticMatchText: $semanticMatchText
             )
+            .background(AppTheme.Colors.editorBackground)
             .id(selectedNote.id) // Force new view instance for each note
             .onChange(of: selectedNote.content) { newContent in
                 // Update word and character counts
