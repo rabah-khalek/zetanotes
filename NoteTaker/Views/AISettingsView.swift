@@ -984,9 +984,6 @@ struct ToolsSettingsContent: View {
                         canEdit: licenseManager.isPro,
                         onEdit: {
                             toolEditorState = .edit(tool)
-                        },
-                        onReset: {
-                            toolManager.resetDefaultTool(tool)
                         }
                     )
                 }
@@ -1027,7 +1024,6 @@ struct ToolRow: View {
     let canEdit: Bool
     var canDelete: Bool = false
     let onEdit: () -> Void
-    var onReset: (() -> Void)?
     var onDelete: (() -> Void)?
 
     var body: some View {
@@ -1069,17 +1065,6 @@ struct ToolRow: View {
             Spacer()
 
             HStack(spacing: 8) {
-                // Reset button (default tools only)
-                if tool.isDefault, let reset = onReset, canEdit {
-                    Button(action: reset) {
-                        Image(systemName: "arrow.counterclockwise")
-                            .font(.system(size: 12))
-                            .foregroundColor(.blue)
-                    }
-                    .buttonStyle(.plain)
-                    .help("Reset to default")
-                }
-
                 // View/Edit button
                 Button(action: onEdit) {
                     if canEdit {
