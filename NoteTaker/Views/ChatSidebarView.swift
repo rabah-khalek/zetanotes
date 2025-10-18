@@ -17,11 +17,7 @@ struct ChatSidebarView: View {
     var body: some View {
         ZStack(alignment: .leading) {
             VStack(spacing: 0) {
-                // Spacer for window titlebar
-                Color.clear
-                    .frame(height: 44) // Reduced from 52
-
-                // Header - AI Chat title
+                // Header - AI Chat title (now at the top)
                 HStack(spacing: 6) {
                     Image(systemName: "bubble.left.and.bubble.right.fill")
                         .font(.system(size: 14))
@@ -33,7 +29,8 @@ struct ChatSidebarView: View {
                     Spacer()
                 }
                 .padding(.horizontal, 12)
-                .padding(.vertical, 6) // Reduced from 8
+                .padding(.top, 16) // Top padding to align with title bar area
+                .padding(.bottom, 8)
                 .background(Color(nsColor: .controlBackgroundColor))
 
                 // Messages

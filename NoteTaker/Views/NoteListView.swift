@@ -81,12 +81,12 @@ struct NoteListView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Compact header
+            // Compact header with title bar spacing
             VStack(spacing: 8) {
                 // Search Bar only
                 SearchBarView(searchQuery: $viewModel.searchQuery, isSearching: $viewModel.isSearching)
                     .padding(.horizontal, 12)
-                    .padding(.top, 12)
+                    .padding(.top, 40) // Increased to account for title bar area
                     .padding(.bottom, 6)
             }
 

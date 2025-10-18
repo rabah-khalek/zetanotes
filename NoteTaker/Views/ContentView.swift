@@ -44,25 +44,41 @@ struct ContentView: View {
     @State private var isSearching = false
     @State private var semanticMatchText = "" // Stores the matched text for highlighting
 
+    // Sidebar state
+    @State private var showingSidebar = true
+    @State private var sidebarWidth: CGFloat = 250
+
     // Chat state
     @State private var showingChat = false
     @State private var chatSidebarWidth: CGFloat = 350
 
     var body: some View {
-        NavigationSplitView {
-            // Left Sidebar: Note list
-            NoteListView(viewModel: viewModel)
-                .navigationSplitViewColumnWidth(min: 200, ideal: 250, max: 350)
-                .ignoresSafeArea(.all)
-        } detail: {
-            // Main content with chat overlay
-            mainDetailView
-                .ignoresSafeArea(.all)
+        GeometryReader { geometry in
+            HStack(spacing: 0) {
+                // Custom left sidebar
+                if showingSidebar {
+                    VStack(spacing: 0) {
+                        NoteListView(viewModel: viewModel)
+                    }
+                    .frame(width: sidebarWidth)
+                    .background(Color(nsColor: .controlBackgroundColor))
+                    .overlay(
+                        Rectangle()
+                            .fill(Color.secondary.opacity(0.15))
+                            .frame(width: 1),
+                        alignment: .trailing
+                    )
+                    .transition(.move(edge: .leading).combined(with: .opacity))
+                }
+
+                // Main content area
+                mainDetailView
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+            .frame(width: geometry.size.width, height: geometry.size.height)
+            .ignoresSafeArea(.all)
         }
-        .navigationSplitViewStyle(.balanced)
-        .toolbar(.hidden, for: .windowToolbar)
         .ignoresSafeArea(.all) // Remove all safe area insets including title bar
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .sheet(isPresented: $showingSettings) {
             AISettingsView(viewModel: viewModel)
                 .environmentObject(aiEngine)
@@ -551,6 +567,20 @@ struct ContentView: View {
     @ViewBuilder
     private var toolbarLeftItems: some View {
         HStack(spacing: 8) {
+            // Sidebar toggle
+            Button(action: {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                    showingSidebar.toggle()
+                }
+            }) {
+                Image(systemName: "sidebar.left")
+                    .font(.system(size: 14))
+                    .foregroundColor(showingSidebar ? .blue : .secondary)
+            }
+            .buttonStyle(.plain)
+            .help("Toggle Sidebar (⌘B)")
+            .keyboardShortcut("b", modifiers: .command)
+
             Button(action: { showingSettings.toggle() }) {
                 Image(systemName: "gear")
                     .font(.system(size: 14))
