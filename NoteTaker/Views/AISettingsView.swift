@@ -127,7 +127,7 @@ struct AISettingsView: View {
                     VStack(alignment: .leading, spacing: 24) {
                         switch selectedSection {
                         case .general:
-                            GeneralSettingsContent(dismiss: dismiss)
+                            GeneralSettingsContent(dismiss: dismiss, viewModel: viewModel)
                         case .model:
                             ModelSettingsContent(
                                 aiEngine: aiEngine,
@@ -274,6 +274,7 @@ struct CloseButton: View {
 
 struct GeneralSettingsContent: View {
     let dismiss: DismissAction
+    @ObservedObject var viewModel: NoteViewModel
     @ObservedObject var licenseManager = LicenseManager.shared
     @AppStorage("preferredAppearance") private var preferredAppearance: String = "light"
 
@@ -285,6 +286,53 @@ struct GeneralSettingsContent: View {
 
             // Pro Status / Upgrade Section
             ProStatusSection(dismiss: dismiss)
+
+            Divider()
+
+            // Semantic Search Indexing Section
+            VStack(alignment: .leading, spacing: 12) {
+                Label("Semantic Search", systemImage: "magnifyingglass.circle")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+
+                Text("AI-powered semantic search is available via Cmd+F within individual notes")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                            .font(.system(size: 12))
+                        Text("Cmd+F in a note: AI semantic search (embeddings generated on-demand)")
+                            .font(.caption)
+                    }
+
+                    HStack(spacing: 6) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                            .font(.system(size: 12))
+                        Text("Note list search: Fast keyword search (no embeddings needed)")
+                            .font(.caption)
+                    }
+
+                    HStack(spacing: 6) {
+                        Image(systemName: "info.circle.fill")
+                            .foregroundColor(.blue)
+                            .font(.system(size: 12))
+                        Text("This eliminates heavy computation on app startup")
+                            .font(.caption)
+                            .foregroundColor(.blue)
+                    }
+                }
+
+                Text("💡 Embeddings are only computed when you need them, keeping the app fast and responsive.")
+                    .font(.caption2)
+                    .foregroundColor(.orange)
+            }
+            .padding()
+            .background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
+            .cornerRadius(8)
 
             Divider()
 

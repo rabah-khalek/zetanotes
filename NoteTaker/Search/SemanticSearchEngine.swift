@@ -72,9 +72,12 @@ class SemanticSearchEngine {
 
         // Compute similarities
         var results: [SearchResult] = []
+        var notesNeedingEmbeddings: [Note] = []
 
         for note in notes {
             guard let embedding = note.embedding, let noteVector = embedding.vector else {
+                // Track notes that need embeddings for lazy generation
+                notesNeedingEmbeddings.append(note)
                 continue
             }
 
@@ -82,6 +85,16 @@ class SemanticSearchEngine {
 
             if similarity >= threshold {
                 results.append(SearchResult(note: note, similarity: similarity))
+            }
+        }
+
+        // Generate embeddings lazily for notes that are missing them (up to 5 at a time)
+        if !notesNeedingEmbeddings.isEmpty {
+            print("⚠️ Found \(notesNeedingEmbeddings.count) notes without embeddings during search")
+            Task.detached(priority: .utility) {
+                let context = self.persistenceController.newBackgroundContext()
+                let limitedNotes = Array(notesNeedingEmbeddings.prefix(5))
+                await self.embeddingService.batchGenerateEmbeddings(for: limitedNotes, in: context)
             }
         }
 
@@ -161,6 +174,22 @@ class SemanticSearchEngine {
 
     // MARK: - Hybrid Search
 
+    /// Keyword-only search (no embeddings required - fast!)
+    /// - Parameters:
+    ///   - query: The search query
+    ///   - limit: Maximum results to return
+    /// - Returns: Keyword search results wrapped as SearchResult with default score
+    func keywordSearch(query: String, limit: Int = Config.defaultResultLimit) async -> [SearchResult] {
+        let keywordNotes = await performKeywordSearch(query: query)
+
+        // Wrap in SearchResult with a neutral similarity score
+        let results = keywordNotes.map { note in
+            SearchResult(note: note, similarity: 0.75) // Default relevance score
+        }
+
+        return Array(results.prefix(limit))
+    }
+
     /// Combines keyword search with semantic search for best results
     /// - Parameters:
     ///   - query: The search query
@@ -216,9 +245,38 @@ class SemanticSearchEngine {
 
     // MARK: - Indexing
 
-    /// Ensures all notes have embeddings generated
-    /// Call this periodically or after bulk imports
-    func indexAllNotes() async {
+    /// Ensures all notes have embeddings generated (LAZY MODE)
+    /// Only generates embeddings for a LIMITED number of notes at startup
+    /// - Parameter maxNotes: Maximum notes to index at once (default: 10)
+    func indexAllNotes(maxNotes: Int = 10) async {
+        let context = persistenceController.newBackgroundContext()
+
+        await context.perform {
+            let fetchRequest: NSFetchRequest<Note> = Note.fetchRequest()
+            fetchRequest.predicate = NSPredicate(format: "embedding == nil")
+            fetchRequest.fetchLimit = maxNotes // CRITICAL: Limit to avoid heavy computation
+            fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \Note.updatedAt, ascending: false)] // Index most recent first
+
+            do {
+                let notesWithoutEmbeddings = try context.fetch(fetchRequest)
+
+                if !notesWithoutEmbeddings.isEmpty {
+                    print("🔄 Lazy indexing \(notesWithoutEmbeddings.count) recent notes (max: \(maxNotes))...")
+                    Task {
+                        await self.embeddingService.batchGenerateEmbeddings(for: notesWithoutEmbeddings, in: context)
+                    }
+                } else {
+                    print("✅ All recent notes already indexed")
+                }
+            } catch {
+                print("❌ Failed to fetch notes for indexing: \(error)")
+            }
+        }
+    }
+
+    /// Generates embeddings for ALL notes (use with caution)
+    /// Should only be called manually by the user, not automatically
+    func indexAllNotesComplete() async {
         let context = persistenceController.newBackgroundContext()
 
         await context.perform {
@@ -229,7 +287,7 @@ class SemanticSearchEngine {
                 let notesWithoutEmbeddings = try context.fetch(fetchRequest)
 
                 if !notesWithoutEmbeddings.isEmpty {
-                    print("🔄 Indexing \(notesWithoutEmbeddings.count) notes...")
+                    print("🔄 Full indexing \(notesWithoutEmbeddings.count) notes (this may take a while)...")
                     Task {
                         await self.embeddingService.batchGenerateEmbeddings(for: notesWithoutEmbeddings, in: context)
                     }

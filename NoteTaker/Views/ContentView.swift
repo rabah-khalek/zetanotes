@@ -467,115 +467,115 @@ struct ContentView: View {
         HStack {
             Spacer()
             HStack(alignment: .center, spacing: 8) {
-            // Word and Character count badge (blue)
-            HStack(spacing: 6) {
-                Image(systemName: "doc.text")
-                    .font(.system(size: 9))
-                    .foregroundColor(.blue)
-
-                Text(String(format: "%d words", currentWordCount))
-                    .font(.system(size: 10, weight: .medium, design: .monospaced))
-                    .foregroundColor(.primary)
-
-                Text("•")
-                    .font(.system(size: 8))
-                    .foregroundColor(.secondary.opacity(0.5))
-
-                Text(String(format: "%d characters", currentCharacterCount))
-                    .font(.system(size: 10, weight: .medium, design: .monospaced))
-                    .foregroundColor(.primary)
-            }
-            .padding(.horizontal, 7)
-            .padding(.vertical, 4)
-            .background(
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(Color.blue.opacity(0.08))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 4)
-                            .strokeBorder(Color.blue.opacity(0.2), lineWidth: 0.5)
-                    )
-            )
-            .help(String(format: "%d words, %d characters", currentWordCount, currentCharacterCount))
-
-            // Active AI Model
-            if !systemMonitor.activeModel.isEmpty {
-                HStack(spacing: 4) {
-                    Image(systemName: "brain.head.profile")
+                // Word and Character count badge (blue)
+                HStack(spacing: 6) {
+                    Image(systemName: "doc.text")
                         .font(.system(size: 9))
-                        .foregroundColor(.purple)
+                        .foregroundColor(.blue)
 
-                    Text(systemMonitor.activeModel)
-                        .font(.system(size: 10, weight: .medium))
+                    Text(String(format: "%d words", currentWordCount))
+                        .font(.system(size: 10, weight: .medium, design: .monospaced))
                         .foregroundColor(.primary)
-                        .lineLimit(1)
+
+                    Text("•")
+                        .font(.system(size: 8))
+                        .foregroundColor(.secondary.opacity(0.5))
+
+                    Text(String(format: "%d characters", currentCharacterCount))
+                        .font(.system(size: 10, weight: .medium, design: .monospaced))
+                        .foregroundColor(.primary)
                 }
                 .padding(.horizontal, 7)
                 .padding(.vertical, 4)
                 .background(
                     RoundedRectangle(cornerRadius: 4)
-                        .fill(Color.purple.opacity(0.08))
+                        .fill(Color.blue.opacity(0.08))
                         .overlay(
                             RoundedRectangle(cornerRadius: 4)
-                                .strokeBorder(Color.purple.opacity(0.2), lineWidth: 0.5)
+                                .strokeBorder(Color.blue.opacity(0.2), lineWidth: 0.5)
                         )
                 )
-                .help("Active AI Model: \(systemMonitor.activeModel)")
-            }
+                .help(String(format: "%d words, %d characters", currentWordCount, currentCharacterCount))
 
-            // System Monitor
-            HStack(spacing: 6) {
-                // CPU indicator
-                HStack(spacing: 3) {
-                    Image(systemName: "cpu.fill")
-                        .font(.system(size: 9))
-                        .foregroundColor(cpuColor)
+                // Active AI Model
+                if !systemMonitor.activeModel.isEmpty {
+                    HStack(spacing: 4) {
+                        Image(systemName: "brain.head.profile")
+                            .font(.system(size: 9))
+                            .foregroundColor(.purple)
 
-                    Text("CPU:")
-                        .font(.system(size: 9, weight: .medium))
-                        .foregroundColor(.secondary)
-
-                    Text(String(format: "%3d", Int(systemMonitor.cpuUsage)) + "%")
-                        .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                        .foregroundColor(.primary)
-                        .frame(width: 32, alignment: .trailing)
-                }
-
-                Rectangle()
-                    .fill(Color.secondary.opacity(0.3))
-                    .frame(width: 1, height: 10)
-
-                // Memory indicator
-                HStack(spacing: 3) {
-                    Image(systemName: "memorychip.fill")
-                        .font(.system(size: 9))
-                        .foregroundColor(memoryColor)
-
-                    Text("MEM:")
-                        .font(.system(size: 9, weight: .medium))
-                        .foregroundColor(.secondary)
-
-                    Text(String(format: "%4d", Int(systemMonitor.memoryUsage)) + "M")
-                        .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                        .foregroundColor(.primary)
-                        .frame(width: 42, alignment: .trailing)
-                }
-            }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(Color.secondary.opacity(0.08))
-                    .overlay(
+                        Text(systemMonitor.activeModel)
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundColor(.primary)
+                            .lineLimit(1)
+                    }
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 4)
+                    .background(
                         RoundedRectangle(cornerRadius: 4)
-                            .strokeBorder(Color.secondary.opacity(0.2), lineWidth: 0.5)
+                            .fill(Color.purple.opacity(0.08))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 4)
+                                    .strokeBorder(Color.purple.opacity(0.2), lineWidth: 0.5)
+                            )
                     )
-            )
-            .help("""
-            CPU: \(Int(systemMonitor.cpuUsage))% of \(systemMonitor.cpuCoreCount) cores • \
-            Memory: \(Int(systemMonitor.memoryUsage))MB \
-            (\(String(format: "%.1f", systemMonitor.memoryUsagePercentage))% of \
-            \(Int(systemMonitor.totalSystemMemory / 1024))GB)
-            """)
+                    .help("Active AI Model: \(systemMonitor.activeModel)")
+                }
+
+                // System Monitor
+                HStack(spacing: 6) {
+                    // CPU indicator
+                    HStack(spacing: 3) {
+                        Image(systemName: "cpu.fill")
+                            .font(.system(size: 9))
+                            .foregroundColor(cpuColor)
+
+                        Text("CPU:")
+                            .font(.system(size: 9, weight: .medium))
+                            .foregroundColor(.secondary)
+
+                        Text(String(format: "%3d", Int(systemMonitor.cpuUsage)) + "%")
+                            .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                            .foregroundColor(.primary)
+                            .frame(width: 32, alignment: .trailing)
+                    }
+
+                    Rectangle()
+                        .fill(Color.secondary.opacity(0.3))
+                        .frame(width: 1, height: 10)
+
+                    // Memory indicator
+                    HStack(spacing: 3) {
+                        Image(systemName: "memorychip.fill")
+                            .font(.system(size: 9))
+                            .foregroundColor(memoryColor)
+
+                        Text("MEM:")
+                            .font(.system(size: 9, weight: .medium))
+                            .foregroundColor(.secondary)
+
+                        Text(String(format: "%4d", Int(systemMonitor.memoryUsage)) + "M")
+                            .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                            .foregroundColor(.primary)
+                            .frame(width: 42, alignment: .trailing)
+                    }
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.secondary.opacity(0.08))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 4)
+                                .strokeBorder(Color.secondary.opacity(0.2), lineWidth: 0.5)
+                        )
+                )
+                .help("""
+                CPU: \(Int(systemMonitor.cpuUsage))% of \(systemMonitor.cpuCoreCount) cores • \
+                Memory: \(Int(systemMonitor.memoryUsage))MB \
+                (\(String(format: "%.1f", systemMonitor.memoryUsagePercentage))% of \
+                \(Int(systemMonitor.totalSystemMemory / 1024))GB)
+                """)
             }
             Spacer()
         }
@@ -769,13 +769,13 @@ struct ContentView: View {
                         Image(systemName: "info.circle.fill")
                             .font(.system(size: 9))
                             .foregroundColor(.blue.opacity(0.8))
-                        Text("Type for keywords")
+                        Text("AI semantic search within this note")
                             .font(.system(size: 9, weight: .medium))
                             .foregroundColor(.secondary)
                         Text("•")
                             .font(.system(size: 8))
                             .foregroundColor(.secondary.opacity(0.5))
-                        Text("Press ⏎ for AI semantic search")
+                        Text("Press ⏎ to find related content")
                             .font(.system(size: 9, weight: .medium))
                             .foregroundColor(.blue)
                     }
@@ -881,13 +881,19 @@ struct ContentView: View {
     }
 
     private func performSemanticSearch(in content: String) {
-        // Semantic/embedding-based search using AI embeddings
+        // ✅ SCOPED SEARCH: Only searches within the CURRENT note's content
+        // Does NOT search across all notes or generate embeddings for other notes
+        // Embeddings are computed on-demand for:
+        //   1. The search query
+        //   2. Chunks of THIS note's content only
+        // This keeps the operation fast and memory-efficient
+
         Task {
             guard !searchQuery.isEmpty else { return }
 
-            print("🔍 Performing semantic search for '\(searchQuery)'")
+            print("🔍 Performing semantic search within current note for '\(searchQuery)'")
 
-            // Extract only base content (exclude AI-generated sections)
+            // Extract only base content (exclude AI-generated sections) from CURRENT note
             let baseContent = extractBaseContent(from: content)
 
             if baseContent.isEmpty {
@@ -920,7 +926,8 @@ struct ContentView: View {
 
             var bestMatches: [SearchMatch] = []
 
-            // Generate embeddings for each chunk and compute similarity
+            // Generate embeddings for each chunk of CURRENT NOTE ONLY (not all notes)
+            // This is an on-demand, scoped operation limited to the active note
             for chunk in chunks {
                 guard chunk.text.count > 20 else { continue } // Skip very short chunks
 

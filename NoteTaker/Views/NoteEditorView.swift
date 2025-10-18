@@ -307,11 +307,13 @@ struct NoteEditorView: View {
                     .padding(.vertical, 4)
                     .background(
                         RoundedRectangle(cornerRadius: 4)
-                            .fill((showMarkdownPreview ? AppTheme.Colors.accentGreen : AppTheme.Colors.accentBlue).opacity(0.08))
+                            .fill((showMarkdownPreview ? AppTheme.Colors.accentGreen : AppTheme.Colors.accentBlue)
+                                .opacity(0.08))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 4)
                                     .strokeBorder(
-                                        (showMarkdownPreview ? AppTheme.Colors.accentGreen : AppTheme.Colors.accentBlue).opacity(0.2),
+                                        (showMarkdownPreview ? AppTheme.Colors.accentGreen : AppTheme.Colors.accentBlue)
+                                            .opacity(0.2),
                                         lineWidth: 0.5
                                     )
                             )
@@ -322,7 +324,10 @@ struct NoteEditorView: View {
                 .help(showMarkdownPreview ? "Switch to edit mode" : "Preview Markdown formatting")
             }
             .padding(.horizontal, 24)
-            .padding(.top, isSearching ? 70 : AppTheme.Spacing.noteTitleTopPadding) // Extra space when search bar is showing
+            .padding(
+                .top,
+                isSearching ? 70 : AppTheme.Spacing.noteTitleTopPadding
+            ) // Extra space when search bar is showing
             .padding(.bottom, AppTheme.Spacing.noteTitleBottomPadding)
 
             // Content Editor or Markdown Preview

@@ -295,24 +295,11 @@ class NoteViewModel: ObservableObject {
     }
 
     /// Only regenerate embeddings if content changed by >100 characters
-    /// Runs on background thread to avoid UI blocking
+    /// DISABLED: Embeddings only generated on-demand during Cmd+F search
     private func reindexIfNeeded(_ note: Note) async {
-        guard let noteID = note.id, let content = note.content else { return }
-
-        let lastContent = await MainActor.run { lastEmbeddingContent[noteID] ?? "" }
-        let contentDiff = abs(content.count - lastContent.count)
-
-        // Only reindex if content changed significantly (>100 chars)
-        if contentDiff > 100 || lastContent.isEmpty {
-            await MainActor.run {
-                lastEmbeddingContent[noteID] = content
-            }
-
-            // Perform reindexing in background
-            await Task.detached(priority: .utility) {
-                await self.searchEngine.reindexNote(note)
-            }.value
-        }
+        // DISABLED: No automatic embedding generation
+        // Embeddings are now only computed when user uses Cmd+F (in-note search)
+        return
     }
 
     /// Flush all pending saves - call before app quits or critical operations
@@ -340,7 +327,9 @@ class NoteViewModel: ObservableObject {
 
         isSearching = true
 
-        let results = await searchEngine.hybridSearch(query: query, limit: 20)
+        // DISABLED: Semantic search across notes (too heavy with large models)
+        // Only use keyword search for cross-note search
+        let results = await searchEngine.keywordSearch(query: query, limit: 20)
 
         await MainActor.run {
             self.searchResults = results
@@ -472,7 +461,13 @@ class NoteViewModel: ObservableObject {
     }
 
     func indexAllNotes() async {
-        await searchEngine.indexAllNotes()
+        await searchEngine.indexAllNotes(maxNotes: 10) // Lazy: only index 10 most recent
+    }
+
+    /// Index ALL notes completely - use with caution for large libraries
+    /// Should only be called manually by the user
+    func indexAllNotesComplete() async {
+        await searchEngine.indexAllNotesComplete()
     }
 
     func generateTranslation(for note: Note) async {

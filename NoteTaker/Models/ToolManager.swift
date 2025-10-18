@@ -53,7 +53,7 @@ class ToolManager: ObservableObject {
 
         // Ensure default tools exist (in case of updates/migration)
         ensureDefaultToolsExist()
-        
+
         // Migrate Autocomplete tool to remove keyboard shortcut
         migrateAutocompleteShortcut()
     }
@@ -82,12 +82,12 @@ class ToolManager: ObservableObject {
             saveTools()
         }
     }
-    
+
     /// Migration: Update Autocomplete tool to remove keyboard shortcut
     /// This ensures existing installations update to the new schema where Autocomplete has no shortcut
     private func migrateAutocompleteShortcut() {
         var needsSave = false
-        
+
         if let index = tools.firstIndex(where: { $0.name == "Autocomplete" && $0.isDefault }) {
             if tools[index].keyboardShortcut == "A" {
                 tools[index].keyboardShortcut = ""
@@ -95,7 +95,7 @@ class ToolManager: ObservableObject {
                 print("🔄 Migrated Autocomplete tool: removed keyboard shortcut 'A'")
             }
         }
-        
+
         if needsSave {
             saveTools()
         }
@@ -191,7 +191,7 @@ class ToolManager: ObservableObject {
     /// Check if a keyboard shortcut is available
     func isShortcutAvailable(_ shortcut: String, excluding toolId: UUID? = nil) -> Bool {
         let normalizedShortcut = shortcut.uppercased()
-        
+
         // Empty shortcuts are always allowed (e.g., Autocomplete)
         guard !normalizedShortcut.isEmpty else { return true }
 

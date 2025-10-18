@@ -9,11 +9,10 @@ import SwiftUI
 
 // MARK: - App Theme
 
-struct AppTheme {
-
+enum AppTheme {
     // MARK: - Colors
 
-    struct Colors {
+    enum Colors {
         // Background colors (semantic - auto-adapt to light/dark mode)
         static let windowBackground = Color(nsColor: .windowBackgroundColor)
         static let controlBackground = Color(nsColor: .controlBackgroundColor)
@@ -56,7 +55,7 @@ struct AppTheme {
 
     // MARK: - Spacing
 
-    struct Spacing {
+    enum Spacing {
         // Toolbar
         static let toolbarHeight: CGFloat = 52
         static let toolbarHorizontalPadding: CGFloat = 16
@@ -98,7 +97,7 @@ struct AppTheme {
 
     // MARK: - Typography
 
-    struct Typography {
+    enum Typography {
         static let toolbarIconSize: CGFloat = 14
         static let toolbarButtonSize: CGFloat = 11
 
@@ -111,7 +110,7 @@ struct AppTheme {
 
     // MARK: - Effects
 
-    struct Effects {
+    enum Effects {
         static let toolbarMaterial: Material = .ultraThinMaterial
         static let sidebarMaterial: Material? = nil // Use solid color
 
@@ -125,7 +124,7 @@ struct AppTheme {
 
     // MARK: - Animation
 
-    struct Animation {
+    enum Animation {
         static let standard = SwiftUI.Animation.spring(response: 0.3, dampingFraction: 0.8)
         static let quick = SwiftUI.Animation.spring(response: 0.2, dampingFraction: 0.9)
         static let smooth = SwiftUI.Animation.easeInOut(duration: 0.25)
@@ -133,7 +132,7 @@ struct AppTheme {
 
     // MARK: - Responsive Layout
 
-    struct Layout {
+    enum Layout {
         // Window size breakpoints
         static let minWindowWidth: CGFloat = 800
         static let minWindowHeight: CGFloat = 600

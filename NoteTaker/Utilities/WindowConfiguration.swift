@@ -6,13 +6,13 @@
 //  and enabling custom chrome (toolbar, titlebar, etc.)
 //
 
-import SwiftUI
 import AppKit
+import SwiftUI
 
 // MARK: - Window Configuration
 
 /// Configures an NSWindow to use custom chrome (no native titlebar/toolbar)
-struct WindowConfiguration {
+enum WindowConfiguration {
     /// Apply custom window configuration to disable native UI
     static func configureCustomChrome(window: NSWindow) {
         // Hide native title and titlebar
