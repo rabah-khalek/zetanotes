@@ -307,6 +307,7 @@ struct ContentView: View {
             AutocompleteToggle(isEnabled: $viewModel.isAutocompleteEnabled)
                 .help("Toggle Autocomplete")
                 .padding(.leading, 8)
+                .disabled(viewModel.selectedNote == nil)
 
             Rectangle()
                 .fill(Color.secondary.opacity(0.2))
@@ -327,6 +328,7 @@ struct ContentView: View {
             )
             .keyboardShortcut("f", modifiers: .command)
             .help("Find in note (⌘F)")
+            .disabled(viewModel.selectedNote == nil)
 
             // Patch
             AIToolButton(
