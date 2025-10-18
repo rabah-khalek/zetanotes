@@ -50,6 +50,17 @@ struct NoteTakerApp: App {
                 .environmentObject(aiEngine)
                 .frame(minWidth: 800, minHeight: 600)
                 .preferredColorScheme(colorScheme)
+                .background(WindowAccessor { window in
+                    window.titleVisibility = .hidden
+                    window.titlebarAppearsTransparent = true
+                    window.toolbar = nil
+                    window.isMovableByWindowBackground = true
+                    window.styleMask.insert(.fullSizeContentView)
+                    // Keep standard window buttons visible
+                    window.standardWindowButton(.closeButton)?.isHidden = false
+                    window.standardWindowButton(.miniaturizeButton)?.isHidden = false
+                    window.standardWindowButton(.zoomButton)?.isHidden = false
+                })
         }
         .commands {
             // Add custom menu commands
@@ -74,6 +85,25 @@ struct NoteTakerApp: App {
             return nil // Auto - follows system
         }
     }
+}
+
+// MARK: - Window Accessor Helper
+
+/// Helper to get NSWindow reference for customization
+struct WindowAccessor: NSViewRepresentable {
+    var callback: (NSWindow) -> Void
+
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        DispatchQueue.main.async {
+            if let window = view.window {
+                callback(window)
+            }
+        }
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {}
 }
 
 // MARK: - Notification Names

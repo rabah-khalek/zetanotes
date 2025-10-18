@@ -53,11 +53,16 @@ struct ContentView: View {
             // Left Sidebar: Note list
             NoteListView(viewModel: viewModel)
                 .navigationSplitViewColumnWidth(min: 200, ideal: 250, max: 350)
+                .ignoresSafeArea(.all)
         } detail: {
             // Main content with chat overlay
             mainDetailView
+                .ignoresSafeArea(.all)
         }
         .navigationSplitViewStyle(.balanced)
+        .toolbar(.hidden, for: .windowToolbar)
+        .ignoresSafeArea(.all) // Remove all safe area insets including title bar
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .sheet(isPresented: $showingSettings) {
             AISettingsView(viewModel: viewModel)
                 .environmentObject(aiEngine)
@@ -175,6 +180,11 @@ struct ContentView: View {
             HStack(spacing: 0) {
                 // Main content area (squeezable)
                 ZStack(alignment: .top) {
+                    // Background color to fill entire area
+                    Color(nsColor: .windowBackgroundColor)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .ignoresSafeArea(.all)
+
                     VStack(spacing: 0) {
                         mainContentView
                             .padding(.bottom, 32) // Space for bottom status bar
@@ -182,12 +192,22 @@ struct ContentView: View {
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                    // Custom centered toolbar overlay
+                    // Custom toolbar overlay at top
                     VStack(spacing: 0) {
                         customToolbar
-                            .frame(height: 52)
-                            .frame(maxWidth: .infinity)
-                            .background(Color(nsColor: .windowBackgroundColor).opacity(0.95))
+                            .background(
+                                Color(nsColor: .windowBackgroundColor)
+                                    .opacity(0.98)
+                                    .background(.ultraThinMaterial)
+                            )
+                            .overlay(
+                                // Bottom border
+                                Rectangle()
+                                    .fill(Color.secondary.opacity(0.15))
+                                    .frame(height: 1),
+                                alignment: .bottom
+                            )
+                            .zIndex(10) // Ensure toolbar stays on top
 
                         Spacer()
                     }
@@ -210,20 +230,6 @@ struct ContentView: View {
                 }
                 .frame(width: showingChat ? geometry.size.width - chatSidebarWidth : geometry.size.width)
                 .animation(.spring(response: 0.3, dampingFraction: 0.8), value: showingChat)
-                .toolbar {
-                    // Far Left: Settings and New Note
-                    ToolbarItemGroup(placement: .navigation) {
-                        toolbarLeftItems
-                    }
-
-                    // Far Right: Chat button (hidden when chat open)
-                    if !showingChat {
-                        ToolbarItemGroup(placement: .primaryAction) {
-                            toolbarRightItems
-                        }
-                    }
-                }
-                .toolbarBackground(.visible, for: .windowToolbar)
 
                 // Chat sidebar (from right)
                 if showingChat {
@@ -233,7 +239,9 @@ struct ContentView: View {
                         .transition(.move(edge: .trailing).combined(with: .opacity))
                 }
             }
+            .ignoresSafeArea(.all)
         }
+        .ignoresSafeArea(.all)
     }
 
     // MARK: - Toolbar Items
@@ -569,14 +577,44 @@ struct ContentView: View {
 
     @ViewBuilder
     private var customToolbar: some View {
-        HStack {
-            Spacer()
+        ZStack {
+            // Draggable background layer (for window movement)
+            WindowDraggableView()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .allowsHitTesting(true)
 
-            // Center: AI Tools
-            toolbarCenterItems
+            // Toolbar content (buttons on top of draggable area)
+            HStack(spacing: 0) {
+                // Left: Settings and New Note
+                toolbarLeftItems
+                    .padding(.leading, 16)
+                    .allowsHitTesting(true) // Allow buttons to receive clicks
 
-            Spacer()
+                Spacer()
+                    .allowsHitTesting(false) // Spacer doesn't block dragging
+
+                // Center: AI Tools
+                toolbarCenterItems
+                    .allowsHitTesting(true) // Allow buttons to receive clicks
+
+                Spacer()
+                    .allowsHitTesting(false) // Spacer doesn't block dragging
+
+                // Right: Chat button (hidden when chat open)
+                if !showingChat {
+                    toolbarRightItems
+                        .padding(.trailing, 16)
+                        .allowsHitTesting(true) // Allow button to receive clicks
+                } else {
+                    // Empty spacer when chat is open to maintain balance
+                    Color.clear
+                        .frame(width: 60)
+                        .padding(.trailing, 16)
+                        .allowsHitTesting(false)
+                }
+            }
         }
+        .frame(height: 52)
     }
 
     @ViewBuilder
@@ -1003,6 +1041,22 @@ extension String {
         }
 
         return ranges
+    }
+}
+
+// MARK: - Window Draggable Helper
+
+/// Helper to make a view draggable for window movement
+struct WindowDraggableView: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        view.wantsLayer = true
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        // Enable mouseDown passthrough for window dragging
+        nsView.window?.isMovableByWindowBackground = true
     }
 }
 
