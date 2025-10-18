@@ -225,16 +225,8 @@ class ToolManager: ObservableObject {
     private func isToolAtDefaultConfig(_ tool: AITool) -> Bool {
         guard tool.isDefault else { return false }
 
-        // Map tool name to ToolType
-        let toolType: ToolType
-        switch tool.name {
-        case "Autocomplete": toolType = .autocomplete
-        case "Patch": toolType = .patch
-        case "Rephrase": toolType = .rephrase
-        case "Summarize": toolType = .summarize
-        case "Translate": toolType = .translate
-        default: return false
-        }
+        // Get the ToolType for this default tool
+        guard let toolType = tool.toolType else { return false }
 
         // Check if the tool's config matches the default config for any model
         for model in AIModel.allCases {

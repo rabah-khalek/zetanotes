@@ -16,6 +16,7 @@ struct ToolEditorView: View {
 
     @StateObject private var toolManager = ToolManager.shared
     @StateObject private var licenseManager = LicenseManager.shared
+    @StateObject private var aiEngine = AIEngine.shared
     @State private var shortcutError: String?
     @State private var nameError: String?
     @State private var showAdvanced = false
@@ -359,6 +360,20 @@ struct ToolEditorView: View {
 
             // Footer
             HStack(spacing: 12) {
+                // Reset to Default button (default tools only)
+                if tool.isDefault {
+                    Button(action: resetToDefault) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "arrow.counterclockwise")
+                            Text("Reset to Default")
+                                .fontWeight(.medium)
+                        }
+                        .frame(minWidth: 120)
+                    }
+                    .buttonStyle(.bordered)
+                    .help("Reset prompt and settings to defaults for current model")
+                }
+
                 Spacer()
 
                 if !isReadOnly {
@@ -552,5 +567,26 @@ struct ToolEditorView: View {
         } else {
             nameError = nil
         }
+    }
+
+    // MARK: - Reset to Default
+
+    private func resetToDefault() {
+        guard tool.isDefault else { return }
+
+        // Get the ToolType for this default tool
+        guard let toolType = tool.toolType else { return }
+
+        // Get the default config for this tool with the current model
+        let defaultConfig = ModelToolConfigRegistry.getConfig(
+            for: aiEngine.selectedModel,
+            toolType: toolType
+        )
+
+        // Reset only the LLM-related settings, keep name, color, shortcut, icon
+        tool.prompt = defaultConfig.prompt
+        tool.temperature = defaultConfig.temperature
+        tool.maxTokens = defaultConfig.maxTokens
+        tool.stopSequences = defaultConfig.stopSequences
     }
 }

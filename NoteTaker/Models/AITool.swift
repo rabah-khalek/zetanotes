@@ -221,4 +221,29 @@ extension AITool {
     static func createDefaultTools() -> [AITool] {
         createDefaultTools(for: AIEngine.shared.selectedModel)
     }
+
+    /// Maps a default tool name to its corresponding ToolType
+    /// Returns nil if the tool name doesn't match a known default tool
+    static func toolType(forName name: String) -> ToolType? {
+        switch name {
+        case "Autocomplete":
+            return .autocomplete
+        case "Patch":
+            return .patch
+        case "Rephrase":
+            return .rephrase
+        case "Summarize":
+            return .summarize
+        case "Translate":
+            return .translate
+        default:
+            return nil
+        }
+    }
+
+    /// Gets the ToolType for this tool (if it's a default tool)
+    var toolType: ToolType? {
+        guard isDefault else { return nil }
+        return AITool.toolType(forName: name)
+    }
 }
