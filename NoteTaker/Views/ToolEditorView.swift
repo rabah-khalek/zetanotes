@@ -473,8 +473,13 @@ struct ToolEditorView: View {
 
     private var keyboardShortcutField: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Label("Keyboard Shortcut", systemImage: "command")
-                .font(.system(size: 14, weight: .semibold))
+            HStack(spacing: 4) {
+                Label("Keyboard Shortcut", systemImage: "command")
+                    .font(.system(size: 14, weight: .semibold))
+                Text("(Optional)")
+                    .font(.system(size: 12))
+                    .foregroundColor(.secondary)
+            }
 
             HStack(spacing: 8) {
                 HStack(spacing: 4) {
@@ -489,9 +494,9 @@ struct ToolEditorView: View {
                 .background(Color(nsColor: .controlBackgroundColor))
                 .cornerRadius(6)
 
-                TextField("Letter", text: $tool.keyboardShortcut)
+                TextField("Letter (or leave empty)", text: $tool.keyboardShortcut)
                     .textFieldStyle(.roundedBorder)
-                    .frame(width: 60)
+                    .frame(width: 160)
                     .disabled(isReadOnly)
                     .onChange(of: tool.keyboardShortcut) { newValue in
                         tool.keyboardShortcut = String(newValue.uppercased().prefix(1))
@@ -516,13 +521,14 @@ struct ToolEditorView: View {
 
     private var isValid: Bool {
         !tool.name.isEmpty &&
-            !tool.keyboardShortcut.isEmpty &&
             !tool.prompt.isEmpty &&
             shortcutError == nil &&
             nameError == nil
+        // Note: keyboard shortcut is optional
     }
 
     private func validateShortcut() {
+        // Empty shortcut is valid (optional)
         guard !tool.keyboardShortcut.isEmpty else {
             shortcutError = nil
             return

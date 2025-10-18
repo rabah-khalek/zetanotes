@@ -26,20 +26,27 @@ struct ToolButton: View {
                         .padding(.trailing, 2)
                 }
 
-                // Square with ⌘ + keyboard shortcut letter
-                HStack(spacing: 1) {
-                    Text("⌘")
-                        .font(.system(size: 8, weight: .medium))
-                    Text(tool.keyboardShortcut)
-                        .font(.system(size: 9, weight: .bold))
-                }
-                .foregroundColor(.white)
-                .padding(.horizontal, 3)
-                .padding(.vertical, 1)
-                .background(
+                // Square with ⌘ + keyboard shortcut letter (or empty colored box)
+                if !tool.keyboardShortcut.isEmpty {
+                    HStack(spacing: 1) {
+                        Text("⌘")
+                            .font(.system(size: 8, weight: .medium))
+                        Text(tool.keyboardShortcut)
+                            .font(.system(size: 9, weight: .bold))
+                    }
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 3)
+                    .padding(.vertical, 1)
+                    .background(
+                        RoundedRectangle(cornerRadius: 3)
+                            .fill(solidBackgroundColor)
+                    )
+                } else {
+                    // Empty colored box for tools without shortcuts
                     RoundedRectangle(cornerRadius: 3)
                         .fill(solidBackgroundColor)
-                )
+                        .frame(width: 20, height: 12)
+                }
 
                 // Full tool name
                 Text(tool.name)

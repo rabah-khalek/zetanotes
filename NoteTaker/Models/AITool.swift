@@ -114,12 +114,12 @@ extension AITool {
         ]
 
         return [
-            // Autocomplete
+            // Autocomplete (no keyboard shortcut - it's a toggleable feature)
             AITool(
                 name: "Autocomplete",
                 icon: "text.cursor",
                 prompt: DefaultPrompts.autocomplete,
-                keyboardShortcut: "A",
+                keyboardShortcut: "", // No shortcut - toggled via toolbar button
                 color: .purple,
                 isDefault: true,
                 isEditable: false,

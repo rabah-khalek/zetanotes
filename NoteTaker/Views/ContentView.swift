@@ -46,11 +46,11 @@ struct ContentView: View {
 
     // Sidebar state
     @State private var showingSidebar = true
-    @State private var sidebarWidth: CGFloat = 250
+    @State private var sidebarWidth: CGFloat = AppTheme.Spacing.sidebarDefaultWidth
 
     // Chat state
     @State private var showingChat = false
-    @State private var chatSidebarWidth: CGFloat = 350
+    @State private var chatSidebarWidth: CGFloat = AppTheme.Spacing.chatDefaultWidth
 
     var body: some View {
         CustomWindowLayout(
@@ -409,7 +409,7 @@ struct ContentView: View {
                 .fill(Color.secondary.opacity(0.2))
                 .frame(width: 1, height: 14)
 
-            // Show custom tools (Pro only)
+            // Show custom tools (Pro only) - all tools shown, keyboard shortcut optional
             if licenseManager.isPro && !toolManager.customTools.isEmpty {
                 ForEach(toolManager.customTools.prefix(3)) { tool in
                     ToolButton(
@@ -423,8 +423,11 @@ struct ContentView: View {
                             }
                         }
                     )
-                    .keyboardShortcut(KeyEquivalent(Character(tool.keyboardShortcut)), modifiers: .command)
-                    .help("\(tool.name) (⌘\(tool.keyboardShortcut))")
+                    // Only add keyboard shortcut if tool has one
+                    .if(!tool.keyboardShortcut.isEmpty) { view in
+                        view.keyboardShortcut(KeyEquivalent(Character(tool.keyboardShortcut)), modifiers: .command)
+                    }
+                    .help(tool.keyboardShortcut.isEmpty ? tool.name : "\(tool.name) (⌘\(tool.keyboardShortcut))")
                     .disabled(viewModel.selectedNote == nil || viewModel.executingToolId == tool.id)
                 }
             }
@@ -461,7 +464,9 @@ struct ContentView: View {
 
     @ViewBuilder
     private var bottomStatusBar: some View {
-        HStack(alignment: .center, spacing: 8) {
+        HStack {
+            Spacer()
+            HStack(alignment: .center, spacing: 8) {
             // Word and Character count badge (blue)
             HStack(spacing: 6) {
                 Image(systemName: "doc.text")
@@ -571,6 +576,8 @@ struct ContentView: View {
             (\(String(format: "%.1f", systemMonitor.memoryUsagePercentage))% of \
             \(Int(systemMonitor.totalSystemMemory / 1024))GB)
             """)
+            }
+            Spacer()
         }
         .padding(.vertical, AppTheme.Spacing.statusBarVerticalPadding)
         .frame(maxWidth: .infinity)
@@ -1107,6 +1114,20 @@ extension String {
         }
 
         return ranges
+    }
+}
+
+// MARK: - View Extension for Conditional Modifiers
+
+extension View {
+    /// Conditionally apply a modifier
+    @ViewBuilder
+    func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content) -> some View {
+        if condition {
+            transform(self)
+        } else {
+            self
+        }
     }
 }
 

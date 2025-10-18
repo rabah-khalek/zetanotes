@@ -949,6 +949,7 @@ struct ToolsSettingsContent: View {
                     }
                 }
 
+                // Show all default tools (keyboard shortcut is optional)
                 ForEach(toolManager.defaultTools) { tool in
                     ToolRow(
                         tool: tool,
@@ -1003,17 +1004,27 @@ struct ToolRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            // Colored keyboard shortcut indicator
-            HStack(spacing: 2) {
-                Text("⌘")
-                    .font(.system(size: 12, weight: .medium))
-                Text(tool.keyboardShortcut)
-                    .font(.system(size: 13, weight: .bold))
+            // Colored keyboard shortcut indicator (only show if shortcut exists)
+            if !tool.keyboardShortcut.isEmpty {
+                HStack(spacing: 2) {
+                    Text("⌘")
+                        .font(.system(size: 12, weight: .medium))
+                    Text(tool.keyboardShortcut)
+                        .font(.system(size: 13, weight: .bold))
+                }
+                .foregroundColor(.white)
+                .frame(width: 36, height: 36)
+                .background(tool.color.color)
+                .cornerRadius(6)
+            } else {
+                // For tools without shortcuts (like Autocomplete), show icon instead
+                Image(systemName: tool.icon)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.white)
+                    .frame(width: 36, height: 36)
+                    .background(tool.color.color)
+                    .cornerRadius(6)
             }
-            .foregroundColor(.white)
-            .frame(width: 36, height: 36)
-            .background(tool.color.color)
-            .cornerRadius(6)
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 8) {

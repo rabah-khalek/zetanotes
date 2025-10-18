@@ -41,24 +41,29 @@ struct CustomToolbarView<LeftContent: View, CenterContent: View, RightContent: V
             HStack(spacing: 0) {
                 // Left items
                 leftContent
-                    .padding(.leading, 16)
+                    .padding(.leading, AppTheme.Spacing.toolbarHorizontalPadding)
                     .allowsHitTesting(true)
+                    .fixedSize(horizontal: true, vertical: false)
 
-                Spacer()
+                Spacer(minLength: 8)
                     .allowsHitTesting(false)
 
                 // Center items
                 centerContent
                     .allowsHitTesting(true)
+                    .fixedSize(horizontal: false, vertical: false)
+                    .layoutPriority(1)
 
-                Spacer()
+                Spacer(minLength: 8)
                     .allowsHitTesting(false)
 
                 // Right items
                 rightContent
                     .padding(.trailing, 8)
                     .allowsHitTesting(true)
+                    .fixedSize(horizontal: true, vertical: false)
             }
+            .frame(maxWidth: .infinity)
         }
         .frame(height: height)
         .background(

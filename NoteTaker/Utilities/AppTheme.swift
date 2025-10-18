@@ -63,9 +63,14 @@ struct AppTheme {
         static let toolbarItemSpacing: CGFloat = 8
 
         // Sidebar
-        static let sidebarWidth: CGFloat = 250
-        static let sidebarMinWidth: CGFloat = 200
+        static let sidebarDefaultWidth: CGFloat = 250
+        static let sidebarMinWidth: CGFloat = 250
         static let sidebarMaxWidth: CGFloat = 400
+
+        // Chat
+        static let chatDefaultWidth: CGFloat = 350
+        static let chatMinWidth: CGFloat = 350
+        static let chatMaxWidth: CGFloat = 500
 
         // Status bar
         static let statusBarHeight: CGFloat = 32
@@ -124,5 +129,50 @@ struct AppTheme {
         static let standard = SwiftUI.Animation.spring(response: 0.3, dampingFraction: 0.8)
         static let quick = SwiftUI.Animation.spring(response: 0.2, dampingFraction: 0.9)
         static let smooth = SwiftUI.Animation.easeInOut(duration: 0.25)
+    }
+
+    // MARK: - Responsive Layout
+
+    struct Layout {
+        // Window size breakpoints
+        static let minWindowWidth: CGFloat = 800
+        static let minWindowHeight: CGFloat = 600
+        static let compactWidth: CGFloat = 1000 // Below this, compact mode
+        static let regularWidth: CGFloat = 1400 // Above this, spacious mode
+
+        // Responsive helpers
+        static func isCompact(width: CGFloat) -> Bool {
+            return width < compactWidth
+        }
+
+        static func isRegular(width: CGFloat) -> Bool {
+            return width >= regularWidth
+        }
+
+        // Adaptive sidebar width based on window size
+        static func adaptiveSidebarWidth(windowWidth: CGFloat, isOpen: Bool) -> CGFloat {
+            guard isOpen else { return 0 }
+
+            if windowWidth < compactWidth {
+                return Spacing.sidebarMinWidth
+            } else if windowWidth < regularWidth {
+                return Spacing.sidebarDefaultWidth
+            } else {
+                return min(Spacing.sidebarDefaultWidth, windowWidth * 0.2)
+            }
+        }
+
+        // Adaptive chat width based on window size
+        static func adaptiveChatWidth(windowWidth: CGFloat, isOpen: Bool) -> CGFloat {
+            guard isOpen else { return 0 }
+
+            if windowWidth < compactWidth {
+                return Spacing.chatMinWidth
+            } else if windowWidth < regularWidth {
+                return Spacing.chatDefaultWidth
+            } else {
+                return min(Spacing.chatDefaultWidth, windowWidth * 0.25)
+            }
+        }
     }
 }

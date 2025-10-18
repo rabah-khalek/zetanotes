@@ -53,6 +53,9 @@ class ToolManager: ObservableObject {
 
         // Ensure default tools exist (in case of updates/migration)
         ensureDefaultToolsExist()
+        
+        // Migrate Autocomplete tool to remove keyboard shortcut
+        migrateAutocompleteShortcut()
     }
 
     func saveTools() {
@@ -66,16 +69,34 @@ class ToolManager: ObservableObject {
 
     /// Ensures all default tools exist (for migration/updates)
     private func ensureDefaultToolsExist() {
-        let defaultToolShortcuts = ["A", "P", "R", "S", "T"]
-        let existingShortcuts = Set(tools.filter { $0.isDefault }.map { $0.keyboardShortcut })
+        let defaultToolNames = ["Autocomplete", "Patch", "Rephrase", "Summarize", "Translate"]
+        let existingNames = Set(tools.filter { $0.isDefault }.map { $0.name })
 
-        for defaultTool in AITool.createDefaultTools() where !existingShortcuts.contains(defaultTool.keyboardShortcut) {
+        for defaultTool in AITool.createDefaultTools() where !existingNames.contains(defaultTool.name) {
             // Missing default tool, add it
             tools.insert(defaultTool, at: defaultToolInsertionIndex())
             print("➕ Added missing default tool: \(defaultTool.name)")
         }
 
-        if tools.filter({ $0.isDefault }).count != defaultToolShortcuts.count {
+        if tools.filter({ $0.isDefault }).count != defaultToolNames.count {
+            saveTools()
+        }
+    }
+    
+    /// Migration: Update Autocomplete tool to remove keyboard shortcut
+    /// This ensures existing installations update to the new schema where Autocomplete has no shortcut
+    private func migrateAutocompleteShortcut() {
+        var needsSave = false
+        
+        if let index = tools.firstIndex(where: { $0.name == "Autocomplete" && $0.isDefault }) {
+            if tools[index].keyboardShortcut == "A" {
+                tools[index].keyboardShortcut = ""
+                needsSave = true
+                print("🔄 Migrated Autocomplete tool: removed keyboard shortcut 'A'")
+            }
+        }
+        
+        if needsSave {
             saveTools()
         }
     }
@@ -89,12 +110,9 @@ class ToolManager: ObservableObject {
 
     var defaultTools: [AITool] {
         let defaults = tools.filter { $0.isDefault }
-        // Sort to ensure Autocomplete (shortcut "A") appears first, then alphabetically
-        return defaults.sorted { tool1, tool2 in
-            if tool1.keyboardShortcut == "A" { return true }
-            if tool2.keyboardShortcut == "A" { return false }
-            return tool1.name < tool2.name
-        }
+        // Sort alphabetically by name
+        // Note: Autocomplete has no shortcut and isn't shown in toolbar shortcuts
+        return defaults.sorted { $0.name < $1.name }
     }
 
     var customTools: [AITool] {
@@ -141,19 +159,20 @@ class ToolManager: ObservableObject {
     func resetDefaultTool(_ tool: AITool) {
         guard tool.isDefault else { return }
 
-        // Find the factory default
+        // Find the factory default by name (not shortcut, since shortcuts are optional)
         guard let factoryTool = AITool.createDefaultTools()
-            .first(where: { $0.keyboardShortcut == tool.keyboardShortcut })
+            .first(where: { $0.name == tool.name })
         else {
             return
         }
 
-        // Update with factory prompt
+        // Update with factory prompt and shortcut
         if let index = tools.firstIndex(where: { $0.id == tool.id }) {
             tools[index].prompt = factoryTool.prompt
+            tools[index].keyboardShortcut = factoryTool.keyboardShortcut
             tools[index].touch()
             saveTools()
-            print("🔄 Reset \(tool.name) to default prompt")
+            print("🔄 Reset \(tool.name) to default prompt and shortcut")
         }
     }
 
@@ -172,17 +191,21 @@ class ToolManager: ObservableObject {
     /// Check if a keyboard shortcut is available
     func isShortcutAvailable(_ shortcut: String, excluding toolId: UUID? = nil) -> Bool {
         let normalizedShortcut = shortcut.uppercased()
+        
+        // Empty shortcuts are always allowed (e.g., Autocomplete)
+        guard !normalizedShortcut.isEmpty else { return true }
 
         // Check against all tools (default + custom)
         return !tools.contains { tool in
-            tool.keyboardShortcut.uppercased() == normalizedShortcut &&
+            !tool.keyboardShortcut.isEmpty &&
+                tool.keyboardShortcut.uppercased() == normalizedShortcut &&
                 tool.id != toolId
         }
     }
 
     /// Get list of all used shortcuts
     var usedShortcuts: Set<String> {
-        Set(tools.map { $0.keyboardShortcut.uppercased() })
+        Set(tools.map { $0.keyboardShortcut.uppercased() }.filter { !$0.isEmpty })
     }
 
     /// Get suggested available shortcuts
