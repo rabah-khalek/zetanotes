@@ -4,23 +4,76 @@
 //
 //  Centralized default prompts for all AI services
 //  Users can customize these in settings
+//  Now uses ModelPromptRegistry for model-specific optimized prompts
 //
 
 import Foundation
 
 /// Centralized default prompts for all AI features
 /// These serve as the base templates that users can customize in settings
+/// Prompts are now model-specific and optimized based on each model's best practices
 enum DefaultPrompts {
-    // MARK: - Autocomplete
+    // MARK: - Model-Aware Prompts
 
-    static let autocomplete = """
+    /// Returns the default autocomplete prompt for the current model
+    static var autocomplete: String {
+        ModelPromptRegistry.getPrompt(
+            for: AIEngine.shared.selectedModel,
+            type: .autocomplete
+        )
+    }
+
+    /// Returns the default summarization prompt for the current model
+    static var summarization: String {
+        ModelPromptRegistry.getPrompt(
+            for: AIEngine.shared.selectedModel,
+            type: .summarization
+        )
+    }
+
+    /// Returns the default translation prompt for the current model
+    static var translation: String {
+        ModelPromptRegistry.getPrompt(
+            for: AIEngine.shared.selectedModel,
+            type: .translation
+        )
+    }
+
+    /// Returns the default title generation prompt for the current model
+    static var titleGeneration: String {
+        ModelPromptRegistry.getPrompt(
+            for: AIEngine.shared.selectedModel,
+            type: .titleGeneration
+        )
+    }
+
+    /// Returns the default auto-correct prompt for the current model
+    static var autoCorrect: String {
+        ModelPromptRegistry.getPrompt(
+            for: AIEngine.shared.selectedModel,
+            type: .autoCorrect
+        )
+    }
+
+    /// Returns the default reformulate prompt for the current model
+    static var reformulate: String {
+        ModelPromptRegistry.getPrompt(
+            for: AIEngine.shared.selectedModel,
+            type: .reformulate
+        )
+    }
+
+    // MARK: - Legacy Static Prompts (for TinyLlama 1.1B)
+
+    // These are kept for backward compatibility and as fallbacks
+
+    /// Legacy autocomplete prompt (TinyLlama 1.1B format)
+    static let autocompleteLegacy = """
     Continue the following text naturally. Write only the next few words that would logically follow.
     """
 
-    // MARK: - Summarization
-
-    // TinyLlama works better with instructions in user message
-    static let summarization = """
+    /// Legacy summarization prompt (TinyLlama 1.1B format)
+    static let summarizationLegacy = """
     <|system|>
     You are a helpful assistant.</s>
     <|user|>
@@ -28,10 +81,8 @@ enum DefaultPrompts {
 
     """
 
-    // MARK: - Translation
-
-    // TinyLlama works better with instructions in user message
-    static let translation = """
+    /// Legacy translation prompt (TinyLlama 1.1B format)
+    static let translationLegacy = """
     <|system|>
     You are a translator.</s>
     <|user|>
@@ -39,10 +90,8 @@ enum DefaultPrompts {
 
     """
 
-    // MARK: - Title Generation
-
-    // TinyLlama works better with instructions in user message
-    static let titleGeneration = """
+    /// Legacy title generation prompt (TinyLlama 1.1B format)
+    static let titleGenerationLegacy = """
     <|system|>
     You are a helpful assistant.</s>
     <|user|>
@@ -50,10 +99,8 @@ enum DefaultPrompts {
 
     """
 
-    // MARK: - Auto-Correct
-
-    // TinyLlama works better with instructions in user message
-    static let autoCorrect = """
+    /// Legacy auto-correct prompt (TinyLlama 1.1B format)
+    static let autoCorrectLegacy = """
     <|system|>
     You are a helpful assistant.</s>
     <|user|>
@@ -61,10 +108,8 @@ enum DefaultPrompts {
 
     """
 
-    // MARK: - Reformulation
-
-    // TinyLlama works better with instructions in user message
-    static let reformulate = """
+    /// Legacy reformulate prompt (TinyLlama 1.1B format)
+    static let reformulateLegacy = """
     <|system|>
     You are a helpful assistant.</s>
     <|user|>

@@ -83,6 +83,7 @@ enum AppTheme {
         // Note title
         static let noteTitleTopPadding: CGFloat = 8 // Reduced from 12
         static let noteTitleBottomPadding: CGFloat = 4 // Reduced for tighter spacing to content
+        static let noteTitleTopPaddingWhileSearching: CGFloat = 80 // When search bar is visible
 
         // Search bar
         static let searchBarTopPadding: CGFloat = 40 // For title bar area

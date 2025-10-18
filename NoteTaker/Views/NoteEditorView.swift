@@ -326,7 +326,7 @@ struct NoteEditorView: View {
             .padding(.horizontal, 24)
             .padding(
                 .top,
-                isSearching ? 70 : AppTheme.Spacing.noteTitleTopPadding
+                isSearching ? AppTheme.Spacing.noteTitleTopPaddingWhileSearching : AppTheme.Spacing.noteTitleTopPadding
             ) // Extra space when search bar is showing
             .padding(.bottom, AppTheme.Spacing.noteTitleBottomPadding)
 

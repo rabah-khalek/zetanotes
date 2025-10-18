@@ -154,7 +154,18 @@ struct AISettingsView: View {
             switch state {
             case .create:
                 ToolEditorView(
-                    tool: AITool(name: "", icon: "star.fill", prompt: "", keyboardShortcut: "", color: .purple),
+                    tool: AITool(
+                        name: "",
+                        icon: "star.fill",
+                        keyboardShortcut: "",
+                        color: .purple,
+                        llmConfig: LLMConfig(
+                            prompt: "",
+                            temperature: 0.7,
+                            maxTokens: nil,
+                            stopSequences: []
+                        )
+                    ),
                     isPresented: Binding(
                         get: { toolEditorState != nil },
                         set: { if !$0 { toolEditorState = nil } }
@@ -286,53 +297,6 @@ struct GeneralSettingsContent: View {
 
             // Pro Status / Upgrade Section
             ProStatusSection(dismiss: dismiss)
-
-            Divider()
-
-            // Semantic Search Indexing Section
-            VStack(alignment: .leading, spacing: 12) {
-                Label("Semantic Search", systemImage: "magnifyingglass.circle")
-                    .font(.headline)
-                    .fontWeight(.semibold)
-
-                Text("AI-powered semantic search is available via Cmd+F within individual notes")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.green)
-                            .font(.system(size: 12))
-                        Text("Cmd+F in a note: AI semantic search (embeddings generated on-demand)")
-                            .font(.caption)
-                    }
-
-                    HStack(spacing: 6) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.green)
-                            .font(.system(size: 12))
-                        Text("Note list search: Fast keyword search (no embeddings needed)")
-                            .font(.caption)
-                    }
-
-                    HStack(spacing: 6) {
-                        Image(systemName: "info.circle.fill")
-                            .foregroundColor(.blue)
-                            .font(.system(size: 12))
-                        Text("This eliminates heavy computation on app startup")
-                            .font(.caption)
-                            .foregroundColor(.blue)
-                    }
-                }
-
-                Text("💡 Embeddings are only computed when you need them, keeping the app fast and responsive.")
-                    .font(.caption2)
-                    .foregroundColor(.orange)
-            }
-            .padding()
-            .background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
-            .cornerRadius(8)
 
             Divider()
 
@@ -572,9 +536,14 @@ struct ModelCard: View {
     let onDownload: () -> Void
 
     @ObservedObject var licenseManager = LicenseManager.shared
+    @ObservedObject var aiEngine = AIEngine.shared
 
     private var isLocked: Bool {
         !licenseManager.canUseModel(model)
+    }
+
+    private var isSwitchingToThisModel: Bool {
+        aiEngine.isSwitchingModel && aiEngine.switchingToModel == model
     }
 
     var body: some View {
@@ -656,6 +625,16 @@ struct ModelCard: View {
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
+            } else if isSwitchingToThisModel {
+                // Show loading spinner when switching to this model
+                HStack(spacing: 6) {
+                    ProgressView()
+                        .scaleEffect(0.7)
+                        .frame(width: 12, height: 12)
+                    Text("Loading...")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
             } else if !isSelected {
                 Button(action: onSelect) {
                     Text("Use This")
@@ -663,6 +642,7 @@ struct ModelCard: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.small)
+                .disabled(aiEngine.isSwitchingModel)
             } else {
                 HStack(spacing: 4) {
                     Image(systemName: "checkmark.circle.fill")

@@ -82,9 +82,14 @@ struct ContentView: View {
                 tool: editingTool ?? AITool(
                     name: "",
                     icon: "star.fill",
-                    prompt: "",
                     keyboardShortcut: "",
-                    color: .purple
+                    color: .purple,
+                    llmConfig: LLMConfig(
+                        prompt: "",
+                        temperature: 0.7,
+                        maxTokens: nil,
+                        stopSequences: []
+                    )
                 ),
                 isPresented: $showingToolEditor,
                 onSave: { tool in
@@ -838,7 +843,7 @@ struct ContentView: View {
                         .shadow(color: .black.opacity(0.1), radius: 8, y: 4)
                 )
                 .padding(.horizontal, 24)
-                .padding(.top, 2)
+                .padding(.top, 0)
 
                 Spacer()
             }

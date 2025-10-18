@@ -51,14 +51,15 @@ class TranslationService: AIService {
     func buildPrompt(for text: String, customPrompt: String? = nil) -> String {
         // Use custom prompt as-is if provided (user controls the format)
         // Otherwise use default prompt with proper chat template
-        // Always close with the assistant tag
         let instruction = if let customPrompt = customPrompt, !customPrompt.isEmpty {
-            customPrompt.replacingOccurrences(of: "{language}", with: targetLanguage)
+            customPrompt
         } else {
-            DefaultPrompts.translation.replacingOccurrences(of: "{language}", with: targetLanguage)
+            DefaultPrompts.translation
         }
 
-        let prompt = "\(instruction)\(text)</s>\n<|assistant|>\n"
+        let prompt = instruction
+            .replacingOccurrences(of: "{language}", with: targetLanguage)
+            .replacingOccurrences(of: "{content}", with: text)
 
         print("🌍 Translation prompt built:")
         print("📝 Using: \(customPrompt != nil && !customPrompt!.isEmpty ? "custom prompt" : "default prompt")")
@@ -107,14 +108,13 @@ class TranslationService: AIService {
     func translate(_ text: String, withPrompt customPrompt: String) async -> String? {
         print("🌍 Starting translation")
 
-        // Prepare prompt instruction
+        // Prepare prompt with placeholder replacement
         let instruction = customPrompt.isEmpty
             ? DefaultPrompts.translation
             : customPrompt
-        let finalInstruction = instruction.replacingOccurrences(of: "{language}", with: targetLanguage)
-
-        // CRITICAL FIX: Use proper chat template closing like other services
-        let prompt = "\(finalInstruction)\(text)</s>\n<|assistant|>\n"
+        let prompt = instruction
+            .replacingOccurrences(of: "{language}", with: targetLanguage)
+            .replacingOccurrences(of: "{content}", with: text)
 
         // Calculate dynamic max tokens with 50% buffer
         let maxTokens = calculateMaxTokens(for: text, bufferPercent: 50, maxLimit: 512)
@@ -149,6 +149,7 @@ class TranslationService: AIService {
         cleaned = cleaned.replacingOccurrences(of: "</s>", with: "")
         cleaned = cleaned.replacingOccurrences(of: "<|user|>", with: "")
         cleaned = cleaned.replacingOccurrences(of: "<|system|>", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "_id|>", with: "")
 
         // Remove common hallucination prefixes (especially important for translation)
         let hallucinationPrefixes = [

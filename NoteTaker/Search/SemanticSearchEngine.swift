@@ -255,7 +255,10 @@ class SemanticSearchEngine {
             let fetchRequest: NSFetchRequest<Note> = Note.fetchRequest()
             fetchRequest.predicate = NSPredicate(format: "embedding == nil")
             fetchRequest.fetchLimit = maxNotes // CRITICAL: Limit to avoid heavy computation
-            fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \Note.updatedAt, ascending: false)] // Index most recent first
+            fetchRequest.sortDescriptors = [NSSortDescriptor(
+                keyPath: \Note.updatedAt,
+                ascending: false
+            )] // Index most recent first
 
             do {
                 let notesWithoutEmbeddings = try context.fetch(fetchRequest)

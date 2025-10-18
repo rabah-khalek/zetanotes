@@ -16,6 +16,9 @@
 		81111F5E2E9F348400D7317B /* TitleGenerationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F592E9F348400D7317B /* TitleGenerationService.swift */; };
 		81111F5F2E9F348400D7317B /* TranslationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F5A2E9F348400D7317B /* TranslationService.swift */; };
 		81111F612E9F37FB00D7317B /* DefaultPrompts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F602E9F37FB00D7317B /* DefaultPrompts.swift */; };
+		AA6FCA66D4D547B2992A284A /* ModelPromptRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4843FC5037834C4F8E7278A3 /* ModelPromptRegistry.swift */; };
+		64D52F7A4AC043C7A510C356 /* LLMConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = C19B2B4688514121A68351A9 /* LLMConfig.swift */; };
+		4A0ABDEFA72E47F0B951871F /* ModelToolConfigRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B9FCA2E2174FC592D860AE /* ModelToolConfigRegistry.swift */; };
 		81111F642EA0891A00D7317B /* InlineAutocompleteTextEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F622EA0891A00D7317B /* InlineAutocompleteTextEditor.swift */; };
 		81111F652EA0891A00D7317B /* UpgradePromptView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F632EA0891A00D7317B /* UpgradePromptView.swift */; };
 		81111F6E2EA0896E00D7317B /* LicenseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F6C2EA0896E00D7317B /* LicenseManager.swift */; };
@@ -105,6 +108,9 @@
 		81111F592E9F348400D7317B /* TitleGenerationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TitleGenerationService.swift; sourceTree = "<group>"; };
 		81111F5A2E9F348400D7317B /* TranslationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationService.swift; sourceTree = "<group>"; };
 		81111F602E9F37FB00D7317B /* DefaultPrompts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefaultPrompts.swift; sourceTree = "<group>"; };
+		4843FC5037834C4F8E7278A3 /* ModelPromptRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelPromptRegistry.swift; sourceTree = "<group>"; };
+		C19B2B4688514121A68351A9 /* LLMConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMConfig.swift; sourceTree = "<group>"; };
+		17B9FCA2E2174FC592D860AE /* ModelToolConfigRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelToolConfigRegistry.swift; sourceTree = "<group>"; };
 		81111F622EA0891A00D7317B /* InlineAutocompleteTextEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineAutocompleteTextEditor.swift; sourceTree = "<group>"; };
 		81111F632EA0891A00D7317B /* UpgradePromptView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpgradePromptView.swift; sourceTree = "<group>"; };
 		81111F6B2EA0896E00D7317B /* AnalyticsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsManager.swift; sourceTree = "<group>"; };
@@ -292,6 +298,7 @@
 				81DE4F812EA2DCB4006293FC /* ChatMessage.swift */,
 				81DE4F822EA2DCB4006293FC /* ChatSettings.swift */,
 				81DE4F6C2EA1CE1A006293FC /* AITool.swift */,
+				C19B2B4688514121A68351A9 /* LLMConfig.swift */,
 				81DE4F6D2EA1CE1A006293FC /* ToolManager.swift */,
 				81DE4F642EA18C90006293FC /* NotesDataModel.xcdatamodeld */,
 				810418062E9AF4770086B1B2 /* Note+CoreDataClass.swift */,
@@ -308,6 +315,8 @@
 			children = (
 				81DE4F8C2EA2DCF9006293FC /* ChatService.swift */,
 				81111F602E9F37FB00D7317B /* DefaultPrompts.swift */,
+				4843FC5037834C4F8E7278A3 /* ModelPromptRegistry.swift */,
+				17B9FCA2E2174FC592D860AE /* ModelToolConfigRegistry.swift */,
 				81111F562E9F348400D7317B /* AIService.swift */,
 				81111F572E9F348400D7317B /* AutoCorrectService.swift */,
 				81111F582E9F348400D7317B /* ReformulationService.swift */,
@@ -436,6 +445,9 @@
 				A1000001000000000000001 /* NoteTakerApp.swift in Sources */,
 				A1000009000000000000001 /* NotesDataModel.xcdatamodeld in Sources */,
 				81111F612E9F37FB00D7317B /* DefaultPrompts.swift in Sources */,
+				AA6FCA66D4D547B2992A284A /* ModelPromptRegistry.swift in Sources */,
+				64D52F7A4AC043C7A510C356 /* LLMConfig.swift in Sources */,
+				4A0ABDEFA72E47F0B951871F /* ModelToolConfigRegistry.swift in Sources */,
 				A1000011000000000000001 /* NoteListView.swift in Sources */,
 				81DE4F912EA2E0AB006293FC /* ChatSidebarView.swift in Sources */,
 				A1000013000000000000001 /* NoteEditorView.swift in Sources */,

@@ -33,7 +33,7 @@ class ReformulationService: AIService {
     // MARK: - AIService Protocol
 
     func buildPrompt(for text: String) -> String {
-        return "\(DefaultPrompts.reformulate)\(text)</s>\n<|assistant|>\n"
+        return DefaultPrompts.reformulate.replacingOccurrences(of: "{content}", with: text)
     }
 
     // MARK: - AIService Override
@@ -45,9 +45,8 @@ class ReformulationService: AIService {
 
         // Use custom prompt as-is if provided (user controls the format)
         // Otherwise use default prompt with proper chat template
-        // Always close with the assistant tag
         let instruction = customPrompt.isEmpty ? DefaultPrompts.reformulate : customPrompt
-        let prompt = "\(instruction)\(text)</s>\n<|assistant|>\n"
+        let prompt = instruction.replacingOccurrences(of: "{content}", with: text)
 
         guard let rawOutput = await llmService.generate(
             prompt: prompt,
@@ -73,11 +72,24 @@ class ReformulationService: AIService {
     func postProcess(_ output: String) -> String {
         var cleaned = output.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        // First apply default TinyLlama artifact removal
+        // Remove model-specific artifacts
         cleaned = cleaned.replacingOccurrences(of: "<|assistant|>", with: "")
         cleaned = cleaned.replacingOccurrences(of: "</s>", with: "")
         cleaned = cleaned.replacingOccurrences(of: "<|user|>", with: "")
         cleaned = cleaned.replacingOccurrences(of: "<|system|>", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "_id|>", with: "")
+
+        // Remove everything before "Here is" if it contains explanation text
+        if let range = cleaned.range(of: "Here is a rewritten version", options: .caseInsensitive),
+           let colonRange = cleaned[range.lowerBound...].range(of: ":") {
+            cleaned = String(cleaned[colonRange.upperBound...]).trimmingCharacters(in: .whitespacesAndNewlines)
+        } else if let range = cleaned.range(of: "Here is the rewritten", options: .caseInsensitive),
+                  let colonRange = cleaned[range.lowerBound...].range(of: ":") {
+            cleaned = String(cleaned[colonRange.upperBound...]).trimmingCharacters(in: .whitespacesAndNewlines)
+        } else if let range = cleaned.range(of: "Here is", options: .caseInsensitive),
+                  let colonRange = cleaned[range.upperBound...].range(of: ":") {
+            cleaned = String(cleaned[colonRange.upperBound...]).trimmingCharacters(in: .whitespacesAndNewlines)
+        }
 
         // Remove common hallucination prefixes
         let hallucinationPrefixes = [
@@ -92,7 +104,7 @@ class ReformulationService: AIService {
 
         // Remove leading markdown quote character if present
         if cleaned.hasPrefix(">") {
-            cleaned = cleaned.dropFirst().trimmingCharacters(in: .whitespacesAndNewlines)
+            cleaned = String(cleaned.dropFirst()).trimmingCharacters(in: .whitespacesAndNewlines)
         }
 
         return cleaned.trimmingCharacters(in: .whitespacesAndNewlines)

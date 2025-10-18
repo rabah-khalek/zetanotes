@@ -38,6 +38,8 @@ class AIEngine: ObservableObject {
     @Published var modelLoadingError: String?
     @Published var memoryUsage: Double = 0.0 // In MB
     @Published var selectedModel: AIModel = .tinyLlama
+    @Published var isSwitchingModel = false
+    @Published var switchingToModel: AIModel?
 
     private var cancellables = Set<AnyCancellable>()
     private let memoryMonitorQueue = DispatchQueue(label: "com.notetaker.memorymonitor", qos: .utility)
@@ -126,8 +128,20 @@ class AIEngine: ObservableObject {
             return
         }
 
+        // Set loading state
+        await MainActor.run {
+            self.isSwitchingModel = true
+            self.switchingToModel = modelType
+        }
+
         print("🔄 Switching to \(modelType.displayName)...")
         await loadModel(modelType)
+
+        // Clear loading state
+        await MainActor.run {
+            self.isSwitchingModel = false
+            self.switchingToModel = nil
+        }
     }
 
     /// Unloads the model to free memory (useful for memory pressure situations)

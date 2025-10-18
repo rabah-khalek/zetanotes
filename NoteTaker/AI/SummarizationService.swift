@@ -42,7 +42,7 @@ class SummarizationService: AIService {
     // MARK: - AIService Protocol
 
     func buildPrompt(for text: String) -> String {
-        return "\(DefaultPrompts.summarization)\(text)</s>\n<|assistant|>\n"
+        return DefaultPrompts.summarization.replacingOccurrences(of: "{content}", with: text)
     }
 
     // MARK: - AIService Override
@@ -52,11 +52,9 @@ class SummarizationService: AIService {
         // For very long text, truncate to first 2000 characters for performance
         let textToProcess = text.count > 2000 ? String(text.prefix(2000)) : text
 
-        // Use custom prompt as-is if provided (user controls the format)
-        // Otherwise use default prompt with proper chat template
-        // Always close with the assistant tag
+        // Use custom prompt with placeholder replacement
         let instruction = customPrompt.isEmpty ? DefaultPrompts.summarization : customPrompt
-        let prompt = "\(instruction)\(textToProcess)</s>\n<|assistant|>\n"
+        let prompt = instruction.replacingOccurrences(of: "{content}", with: textToProcess)
 
         guard let rawOutput = await llmService.generate(
             prompt: prompt,
@@ -131,6 +129,7 @@ class SummarizationService: AIService {
         cleaned = cleaned.replacingOccurrences(of: "</s>", with: "")
         cleaned = cleaned.replacingOccurrences(of: "<|user|>", with: "")
         cleaned = cleaned.replacingOccurrences(of: "<|system|>", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "_id|>", with: "")
 
         // Remove common hallucination prefixes
         let hallucinationPrefixes = [

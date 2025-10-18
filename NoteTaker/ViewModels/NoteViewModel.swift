@@ -112,6 +112,16 @@ class NoteViewModel: ObservableObject {
                 }
             }
             .store(in: &cancellables)
+
+        // Observe model changes and update prompts automatically
+        aiEngine.$selectedModel
+            .sink { [weak self] _ in
+                Task { @MainActor in
+                    self?.updatePromptsForCurrentModel()
+                    // Note: ToolManager now automatically updates tools when model changes
+                }
+            }
+            .store(in: &cancellables)
     }
 
     private func setupSearchDebouncing() {
@@ -607,6 +617,92 @@ class NoteViewModel: ObservableObject {
         targetLanguage = "Spanish"
     }
 
+    /// Updates all prompts to match the currently selected model's optimized defaults
+    /// This is called automatically when the AI model is switched
+    private func updatePromptsForCurrentModel() {
+        // Only update prompts if they match the current default (haven't been customized)
+        // This prevents overwriting user customizations
+
+        // Check if each prompt is still at default (not customized by user)
+        // If it matches any model's default for that prompt type, update it
+        if isAutocompletePromptAtDefault() {
+            autocompletePrompt = DefaultPrompts.autocomplete
+        }
+        if isSummarizationPromptAtDefault() {
+            summarizationPrompt = DefaultPrompts.summarization
+        }
+        if isTranslationPromptAtDefault() {
+            translationPrompt = DefaultPrompts.translation
+        }
+        if isTitleGenerationPromptAtDefault() {
+            titleGenerationPrompt = DefaultPrompts.titleGeneration
+        }
+        if isAutoCorrectPromptAtDefault() {
+            autoCorrectPrompt = DefaultPrompts.autoCorrect
+        }
+        if isReformulatePromptAtDefault() {
+            reformulatePrompt = DefaultPrompts.reformulate
+        }
+
+        print("📝 Updated prompts for model: \(aiEngine.selectedModel.displayName)")
+    }
+
+    /// Helper functions to check if each prompt is at default (not customized)
+    /// Only checks if the prompt matches any model's default for that specific prompt type
+    private func isAutocompletePromptAtDefault() -> Bool {
+        for model in AIModel.allCases {
+            if autocompletePrompt == ModelPromptRegistry.getPrompt(for: model, type: .autocomplete) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private func isSummarizationPromptAtDefault() -> Bool {
+        for model in AIModel.allCases {
+            if summarizationPrompt == ModelPromptRegistry.getPrompt(for: model, type: .summarization) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private func isTranslationPromptAtDefault() -> Bool {
+        for model in AIModel.allCases {
+            if translationPrompt == ModelPromptRegistry.getPrompt(for: model, type: .translation) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private func isTitleGenerationPromptAtDefault() -> Bool {
+        for model in AIModel.allCases {
+            if titleGenerationPrompt == ModelPromptRegistry.getPrompt(for: model, type: .titleGeneration) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private func isAutoCorrectPromptAtDefault() -> Bool {
+        for model in AIModel.allCases {
+            if autoCorrectPrompt == ModelPromptRegistry.getPrompt(for: model, type: .autoCorrect) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private func isReformulatePromptAtDefault() -> Bool {
+        for model in AIModel.allCases {
+            if reformulatePrompt == ModelPromptRegistry.getPrompt(for: model, type: .reformulate) {
+                return true
+            }
+        }
+        return false
+    }
+
     func generateTitle(for note: Note) async {
         guard let content = note.content, !content.isEmpty else { return }
 
@@ -649,8 +745,8 @@ class NoteViewModel: ObservableObject {
             self.executingToolId = tool.id
         }
 
-        // Format prompt: use tool prompt with proper chat template closing
-        let prompt = "\(tool.prompt)\(sections.baseContent)</s>\n<|assistant|>\n"
+        // Format prompt: replace {content} placeholder with actual content
+        let prompt = tool.prompt.replacingOccurrences(of: "{content}", with: sections.baseContent)
 
         // Use tool-specific max tokens or calculate dynamically
         let maxTokens: Int

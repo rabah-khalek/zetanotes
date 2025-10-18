@@ -9,6 +9,7 @@
 
 import Foundation
 import SwiftUI
+import Combine
 
 /// Manager for all AI tools (default and custom)
 class ToolManager: ObservableObject {
@@ -19,9 +20,24 @@ class ToolManager: ObservableObject {
     private let storageKey = "aiTools"
     private let maxCustomTools = 10
     private let hasInitializedKey = "hasInitializedDefaultTools"
+    private var cancellables = Set<AnyCancellable>()
 
     private init() {
         loadTools()
+        setupModelChangeObserver()
+    }
+
+    // MARK: - Model Change Observer
+
+    private func setupModelChangeObserver() {
+        // Automatically update default tools when model changes
+        AIEngine.shared.$selectedModel
+            .sink { [weak self] _ in
+                Task { @MainActor in
+                    self?.updateDefaultToolsForCurrentModel()
+                }
+            }
+            .store(in: &cancellables)
     }
 
     // MARK: - Loading & Saving
@@ -155,11 +171,12 @@ class ToolManager: ObservableObject {
         return customTools.count < maxCustomTools
     }
 
-    /// Resets a default tool to its factory prompt
+    /// Resets a default tool to its factory prompt for the current model
     func resetDefaultTool(_ tool: AITool) {
         guard tool.isDefault else { return }
 
         // Find the factory default by name (not shortcut, since shortcuts are optional)
+        // Uses current model's optimized configuration
         guard let factoryTool = AITool.createDefaultTools()
             .first(where: { $0.name == tool.name })
         else {
@@ -168,12 +185,66 @@ class ToolManager: ObservableObject {
 
         // Update with factory prompt and shortcut
         if let index = tools.firstIndex(where: { $0.id == tool.id }) {
-            tools[index].prompt = factoryTool.prompt
+            tools[index].llmConfig = factoryTool.llmConfig
             tools[index].keyboardShortcut = factoryTool.keyboardShortcut
             tools[index].touch()
             saveTools()
-            print("🔄 Reset \(tool.name) to default prompt and shortcut")
+            print("🔄 Reset \(tool.name) to default config for current model")
         }
+    }
+
+    /// Updates all default tools to use configurations optimized for the current AI model
+    /// Called automatically when the AI model is switched
+    /// Preserves user customizations - only updates tools that haven't been modified
+    func updateDefaultToolsForCurrentModel() {
+        let currentModelDefaults = AITool.createDefaultTools()
+        var needsSave = false
+
+        for defaultTool in currentModelDefaults {
+            guard let index = tools.firstIndex(where: { $0.name == defaultTool.name && $0.isDefault }) else {
+                continue
+            }
+
+            // Check if this tool's config matches ANY model's default (hasn't been customized)
+            if isToolAtDefaultConfig(tools[index]) {
+                // Update to current model's optimized config
+                tools[index].llmConfig = defaultTool.llmConfig
+                tools[index].touch()
+                needsSave = true
+                print("🔄 Updated \(defaultTool.name) config for current model")
+            }
+        }
+
+        if needsSave {
+            saveTools()
+        }
+    }
+
+    /// Checks if a tool's config matches a default config from any model
+    /// This allows updating from one model's defaults to another
+    private func isToolAtDefaultConfig(_ tool: AITool) -> Bool {
+        guard tool.isDefault else { return false }
+
+        // Map tool name to ToolType
+        let toolType: ToolType
+        switch tool.name {
+        case "Autocomplete": toolType = .autocomplete
+        case "Patch": toolType = .patch
+        case "Rephrase": toolType = .rephrase
+        case "Summarize": toolType = .summarize
+        case "Translate": toolType = .translate
+        default: return false
+        }
+
+        // Check if the tool's config matches the default config for any model
+        for model in AIModel.allCases {
+            let defaultConfig = ModelToolConfigRegistry.getConfig(for: model, toolType: toolType)
+            if tool.llmConfig == defaultConfig {
+                return true
+            }
+        }
+
+        return false
     }
 
     // MARK: - Tool Lookup

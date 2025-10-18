@@ -41,7 +41,7 @@ class TitleGenerationService: AIService {
         // Limit context to first 300 characters
         let limitedText = String(text.prefix(Config.contextLimit))
 
-        return "\(DefaultPrompts.titleGeneration)\(limitedText)</s>\n<|assistant|>\n"
+        return DefaultPrompts.titleGeneration.replacingOccurrences(of: "{content}", with: limitedText)
     }
 
     // MARK: - AIService Override
@@ -51,11 +51,9 @@ class TitleGenerationService: AIService {
         // Limit context to first 300 characters
         let limitedText = String(text.prefix(Config.contextLimit))
 
-        // Use custom prompt as-is if provided (user controls the format)
-        // Otherwise use default prompt with proper chat template
-        // Always close with the assistant tag
+        // Use custom prompt with placeholder replacement
         let instruction = customPrompt.isEmpty ? DefaultPrompts.titleGeneration : customPrompt
-        let prompt = "\(instruction)\(limitedText)</s>\n<|assistant|>\n"
+        let prompt = instruction.replacingOccurrences(of: "{content}", with: limitedText)
 
         guard let rawOutput = await llmService.generate(
             prompt: prompt,
@@ -116,6 +114,7 @@ class TitleGenerationService: AIService {
         cleaned = cleaned.replacingOccurrences(of: "</s>", with: "")
         cleaned = cleaned.replacingOccurrences(of: "<|user|>", with: "")
         cleaned = cleaned.replacingOccurrences(of: "<|system|>", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "_id|>", with: "")
 
         // Remove leading markdown quote character if present
         if cleaned.hasPrefix(">") {
