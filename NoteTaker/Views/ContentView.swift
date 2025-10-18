@@ -53,32 +53,26 @@ struct ContentView: View {
     @State private var chatSidebarWidth: CGFloat = 350
 
     var body: some View {
-        GeometryReader { geometry in
-            HStack(spacing: 0) {
-                // Custom left sidebar
-                if showingSidebar {
-                    VStack(spacing: 0) {
-                        NoteListView(viewModel: viewModel)
-                    }
-                    .frame(width: sidebarWidth)
-                    .background(Color(nsColor: .controlBackgroundColor))
-                    .overlay(
-                        Rectangle()
-                            .fill(Color.secondary.opacity(0.15))
-                            .frame(width: 1),
-                        alignment: .trailing
-                    )
-                    .transition(.move(edge: .leading).combined(with: .opacity))
-                }
-
-                // Main content area
-                mainDetailView
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
-            .frame(width: geometry.size.width, height: geometry.size.height)
-            .ignoresSafeArea(.all)
+        CustomWindowLayout(
+            toolbarHeight: 52,
+            showLeftSidebar: showingSidebar,
+            leftSidebarWidth: sidebarWidth,
+            showRightSidebar: showingChat,
+            rightSidebarWidth: chatSidebarWidth
+        ) {
+            // Toolbar
+            buildCustomToolbar()
+        } leftSidebar: {
+            // Left sidebar
+            NoteListView(viewModel: viewModel)
+        } content: {
+            // Main content
+            mainContentArea
+        } rightSidebar: {
+            // Right sidebar (chat)
+            ChatSidebarView()
+                .environmentObject(aiEngine)
         }
-        .ignoresSafeArea(.all) // Remove all safe area insets including title bar
         .sheet(isPresented: $showingSettings) {
             AISettingsView(viewModel: viewModel)
                 .environmentObject(aiEngine)
@@ -188,7 +182,55 @@ struct ContentView: View {
         }
     }
 
-    // MARK: - Main Detail View
+    // MARK: - Toolbar Builder
+
+    @ViewBuilder
+    private func buildCustomToolbar() -> some View {
+        CustomToolbarView(height: 52) {
+            // Left items
+            toolbarLeftItems
+        } centerContent: {
+            // Center items
+            toolbarCenterItems
+        } rightContent: {
+            // Right items
+            if !showingChat {
+                toolbarRightItems
+            } else {
+                Color.clear.frame(width: 60)
+            }
+        }
+    }
+
+    // MARK: - Main Content Area
+
+    @ViewBuilder
+    private var mainContentArea: some View {
+        ZStack(alignment: .bottom) {
+            // Main content view
+            mainContentView
+                .padding(.bottom, 32) // Space for bottom status bar
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            // Bottom overlays
+            VStack {
+                Spacer()
+
+                ZStack(alignment: .bottom) {
+                    // Bottom center status bar
+                    bottomStatusBar
+
+                    // Search bar overlay
+                    searchBarOverlay
+
+                    // Error log overlay
+                    errorLogOverlay
+                }
+            }
+        }
+    }
+
+    // MARK: - Main Detail View (Legacy - will remove)
 
     @ViewBuilder
     private var mainDetailView: some View {
@@ -1071,22 +1113,6 @@ extension String {
         }
 
         return ranges
-    }
-}
-
-// MARK: - Window Draggable Helper
-
-/// Helper to make a view draggable for window movement
-struct WindowDraggableView: NSViewRepresentable {
-    func makeNSView(context: Context) -> NSView {
-        let view = NSView()
-        view.wantsLayer = true
-        return view
-    }
-
-    func updateNSView(_ nsView: NSView, context: Context) {
-        // Enable mouseDown passthrough for window dragging
-        nsView.window?.isMovableByWindowBackground = true
     }
 }
 

@@ -38,6 +38,11 @@
 		81DE4F8D2EA2DCF9006293FC /* ChatService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F8C2EA2DCF9006293FC /* ChatService.swift */; };
 		81DE4F8F2EA2DD06006293FC /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F8E2EA2DD06006293FC /* ChatView.swift */; };
 		81DE4F912EA2E0AB006293FC /* ChatSidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F902EA2E0AB006293FC /* ChatSidebarView.swift */; };
+		81DE4F982EA33ED6006293FC /* CustomToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F962EA33ED6006293FC /* CustomToolbar.swift */; };
+		81DE4F992EA33ED6006293FC /* WindowConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F972EA33ED6006293FC /* WindowConfiguration.swift */; };
+		81DE4F9D2EA33EF3006293FC /* CustomWindowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F9C2EA33EF3006293FC /* CustomWindowLayout.swift */; };
+		81DE4F9E2EA33EF3006293FC /* CustomSidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F9A2EA33EF3006293FC /* CustomSidebarView.swift */; };
+		81DE4F9F2EA33EF3006293FC /* CustomToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F9B2EA33EF3006293FC /* CustomToolbarView.swift */; };
 		81EFBE2E2E9B05C700F7E48B /* libllama.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 81EFBE282E9B05C700F7E48B /* libllama.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		81EFBE2F2E9B05C700F7E48B /* libggml-base.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 81EFBE292E9B05C700F7E48B /* libggml-base.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		81EFBE302E9B05C700F7E48B /* libggml-metal.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 81EFBE2A2E9B05C700F7E48B /* libggml-metal.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -122,6 +127,11 @@
 		81DE4F8C2EA2DCF9006293FC /* ChatService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatService.swift; sourceTree = "<group>"; };
 		81DE4F8E2EA2DD06006293FC /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 		81DE4F902EA2E0AB006293FC /* ChatSidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatSidebarView.swift; sourceTree = "<group>"; };
+		81DE4F962EA33ED6006293FC /* CustomToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomToolbar.swift; sourceTree = "<group>"; };
+		81DE4F972EA33ED6006293FC /* WindowConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowConfiguration.swift; sourceTree = "<group>"; };
+		81DE4F9A2EA33EF3006293FC /* CustomSidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomSidebarView.swift; sourceTree = "<group>"; };
+		81DE4F9B2EA33EF3006293FC /* CustomToolbarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomToolbarView.swift; sourceTree = "<group>"; };
+		81DE4F9C2EA33EF3006293FC /* CustomWindowLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomWindowLayout.swift; sourceTree = "<group>"; };
 		81EFBE282E9B05C700F7E48B /* libllama.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libllama.dylib; path = llama.cpp/build/bin/libllama.dylib; sourceTree = "<group>"; };
 		81EFBE292E9B05C700F7E48B /* libggml-base.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libggml-base.dylib"; path = "llama.cpp/build/bin/libggml-base.dylib"; sourceTree = "<group>"; };
 		81EFBE2A2E9B05C700F7E48B /* libggml-metal.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libggml-metal.dylib"; path = "llama.cpp/build/bin/libggml-metal.dylib"; sourceTree = "<group>"; };
@@ -244,6 +254,9 @@
 		A1000041000000000000001 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				81DE4F9A2EA33EF3006293FC /* CustomSidebarView.swift */,
+				81DE4F9B2EA33EF3006293FC /* CustomToolbarView.swift */,
+				81DE4F9C2EA33EF3006293FC /* CustomWindowLayout.swift */,
 				81DE4F902EA2E0AB006293FC /* ChatSidebarView.swift */,
 				81DE4F8E2EA2DD06006293FC /* ChatView.swift */,
 				81DE4F772EA25B10006293FC /* Components */,
@@ -336,6 +349,8 @@
 		A1000068000000000000001 /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
+				81DE4F962EA33ED6006293FC /* CustomToolbar.swift */,
+				81DE4F972EA33ED6006293FC /* WindowConfiguration.swift */,
 				A1000064000000000000001 /* SystemMonitor.swift */,
 				A1000091000000000000001 /* Logger.swift */,
 				A1000092000000000000001 /* ErrorManager.swift */,
@@ -466,8 +481,13 @@
 				81DE4F8B2EA2DCE9006293FC /* LicenseManager.swift in Sources */,
 				81DE4F7C2EA25B10006293FC /* ToolButton.swift in Sources */,
 				A1000072000000000000001 /* SystemMonitorView.swift in Sources */,
+				81DE4F982EA33ED6006293FC /* CustomToolbar.swift in Sources */,
+				81DE4F992EA33ED6006293FC /* WindowConfiguration.swift in Sources */,
 				A1000093000000000000001 /* Logger.swift in Sources */,
 				A1000094000000000000001 /* ErrorManager.swift in Sources */,
+				81DE4F9D2EA33EF3006293FC /* CustomWindowLayout.swift in Sources */,
+				81DE4F9E2EA33EF3006293FC /* CustomSidebarView.swift in Sources */,
+				81DE4F9F2EA33EF3006293FC /* CustomToolbarView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
