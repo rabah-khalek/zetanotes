@@ -36,10 +36,10 @@ ZetaNotes is a native macOS note-taking app that runs AI models completely offli
 ## 📦 Installation
 
 ### Requirements
-- **macOS 13.0** (Ventura) or later
-- **Apple Silicon** (M1/M2/M3/M4) recommended for best performance
+- **macOS 13.0 (Ventura) or later**
+- **Apple Silicon (M1/M2/M3/M4)** - optimized for Apple's chips
 - **4 GB RAM** minimum (8 GB+ recommended)
-- **1 GB disk space** (+ more for additional models)
+- **2 GB disk space** (includes app + AI models)
 
 ### Quick Install
 
@@ -222,7 +222,7 @@ ZetaNotes/
 This creates a DMG with:
 
 - ✅ **Simple distribution** - just upload to GitHub Releases
-- ✅ **Small download** - no bundled AI models (users download via welcome page)
+- ✅ **Small download** - ~80 MB (no bundled AI models, users download via welcome page)
 - ✅ **$0/year** - completely free
 - ✅ **User control** - users choose which AI models to download
 
@@ -244,7 +244,7 @@ This creates a DMG with:
 
 - ✅ Free (no $99/year Apple Developer fee)
 - ✅ Full control over distribution
-- ✅ Small download size (<10 MB vs >500 MB with bundled model)
+- ✅ Small download size (~80 MB app + models downloaded separately)
 - ✅ Users choose which models to download
 - ✅ Easy to update (just upload new DMG to GitHub)
 

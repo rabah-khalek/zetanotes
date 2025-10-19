@@ -1,0 +1,82 @@
+name: Update Website
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+  workflow_dispatch:
+    inputs:
+      force_update:
+        description: 'Force update website'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  PUBLIC_REPO: rabah-khalek/zetanotes
+
+jobs:
+  update-website:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout dev repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Clone public repo and update docs
+        env:
+          PUBLIC_REPO_TOKEN: ${{ secrets.PUBLIC_REPO_TOKEN }}
+        run: |
+          # Clone public repo
+          git clone https://x-access-token:$PUBLIC_REPO_TOKEN@github.com/${{ env.PUBLIC_REPO }}.git /tmp/public-repo
+          cd /tmp/public-repo
+
+          # Configure git
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Create docs folder if it doesn't exist
+          mkdir -p docs
+
+          # Copy docs from dev repo (excluding appcast.xml to preserve releases)
+          cp ${{ github.workspace }}/docs/index.html ./docs/index.html
+          cp ${{ github.workspace }}/docs/download.html ./docs/download.html
+          cp ${{ github.workspace }}/docs/logo.png ./docs/logo.png
+
+          # Only copy appcast.xml if it doesn't exist (preserve existing releases)
+          if [ ! -f ./docs/appcast.xml ]; then
+            cp ${{ github.workspace }}/docs/appcast.xml ./docs/appcast.xml
+          fi
+
+          # Check if there are any changes
+          if git diff --quiet; then
+            echo "No changes to commit"
+          else
+            echo "Changes detected, committing..."
+            git add docs/
+            git commit -m "Update website content from dev repo"
+            git push
+            echo "Website updated successfully"
+          fi
+
+      - name: Summary
+        run: |
+          echo "## ✅ Website Update Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Trigger**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Repository**: ${{ env.PUBLIC_REPO }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📝 Files Updated:" >> $GITHUB_STEP_SUMMARY
+          echo "- index.html (main website)" >> $GITHUB_STEP_SUMMARY
+          echo "- download.html (download page)" >> $GITHUB_STEP_SUMMARY
+          echo "- logo.png (app logo)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🌐 Live Site:" >> $GITHUB_STEP_SUMMARY
+          echo "- **Website**: https://rabah-khalek.github.io/zetanotes/" >> $GITHUB_STEP_SUMMARY
+          echo "- **GitHub Pages** will auto-deploy in 1-2 minutes" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Note**: appcast.xml is preserved to maintain existing releases" >> $GITHUB_STEP_SUMMARY

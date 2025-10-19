@@ -1,0 +1,235 @@
+name: Build and Release to Public Repo
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.0.0)'
+        required: true
+        type: string
+
+env:
+  APP_NAME: ZetaNotes
+  PUBLIC_REPO: rabah-khalek/zetanotes
+
+jobs:
+  build-and-release:
+    runs-on: macos-14  # macOS with Apple Silicon support
+
+    steps:
+      - name: Checkout dev repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set version from tag or input
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
+
+      - name: Set up Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Install dependencies
+        run: |
+          # Install create-dmg if not present
+          if ! command -v create-dmg &> /dev/null; then
+            brew install create-dmg
+          fi
+
+          # Install Sparkle's generate_appcast tool
+          if [ ! -f "$HOME/bin/generate_appcast" ]; then
+            mkdir -p $HOME/bin
+            curl -L https://github.com/sparkle-project/Sparkle/releases/latest/download/generate_appcast.tar.xz -o /tmp/generate_appcast.tar.xz
+            tar -xf /tmp/generate_appcast.tar.xz -C $HOME/bin
+            chmod +x $HOME/bin/generate_appcast
+          fi
+
+      - name: Build release
+        id: build
+        run: |
+          chmod +x scripts/release.sh
+          ./scripts/release.sh ${{ steps.version.outputs.VERSION }}
+
+          # Find the built DMG
+          BUILD_DIR=$(find ~/Desktop -name "ZetaNotes-Release-*" -type d | head -n 1)
+          DMG_FILE=$(find "$BUILD_DIR" -name "*.dmg" | head -n 1)
+          SHA_FILE="${DMG_FILE}.sha256"
+
+          echo "BUILD_DIR=$BUILD_DIR" >> $GITHUB_OUTPUT
+          echo "DMG_FILE=$DMG_FILE" >> $GITHUB_OUTPUT
+          echo "SHA_FILE=$SHA_FILE" >> $GITHUB_OUTPUT
+          echo "DMG_NAME=$(basename $DMG_FILE)" >> $GITHUB_OUTPUT
+
+          # Get file size
+          FILE_SIZE=$(stat -f%z "$DMG_FILE")
+          echo "FILE_SIZE=$FILE_SIZE" >> $GITHUB_OUTPUT
+
+          # Get checksum
+          CHECKSUM=$(cat "$SHA_FILE")
+          echo "CHECKSUM=$CHECKSUM" >> $GITHUB_OUTPUT
+
+      - name: Generate Sparkle EdDSA signature
+        id: signature
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          # Save private key to temp file
+          echo "$SPARKLE_PRIVATE_KEY" > /tmp/sparkle_private_key
+
+          # Generate signature
+          SIGNATURE=$($HOME/bin/generate_appcast \
+            --ed-key-file /tmp/sparkle_private_key \
+            --download-url-prefix "https://github.com/${{ env.PUBLIC_REPO }}/releases/download/v${{ steps.version.outputs.VERSION }}/" \
+            "${{ steps.build.outputs.BUILD_DIR }}" | grep "sparkle:edSignature" | sed 's/.*sparkle:edSignature="\([^"]*\)".*/\1/')
+
+          # Clean up private key
+          rm /tmp/sparkle_private_key
+
+          echo "SIGNATURE=$SIGNATURE" >> $GITHUB_OUTPUT
+          echo "Generated signature: $SIGNATURE"
+
+      - name: Create release in public repo
+        uses: softprops/action-gh-release@v1
+        with:
+          repository: ${{ env.PUBLIC_REPO }}
+          token: ${{ secrets.PUBLIC_REPO_TOKEN }}
+          tag_name: v${{ steps.version.outputs.VERSION }}
+          name: ZetaNotes v${{ steps.version.outputs.VERSION }}
+          body: |
+            # ZetaNotes v${{ steps.version.outputs.VERSION }}
+
+            ## Installation Instructions
+
+            **IMPORTANT**: This app is not signed with an Apple Developer certificate.
+
+            ### Installation Steps:
+
+            1. Download `${{ steps.build.outputs.DMG_NAME }}`
+            2. Open the DMG file
+            3. Drag ZetaNotes to your Applications folder
+            4. **RIGHT-CLICK** (or Control-Click) on ZetaNotes in Applications
+            5. Select "Open" from the menu
+            6. Click "Open" in the security dialog
+            7. ZetaNotes will launch and show the welcome screen
+            8. Download the AI model when prompted
+
+            After the first time, you can open ZetaNotes normally.
+
+            ### Why the security warning?
+
+            ZetaNotes is not signed with an Apple Developer certificate ($99/year).
+            The app is safe - you can verify the source code.
+
+            ### SHA256 Checksum
+
+            ```
+            ${{ steps.build.outputs.CHECKSUM }}
+            ```
+
+            ---
+
+            **System Requirements:**
+            - macOS 13.0 (Ventura) or later
+            - Apple Silicon (M1/M2/M3/M4) recommended
+            - 4 GB RAM minimum (8 GB+ recommended)
+            - 1 GB disk space
+          files: |
+            ${{ steps.build.outputs.DMG_FILE }}
+            ${{ steps.build.outputs.SHA_FILE }}
+          draft: false
+          prerelease: false
+
+      - name: Clone public repo and update docs
+        env:
+          PUBLIC_REPO_TOKEN: ${{ secrets.PUBLIC_REPO_TOKEN }}
+        run: |
+          # Clone public repo
+          git clone https://x-access-token:$PUBLIC_REPO_TOKEN@github.com/${{ env.PUBLIC_REPO }}.git /tmp/public-repo
+          cd /tmp/public-repo
+
+          # Configure git
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Create docs folder if it doesn't exist
+          mkdir -p docs
+
+          # Copy docs from dev repo
+          cp -r ${{ github.workspace }}/docs/* ./docs/
+
+          # Update appcast.xml with new release info
+          cat > docs/appcast.xml << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
+              <channel>
+                  <title>ZetaNotes Updates</title>
+                  <link>https://rabah-khalek.github.io/zetanotes/appcast.xml</link>
+                  <description>Most recent updates for ZetaNotes</description>
+                  <language>en</language>
+
+                  <!-- Version ${{ steps.version.outputs.VERSION }} -->
+                  <item>
+                      <title>Version ${{ steps.version.outputs.VERSION }}</title>
+                      <link>https://github.com/${{ env.PUBLIC_REPO }}</link>
+                      <sparkle:version>${{ steps.version.outputs.VERSION }}</sparkle:version>
+                      <sparkle:shortVersionString>${{ steps.version.outputs.VERSION }}</sparkle:shortVersionString>
+                      <description><![CDATA[
+                          <h2>ZetaNotes ${{ steps.version.outputs.VERSION }}</h2>
+                          <p>Privacy-first note-taking with offline AI.</p>
+                          <ul>
+                              <li>🔒 100% offline AI processing</li>
+                              <li>✨ Smart autocomplete with Llama 3.2</li>
+                              <li>📝 Instant summarization</li>
+                              <li>🌍 Translate to 12+ languages</li>
+                              <li>🔍 Semantic search</li>
+                          </ul>
+                      ]]></description>
+                      <pubDate>$(date -R)</pubDate>
+                      <enclosure
+                          url="https://github.com/${{ env.PUBLIC_REPO }}/releases/download/v${{ steps.version.outputs.VERSION }}/${{ steps.build.outputs.DMG_NAME }}"
+                          sparkle:version="${{ steps.version.outputs.VERSION }}"
+                          sparkle:shortVersionString="${{ steps.version.outputs.VERSION }}"
+                          length="${{ steps.build.outputs.FILE_SIZE }}"
+                          type="application/octet-stream"
+                          sparkle:edSignature="${{ steps.signature.outputs.SIGNATURE }}" />
+                      <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+                  </item>
+
+              </channel>
+          </rss>
+          EOF
+
+          # Update index.html download link
+          sed -i '' "s|https://github.com/rabah-khalek/notetaker/releases/latest/download/ZetaNotes.dmg|https://github.com/${{ env.PUBLIC_REPO }}/releases/download/v${{ steps.version.outputs.VERSION }}/${{ steps.build.outputs.DMG_NAME }}|g" docs/index.html
+
+          # Commit and push changes
+          git add docs/
+          git commit -m "Update docs for v${{ steps.version.outputs.VERSION }}" || echo "No changes to commit"
+          git push
+
+      - name: Summary
+        run: |
+          echo "## ✅ Release Build Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ steps.version.outputs.VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "**DMG:** ${{ steps.build.outputs.DMG_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Size:** ${{ steps.build.outputs.FILE_SIZE }} bytes" >> $GITHUB_STEP_SUMMARY
+          echo "**SHA256:** \`${{ steps.build.outputs.CHECKSUM }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🚀 Next Steps:" >> $GITHUB_STEP_SUMMARY
+          echo "- Release published to: https://github.com/${{ env.PUBLIC_REPO }}/releases/tag/v${{ steps.version.outputs.VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "- GitHub Pages will auto-deploy in a few minutes" >> $GITHUB_STEP_SUMMARY
+          echo "- Download page: https://rabah-khalek.github.io/zetanotes/" >> $GITHUB_STEP_SUMMARY
+          echo "- Appcast URL: https://rabah-khalek.github.io/zetanotes/appcast.xml" >> $GITHUB_STEP_SUMMARY
