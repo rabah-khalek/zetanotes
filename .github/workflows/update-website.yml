@@ -47,8 +47,8 @@ jobs:
           cp ${{ github.workspace }}/docs/download.html ./docs/download.html
           cp ${{ github.workspace }}/docs/logo.png ./docs/logo.png
 
-          # Only copy appcast.xml if it doesn't exist (preserve existing releases)
-          if [ ! -f ./docs/appcast.xml ]; then
+          # Copy appcast.xml if it doesn't exist or if this is a manual force update
+          if [ ! -f ./docs/appcast.xml ] || [ "${{ github.event.inputs.force_update }}" = "true" ]; then
             cp ${{ github.workspace }}/docs/appcast.xml ./docs/appcast.xml
           fi
 
