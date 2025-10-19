@@ -759,6 +759,6 @@ struct FirstRunModelSetupView_Previews: PreviewProvider {
     static var previews: some View {
         FirstRunModelSetupView()
             .environmentObject(AIEngine.shared)
-            .frame(width: 800, height: 600)
+            .frame(width: AppTheme.Layout.defaultWindowWidth, height: AppTheme.Layout.defaultWindowHeight)
     }
 }

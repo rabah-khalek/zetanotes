@@ -169,8 +169,8 @@ struct UpgradePromptView: View {
             // Actions
             VStack(spacing: 12) {
                 Button(action: {
-                    // Open LemonSqueezy purchase page
-                    openLemonSqueezyPage()
+                    // Open Paddle purchase page
+                    openPaddlePage()
                     // Note: Analytics tracking removed to avoid import issues
                 }) {
                     HStack {
@@ -201,20 +201,20 @@ struct UpgradePromptView: View {
         .shadow(radius: 20)
     }
 
-    private func openLemonSqueezyPage() {
-        // DEV_TODO: Replace with your actual LemonSqueezy checkout URLs for each tier
-        // Get these from your LemonSqueezy dashboard after creating the products
+    private func openPaddlePage() {
+        // DEV_TODO: Replace with your actual Paddle checkout URLs for each tier
+        // Get these from your Paddle dashboard after creating the products
         let checkoutURL: String
 
         switch selectedTier {
         case "monthly":
-            checkoutURL = "https://zetanotes.lemonsqueezy.com/checkout/buy/DEV_MONTHLY_VARIANT_ID"
+            checkoutURL = "https://buy.paddle.com/product/DEV_MONTHLY_PRICE_ID"
         case "annual":
-            checkoutURL = "https://zetanotes.lemonsqueezy.com/checkout/buy/DEV_ANNUAL_VARIANT_ID"
+            checkoutURL = "https://buy.paddle.com/product/DEV_ANNUAL_PRICE_ID"
         case "lifetime":
-            checkoutURL = "https://zetanotes.lemonsqueezy.com/checkout/buy/DEV_LIFETIME_VARIANT_ID"
+            checkoutURL = "https://buy.paddle.com/product/DEV_LIFETIME_PRICE_ID"
         default:
-            checkoutURL = "https://zetanotes.lemonsqueezy.com/checkout/buy/DEV_LIFETIME_VARIANT_ID"
+            checkoutURL = "https://buy.paddle.com/product/DEV_LIFETIME_PRICE_ID"
         }
 
         if let url = URL(string: checkoutURL) {

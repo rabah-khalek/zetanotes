@@ -134,9 +134,13 @@ enum AppTheme {
     // MARK: - Responsive Layout
 
     enum Layout {
+        // Window size constraints
+        static let defaultWindowWidth: CGFloat = 1000
+        static let defaultWindowHeight: CGFloat = 700
+        static let minWindowWidth: CGFloat = 1000
+        static let minWindowHeight: CGFloat = 700
+
         // Window size breakpoints
-        static let minWindowWidth: CGFloat = 800
-        static let minWindowHeight: CGFloat = 600
         static let compactWidth: CGFloat = 1000 // Below this, compact mode
         static let regularWidth: CGFloat = 1400 // Above this, spacious mode
 

@@ -844,7 +844,7 @@ struct ModelCard: View {
     @State private var showingDeleteConfirmation = false
 
     private var isLocked: Bool {
-        !licenseManager.canUseModel(model)
+        !licenseManager.canUseModel(model.displayName)
     }
 
     private var isSwitchingToThisModel: Bool {

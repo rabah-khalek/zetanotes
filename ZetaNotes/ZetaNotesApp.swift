@@ -65,16 +65,18 @@ struct ZetaNotesApp: App {
                     ContentView()
                         .environment(\.managedObjectContext, persistenceController.container.viewContext)
                         .environmentObject(aiEngine)
-                        .frame(minWidth: 800, minHeight: 600)
+                        .frame(minWidth: AppTheme.Layout.minWindowWidth, minHeight: AppTheme.Layout.minWindowHeight)
                         .preferredColorScheme(colorScheme)
                 } else {
                     FirstRunModelSetupView()
                         .environmentObject(aiEngine)
-                        .frame(minWidth: 800, minHeight: 600)
+                        .frame(minWidth: AppTheme.Layout.minWindowWidth, minHeight: AppTheme.Layout.minWindowHeight)
                         .preferredColorScheme(colorScheme)
                 }
             }
         }
+        .defaultSize(width: AppTheme.Layout.defaultWindowWidth, height: AppTheme.Layout.defaultWindowHeight)
+        .windowResizability(.contentMinSize)
         .commands {
             // Add custom menu commands
             CommandGroup(replacing: .newItem) {

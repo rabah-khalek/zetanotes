@@ -9,10 +9,29 @@
 import AppKit
 import SwiftUI
 
+// MARK: - Window Delegate for Size Enforcement
+
+class WindowSizeDelegate: NSObject, NSWindowDelegate {
+    func windowWillResize(_ sender: NSWindow, to frameSize: NSSize) -> NSSize {
+        let minWidth = AppTheme.Layout.minWindowWidth
+        let minHeight = AppTheme.Layout.minWindowHeight
+        
+        let constrainedSize = NSSize(
+            width: max(frameSize.width, minWidth),
+            height: max(frameSize.height, minHeight)
+        )
+        
+        print("🪟 Window resize attempt: \(frameSize) -> constrained to: \(constrainedSize)")
+        return constrainedSize
+    }
+}
+
 // MARK: - Window Configuration
 
 /// Configures an NSWindow to use custom chrome (no native titlebar/toolbar)
 enum WindowConfiguration {
+    private static let windowDelegate = WindowSizeDelegate()
+    
     /// Apply custom window configuration to disable native UI
     static func configureCustomChrome(window: NSWindow) {
         // Hide native title and titlebar
@@ -32,6 +51,20 @@ enum WindowConfiguration {
         window.standardWindowButton(.closeButton)?.isHidden = false
         window.standardWindowButton(.miniaturizeButton)?.isHidden = false
         window.standardWindowButton(.zoomButton)?.isHidden = false
+
+        // Set minimum window size constraints
+        let minSize = NSSize(
+            width: AppTheme.Layout.minWindowWidth,
+            height: AppTheme.Layout.minWindowHeight
+        )
+        
+        window.minSize = minSize
+        window.contentMinSize = minSize
+        
+        // Set delegate to enforce size constraints during resize
+        window.delegate = windowDelegate
+        
+        print("🪟 Window constraints set: minSize = \(minSize)")
     }
 }
 

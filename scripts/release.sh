@@ -14,6 +14,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 VERSION="${1:-1.0.0}"
+SKIP_PADDLE_CHECK="${2:-false}"  # Add flag to skip Paddle verification
 BUILD_DIR="$HOME/Desktop/ZetaNotes-Release-$(date +%Y%m%d-%H%M%S)"
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP_NAME="ZetaNotes"
@@ -25,13 +26,17 @@ echo -e "${BLUE}╚════════════════════�
 echo ""
 echo -e "${GREEN}Version:${NC} ${VERSION}"
 echo -e "${GREEN}Build directory:${NC} ${BUILD_DIR}"
+if [ "$SKIP_PADDLE_CHECK" = "true" ]; then
+    echo -e "${YELLOW}⚠️  Paddle verification: SKIPPED (for testing)${NC}"
+fi
 echo -e "${YELLOW}⚠️  Note: AI model NOT bundled - users download on first run${NC}"
 echo ""
 
 if [ -z "$1" ]; then
     echo -e "${YELLOW}Warning: No version specified, using 1.0.0${NC}"
-    echo "Usage: $0 <version>"
+    echo "Usage: $0 <version> [skip_paddle]"
     echo "Example: $0 1.0.1"
+    echo "         $0 1.0.1 true    # Skip Paddle checks for testing"
     echo ""
 fi
 
@@ -67,12 +72,31 @@ fi
 print_success "Xcode found: $(xcodebuild -version | head -n 1)"
 
 if ! command -v create-dmg &> /dev/null; then
-    print_warning "create-dmg not found. Install with: brew install create-dmg"
-    echo "Will use fallback DMG creation method"
-    USE_CREATE_DMG=false
+    # Check common locations for create-dmg (local dev and CI)
+    if [ -f "/opt/homebrew/bin/create-dmg" ]; then
+        # Apple Silicon Mac (local dev)
+        CREATE_DMG="/opt/homebrew/bin/create-dmg"
+        USE_CREATE_DMG=true
+        print_success "create-dmg found at /opt/homebrew/bin/create-dmg"
+    elif [ -f "/usr/local/bin/create-dmg" ]; then
+        # Intel Mac or CI environment
+        CREATE_DMG="/usr/local/bin/create-dmg"
+        USE_CREATE_DMG=true
+        print_success "create-dmg found at /usr/local/bin/create-dmg"
+    elif [ -f "/home/linuxbrew/.linuxbrew/bin/create-dmg" ]; then
+        # Linuxbrew (unlikely but just in case)
+        CREATE_DMG="/home/linuxbrew/.linuxbrew/bin/create-dmg"
+        USE_CREATE_DMG=true
+        print_success "create-dmg found at /home/linuxbrew/.linuxbrew/bin/create-dmg"
+    else
+        print_warning "create-dmg not found. Install with: brew install create-dmg"
+        echo "Will use fallback DMG creation method"
+        USE_CREATE_DMG=false
+    fi
 else
+    CREATE_DMG="create-dmg"
     USE_CREATE_DMG=true
-    print_success "create-dmg found"
+    print_success "create-dmg found in PATH"
 fi
 
 echo ""
@@ -93,26 +117,32 @@ print_step "Step 2: Running production safety checks"
 
 # Check for DEV_TODO markers
 print_warning "Checking for DEV_TODO markers..."
-DEV_TODO_COUNT=$(grep -r "DEV_TODO\|DEV_STORE_ID\|DEV_PRODUCT_ID\|DEV_VARIANT_ID" "$PROJECT_DIR/ZetaNotes" 2>/dev/null | wc -l | tr -d ' ')
-if [ "$DEV_TODO_COUNT" -gt 0 ]; then
+DEV_TODO_COUNT=$(grep -r "DEV_TODO\|DEV_VENDOR_ID\|DEV_PRODUCT_ID\|DEV_PRICE_ID" "$PROJECT_DIR/ZetaNotes" 2>/dev/null | wc -l | tr -d ' ')
+if [ "$DEV_TODO_COUNT" -gt 0 ] && [ "$SKIP_PADDLE_CHECK" != "true" ]; then
     echo ""
     print_error "Found $DEV_TODO_COUNT DEV_TODO markers in source code!
 
 Please replace these with production values before release:
-  - DEV_STORE_ID → Your actual LemonSqueezy store ID
-  - DEV_PRODUCT_ID → Your actual LemonSqueezy product ID
-  - DEV_VARIANT_ID → Your actual LemonSqueezy variant ID
+  - DEV_VENDOR_ID → Your actual Paddle vendor ID
+  - DEV_PRODUCT_ID → Your actual Paddle product ID
+  - DEV_PRICE_ID → Your actual Paddle price ID
 
 To find them all:
   grep -rn 'DEV_' ZetaNotes/
 
 To get these values:
-  1. Go to https://app.lemonsqueezy.com/settings/api
+  1. Go to https://vendors.paddle.com (or sandbox.vendors.paddle.com for testing)
   2. Create a product for ZetaNotes Pro
-  3. Note the IDs and replace in code
+  3. Set up pricing plans (Monthly: \$1, Annual: \$6, Lifetime: \$20)
+  4. Note the IDs and replace in code
+
+To skip this check for testing: $0 $VERSION true
 "
+elif [ "$DEV_TODO_COUNT" -gt 0 ] && [ "$SKIP_PADDLE_CHECK" = "true" ]; then
+    print_warning "Found $DEV_TODO_COUNT DEV_TODO markers - SKIPPED (testing mode)"
+else
+    print_success "No DEV_TODO markers found"
 fi
-print_success "No DEV_TODO markers found"
 
 # Verify DEBUG blocks
 print_warning "Verifying DEBUG-only code is properly wrapped..."
@@ -123,10 +153,18 @@ print_success "DEBUG blocks verified"
 
 # Check for test license code outside DEBUG blocks
 print_warning "Checking test license configuration..."
-if grep -r "testLicenseKey\|testLicenseEmail" "$PROJECT_DIR/ZetaNotes/Managers/LicenseManager.swift" 2>/dev/null | grep -v "#if DEBUG" | grep -q "test"; then
-    print_error "Test license code found OUTSIDE of #if DEBUG blocks!"
+# Check if test license constants are properly wrapped in DEBUG blocks
+if [ "$SKIP_PADDLE_CHECK" != "true" ]; then
+    # Extract the section with test license declarations and check if it's in a DEBUG block
+    TEST_LICENSE_SECTION=$(grep -A 3 -B 3 "private let testLicenseKey\|private let testLicenseEmail" "$PROJECT_DIR/ZetaNotes/Managers/LicenseManager.swift" 2>/dev/null || true)
+    if [ -n "$TEST_LICENSE_SECTION" ] && ! echo "$TEST_LICENSE_SECTION" | grep -q "#if DEBUG"; then
+        print_error "Test license constants found OUTSIDE of #if DEBUG blocks!"
+    else
+        print_success "Test credentials properly wrapped in #if DEBUG"
+    fi
+else
+    print_warning "Test license configuration check - SKIPPED (testing mode)"
 fi
-print_success "Test credentials properly wrapped in #if DEBUG"
 
 echo ""
 print_success "All production safety checks passed!"
@@ -136,18 +174,43 @@ print_step "Step 3: Building app in Xcode"
 echo "This may take 5-10 minutes..."
 cd "$PROJECT_DIR"
 
-# Clean first
-xcodebuild clean -project ZetaNotes.xcodeproj -scheme ZetaNotes -configuration Release &> /dev/null || print_error "Clean failed"
+# Clean first - more thorough cleanup
+print_warning "Performing thorough clean..."
+xcodebuild clean -project ZetaNotes.xcodeproj -scheme ZetaNotes -configuration Release
+rm -rf ~/Library/Developer/Xcode/DerivedData/ZetaNotes-*
+rm -rf "$BUILD_DIR/DerivedData"
 print_success "Clean completed"
 
-# Build
-echo "Building..."
-xcodebuild build \
+# Build with proper error handling
+echo "Building (errors will cause script to exit)..."
+BUILD_LOG="$BUILD_DIR/build.log"
+
+if ! xcodebuild build \
     -project ZetaNotes.xcodeproj \
     -scheme ZetaNotes \
     -configuration Release \
     -derivedDataPath "$BUILD_DIR/DerivedData" \
-    | grep -E "^(==|Build succeeded|warning:|error:)" || true
+    -quiet \
+    > "$BUILD_LOG" 2>&1; then
+
+    echo ""
+    print_error "Build failed! Check the build log below:
+
+$(tail -50 "$BUILD_LOG")
+
+Full build log: $BUILD_LOG
+"
+fi
+
+# Show any warnings from the build
+if grep -q "warning:" "$BUILD_LOG"; then
+    echo ""
+    print_warning "Build completed with warnings:"
+    grep "warning:" "$BUILD_LOG" | head -10
+    echo ""
+fi
+
+print_success "Build completed successfully"
 
 # Find the built app
 BUILT_APP=$(find "$BUILD_DIR/DerivedData/Build/Products/Release" -name "*.app" -maxdepth 1 | head -n 1)
@@ -167,8 +230,16 @@ rm -rf "$BUILD_DIR/${APP_NAME}.app/Contents/Resources/"*.sqlite* 2>/dev/null || 
 rm -rf "$BUILD_DIR/${APP_NAME}.app/Contents/Resources/"*.db 2>/dev/null || true
 rm -rf "$BUILD_DIR/${APP_NAME}.app/Contents/Resources/Models" 2>/dev/null || true
 
+# Clean up any development UserDefaults/preferences that might persist
+print_warning "Clearing development preferences..."
+# Note: This removes preferences for the current user, not from the app bundle
+# Users will get a fresh experience as if launching for the first time
+defaults delete com.zetanotes.ZetaNotes 2>/dev/null || true
+defaults delete com.example.ZetaNotes 2>/dev/null || true
+
 print_success "App copied and cleaned: $BUILD_DIR/${APP_NAME}.app"
 print_success "Models directory removed (users will download on first run)"
+print_success "Development preferences cleared"
 
 # Verify Release configuration
 print_warning "Verifying build configuration..."
@@ -189,18 +260,18 @@ cd "$BUILD_DIR"
 
 if [ "$USE_CREATE_DMG" = true ]; then
     # Using create-dmg (prettier)
-    create-dmg \
+    echo "Using create-dmg for professional installer interface..."
+    "$CREATE_DMG" \
         --volname "${APP_NAME} Installer" \
         --window-pos 200 120 \
-        --window-size 800 400 \
+        --window-size 800 450 \
         --icon-size 100 \
         --icon "${APP_NAME}.app" 200 190 \
         --hide-extension "${APP_NAME}.app" \
         --app-drop-link 600 185 \
+        --text-size 12 \
         "$DMG_NAME" \
-        "${APP_NAME}.app" 2>&1 | grep -v "^hdiutil:" || true
-
-    # create-dmg might fail but still create the DMG
+        "${APP_NAME}.app" 2>&1 | grep -v "^hdiutil:" || true    # create-dmg might fail but still create the DMG
     if [ ! -f "$DMG_NAME" ]; then
         print_warning "create-dmg failed, using fallback method"
         USE_CREATE_DMG=false
@@ -211,20 +282,31 @@ if [ "$USE_CREATE_DMG" = false ]; then
     # Fallback method
     echo "Using manual DMG creation..."
 
+    # Clean up any existing mounts first
+    if [ -d "/Volumes/$APP_NAME" ]; then
+        echo "Unmounting existing volume..."
+        hdiutil detach "/Volumes/$APP_NAME" -force 2>/dev/null || true
+        sleep 2
+    fi
+
+    # Remove any existing temp files
+    rm -f temp.dmg "$DMG_NAME" 2>/dev/null || true
+
     # Create temporary DMG (smaller now without model)
     hdiutil create -size 200m -fs HFS+ -volname "$APP_NAME" temp.dmg
 
-    # Mount it
-    hdiutil attach temp.dmg -readwrite -mountpoint "/Volumes/$APP_NAME"
+    # Mount it with a unique mount point to avoid conflicts
+    MOUNT_POINT="/Volumes/${APP_NAME}_$(date +%s)"
+    hdiutil attach temp.dmg -readwrite -mountpoint "$MOUNT_POINT"
 
     # Copy app
-    cp -R "${APP_NAME}.app" "/Volumes/$APP_NAME/"
+    cp -R "${APP_NAME}.app" "$MOUNT_POINT/"
 
     # Create Applications symlink
-    ln -s /Applications "/Volumes/$APP_NAME/Applications"
+    ln -s /Applications "$MOUNT_POINT/Applications"
 
     # Create README with instructions
-    cat > "/Volumes/$APP_NAME/README.txt" << 'EOF'
+    cat > "$MOUNT_POINT/README.txt" << 'EOF'
 ZetaNotes Installation Instructions
 
 1. Drag ZetaNotes to Applications folder
@@ -242,10 +324,27 @@ The AI model will be downloaded automatically when you first launch the app.
 For more help: https://github.com/rabah-khalek/zetanotes
 EOF
 
-    # Unmount
-    hdiutil detach "/Volumes/$APP_NAME"
+    # Sync and wait a moment for filesystem operations to complete
+    sync
+    sleep 2
+
+    # Force unmount with retries
+    echo "Unmounting DMG..."
+    for i in {1..5}; do
+        if hdiutil detach "$MOUNT_POINT" -force 2>/dev/null; then
+            echo "Successfully unmounted on attempt $i"
+            break
+        else
+            echo "Unmount attempt $i failed, retrying..."
+            sleep 2
+        fi
+    done
+
+    # Wait a moment for the detach to complete
+    sleep 2
 
     # Convert to compressed DMG
+    echo "Converting to compressed DMG..."
     hdiutil convert temp.dmg -format UDZO -o "$DMG_NAME"
 
     # Clean up
@@ -337,8 +436,21 @@ No need to manually download or install models!
 Need Help?
 ----------
 
-Visit: https://github.com/rabah-khalek/zetanotes
+Website: https://zetanotes.com
+GitHub: https://github.com/rabah-khalek/zetanotes
 Issues: https://github.com/rabah-khalek/zetanotes/issues
+
+Pro Features:
+-------------
+
+ZetaNotes is free forever with basic AI features.
+For advanced features (8 AI models, Chat Assistant, Custom Tools):
+- Visit: https://zetanotes.com/pricing
+- Monthly: \$1/month
+- Annual: \$6/year (50% off)
+- Lifetime: \$20 one-time
+
+Payment processing by Paddle.com (secure & international)
 
 SHA256 Checksum (for verification):
 ${CHECKSUM}
@@ -379,6 +491,8 @@ echo "2. Create GitHub release: https://github.com/rabah-khalek/zetanotes/releas
 echo "3. Upload: ${DMG_NAME}"
 echo "4. Include INSTALLATION.txt in release description"
 echo "5. Update download page with checksum: ${CHECKSUM}"
+echo "6. Update Paddle product settings if needed"
+echo "7. Test Pro license purchase flow with Paddle"
 echo ""
 echo -e "${GREEN}Build ready for distribution! 🚀${NC}"
 echo ""

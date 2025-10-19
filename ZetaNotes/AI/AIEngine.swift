@@ -127,7 +127,7 @@ class AIEngine: ObservableObject {
     /// - Parameter modelType: The new model to switch to
     func switchModel(to modelType: AIModel) async {
         // Check if user has access to this model
-        guard LicenseManager.shared.canUseModel(modelType) else {
+        guard LicenseManager.shared.canUseModel(modelType.displayName) else {
             print("🔒 Model \(modelType.displayName) requires Pro license")
             await MainActor.run {
                 NotificationCenter.default.post(

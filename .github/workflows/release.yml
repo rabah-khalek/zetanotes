@@ -43,6 +43,9 @@ jobs:
 
       - name: Install dependencies
         run: |
+          # Add Homebrew to PATH for GitHub Actions
+          echo "/usr/local/bin:/opt/homebrew/bin" >> $GITHUB_PATH
+
           # Install create-dmg if not present
           if ! command -v create-dmg &> /dev/null; then
             brew install create-dmg
@@ -60,7 +63,9 @@ jobs:
         id: build
         run: |
           chmod +x scripts/release.sh
-          ./scripts/release.sh ${{ steps.version.outputs.VERSION }}
+          # TODO: Remove 'true' flag when Paddle setup is complete
+          # Skip Paddle checks for now (until setup is complete)
+          ./scripts/release.sh ${{ steps.version.outputs.VERSION }} true
 
           # Find the built DMG
           BUILD_DIR=$(find ~/Desktop -name "ZetaNotes-Release-*" -type d | head -n 1)

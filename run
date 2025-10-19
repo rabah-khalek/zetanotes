@@ -1,7 +1,8 @@
 #!/bin/zsh
 
-# Clean, build, and run ZetaNotes
-# This script will clean the project, build it, and then run the built application
+# Clean, build, and run ZetaNotes in debug mode
+# This script will clean the project, build it, and run the built application
+# with console output visible in the terminal
 
 set -e
 
@@ -11,30 +12,61 @@ xcodebuild -project ZetaNotes.xcodeproj -scheme ZetaNotes clean
 echo "🔨 Building project..."
 xcodebuild -project ZetaNotes.xcodeproj -scheme ZetaNotes build
 
-echo "🚀 Running ZetaNotes..."
+echo "🚀 Running ZetaNotes in debug mode..."
 
-# Use the simpler approach: just open the app by name
-# Since we just built it, it should be available to launch
-open -a ZetaNotes 2>/dev/null || {
-    echo "❌ Failed to launch ZetaNotes directly. Trying alternative method..."
+if [[ "$DEBUG_MODE" == "true" ]]; then
+    # Debug mode: find the built app and run it directly to see console output
+    echo "🔍 Looking for built app to run in debug mode..."
 
-    # Try to find the app in typical build locations
+    # More comprehensive search for the built app
+    APP_PATH=""
+    
+    # Search in common build locations
     for BUILD_PATH in \
         "build/Debug/ZetaNotes.app" \
         "build/Release/ZetaNotes.app" \
-        "$HOME/Library/Developer/Xcode/DerivedData/ZetaNotes-*/Build/Products/Debug/ZetaNotes.app" \
-        "$HOME/Library/Developer/Xcode/DerivedData/ZetaNotes-*/Build/Products/Release/ZetaNotes.app"
+        $(find "$HOME/Library/Developer/Xcode/DerivedData" -name "ZetaNotes.app" -type d 2>/dev/null | head -1)
     do
         if [ -d "$BUILD_PATH" ]; then
-            echo "✅ Found app at: $BUILD_PATH"
-            open "$BUILD_PATH"
-            exit 0
+            APP_PATH="$BUILD_PATH"
+            echo "✅ Found app at: $APP_PATH"
+            break
         fi
     done
+    
+    if [ -z "$APP_PATH" ]; then
+        echo "❌ Could not find built app for debug mode."
+        echo "� Try building first or check Xcode build settings."
+        exit 1
+    fi
+    
+    echo "�🔍 Running in debug mode (console output will appear here)..."
+    echo "Press Ctrl+C to stop the app"
+    "$APP_PATH/Contents/MacOS/ZetaNotes"
+    exit 0
+else
+    # Normal mode: just open the app (terminal closes)
+    open -a ZetaNotes 2>/dev/null || {
+        echo "❌ Failed to launch ZetaNotes directly. Trying alternative method..."
 
-    echo "❌ Could not find built app in any expected location."
-    echo "💡 Try running from Xcode or use VS Code task: 'Run NoteTaker'"
-    exit 1
-}
+        # Try to find the app in typical build locations
+        for BUILD_PATH in \
+            "build/Debug/ZetaNotes.app" \
+            "build/Release/ZetaNotes.app" \
+            "$HOME/Library/Developer/Xcode/DerivedData/ZetaNotes-*/Build/Products/Debug/ZetaNotes.app" \
+            "$HOME/Library/Developer/Xcode/DerivedData/ZetaNotes-*/Build/Products/Release/ZetaNotes.app"
+        do
+            if [ -d "$BUILD_PATH" ]; then
+                echo "✅ Found app at: $BUILD_PATH"
+                open "$BUILD_PATH"
+                exit 0
+            fi
+        done
 
-echo "✅ ZetaNotes launched successfully!"
+        echo "❌ Could not find built app in any expected location."
+        echo "💡 Try running from Xcode or use VS Code task: 'Run NoteTaker'"
+        exit 1
+    }
+
+    echo "✅ ZetaNotes launched successfully!"
+fi

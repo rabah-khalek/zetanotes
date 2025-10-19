@@ -3,7 +3,7 @@
 //  ZetaNotes
 //
 //  Manages Pro license validation and feature access
-//  Integrates with LemonSqueezy for license key validation
+//  Integrates with Paddle for license key validation
 //
 
 import Foundation
@@ -67,7 +67,7 @@ class LicenseManager: ObservableObject {
 
     // MARK: - License Validation
 
-    /// Validates a license key with LemonSqueezy
+    /// Validates a license key with Paddle
     /// - Parameters:
     ///   - key: The license key to validate
     ///   - email: The email associated with the purchase
@@ -98,11 +98,11 @@ class LicenseManager: ObservableObject {
         }
         #endif
 
-        // Validate with LemonSqueezy API
-        let isValid = await validateWithLemonSqueezy(key: cleanKey, email: cleanEmail)
+        // Validate with Paddle API
+        let isValid = await validateWithPaddle(key: cleanKey, email: cleanEmail)
 
         if isValid {
-            // Note: tier and expiry are extracted inside validateWithLemonSqueezy and saved there
+            // Note: tier and expiry are extracted inside validateWithPaddle and saved there
             print("✅ Pro license activated for \(cleanEmail)")
             // Note: Analytics tracking removed to avoid circular dependency
         } else {
@@ -113,18 +113,18 @@ class LicenseManager: ObservableObject {
         return isValid
     }
 
-    /// Validates license key with LemonSqueezy API
-    private func validateWithLemonSqueezy(key: String, email: String) async -> Bool {
-        // DEV_TODO: Replace with your actual LemonSqueezy store ID and product ID
-        // Get these from: https://app.lemonsqueezy.com/settings/api
-        _ = "DEV_STORE_ID" // DEV_TODO: CHANGE THIS
+    /// Validates license key with Paddle API
+    private func validateWithPaddle(key: String, email: String) async -> Bool {
+        // DEV_TODO: Replace with your actual Paddle vendor ID and product ID
+        // Get these from: https://vendors.paddle.com/authentication
+        _ = "DEV_VENDOR_ID" // DEV_TODO: CHANGE THIS
         _ = "DEV_PRODUCT_ID" // DEV_TODO: CHANGE THIS (optional, can validate without)
 
-        // LemonSqueezy license activation endpoint
-        let urlString = "https://api.lemonsqueezy.com/v1/licenses/activate"
+        // Paddle license validation endpoint (using Paddle Classic API)
+        let urlString = "https://vendors.paddle.com/api/2.0/product/validate_license"
 
         guard let url = URL(string: urlString) else {
-            print("❌ Invalid LemonSqueezy API URL")
+            print("❌ Invalid Paddle API URL")
             return false
         }
 
@@ -136,10 +136,10 @@ class LicenseManager: ObservableObject {
         // Add timeout to prevent hanging
         request.timeoutInterval = 10
 
-        // Create JSON payload
+        // Create JSON payload for Paddle
         let payload: [String: Any] = [
-            "license_key": key,
-            "instance_name": email // Use email as instance identifier
+            "license_code": key,
+            "email": email // Use email for validation
         ]
 
         guard let jsonData = try? JSONSerialization.data(withJSONObject: payload) else {
@@ -153,69 +153,68 @@ class LicenseManager: ObservableObject {
             let (data, response) = try await URLSession.shared.data(for: request)
 
             guard let httpResponse = response as? HTTPURLResponse else {
-                print("❌ Invalid response from LemonSqueezy")
+                print("❌ Invalid response from Paddle")
                 return false
             }
 
-            print("📡 LemonSqueezy API response status: \(httpResponse.statusCode)")
+            print("📡 Paddle API response status: \(httpResponse.statusCode)")
 
             if httpResponse.statusCode == 200 {
                 // Parse response
                 guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-                    print("❌ Failed to parse LemonSqueezy response")
+                    print("❌ Failed to parse Paddle response")
                     return false
                 }
 
-                // LemonSqueezy returns { "activated": true, "license_key": {...} }
-                let activated = json["activated"] as? Bool ?? false
+                // Paddle returns { "success": true, "response": {...} }
+                let success = json["success"] as? Bool ?? false
 
-                if activated {
-                    // Check license key metadata
-                    if let licenseData = json["license_key"] as? [String: Any] {
-                        let status = licenseData["status"] as? String ?? ""
+                if success {
+                    // Check license data
+                    if let responseData = json["response"] as? [String: Any] {
+                        let state = responseData["state"] as? String ?? ""
 
-                        // Valid statuses: "active", "inactive", "expired", "disabled"
-                        if status == "active" {
+                        // Valid states: "active", "inactive", "expired", "trialing"
+                        if state == "active" || state == "trialing" {
                             // Extract subscription info
-                            let tier = extractSubscriptionTier(from: licenseData)
-                            let expiryDate = extractExpiryDate(from: licenseData)
+                            let tier = extractSubscriptionTierFromPaddle(from: responseData)
+                            let expiryDate = extractExpiryDateFromPaddle(from: responseData)
 
                             await saveLicense(key: key, email: email, tier: tier, expiryDate: expiryDate)
 
                             print("✅ License validated successfully - Tier: \(tier.displayName)")
                             return true
                         } else {
-                            print("⚠️ License status: \(status)")
+                            print("⚠️ License state: \(state)")
                             return false
                         }
                     }
                     return true
                 }
 
-                print("⚠️ License not activated")
+                print("⚠️ License validation failed")
                 return false
 
-            } else if httpResponse.statusCode == 422 {
+            } else if httpResponse.statusCode == 400 {
                 // Validation error (invalid key, expired, etc.)
                 if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                    let errors = json["errors"] as? [[String: Any]] ?? []
-                    for error in errors {
-                        if let detail = error["detail"] as? String {
-                            print("⚠️ LemonSqueezy error: \(detail)")
-                        }
+                    let error = json["error"] as? [String: Any] ?? [:]
+                    if let message = error["message"] as? String {
+                        print("⚠️ Paddle error: \(message)")
                     }
                 }
                 return false
             } else if httpResponse.statusCode == 404 {
-                print("⚠️ LemonSqueezy API endpoint not found (check configuration)")
+                print("⚠️ Paddle API endpoint not found (check configuration)")
                 return false
             }
 
-            print("⚠️ LemonSqueezy validation failed with status: \(httpResponse.statusCode)")
+            print("⚠️ Paddle validation failed with status: \(httpResponse.statusCode)")
 
             // Try to parse error message
             if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-               let message = json["message"] as? String {
+               let error = json["error"] as? [String: Any],
+               let message = error["message"] as? String {
                 print("⚠️ Error message: \(message)")
             }
 
@@ -234,7 +233,57 @@ class LicenseManager: ObservableObject {
 
     // MARK: - Helper Methods
 
-    /// Extract subscription tier from license metadata
+    /// Extract subscription tier from Paddle license metadata
+    private func extractSubscriptionTierFromPaddle(from responseData: [String: Any]) -> SubscriptionTier {
+        // Check product_name or subscription info for tier
+        if let productName = responseData["product_name"] as? String {
+            let lowercased = productName.lowercased()
+            if lowercased.contains("monthly") {
+                return .monthly
+            } else if lowercased.contains("annual") || lowercased.contains("yearly") {
+                return .annual
+            } else if lowercased.contains("lifetime") {
+                return .lifetime
+            }
+        }
+
+        // Check subscription info if available
+        if let subscription = responseData["subscription"] as? [String: Any],
+           let plan = subscription["plan"] as? String {
+            let lowercased = plan.lowercased()
+            if lowercased.contains("monthly") {
+                return .monthly
+            } else if lowercased.contains("annual") || lowercased.contains("yearly") {
+                return .annual
+            } else if lowercased.contains("lifetime") {
+                return .lifetime
+            }
+        }
+
+        // Default to lifetime for backwards compatibility
+        return .lifetime
+    }
+
+    /// Extract expiry date from Paddle license metadata
+    private func extractExpiryDateFromPaddle(from responseData: [String: Any]) -> Date? {
+        // Check for expiry date in response
+        if let expiryTimestamp = responseData["expires"] as? TimeInterval, expiryTimestamp > 0 {
+            return Date(timeIntervalSince1970: expiryTimestamp)
+        }
+
+        // Check subscription expiry
+        if let subscription = responseData["subscription"] as? [String: Any],
+           let nextBillDate = subscription["next_bill_date"] as? String {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd"
+            return formatter.date(from: nextBillDate)
+        }
+
+        // For lifetime licenses, no expiry
+        return nil
+    }
+
+    /// Extract subscription tier from license metadata (legacy LemonSqueezy)
     private func extractSubscriptionTier(from licenseData: [String: Any]) -> SubscriptionTier {
         // Check meta or variant_name for subscription info
         if let meta = licenseData["meta"] as? [String: Any],
@@ -520,16 +569,27 @@ class LicenseManager: ObservableObject {
     }
 
     /// Get allowed models for current license
-    var allowedModels: [AIModel] {
+    var allowedModels: [String] {
         if isPro {
-            return AIModel.allCases
+            // Pro users get all models - we'll use string references to avoid circular imports
+            return [
+                "TinyLlama 1.1B",
+                "Llama 3.2 1B",
+                "Qwen2.5 1.5B",
+                "SmolLM2 1.7B",
+                "Phi-2 2.7B",
+                "Gemma 2 2B",
+                "Qwen2.5 3B",
+                "Llama 3.2 3B",
+                "Phi-3.5 Mini 3.8B"
+            ]
         } else {
-            return [.llamaThreeTwoOneB] // Free tier gets Llama 3.2 1B
+            return ["Llama 3.2 1B"] // Free tier gets Llama 3.2 1B
         }
     }
 
     /// Check if a specific model is available
-    func canUseModel(_ model: AIModel) -> Bool {
-        return allowedModels.contains(model)
+    func canUseModel(_ modelName: String) -> Bool {
+        return allowedModels.contains(modelName)
     }
 }
