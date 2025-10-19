@@ -17,7 +17,8 @@ struct MarkdownRenderer: View {
                     renderElement(element)
                 }
             }
-            .padding()
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
     }

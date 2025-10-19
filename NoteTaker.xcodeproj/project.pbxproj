@@ -78,7 +78,6 @@
 		A1000072000000000000001 /* SystemMonitorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000071000000000000001 /* SystemMonitorView.swift */; };
 		A1000093000000000000001 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000091000000000000001 /* Logger.swift */; };
 		A1000094000000000000001 /* ErrorManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000092000000000000001 /* ErrorManager.swift */; };
-		AA6FCA66D4D547B2992A284A /* ModelPromptRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4843FC5037834C4F8E7278A3 /* ModelPromptRegistry.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -101,7 +100,6 @@
 
 /* Begin PBXFileReference section */
 		17B9FCA2E2174FC592D860AE /* ModelToolConfigRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelToolConfigRegistry.swift; sourceTree = "<group>"; };
-		4843FC5037834C4F8E7278A3 /* ModelPromptRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelPromptRegistry.swift; sourceTree = "<group>"; };
 		810418062E9AF4770086B1B2 /* Note+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Note+CoreDataClass.swift"; sourceTree = "<group>"; };
 		810418082E9AF4770086B1B2 /* NoteEmbedding+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NoteEmbedding+CoreDataClass.swift"; sourceTree = "<group>"; };
 		8104180A2E9AF4770086B1B2 /* Tag+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Tag+CoreDataClass.swift"; sourceTree = "<group>"; };
@@ -318,7 +316,6 @@
 				81DE4FA22EA46176006293FC /* LLMOutputCleaner.swift */,
 				81DE4F8C2EA2DCF9006293FC /* ChatService.swift */,
 				81111F602E9F37FB00D7317B /* DefaultPrompts.swift */,
-				4843FC5037834C4F8E7278A3 /* ModelPromptRegistry.swift */,
 				17B9FCA2E2174FC592D860AE /* ModelToolConfigRegistry.swift */,
 				81111F562E9F348400D7317B /* AIService.swift */,
 				81111F572E9F348400D7317B /* AutoCorrectService.swift */,
@@ -448,7 +445,6 @@
 				A1000001000000000000001 /* NoteTakerApp.swift in Sources */,
 				A1000009000000000000001 /* NotesDataModel.xcdatamodeld in Sources */,
 				81111F612E9F37FB00D7317B /* DefaultPrompts.swift in Sources */,
-				AA6FCA66D4D547B2992A284A /* ModelPromptRegistry.swift in Sources */,
 				64D52F7A4AC043C7A510C356 /* LLMConfig.swift in Sources */,
 				4A0ABDEFA72E47F0B951871F /* ModelToolConfigRegistry.swift in Sources */,
 				A1000011000000000000001 /* NoteListView.swift in Sources */,

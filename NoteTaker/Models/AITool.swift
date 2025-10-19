@@ -19,6 +19,7 @@ enum ToolType: String, Codable, CaseIterable {
     case rephrase = "Rephrase"
     case summarize = "Summarize"
     case translate = "Translate"
+    case titleGeneration = "Title Generation"
     case custom = "Custom"
 
     var icon: String {
@@ -28,17 +29,19 @@ enum ToolType: String, Codable, CaseIterable {
         case .rephrase: return "arrow.triangle.2.circlepath"
         case .summarize: return "doc.text.magnifyingglass"
         case .translate: return "globe"
+        case .titleGeneration: return "textformat.size"
         case .custom: return "star.fill"
         }
     }
 
     var keyboardShortcut: String {
         switch self {
-        case .autocomplete: return "" // No shortcut - toggled via toolbar
+        case .autocomplete: return "Q" // Cmd+Q to toggle autocomplete
         case .patch: return "P"
         case .rephrase: return "R"
         case .summarize: return "S"
         case .translate: return "T"
+        case .titleGeneration: return "G" // Cmd+G to regenerate title
         case .custom: return ""
         }
     }
@@ -86,27 +89,27 @@ struct AITool: Identifiable, Codable, Equatable {
         self.modifiedAt = modifiedAt
     }
 
-    // MARK: - Legacy Convenience Accessors
+    // MARK: - Convenience Accessors
 
-    /// Convenience accessor for prompt (legacy compatibility)
+    /// Convenience accessor for prompt
     var prompt: String {
         get { llmConfig.prompt }
         set { llmConfig.prompt = newValue }
     }
 
-    /// Convenience accessor for temperature (legacy compatibility)
+    /// Convenience accessor for temperature
     var temperature: Float {
         get { llmConfig.temperature }
         set { llmConfig.temperature = newValue }
     }
 
-    /// Convenience accessor for maxTokens (legacy compatibility)
+    /// Convenience accessor for maxTokens
     var maxTokens: Int? {
         get { llmConfig.maxTokens }
         set { llmConfig.maxTokens = newValue }
     }
 
-    /// Convenience accessor for stopSequences (legacy compatibility)
+    /// Convenience accessor for stopSequences
     var stopSequences: [String] {
         get { llmConfig.stopSequences }
         set { llmConfig.stopSequences = newValue }
@@ -161,10 +164,11 @@ extension AITool {
     static func createDefaultTools(for model: AIModel) -> [AITool] {
         return [
             // Autocomplete (no keyboard shortcut - it's a toggleable feature)
+            // Autocomplete (no keyboard shortcut - it's a toggleable feature)
             AITool(
                 name: "Autocomplete",
                 icon: "text.cursor",
-                keyboardShortcut: "", // No shortcut - toggled via toolbar button
+                keyboardShortcut: "Q", // Cmd+Q to toggle autocomplete
                 color: .purple,
                 isDefault: true,
                 isEditable: false,
@@ -213,6 +217,17 @@ extension AITool {
                 isDefault: true,
                 isEditable: false,
                 llmConfig: ModelToolConfigRegistry.getConfig(for: model, toolType: .translate)
+            ),
+
+            // Title Generation
+            AITool(
+                name: "Title Generation",
+                icon: "textformat.size",
+                keyboardShortcut: "G", // Cmd+G to regenerate title
+                color: .teal,
+                isDefault: true,
+                isEditable: false,
+                llmConfig: ModelToolConfigRegistry.getConfig(for: model, toolType: .titleGeneration)
             )
         ]
     }
@@ -236,6 +251,8 @@ extension AITool {
             return .summarize
         case "Translate":
             return .translate
+        case "Title Generation":
+            return .titleGeneration
         default:
             return nil
         }

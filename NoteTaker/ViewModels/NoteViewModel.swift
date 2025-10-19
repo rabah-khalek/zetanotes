@@ -617,6 +617,31 @@ class NoteViewModel: ObservableObject {
         targetLanguage = "Spanish"
     }
 
+    /// Resets ALL app settings to defaults
+    /// This includes prompts, tools, chat settings, model selection, and appearance
+    func resetAllSettingsToDefaults() {
+        // Reset prompts
+        resetPromptsToDefaults()
+
+        // Reset autocomplete state
+        isAutocompleteEnabled = true
+
+        // Reset AI model to TinyLlama
+        AIEngine.shared.selectedModel = .tinyLlama
+
+        // Reset tools to defaults (removes custom tools, resets default tools)
+        ToolManager.shared.resetToDefaults()
+
+        // Reset chat settings
+        let defaultChatSettings = ChatSettings.default
+        defaultChatSettings.save()
+
+        // Reset appearance to dark mode
+        UserDefaults.standard.set("dark", forKey: "preferredAppearance")
+
+        print("✅ Reset all settings to defaults")
+    }
+
     /// Updates all prompts to match the currently selected model's optimized defaults
     /// This is called automatically when the AI model is switched
     private func updatePromptsForCurrentModel() {
@@ -651,7 +676,7 @@ class NoteViewModel: ObservableObject {
     /// Only checks if the prompt matches any model's default for that specific prompt type
     private func isAutocompletePromptAtDefault() -> Bool {
         for model in AIModel.allCases {
-            if autocompletePrompt == ModelPromptRegistry.getPrompt(for: model, type: .autocomplete) {
+            if autocompletePrompt == ModelToolConfigRegistry.getConfig(for: model, toolType: .autocomplete).prompt {
                 return true
             }
         }
@@ -660,7 +685,7 @@ class NoteViewModel: ObservableObject {
 
     private func isSummarizationPromptAtDefault() -> Bool {
         for model in AIModel.allCases {
-            if summarizationPrompt == ModelPromptRegistry.getPrompt(for: model, type: .summarization) {
+            if summarizationPrompt == ModelToolConfigRegistry.getConfig(for: model, toolType: .summarize).prompt {
                 return true
             }
         }
@@ -669,7 +694,7 @@ class NoteViewModel: ObservableObject {
 
     private func isTranslationPromptAtDefault() -> Bool {
         for model in AIModel.allCases {
-            if translationPrompt == ModelPromptRegistry.getPrompt(for: model, type: .translation) {
+            if translationPrompt == ModelToolConfigRegistry.getConfig(for: model, toolType: .translate).prompt {
                 return true
             }
         }
@@ -678,7 +703,8 @@ class NoteViewModel: ObservableObject {
 
     private func isTitleGenerationPromptAtDefault() -> Bool {
         for model in AIModel.allCases {
-            if titleGenerationPrompt == ModelPromptRegistry.getPrompt(for: model, type: .titleGeneration) {
+            if titleGenerationPrompt == ModelToolConfigRegistry.getConfig(for: model, toolType: .titleGeneration)
+                .prompt {
                 return true
             }
         }
@@ -687,7 +713,7 @@ class NoteViewModel: ObservableObject {
 
     private func isAutoCorrectPromptAtDefault() -> Bool {
         for model in AIModel.allCases {
-            if autoCorrectPrompt == ModelPromptRegistry.getPrompt(for: model, type: .autoCorrect) {
+            if autoCorrectPrompt == ModelToolConfigRegistry.getConfig(for: model, toolType: .patch).prompt {
                 return true
             }
         }
@@ -696,7 +722,7 @@ class NoteViewModel: ObservableObject {
 
     private func isReformulatePromptAtDefault() -> Bool {
         for model in AIModel.allCases {
-            if reformulatePrompt == ModelPromptRegistry.getPrompt(for: model, type: .reformulate) {
+            if reformulatePrompt == ModelToolConfigRegistry.getConfig(for: model, toolType: .rephrase).prompt {
                 return true
             }
         }

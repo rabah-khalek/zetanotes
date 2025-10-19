@@ -20,7 +20,7 @@ struct NoteTakerApp: App {
     @StateObject private var licenseManager = LicenseManager.shared
 
     // Appearance preference
-    @AppStorage("preferredAppearance") private var preferredAppearance: String = "light"
+    @AppStorage("preferredAppearance") private var preferredAppearance: String = "dark"
 
     init() {
         // Setup memory pressure monitoring

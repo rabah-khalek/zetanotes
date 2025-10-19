@@ -314,7 +314,8 @@ struct ContentView: View {
         HStack(spacing: 8) {
             // Autocomplete Toggle
             AutocompleteToggle(isEnabled: $viewModel.isAutocompleteEnabled)
-                .help("Toggle Autocomplete")
+                .keyboardShortcut("q", modifiers: .command)
+                .help("Toggle Autocomplete (⌘Q)")
                 .padding(.leading, 8)
                 .disabled(viewModel.selectedNote == nil)
 

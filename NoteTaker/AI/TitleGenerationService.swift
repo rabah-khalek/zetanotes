@@ -16,8 +16,8 @@ class TitleGenerationService: AIService {
     // MARK: - Configuration
 
     private enum Config {
-        static let contextLimit = 300 // Only use first 300 chars
-        static let maxTokens = 15 // Keep titles short
+        static let contextLimit = 1000 // Use first 1000 chars for better context (increased from 300)
+        static let maxTokens = 30 // Allow for 5-8 word titles (increased from 15)
     }
 
     // MARK: - Initialization
@@ -38,28 +38,39 @@ class TitleGenerationService: AIService {
     // MARK: - AIService Protocol
 
     func buildPrompt(for text: String) -> String {
-        // Limit context to first 300 characters
+        // Limit context to prevent token overflow while preserving enough for good titles
         let limitedText = String(text.prefix(Config.contextLimit))
 
-        return DefaultPrompts.titleGeneration.replacingOccurrences(of: "{content}", with: limitedText)
+        // Use ModelToolConfigRegistry for consistent configuration
+        let toolConfig = ModelToolConfigRegistry.getConfig(
+            for: AIEngine.shared.selectedModel,
+            toolType: .titleGeneration
+        )
+        return toolConfig.prompt.replacingOccurrences(of: "{content}", with: limitedText)
     }
 
     // MARK: - AIService Override
 
     /// Override process to use custom prompt properly
     func process(_ text: String, customPrompt: String) async -> String? {
-        // Limit context to first 300 characters
+        // Limit context to prevent token overflow while preserving enough for good titles
         let limitedText = String(text.prefix(Config.contextLimit))
 
-        // Use custom prompt with placeholder replacement
-        let instruction = customPrompt.isEmpty ? DefaultPrompts.titleGeneration : customPrompt
+        // Get model-specific config from ModelToolConfigRegistry
+        let toolConfig = ModelToolConfigRegistry.getConfig(
+            for: AIEngine.shared.selectedModel,
+            toolType: .titleGeneration
+        )
+
+        // Use custom prompt if provided, otherwise use model-optimized prompt
+        let instruction = customPrompt.isEmpty ? toolConfig.prompt : customPrompt
         let prompt = instruction.replacingOccurrences(of: "{content}", with: limitedText)
 
         guard let rawOutput = await llmService.generate(
             prompt: prompt,
-            maxTokens: config.maxTokens, // Use fixed 15 tokens from config
-            temperature: config.temperature,
-            stopSequences: config.stopSequences
+            maxTokens: toolConfig.maxTokens ?? Config.maxTokens, // Use model-specific maxTokens
+            temperature: toolConfig.temperature,
+            stopSequences: toolConfig.stopSequences
         ) else {
             return nil
         }
@@ -109,9 +120,24 @@ class TitleGenerationService: AIService {
         // First apply centralized artifact removal
         var cleaned = LLMOutputCleaner.clean(output)
 
+        // Trim at first newline (since we no longer use \n\n as stop sequence)
+        // This ensures we only get the first line of output
+        if let firstLine = cleaned.components(separatedBy: .newlines).first {
+            cleaned = firstLine
+        }
+
         // Remove leading markdown quote character if present
         if cleaned.hasPrefix(">") {
             cleaned = cleaned.dropFirst().trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
+        // Remove common prefixes that models might add
+        let prefixesToRemove = ["Title:", "Title :", "Title-", "Title –", "Title—"]
+        for prefix in prefixesToRemove {
+            if cleaned.hasPrefix(prefix) {
+                cleaned = String(cleaned.dropFirst(prefix.count)).trimmingCharacters(in: .whitespacesAndNewlines)
+                break
+            }
         }
 
         // Title-specific post-processing

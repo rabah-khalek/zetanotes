@@ -126,6 +126,23 @@ private enum TinyLlamaConfigs {
                 stopSequences: stopSequences + ["\n\nOutput:"]
             )
 
+        case .titleGeneration:
+            return LLMConfig(
+                prompt: """
+                <|system|>
+                You are a helpful assistant that creates concise titles.</s>
+                <|user|>
+                Create a short title (5-8 words) that captures the main idea of the following text:
+
+                {content}</s>
+                <|assistant|>
+
+                """,
+                temperature: 0.2,
+                maxTokens: 30,
+                stopSequences: stopSequences // Only model-specific end tokens, no \n\n
+            )
+
         case .custom:
             return LLMConfig(
                 prompt: "",
@@ -242,6 +259,23 @@ private enum LlamaThreeTwoConfigs {
                 stopSequences: stopSequences
             )
 
+        case .titleGeneration:
+            return LLMConfig(
+                prompt: """
+                <|begin_of_text|><|start_header_id|>system<|end_header_id|>
+
+                You generate concise titles. Output ONLY the title text, no labels or prefixes.<|eot_id|><|start_header_id|>user<|end_header_id|>
+
+                {content}
+
+                Title (5-8 words):<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+
+                """,
+                temperature: 0.2,
+                maxTokens: 30,
+                stopSequences: ["<|eot_id|>"] // Only model end token, trim newlines in post-processing
+            )
+
         case .custom:
             return LLMConfig(
                 prompt: """
@@ -352,6 +386,22 @@ private enum QwenTwoFiveConfigs {
                 temperature: 0.1,
                 maxTokens: nil,
                 stopSequences: stopSequences
+            )
+
+        case .titleGeneration:
+            return LLMConfig(
+                prompt: """
+                <|im_start|>system
+                You are a helpful assistant that creates concise titles.<|im_end|>
+                <|im_start|>user
+                Create a short title (5-8 words) that captures the main idea of the following text:
+
+                {content}<|im_end|>
+                <|im_start|>assistant
+                """,
+                temperature: 0.2,
+                maxTokens: 30,
+                stopSequences: ["<|im_end|>"] // Only model end token, trim newlines in post-processing
             )
 
         case .custom:
@@ -466,6 +516,23 @@ private enum SmolLMTwoConfigs {
                 stopSequences: stopSequences
             )
 
+        case .titleGeneration:
+            return LLMConfig(
+                prompt: """
+                <|im_start|>system
+                You create concise titles for text. Output ONLY the title (5-8 words).<|im_end|>
+                <|im_start|>user
+                Create a short title (5-8 words) that captures the main idea of the following text:
+
+                {content}<|im_end|>
+                <|im_start|>assistant
+
+                """,
+                temperature: 0.2,
+                maxTokens: 30,
+                stopSequences: ["<|im_end|>"] // Only model end token, trim newlines in post-processing
+            )
+
         case .custom:
             return LLMConfig(
                 prompt: """
@@ -542,6 +609,14 @@ private enum Phi2Configs {
                 temperature: 0.1,
                 maxTokens: nil,
                 stopSequences: stopSequences
+            )
+
+        case .titleGeneration:
+            return LLMConfig(
+                prompt: "Instruct: Create a short title (5-8 words) that captures the main idea of the following text. Return only the title.\n\n{content}\n\nOutput:",
+                temperature: 0.2,
+                maxTokens: 30,
+                stopSequences: stopSequences // Only model-specific end tokens, trim newlines in post-processing
             )
 
         case .custom:
@@ -646,6 +721,23 @@ private enum GemmaTwoConfigs {
                 temperature: 0.1,
                 maxTokens: nil,
                 stopSequences: stopSequences
+            )
+
+        case .titleGeneration:
+            return LLMConfig(
+                prompt: """
+                <start_of_turn>user
+                You are a helpful assistant that creates concise titles. Output ONLY the title (5-8 words).
+
+                Create a short title (5-8 words) that captures the main idea of the following text:
+
+                {content}<end_of_turn>
+                <start_of_turn>model
+
+                """,
+                temperature: 0.2,
+                maxTokens: 30,
+                stopSequences: ["<end_of_turn>"] // Only model end token, trim newlines in post-processing
             )
 
         case .custom:
@@ -756,6 +848,23 @@ private enum PhiThreeFiveConfigs {
                 temperature: 0.1,
                 maxTokens: nil,
                 stopSequences: stopSequences
+            )
+
+        case .titleGeneration:
+            return LLMConfig(
+                prompt: """
+                <|system|>
+                You create concise titles for text. Output ONLY the title (5-8 words).<|end|>
+                <|user|>
+                Create a short title (5-8 words) that captures the main idea of the following text:
+
+                {content}<|end|>
+                <|assistant|>
+
+                """,
+                temperature: 0.2,
+                maxTokens: 30,
+                stopSequences: ["<|end|>"] // Only model end token, trim newlines in post-processing
             )
 
         case .custom:

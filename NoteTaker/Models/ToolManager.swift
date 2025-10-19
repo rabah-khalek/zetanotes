@@ -249,6 +249,23 @@ class ToolManager: ObservableObject {
         return tools.first { $0.id == id }
     }
 
+    // MARK: - Reset
+
+    /// Resets all tools to defaults: removes custom tools, resets default tools to factory settings
+    func resetToDefaults() {
+        // Remove all custom tools and restore default tools
+        tools = AITool.createDefaultTools()
+
+        // Clear the initialization flag so it's like a fresh install
+        UserDefaults.standard.removeObject(forKey: hasInitializedKey)
+        UserDefaults.standard.set(true, forKey: hasInitializedKey)
+
+        // Save the reset state
+        saveTools()
+
+        print("✅ Reset all tools to defaults (removed \(customTools.count) custom tools)")
+    }
+
     // MARK: - Validation
 
     /// Check if a keyboard shortcut is available

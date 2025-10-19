@@ -31,7 +31,7 @@ class AutocompleteService: AIService {
 
     init(llmService: LLMInferenceService, model: AIModel) {
         self.llmService = llmService
-        self.currentModel = model
+        currentModel = model
 
         // Get model-specific config from registry
         let toolConfig = ModelToolConfigRegistry.getConfig(for: model, toolType: .autocomplete)

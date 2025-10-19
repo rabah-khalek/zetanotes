@@ -2,7 +2,7 @@
 //  AutocompleteToggle.swift
 //  NoteTaker
 //
-//  Autocomplete toggle switch component
+//  Autocomplete toggle switch component with keyboard shortcut
 //
 
 import SwiftUI
@@ -17,7 +17,23 @@ struct AutocompleteToggle: View {
                 isEnabled.toggle()
             }
         }) {
-            HStack(spacing: 4) {
+            HStack(spacing: 3) {
+                // Square with ⌘Q
+                HStack(spacing: 1) {
+                    Text("⌘")
+                        .font(.system(size: 8, weight: .medium))
+                    Text("Q")
+                        .font(.system(size: 9, weight: .bold))
+                }
+                .foregroundColor(.white)
+                .padding(.horizontal, 3)
+                .padding(.vertical, 1)
+                .background(
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(isEnabled ? Color.purple.opacity(0.85) : Color.secondary.opacity(0.6))
+                )
+
+                // "Auto" label
                 Text("Auto")
                     .font(.system(size: 10, weight: .medium))
                     .foregroundColor(isEnabled ? .purple : .secondary.opacity(0.8))
@@ -36,7 +52,7 @@ struct AutocompleteToggle: View {
                         .offset(x: isEnabled ? 5 : -5)
                 }
             }
-            .scaleEffect(isHovered ? 1.05 : 1.0)
+            .scaleEffect(isHovered ? 1.02 : 1.0)
         }
         .buttonStyle(.plain)
         .onHover { hovering in

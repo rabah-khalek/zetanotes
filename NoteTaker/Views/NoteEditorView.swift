@@ -261,25 +261,44 @@ struct NoteEditorView: View {
         VStack(spacing: 0) {
             // Title Field with AI Generate Button and Markdown Toggle
             HStack(spacing: 8) {
-                // Generate Title Button (Recycle icon) - LEFT SIDE
+                // Generate Title Button with Cmd+G shortcut
                 Button(action: {
                     Task {
                         await viewModel.generateTitle(for: note)
                     }
                 }) {
-                    if viewModel.isGeneratingTitle {
-                        ProgressView()
-                            .scaleEffect(0.7)
-                            .frame(width: 16, height: 16)
-                    } else {
-                        Image(systemName: "arrow.triangle.2.circlepath")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(.blue)
+                    VStack(spacing: 2) {
+                        // Keyboard shortcut badge
+                        HStack(spacing: 1) {
+                            Text("⌘")
+                                .font(.system(size: 7, weight: .medium))
+                            Text("G")
+                                .font(.system(size: 8, weight: .bold))
+                        }
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 3)
+                        .padding(.vertical, 1)
+                        .background(
+                            RoundedRectangle(cornerRadius: 2.5)
+                                .fill(Color.blue.opacity(0.85))
+                        )
+
+                        // Icon
+                        if viewModel.isGeneratingTitle {
+                            ProgressView()
+                                .scaleEffect(0.7)
+                                .frame(width: 16, height: 16)
+                        } else {
+                            Image(systemName: "arrow.triangle.2.circlepath")
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(.blue)
+                        }
                     }
                 }
                 .buttonStyle(.plain)
+                .keyboardShortcut("g", modifiers: .command)
                 .disabled(content.count < 20 || viewModel.isGeneratingTitle)
-                .help("Generate title from content")
+                .help("Generate title from content (⌘G)")
                 .opacity((content.count < 20 || viewModel.isGeneratingTitle) ? 0.3 : 1.0)
 
                 TextField("Title", text: $title)

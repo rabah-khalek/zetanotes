@@ -287,7 +287,8 @@ struct GeneralSettingsContent: View {
     let dismiss: DismissAction
     @ObservedObject var viewModel: NoteViewModel
     @ObservedObject var licenseManager = LicenseManager.shared
-    @AppStorage("preferredAppearance") private var preferredAppearance: String = "light"
+    @AppStorage("preferredAppearance") private var preferredAppearance: String = "dark"
+    @State private var showResetConfirmation = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
@@ -318,6 +319,47 @@ struct GeneralSettingsContent: View {
                 }
                 .pickerStyle(.segmented)
                 .labelsHidden()
+            }
+            .padding()
+            .background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
+            .cornerRadius(8)
+
+            Divider()
+
+            // Reset to Defaults Section
+            VStack(alignment: .leading, spacing: 12) {
+                Label("Reset Settings", systemImage: "arrow.counterclockwise")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+
+                Text("Restore all settings to their default values")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                Button(action: {
+                    showResetConfirmation = true
+                }) {
+                    HStack {
+                        Image(systemName: "arrow.counterclockwise.circle.fill")
+                        Text("Reset to Defaults")
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.orange)
+                .confirmationDialog(
+                    "Reset All Settings?",
+                    isPresented: $showResetConfirmation,
+                    titleVisibility: .visible
+                ) {
+                    Button("Reset to Defaults", role: .destructive) {
+                        viewModel.resetAllSettingsToDefaults()
+                    }
+                    Button("Cancel", role: .cancel) {}
+                } message: {
+                    Text("This will reset:\n• All prompts to defaults\n• All tools to defaults (removes custom tools)\n• Chat settings to defaults\n• AI model to TinyLlama\n• Appearance to Dark mode\n\nThis action cannot be undone.")
+                }
             }
             .padding()
             .background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
@@ -1041,7 +1083,7 @@ struct ToolRow: View {
                 .background(tool.color.color)
                 .cornerRadius(6)
             } else {
-                // For tools without shortcuts (like Autocomplete), show icon instead
+                // For tools without shortcuts (e.g., custom tools), show icon instead
                 Image(systemName: tool.icon)
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(.white)
