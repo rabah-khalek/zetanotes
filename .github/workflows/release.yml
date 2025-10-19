@@ -148,29 +148,47 @@ jobs:
           # Save private key to temp file
           echo "$SPARKLE_PRIVATE_KEY" > /tmp/sparkle_private_key
 
-          # Generate signature
+          # Generate signature using sign_update tool directly (more reliable than generate_appcast)
           echo "Generating Sparkle EdDSA signature..."
-          if SIGNATURE=$($HOME/bin/generate_appcast \
-            --ed-key-file /tmp/sparkle_private_key \
-            --download-url-prefix "https://github.com/${{ env.PUBLIC_REPO }}/releases/download/v${{ steps.version.outputs.VERSION }}/" \
-            "${{ steps.build.outputs.BUILD_DIR }}" 2>/dev/null | grep "sparkle:edSignature" | sed 's/.*sparkle:edSignature="\([^"]*\)".*/\1/'); then
 
-            # Verify we got a non-empty signature
-            if [ -z "$SIGNATURE" ]; then
-              echo "❌ Failed to generate signature - got empty result"
-              echo "Check that the build directory and DMG file are valid."
-              rm -f /tmp/sparkle_private_key
-              exit 1
-            fi
+          DMG_PATH="${{ steps.build.outputs.DMG_FILE }}"
 
-            echo "✅ Generated signature: $SIGNATURE"
-            echo "SIGNATURE=$SIGNATURE" >> $GITHUB_OUTPUT
-          else
-            echo "❌ Failed to generate signature"
-            echo "generate_appcast command failed. Check build output and private key."
+          if [ ! -f "$DMG_PATH" ]; then
+            echo "❌ DMG file not found at: $DMG_PATH"
             rm -f /tmp/sparkle_private_key
             exit 1
           fi
+
+          echo "Signing DMG: $DMG_PATH"
+
+          # Use sign_update from sparkle tools
+          if [ -f "scripts/sparkle/bin/sign_update" ]; then
+            SIGNATURE=$(scripts/sparkle/bin/sign_update "$DMG_PATH" /tmp/sparkle_private_key 2>/dev/null)
+          else
+            # Fallback to generate_appcast if sign_update not available
+            # Create a temporary directory with the DMG for generate_appcast
+            TEMP_DIR=$(mktemp -d)
+            cp "$DMG_PATH" "$TEMP_DIR/"
+
+            SIGNATURE=$($HOME/bin/generate_appcast \
+              --ed-key-file /tmp/sparkle_private_key \
+              --download-url-prefix "https://github.com/${{ env.PUBLIC_REPO }}/releases/download/v${{ steps.version.outputs.VERSION }}/" \
+              "$TEMP_DIR" 2>&1 | grep "sparkle:edSignature" | sed 's/.*sparkle:edSignature="\([^"]*\)".*/\1/')
+
+            rm -rf "$TEMP_DIR"
+          fi
+
+          # Verify we got a non-empty signature
+          if [ -z "$SIGNATURE" ]; then
+            echo "❌ Failed to generate signature - got empty result"
+            echo "DMG file: $DMG_PATH"
+            echo "DMG size: $(ls -lh "$DMG_PATH")"
+            rm -f /tmp/sparkle_private_key
+            exit 1
+          fi
+
+          echo "✅ Generated signature: $SIGNATURE"
+          echo "SIGNATURE=$SIGNATURE" >> $GITHUB_OUTPUT
 
           # Clean up private key
           rm -f /tmp/sparkle_private_key

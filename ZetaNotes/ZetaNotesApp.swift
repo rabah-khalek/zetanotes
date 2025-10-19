@@ -7,15 +7,12 @@
 //
 
 import SwiftUI
-
-// TODO: Uncomment when Sparkle package is added
-// import Sparkle
+import Sparkle
 
 @main
 struct ZetaNotesApp: App {
-    // TODO: Uncomment when Sparkle package is added
     // Sparkle updater controller - handles automatic updates
-    // private let updaterController: SPUStandardUpdaterController
+    private let updaterController: SPUStandardUpdaterController
 
     // Persistence controller manages Core Data stack
     @StateObject private var persistenceController = PersistenceController.shared
@@ -33,10 +30,8 @@ struct ZetaNotesApp: App {
     @AppStorage("hasCompletedFirstRun") private var hasCompletedFirstRun = false
 
     init() {
-        // TODO: Uncomment when Sparkle package is added
         // Initialize Sparkle updater controller
-        // updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil,
-        // userDriverDelegate: nil)
+        updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
 
         // Setup memory pressure monitoring
         setupMemoryPressureHandler()
@@ -86,11 +81,10 @@ struct ZetaNotesApp: App {
                 .keyboardShortcut("n", modifiers: .command)
             }
 
-            // TODO: Uncomment when Sparkle package is added
             // Add Sparkle's Check for Updates menu item
-            // CommandGroup(after: .appInfo) {
-            //     CheckForUpdatesView(updater: updaterController.updater)
-            // }
+            CommandGroup(after: .appInfo) {
+                CheckForUpdatesView(updater: updaterController.updater)
+            }
         }
         .windowStyle(.hiddenTitleBar)
         .windowToolbarStyle(.unified)

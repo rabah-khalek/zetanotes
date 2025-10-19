@@ -141,9 +141,9 @@
 
 	<!-- Sparkle Auto-Update Configuration -->
 	<key>SUFeedURL</key>
-	<string>https://zetanotes.com/appcast.xml</string>
+	<string>https://rabah-khalek.github.io/zetanotes/appcast.xml</string>
 	<key>SUPublicEDKey</key>
-	<string>FDRYSVr/ynz9brNn3H9FX/GukNtKgnQbuXD90zWps7Y=</string>
+	<string>OaS6XLRg52NaUmFiFX46nv1MlVb2gicyeSuxemv9N5I=</string>
 	<key>SUEnableAutomaticChecks</key>
 	<true/>
 	<key>SUScheduledCheckInterval</key>
