@@ -31,19 +31,11 @@ Appcast URL: https://rabah-khalek.github.io/zetanotes/appcast.xml
 
 ## Release Process
 
-### Step 1: Update Version Number
+### Step 1: Test Current Code
 
-Edit `ZetaNotes/Info.plist`:
+**No need to manually update Info.plist!** The CI workflow will automatically update it based on your git tag.
 
-```xml
-<key>CFBundleShortVersionString</key>
-<string>1.0.1</string>  <!-- Update this -->
-
-<key>CFBundleVersion</key>
-<string>2</string>  <!-- Increment build number -->
-```
-
-### Step 2: Test Locally
+Test the current code locally:
 
 ```bash
 ./run
@@ -54,22 +46,23 @@ Verify:
 - All features work
 - No crashes or errors
 
-### Step 3: Commit and Tag
+### Step 2: Create and Push Tag
 
 ```bash
-# Commit version changes
-git add ZetaNotes/Info.plist
-git commit -m "Bump version to 1.0.1"
-
-# Create tag
+# Create tag (this determines the version number)
 git tag v1.0.1
 
-# Push everything
-git push origin main
+# Push tag to trigger release
 git push origin v1.0.1
 ```
 
-### Step 4: Wait for CI
+**That's it!** The CI workflow will:
+- Automatically update Info.plist with version `1.0.1`
+- Generate a unique build number based on timestamp
+- Build the app with correct version
+- Create the release
+
+### Step 3: Wait for CI
 
 GitHub Actions will automatically:
 1. Build llama.cpp (5-10 min)
@@ -87,7 +80,7 @@ Monitor progress:
 Actions → release workflow
 ```
 
-### Step 5: Verify Release
+### Step 4: Verify Release
 
 1. **Check public repo**: https://github.com/rabah-khalek/zetanotes/releases
    - Release should exist with tag `v1.0.1`
@@ -227,8 +220,6 @@ If keys don't match:
 
 Use this checklist for each release:
 
-- [ ] Version number updated in Info.plist
-- [ ] Build number incremented
 - [ ] Tested locally with `./run`
 - [ ] All features working
 - [ ] Committed changes
@@ -249,14 +240,9 @@ Use this checklist for each release:
 # Build and test locally
 ./run
 
-# Check current version
-grep -A 1 "CFBundleShortVersionString" ZetaNotes/Info.plist
-
-# Create release
-git add ZetaNotes/Info.plist
-git commit -m "Bump version to X.Y.Z"
+# Create release (version comes from tag)
 git tag vX.Y.Z
-git push origin main vX.Y.Z
+git push origin vX.Y.Z
 
 # Monitor CI
 # Go to: https://github.com/YOUR_USERNAME/zetanotes-dev/actions
@@ -283,9 +269,11 @@ For more details, see:
 
 **Releasing a new version is simple**:
 
-1. Update version in Info.plist
+1. Test locally: `./run`
 2. Tag and push: `git tag v1.0.1 && git push origin v1.0.1`
 3. Wait ~15 minutes for CI
 4. Users automatically get notified!
+
+**The CI automatically updates Info.plist** based on the git tag, so you don't need to manually update version numbers!
 
 That's it! 🚀

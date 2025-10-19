@@ -21,6 +21,7 @@
 		81111F642EA0891A00D7317B /* InlineAutocompleteTextEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F622EA0891A00D7317B /* InlineAutocompleteTextEditor.swift */; };
 		81111F652EA0891A00D7317B /* UpgradePromptView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F632EA0891A00D7317B /* UpgradePromptView.swift */; };
 		81C5A72B2EA57C7B00B5077D /* DataExportManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81C5A72A2EA57C7B00B5077D /* DataExportManager.swift */; };
+		81C5A72D2EA58A1700B5077D /* CheckForUpdatesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81C5A72C2EA58A1700B5077D /* CheckForUpdatesView.swift */; };
 		81DE21652E9B3C2400692788 /* ModelDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE21642E9B3C2400692788 /* ModelDownloader.swift */; };
 		81DE4F6B2EA1A524006293FC /* MarkdownRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F6A2EA1A524006293FC /* MarkdownRenderer.swift */; };
 		81DE4F6E2EA1CE1A006293FC /* AITool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F6C2EA1CE1A006293FC /* AITool.swift */; };
@@ -116,6 +117,7 @@
 		81111F622EA0891A00D7317B /* InlineAutocompleteTextEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineAutocompleteTextEditor.swift; sourceTree = "<group>"; };
 		81111F632EA0891A00D7317B /* UpgradePromptView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpgradePromptView.swift; sourceTree = "<group>"; };
 		81C5A72A2EA57C7B00B5077D /* DataExportManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataExportManager.swift; sourceTree = "<group>"; };
+		81C5A72C2EA58A1700B5077D /* CheckForUpdatesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckForUpdatesView.swift; sourceTree = "<group>"; };
 		81DE21642E9B3C2400692788 /* ModelDownloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelDownloader.swift; sourceTree = "<group>"; };
 		81DE4F652EA18C90006293FC /* NotesDataModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = NotesDataModel.xcdatamodel; sourceTree = "<group>"; };
 		81DE4F6A2EA1A524006293FC /* MarkdownRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownRenderer.swift; sourceTree = "<group>"; };
@@ -270,6 +272,7 @@
 		A1000041000000000000001 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				81C5A72C2EA58A1700B5077D /* CheckForUpdatesView.swift */,
 				81DE4F9A2EA33EF3006293FC /* CustomSidebarView.swift */,
 				81DE4F9B2EA33EF3006293FC /* CustomToolbarView.swift */,
 				81DE4F9C2EA33EF3006293FC /* CustomWindowLayout.swift */,
@@ -453,6 +456,7 @@
 				A1000003000000000000001 /* ContentView.swift in Sources */,
 				A1000001000000000000001 /* ZetaNotesApp.swift in Sources */,
 				A1000009000000000000001 /* NotesDataModel.xcdatamodeld in Sources */,
+				81C5A72D2EA58A1700B5077D /* CheckForUpdatesView.swift in Sources */,
 				81111F612E9F37FB00D7317B /* DefaultPrompts.swift in Sources */,
 				64D52F7A4AC043C7A510C356 /* LLMConfig.swift in Sources */,
 				4A0ABDEFA72E47F0B951871F /* ModelToolConfigRegistry.swift in Sources */,
