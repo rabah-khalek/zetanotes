@@ -185,20 +185,41 @@ jobs:
           fi
 
           echo "Signing DMG: $DMG_PATH"
+          echo "DMG size: $(ls -lh "$DMG_PATH")"
 
           # Use sign_update from sparkle tools
           if [ -f "scripts/sparkle/bin/sign_update" ]; then
-            SIGNATURE=$(scripts/sparkle/bin/sign_update "$DMG_PATH" /tmp/sparkle_private_key 2>/dev/null)
-          else
-            # Fallback to generate_appcast if sign_update not available
+            echo "Using sign_update tool..."
+
+            # Run sign_update and capture both stdout and stderr
+            if SIGNATURE=$(scripts/sparkle/bin/sign_update "$DMG_PATH" /tmp/sparkle_private_key 2>&1); then
+              echo "✅ sign_update completed"
+            else
+              echo "⚠️  sign_update failed, trying fallback method..."
+              echo "Error output: $SIGNATURE"
+              SIGNATURE=""
+            fi
+          fi
+
+          # Fallback to generate_appcast if sign_update failed or not available
+          if [ -z "$SIGNATURE" ]; then
+            echo "Using generate_appcast fallback method..."
+
             # Create a temporary directory with the DMG for generate_appcast
             TEMP_DIR=$(mktemp -d)
             cp "$DMG_PATH" "$TEMP_DIR/"
 
-            SIGNATURE=$($HOME/bin/generate_appcast \
+            echo "Running generate_appcast..."
+            APPCAST_OUTPUT=$($HOME/bin/generate_appcast \
               --ed-key-file /tmp/sparkle_private_key \
               --download-url-prefix "https://github.com/${{ env.PUBLIC_REPO }}/releases/download/v${{ steps.version.outputs.VERSION }}/" \
-              "$TEMP_DIR" 2>&1 | grep "sparkle:edSignature" | sed 's/.*sparkle:edSignature="\([^"]*\)".*/\1/')
+              "$TEMP_DIR" 2>&1)
+
+            echo "Generate appcast output:"
+            echo "$APPCAST_OUTPUT"
+
+            # Extract signature from output
+            SIGNATURE=$(echo "$APPCAST_OUTPUT" | grep "sparkle:edSignature" | sed 's/.*sparkle:edSignature="\([^"]*\)".*/\1/')
 
             rm -rf "$TEMP_DIR"
           fi
@@ -207,7 +228,9 @@ jobs:
           if [ -z "$SIGNATURE" ]; then
             echo "❌ Failed to generate signature - got empty result"
             echo "DMG file: $DMG_PATH"
-            echo "DMG size: $(ls -lh "$DMG_PATH")"
+            echo "DMG exists: $(test -f "$DMG_PATH" && echo "yes" || echo "no")"
+            echo "DMG size: $(ls -lh "$DMG_PATH" 2>/dev/null || echo "N/A")"
+            echo "Private key exists: $(test -f /tmp/sparkle_private_key && echo "yes" || echo "no")"
             rm -f /tmp/sparkle_private_key
             exit 1
           fi
