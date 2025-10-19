@@ -191,59 +191,59 @@ jobs:
           if [ -f "scripts/sparkle/bin/sign_update" ]; then
             echo "Using sign_update tool..."
 
-            # Run sign_update and capture both stdout and stderr
-            if SIGNATURE=$(scripts/sparkle/bin/sign_update "$DMG_PATH" /tmp/sparkle_private_key 2>&1); then
-              echo "✅ sign_update completed"
+            # Run sign_update with --ed-key-file parameter
+            SIGN_OUTPUT=$(scripts/sparkle/bin/sign_update --ed-key-file /tmp/sparkle_private_key "$DMG_PATH" 2>&1)
+            SIGN_EXIT_CODE=$?
+
+            if [ $SIGN_EXIT_CODE -eq 0 ]; then
+              echo "✅ sign_update completed successfully"
+              echo "Output: $SIGN_OUTPUT"
+
+              # Extract just the signature value from the output
+              # Expected format: sparkle:edSignature="..." length="..."
+              SIGNATURE=$(echo "$SIGN_OUTPUT" | grep -o 'sparkle:edSignature="[^"]*"' | sed 's/sparkle:edSignature="\([^"]*\)"/\1/')
+
+              if [ -n "$SIGNATURE" ]; then
+                echo "✅ Extracted signature: $SIGNATURE"
+              else
+                echo "⚠️  sign_update succeeded but couldn't extract signature from output"
+                echo "Full output: $SIGN_OUTPUT"
+                SIGNATURE=""
+              fi
             else
-              echo "⚠️  sign_update failed, trying fallback method..."
-              echo "Error output: $SIGNATURE"
+              echo "❌ sign_update failed with exit code: $SIGN_EXIT_CODE"
+              echo "Error output: $SIGN_OUTPUT"
               SIGNATURE=""
             fi
-          fi
-
-          # Fallback to generate_appcast if sign_update failed or not available
-          if [ -z "$SIGNATURE" ]; then
-            echo "Using generate_appcast fallback method..."
-
-            # Create a temporary directory with the DMG for generate_appcast
-            TEMP_DIR=$(mktemp -d)
-            cp "$DMG_PATH" "$TEMP_DIR/"
-
-            echo "Running generate_appcast..."
-            cd "$TEMP_DIR"
-
-            APPCAST_OUTPUT=$($HOME/bin/generate_appcast \
-              --ed-key-file /tmp/sparkle_private_key \
-              --download-url-prefix "https://github.com/${{ env.PUBLIC_REPO }}/releases/download/v${{ steps.version.outputs.VERSION }}/" \
-              . 2>&1)
-
-            echo "Generate appcast output:"
-            echo "$APPCAST_OUTPUT"
-
-            # The signature is in the generated appcast.xml file
-            if [ -f "appcast.xml" ]; then
-              echo "Generated appcast.xml:"
-              cat appcast.xml
-
-              # Extract signature from the appcast.xml
-              SIGNATURE=$(grep "sparkle:edSignature" appcast.xml | sed 's/.*sparkle:edSignature="\([^"]*\)".*/\1/')
-
-              echo "Extracted signature: $SIGNATURE"
-            else
-              echo "❌ appcast.xml not generated"
-            fi
-
-            cd - > /dev/null
-            rm -rf "$TEMP_DIR"
+          else
+            echo "⚠️  sign_update tool not found at scripts/sparkle/bin/sign_update"
+            SIGNATURE=""
           fi
 
           # Verify we got a non-empty signature
           if [ -z "$SIGNATURE" ]; then
-            echo "❌ Failed to generate signature - got empty result"
-            echo "DMG file: $DMG_PATH"
-            echo "DMG exists: $(test -f "$DMG_PATH" && echo "yes" || echo "no")"
-            echo "DMG size: $(ls -lh "$DMG_PATH" 2>/dev/null || echo "N/A")"
-            echo "Private key exists: $(test -f /tmp/sparkle_private_key && echo "yes" || echo "no")"
+            echo "❌❌❌ CRITICAL ERROR: Failed to generate Sparkle signature ❌❌❌"
+            echo ""
+            echo "Auto-updates REQUIRE a valid EdDSA signature for security."
+            echo "The release CANNOT proceed without it."
+            echo ""
+            echo "Troubleshooting info:"
+            echo "  DMG file: $DMG_PATH"
+            echo "  DMG exists: $(test -f "$DMG_PATH" && echo "yes" || echo "no")"
+            echo "  DMG size: $(ls -lh "$DMG_PATH" 2>/dev/null || echo "N/A")"
+            echo "  Private key exists: $(test -f /tmp/sparkle_private_key && echo "yes" || echo "no")"
+            echo ""
+            echo "Common causes:"
+            echo "  1. Private key format is wrong (should be base64-encoded Ed25519 key)"
+            echo "  2. SPARKLE_PRIVATE_KEY GitHub secret not set correctly"
+            echo "  3. Private key doesn't match the public key in Info.plist"
+            echo ""
+            echo "To fix:"
+            echo "  1. Run: ./scripts/setup-sparkle-keys.sh"
+            echo "  2. Copy the private key shown"
+            echo "  3. Update SPARKLE_PRIVATE_KEY GitHub secret"
+            echo "  4. Ensure public key in Info.plist matches"
+            echo ""
             rm -f /tmp/sparkle_private_key
             exit 1
           fi
@@ -324,6 +324,7 @@ jobs:
           cp -r ${{ github.workspace }}/docs/* ./docs/
 
           # Update appcast.xml with new release info
+          # Signature is guaranteed to exist at this point (or workflow would have failed)
           cat > docs/appcast.xml << 'EOF'
           <?xml version="1.0" encoding="utf-8"?>
           <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
