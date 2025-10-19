@@ -9,7 +9,7 @@ set -e  # Exit on error
 
 LLAMA_DIR="${SRCROOT}/llama.cpp"
 BUILD_DIR="${LLAMA_DIR}/build"
-LIB_PATH="${BUILD_DIR}/src/libllama.a"
+LIB_PATH="${BUILD_DIR}/bin/libllama.dylib"
 
 echo "🔨 Checking llama.cpp build status..."
 
@@ -32,23 +32,33 @@ echo "🔨 Building llama.cpp with Metal support..."
 mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
 
-# Configure with CMake
+# Configure with CMake - build shared libraries for macOS
 cmake .. \
     -DCMAKE_BUILD_TYPE=Release \
-    -DLLAMA_METAL=ON \
+    -DBUILD_SHARED_LIBS=ON \
+    -DGGML_METAL=ON \
     -DLLAMA_BUILD_EXAMPLES=OFF \
     -DLLAMA_BUILD_TESTS=OFF \
     -DLLAMA_BUILD_SERVER=OFF
 
 # Build library
-cmake --build . --config Release --target llama -j 8
+cmake --build . --config Release -j 8
 
 # Verify build
 if [ -f "$LIB_PATH" ]; then
     echo "✅ llama.cpp built successfully!"
     echo "📦 Library: $LIB_PATH"
     ls -lh "$LIB_PATH"
+
+    # List all built libraries
+    echo ""
+    echo "📦 All built libraries:"
+    ls -lh "${BUILD_DIR}/bin/"*.dylib 2>/dev/null || true
 else
-    echo "❌ Build failed: libllama.a not found"
+    echo "❌ Build failed: libllama.dylib not found"
+    echo "Expected location: $LIB_PATH"
+    echo ""
+    echo "Contents of build directory:"
+    find "${BUILD_DIR}" -name "*.dylib" -o -name "*.a" 2>/dev/null || true
     exit 1
 fi
