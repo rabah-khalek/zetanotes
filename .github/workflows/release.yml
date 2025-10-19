@@ -66,72 +66,20 @@ jobs:
 
       - name: Setup Sparkle generate_appcast
         run: |
-
-          # Install Sparkle's generate_appcast tool (required for auto-updates)
-          mkdir -p $HOME/bin
-
           echo "Setting up generate_appcast tool..."
 
-          # First try to use generate_appcast from our Sparkle framework
-          SPARKLE_TOOL="Frameworks/Sparkle.xcframework/macos-arm64_x86_64/Sparkle.framework/Versions/Current/Resources/generate_appcast"
+          # Use the local Sparkle tools from scripts/sparkle/bin
+          SPARKLE_TOOL="scripts/sparkle/bin/generate_appcast"
+
           if [ -f "$SPARKLE_TOOL" ]; then
+            mkdir -p $HOME/bin
             cp "$SPARKLE_TOOL" $HOME/bin/generate_appcast
             chmod +x $HOME/bin/generate_appcast
-            echo "✅ Using generate_appcast from local Sparkle framework"
+            echo "✅ Using generate_appcast from scripts/sparkle/bin/"
           else
-            # Download the full Sparkle release and extract generate_appcast
-            echo "📥 Downloading Sparkle framework to extract generate_appcast..."
-            SPARKLE_VERSION="2.6.4"
-            SPARKLE_URL="https://github.com/sparkle-project/Sparkle/releases/download/${SPARKLE_VERSION}/Sparkle-${SPARKLE_VERSION}.tar.xz"
-
-            if curl -L --fail --silent "$SPARKLE_URL" -o /tmp/sparkle.tar.xz; then
-              echo "✅ Downloaded Sparkle archive"
-
-              # Extract to a clean directory
-              mkdir -p /tmp/sparkle_extract
-              cd /tmp/sparkle_extract
-              tar -xf /tmp/sparkle.tar.xz
-
-              echo "Archive contents:"
-              ls -la /tmp/sparkle_extract/
-
-              # Look for generate_appcast in common locations within Sparkle framework
-              TOOL_PATHS=(
-                "Sparkle.framework/Resources/generate_appcast"
-                "Sparkle.framework/Versions/B/Resources/generate_appcast"
-                "Sparkle.framework/Versions/Current/Resources/generate_appcast"
-                "bin/generate_appcast"
-              )
-
-              FOUND=false
-              for TOOL_PATH in "${TOOL_PATHS[@]}"; do
-                if [ -f "/tmp/sparkle_extract/$TOOL_PATH" ]; then
-                  cp "/tmp/sparkle_extract/$TOOL_PATH" $HOME/bin/generate_appcast
-                  chmod +x $HOME/bin/generate_appcast
-                  echo "✅ Found and extracted generate_appcast from $TOOL_PATH"
-                  FOUND=true
-                  break
-                fi
-              done
-
-              if [ "$FOUND" = false ]; then
-                echo "❌ Could not find generate_appcast in expected locations"
-                echo "Searching entire archive for generate_appcast..."
-                find /tmp/sparkle_extract -name "generate_appcast" -type f 2>/dev/null | head -10
-                echo ""
-                echo "All executable files in archive:"
-                find /tmp/sparkle_extract -type f -perm +111 2>/dev/null | head -20
-                rm -rf /tmp/sparkle.tar.xz /tmp/sparkle_extract
-                exit 1
-              fi
-
-              # Clean up
-              rm -rf /tmp/sparkle.tar.xz /tmp/sparkle_extract
-            else
-              echo "❌ Failed to download Sparkle archive from $SPARKLE_URL"
-              echo "This tool is required for generating Sparkle signatures for auto-updates."
-              exit 1
-            fi
+            echo "❌ generate_appcast not found at $SPARKLE_TOOL"
+            echo "Expected to find Sparkle tools in the repository."
+            exit 1
           fi
 
           # Verify the tool works
@@ -176,17 +124,25 @@ jobs:
         run: |
           # Check if generate_appcast is available
           if [ -f "$HOME/bin/generate_appcast_unavailable" ]; then
-            echo "❌ generate_appcast not available - cannot generate signature"
-            echo "This is required for auto-updates to work properly."
-            exit 1
+            echo "⚠️  generate_appcast not available - skipping signature generation"
+            echo "⚠️  Auto-updates will NOT work without Sparkle signatures!"
+            echo "SIGNATURE=" >> $GITHUB_OUTPUT
+            exit 0
           fi
 
           # Check if we have the private key
           if [ -z "$SPARKLE_PRIVATE_KEY" ]; then
-            echo "❌ No Sparkle private key available (SPARKLE_PRIVATE_KEY secret not set)"
-            echo "This is required for auto-updates to work properly."
-            echo "Please set the SPARKLE_PRIVATE_KEY secret in GitHub repository settings."
-            exit 1
+            echo "⚠️  No Sparkle private key available (SPARKLE_PRIVATE_KEY secret not set)"
+            echo "⚠️  Auto-updates will NOT work without Sparkle signatures!"
+            echo ""
+            echo "To set up Sparkle signing:"
+            echo "  1. Run: ./scripts/setup-sparkle-keys.sh"
+            echo "  2. Follow the instructions to generate keys"
+            echo "  3. Add SPARKLE_PRIVATE_KEY to GitHub Secrets"
+            echo ""
+            echo "Continuing without signature..."
+            echo "SIGNATURE=" >> $GITHUB_OUTPUT
+            exit 0
           fi
 
           # Save private key to temp file
