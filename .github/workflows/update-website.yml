@@ -61,7 +61,7 @@ jobs:
           else
             echo "Changes detected, committing..."
             git status --short
-            git commit -m "Update website content from dev repo - Updated from zetanotes-dev repository - Timestamp: $(date) - Workflow run: ${{ github.run_number }}"
+            git commit -m "Website update"
             git push
             echo "Website updated successfully"
           fi
