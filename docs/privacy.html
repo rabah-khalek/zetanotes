@@ -62,20 +62,12 @@
             color: #ffffff;
         }
 
-        h3 {
-            font-size: 18px;
-            font-weight: 600;
-            margin: 24px 0 12px 0;
-            color: #ffffff;
-        }
-
         p {
             margin-bottom: 16px;
             color: #e4e4e7;
         }
 
-        ul,
-        ol {
+        ul {
             margin: 16px 0;
             padding-left: 24px;
             color: #e4e4e7;
@@ -93,56 +85,6 @@
             margin: 24px 0;
         }
 
-        .privacy-summary {
-            background: #1a1a1a;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            padding: 24px;
-            margin: 32px 0;
-        }
-
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 24px 0;
-            background: #1a1a1a;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .data-table th,
-        .data-table td {
-            padding: 12px 16px;
-            text-align: left;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .data-table th {
-            background: #111111;
-            color: #ffffff;
-            font-weight: 600;
-        }
-
-        .data-table td {
-            color: #e4e4e7;
-        }
-
-        .data-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .contact-info {
-            background: #1a1a1a;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            padding: 24px;
-            margin: 32px 0;
-        }
-
-        .contact-info h3 {
-            margin-top: 0;
-        }
-
         a {
             color: #38bdf8;
             text-decoration: none;
@@ -152,12 +94,12 @@
             text-decoration: underline;
         }
 
-        .green {
-            color: #22c55e;
-        }
-
-        .red {
-            color: #ef4444;
+        .contact-info {
+            background: #1a1a1a;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 24px;
+            margin: 32px 0;
         }
     </style>
 </head>
@@ -167,225 +109,78 @@
         <a href="/" class="back-link">← Back to Home</a>
 
         <h1>Privacy Policy</h1>
-        <div class="last-updated">Last updated: October 19, 2025</div>
+        <div class="last-updated">Last updated: December 2024</div>
 
         <div class="highlight">
-            <p><strong>Privacy First:</strong> ZetaNotes processes all AI tasks locally on your device. Your notes never
-                leave your computer unless you explicitly use third-party sync services.</p>
+            <p><strong>Privacy First:</strong> ZetaNotes processes all AI tasks locally on your device. Your notes never leave your computer unless you explicitly use third-party sync services.</p>
         </div>
 
-        <div class="privacy-summary">
-            <h3>Privacy at a Glance</h3>
-            <table class="data-table">
-                <tr>
-                    <th>Data Type</th>
-                    <th>Collected</th>
-                    <th>Purpose</th>
-                    <th>Storage</th>
-                </tr>
-                <tr>
-                    <td>Your Notes & Content</td>
-                    <td><span class="red">No</span></td>
-                    <td>Local AI processing only</td>
-                    <td>Your device only</td>
-                </tr>
-                <tr>
-                    <td>Email Address</td>
-                    <td><span class="green">Yes</span></td>
-                    <td>Pro license delivery</td>
-                    <td>Paddle (payment processor)</td>
-                </tr>
-                <tr>
-                    <td>Usage Analytics</td>
-                    <td><span class="red">No</span></td>
-                    <td>Not collected</td>
-                    <td>None</td>
-                </tr>
-                <tr>
-                    <td>Crash Reports</td>
-                    <td><span class="green">Optional</span></td>
-                    <td>Bug fixes (anonymized)</td>
-                    <td>Local/Apple (if enabled)</td>
-                </tr>
-            </table>
-        </div>
-
-        <h2>1. Information We Collect</h2>
-
-        <h3>1.1 Information We DO NOT Collect</h3>
+        <h2>1. What We Collect</h2>
+        
+        <p><strong>We DO NOT collect:</strong></p>
         <ul>
-            <li><strong>Your notes and documents:</strong> All content remains on your device</li>
-            <li><strong>AI processing data:</strong> All AI computations happen locally</li>
-            <li><strong>Usage analytics:</strong> No tracking of how you use the app</li>
-            <li><strong>Personal files:</strong> No access to other files on your computer</li>
-            <li><strong>Browsing data:</strong> No web tracking or cookies</li>
-            <li><strong>Device fingerprinting:</strong> No unique device identification</li>
+            <li>Your notes or documents (stored locally only)</li>
+            <li>Usage analytics or tracking data</li>
+            <li>Personal files or browsing data</li>
         </ul>
 
-        <h3>1.2 Information We DO Collect</h3>
-
-        <h4>Purchase Information (Pro Users Only)</h4>
+        <p><strong>We DO collect (for Pro users only):</strong></p>
         <ul>
-            <li><strong>Email address:</strong> Required for license delivery and support</li>
-            <li><strong>Transaction details:</strong> Processed by Paddle.com (our payment processor)</li>
-            <li><strong>License key:</strong> Generated and stored to validate Pro features</li>
-        </ul>
-
-        <h4>Technical Information</h4>
-        <ul>
-            <li><strong>App version:</strong> For update notifications</li>
-            <li><strong>macOS version:</strong> For compatibility checking</li>
-            <li><strong>Crash reports:</strong> Only if you explicitly enable them in System Preferences</li>
+            <li>Email address for license delivery and support</li>
+            <li>Payment information (processed by Paddle.com)</li>
         </ul>
 
         <h2>2. How We Use Information</h2>
-
-        <h3>2.1 Email Address</h3>
+        <p>Your email address is used only to:</p>
         <ul>
             <li>Send Pro license keys after purchase</li>
-            <li>Provide customer support</li>
-            <li>Send important app updates (very rarely)</li>
-            <li>Process refunds if requested</li>
-        </ul>
-
-        <h3>2.2 Technical Information</h3>
-        <ul>
-            <li>Check for app updates (anonymous requests)</li>
-            <li>Improve app stability through crash analysis</li>
-            <li>Ensure compatibility with your macOS version</li>
+            <li>Provide customer support when requested</li>
+            <li>Process refunds if needed</li>
         </ul>
 
         <h2>3. Local AI Processing</h2>
-
-        <h3>3.1 Complete Privacy</h3>
-        <p>All AI features in ZetaNotes run entirely on your device:</p>
+        <p>All AI features run completely on your device:</p>
         <ul>
-            <li><strong>Local models:</strong> AI models are downloaded and stored on your Mac</li>
-            <li><strong>No external API calls:</strong> Your text never leaves your device for AI processing</li>
-            <li><strong>Offline functionality:</strong> AI features work without internet connection</li>
-            <li><strong>No cloud processing:</strong> We don't use OpenAI, Google, or any external AI services</li>
+            <li>AI models are downloaded and stored locally</li>
+            <li>Your text never leaves your device for AI processing</li>
+            <li>Works offline - no internet required for AI features</li>
+            <li>No external AI services used (OpenAI, Google, etc.)</li>
         </ul>
 
-        <h3>3.2 Model Downloads</h3>
-        <p>When you first use AI features, ZetaNotes downloads open-source language models:</p>
+        <h2>4. Third-Party Services</h2>
+        <p><strong>Paddle.com</strong> processes payments and receives:</p>
         <ul>
-            <li>Models are downloaded from Hugging Face (public repository)</li>
-            <li>Downloads are anonymous - no personal information transmitted</li>
-            <li>Models are stored locally in the app's data directory</li>
-            <li>No telemetry is sent about model usage</li>
+            <li>Email address and payment information</li>
+            <li>Billing details for purchase processing</li>
+        </ul>
+        <p>View Paddle's privacy policy: <a href="https://paddle.com/privacy">https://paddle.com/privacy</a></p>
+
+        <h2>5. Data Security</h2>
+        <p>Your data is protected by:</p>
+        <ul>
+            <li>macOS sandbox security (app can only access its own data)</li>
+            <li>Local storage (notes never transmitted)</li>
+            <li>macOS FileVault encryption</li>
         </ul>
 
-        <h2>4. Data Sharing and Third Parties</h2>
-
-        <h3>4.1 Payment Processing</h3>
-        <p><strong>Paddle.com</strong> (our merchant of record) receives:</p>
+        <h2>6. Your Rights</h2>
+        <p>You can:</p>
         <ul>
-            <li>Your email address</li>
-            <li>Payment information (credit card, etc.)</li>
-            <li>Billing address</li>
-            <li>Purchase details</li>
-        </ul>
-        <p>Paddle's privacy policy: <a href="https://paddle.com/privacy" target="_blank">https://paddle.com/privacy</a>
-        </p>
-
-        <h3>4.2 App Updates</h3>
-        <p><strong>GitHub</strong> hosts our update feed:</p>
-        <ul>
-            <li>Anonymous requests to check for updates</li>
-            <li>No personal information transmitted</li>
-            <li>Standard web server logs may be kept by GitHub</li>
+            <li>Export your notes at any time</li>
+            <li>Delete all data by uninstalling the app</li>
+            <li>Request account deletion by contacting support</li>
         </ul>
 
-        <h3>4.3 No Other Sharing</h3>
-        <p>We do not:</p>
-        <ul>
-            <li>Sell your information to third parties</li>
-            <li>Share data with advertisers</li>
-            <li>Use your data for marketing</li>
-            <li>Provide data to analytics companies</li>
-        </ul>
-
-        <h2>5. Data Storage and Security</h2>
-
-        <h3>5.1 Local Storage</h3>
-        <ul>
-            <li><strong>Your notes:</strong> Stored in ZetaNotes' macOS sandbox</li>
-            <li><strong>AI models:</strong> Cached locally for offline use</li>
-            <li><strong>App settings:</strong> Stored in macOS preferences</li>
-            <li><strong>License information:</strong> Stored securely in macOS Keychain</li>
-        </ul>
-
-        <h3>5.2 Data Security</h3>
-        <ul>
-            <li><strong>Sandbox protection:</strong> App can only access its own data</li>
-            <li><strong>macOS security:</strong> Protected by macOS file permissions</li>
-            <li><strong>No network exposure:</strong> Local data never transmitted</li>
-            <li><strong>Encrypted storage:</strong> Benefits from macOS FileVault encryption</li>
-        </ul>
-
-        <h2>6. Your Rights and Controls</h2>
-
-        <h3>6.1 Data Access</h3>
-        <ul>
-            <li><strong>Your notes:</strong> Always accessible through the app</li>
-            <li><strong>Export options:</strong> Export notes to standard formats</li>
-            <li><strong>Purchase history:</strong> Available through Paddle customer portal</li>
-        </ul>
-
-        <h3>6.2 Data Deletion</h3>
-        <ul>
-            <li><strong>Uninstall app:</strong> Removes all local data</li>
-            <li><strong>Reset app:</strong> Clear all data through app preferences</li>
-            <li><strong>Account deletion:</strong> Contact support to remove purchase records</li>
-        </ul>
-
-        <h3>6.3 Communication Preferences</h3>
-        <ul>
-            <li>Opt out of support emails (except transactional)</li>
-            <li>Update notification settings in app preferences</li>
-            <li>Crash report sharing in macOS System Preferences</li>
-        </ul>
-
-        <h2>7. Children's Privacy</h2>
-        <p>ZetaNotes is not specifically designed for children under 13. We do not knowingly collect personal
-            information from children under 13. If you believe a child has provided personal information, please contact
-            us to delete it.</p>
-
-        <h2>8. International Users</h2>
-        <p>ZetaNotes is available worldwide. Since all AI processing happens locally:</p>
-        <ul>
-            <li>Your data never crosses borders for AI processing</li>
-            <li>Only payment information is shared with Paddle (EU/US)</li>
-            <li>GDPR compliance through minimal data collection</li>
-            <li>Local data sovereignty maintained</li>
-        </ul>
-
-        <h2>9. Changes to Privacy Policy</h2>
-        <p>We may update this Privacy Policy to reflect changes in our practices or legal requirements. Changes will be
-            posted on this page with an updated date. Continued use of ZetaNotes after changes constitutes acceptance of
-            the new policy.</p>
-
-        <h2>10. Data Breach Notification</h2>
-        <p>In the unlikely event of a data breach involving your purchase information:</p>
-        <ul>
-            <li>We will notify affected users within 72 hours</li>
-            <li>Details about the breach and steps taken will be provided</li>
-            <li>Recommendations for protecting your account will be shared</li>
-            <li>Note: Your notes and AI data cannot be breached as they never leave your device</li>
-        </ul>
+        <h2>7. Changes</h2>
+        <p>We may update this Privacy Policy. Changes will be posted on this page with an updated date.</p>
 
         <div class="contact-info">
-            <h3>Privacy Questions?</h3>
-            <p><strong>For technical issues and bug reports:</strong></p>
-            <p>GitHub Issues: <a href="https://github.com/rabah-khalek/zetanotes/issues"
-                    target="_blank">https://github.com/rabah-khalek/zetanotes/issues</a></p>
-            <p><strong>For privacy concerns and legal inquiries:</strong></p>
+            <h3>Privacy Questions</h3>
             <p>Email: <a href="mailto:rabah.khalek@gmail.com">rabah.khalek@gmail.com</a></p>
-            <p>Website: <a href="https://zetanotes.com">https://zetanotes.com</a></p>
+            <p>Website: <a href="https://zetanotes.com">https://zetanotes.com\</a\>\</p\>
         </div>
 
-        <p><em>This Privacy Policy is effective as of the date last updated above and applies to all users of
-                ZetaNotes.</em></p>
+        <p><em>This Privacy Policy is effective as of the date last updated above.</em></p>
     </div>
 </body>
 
