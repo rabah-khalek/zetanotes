@@ -51,13 +51,17 @@ jobs:
             cp ${{ github.workspace }}/docs/appcast.xml ./docs/appcast.xml
           fi
 
-          # Check if there are any changes
-          if git diff --quiet; then
+          # Check if there are any changes (including untracked files)
+          echo "Checking for changes..."
+          git status --porcelain docs/
+          
+          git add docs/
+          if git diff --cached --quiet && [ -z "$(git ls-files --others --exclude-standard docs/)" ]; then
             echo "No changes to commit"
           else
             echo "Changes detected, committing..."
-            git add docs/
-            git commit -m "Update website content from dev repo"
+            git status --short
+            git commit -m "Update website content from dev repo - Updated from zetanotes-dev repository - Timestamp: $(date) - Workflow run: ${{ github.run_number }}"
             git push
             echo "Website updated successfully"
           fi
