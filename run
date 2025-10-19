@@ -17,7 +17,7 @@ echo "🚀 Running ZetaNotes..."
 # Since we just built it, it should be available to launch
 open -a ZetaNotes 2>/dev/null || {
     echo "❌ Failed to launch ZetaNotes directly. Trying alternative method..."
-    
+
     # Try to find the app in typical build locations
     for BUILD_PATH in \
         "build/Debug/ZetaNotes.app" \
@@ -31,7 +31,7 @@ open -a ZetaNotes 2>/dev/null || {
             exit 0
         fi
     done
-    
+
     echo "❌ Could not find built app in any expected location."
     echo "💡 Try running from Xcode or use VS Code task: 'Run NoteTaker'"
     exit 1

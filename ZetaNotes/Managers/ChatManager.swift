@@ -19,10 +19,10 @@ class ChatManager: ObservableObject {
         // Use Application Support directory (sandboxed) instead of Documents directory
         let appSupportDirectory = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         let zetaNotesDirectory = appSupportDirectory.appendingPathComponent("ZetaNotes")
-        
+
         // Ensure the directory exists
         try? fileManager.createDirectory(at: zetaNotesDirectory, withIntermediateDirectories: true, attributes: nil)
-        
+
         return zetaNotesDirectory.appendingPathComponent("chat_history.json")
     }
 
