@@ -51,6 +51,22 @@ jobs:
             brew install create-dmg
           fi
 
+      - name: Setup llama.cpp
+        run: |
+          echo "📦 Setting up llama.cpp..."
+
+          # Set SRCROOT environment variable for the build script
+          export SRCROOT="${GITHUB_WORKSPACE}"
+
+          # Use the existing build script
+          chmod +x scripts/build-llama.sh
+          ./scripts/build-llama.sh
+
+          echo "✅ llama.cpp setup complete"
+
+      - name: Setup Sparkle generate_appcast
+        run: |
+
           # Install Sparkle's generate_appcast tool (required for auto-updates)
           mkdir -p $HOME/bin
 
