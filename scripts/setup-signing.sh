@@ -10,7 +10,7 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 echo -e "${BLUE}╔═══════════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║   OffNotes Code Signing Setup (One-Time)     ║${NC}"
+echo -e "${BLUE}║   ZetaNotes Code Signing Setup (One-Time)     ║${NC}"
 echo -e "${BLUE}╚═══════════════════════════════════════════════╝${NC}"
 echo ""
 

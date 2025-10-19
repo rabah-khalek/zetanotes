@@ -14,12 +14,12 @@ The files need to be added to your Xcode project:
 
 ```bash
 # Files created:
-- NoteTaker/Managers/LicenseManager.swift
-- NoteTaker/Views/UpgradePromptView.swift
+- ZetaNotes/Managers/LicenseManager.swift
+- ZetaNotes/Views/UpgradePromptView.swift
 - MONETIZATION_STRATEGY.md (documentation only)
 ```
 
-**Action:** Open Xcode → Right-click NoteTaker folder → Add Files → Select the new files
+**Action:** Open Xcode → Right-click ZetaNotes folder → Add Files → Select the new files
 
 ---
 
@@ -164,7 +164,7 @@ Add upgrade prompt handling:
 
 ### 6. Add Notification Name
 
-In NoteTakerApp.swift or a shared file:
+In ZetaNotesApp.swift or a shared file:
 
 ```swift
 extension Notification.Name {
@@ -177,7 +177,7 @@ extension Notification.Name {
 
 ### 7. Update App Launch
 
-In NoteTakerApp.swift, initialize LicenseManager:
+In ZetaNotesApp.swift, initialize LicenseManager:
 
 ```swift
 init() {
@@ -198,24 +198,24 @@ Before you can test license validation:
 
 1. **Create Gumroad account:** <https://gumroad.com/start>
 2. **Create product:**
-   - Name: "NoteTaker Pro"
+   - Name: "ZetaNotes Pro"
    - Price: $29
    - Type: Digital Product
    - Enable "Generate unique license keys"
 3. **Get product permalink:**
-   - Settings → Permalink (e.g., "notetaker-pro")
+   - Settings → Permalink (e.g., "zetanotes-pro")
    - Update in `LicenseManager.swift` line 71:
 
      ```swift
-     let productPermalink = "notetaker-pro" // YOUR ACTUAL PERMALINK
+     let productPermalink = "zetanotes-pro" // YOUR ACTUAL PERMALINK
      ```
 
 4. **Get Gumroad URL:**
-   - Your product URL will be: `https://YOUR-GUMROAD-USERNAME.gumroad.com/l/notetaker-pro`
+   - Your product URL will be: `https://YOUR-GUMROAD-USERNAME.gumroad.com/l/zetanotes-pro`
    - Update in `UpgradePromptView.swift` line 150:
 
      ```swift
-     let gumroadURL = "https://YOUR-USERNAME.gumroad.com/l/notetaker-pro"
+     let gumroadURL = "https://YOUR-USERNAME.gumroad.com/l/zetanotes-pro"
      ```
 
 ---
@@ -250,15 +250,15 @@ Key: TEST-XXXX-XXXX-XXXX
 ### 10. Build and Test
 
 ```bash
-cd /Users/projects/Documents/notetaker
+cd /Users/projects/Documents/zetanotes
 
 # Clean build
-xcodebuild -project NoteTaker.xcodeproj \
-  -scheme NoteTaker \
+xcodebuild -project ZetaNotes.xcodeproj \
+  -scheme ZetaNotes \
   clean build
 
 # Run app
-open ~/Library/Developer/Xcode/DerivedData/NoteTaker-*/Build/Products/Debug/NoteTaker.app
+open ~/Library/Developer/Xcode/DerivedData/ZetaNotes-*/Build/Products/Debug/ZetaNotes.app
 ```
 
 ---
@@ -282,7 +282,7 @@ open ~/Library/Developer/Xcode/DerivedData/NoteTaker-*/Build/Products/Debug/Note
 ### Before Public Release
 
 1. **Remove DEBUG test license** in production builds
-2. **Update bundle ID** from `com.example.NoteTaker` to your real ID
+2. **Update bundle ID** from `com.example.ZetaNotes` to your real ID
 3. **Create app icon** (see next section)
 4. **Test license validation thoroughly**
 5. **Create Gumroad product page**

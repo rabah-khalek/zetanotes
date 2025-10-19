@@ -1,6 +1,6 @@
-# OffNotes Launch Checklist
+# ZetaNotes Launch Checklist
 
-Complete guide to launch OffNotes to production via GitHub Pages + LemonSqueezy.
+Complete guide to launch ZetaNotes to production via GitHub Pages + LemonSqueezy.
 
 ---
 
@@ -18,13 +18,13 @@ Complete guide to launch OffNotes to production via GitHub Pages + LemonSqueezy.
 
 ## ✅ Phase 2: Branding (COMPLETED)
 
-- [x] Changed app name from "NoteTaker" to "OffNotes"
+- [x] Changed app name from "ZetaNotes" to "ZetaNotes"
 - [x] Updated Info.plist with new branding
 - [x] Updated bundle identifiers and URL schemes
 - [x] Updated copyright notices
 
 **Files Updated:**
-- [NoteTaker/Info.plist](NoteTaker/Info.plist)
+- [ZetaNotes/Info.plist](ZetaNotes/Info.plist)
 
 ---
 
@@ -39,18 +39,18 @@ Complete guide to launch OffNotes to production via GitHub Pages + LemonSqueezy.
 **Next Steps:**
 1. Replace `YOUR_USERNAME` in HTML files with actual GitHub username
 2. Enable GitHub Pages in repository settings
-3. Verify site loads at `https://YOUR_USERNAME.github.io/offnotes/`
+3. Verify site loads at `https://YOUR_USERNAME.github.io/zetanotes/`
 
 ---
 
 ## ✅ Phase 4: LemonSqueezy Integration (COMPLETED)
 
-- [x] Updated [LicenseManager.swift](NoteTaker/Managers/LicenseManager.swift) to use LemonSqueezy API
-- [x] Updated [UpgradePromptView.swift](NoteTaker/Views/UpgradePromptView.swift) with LemonSqueezy checkout URL
+- [x] Updated [LicenseManager.swift](ZetaNotes/Managers/LicenseManager.swift) to use LemonSqueezy API
+- [x] Updated [UpgradePromptView.swift](ZetaNotes/Views/UpgradePromptView.swift) with LemonSqueezy checkout URL
 
 **Next Steps:**
 1. Create LemonSqueezy account at https://lemonsqueezy.com
-2. Create product "OffNotes Pro" with three pricing tiers:
+2. Create product "ZetaNotes Pro" with three pricing tiers:
    - Monthly: $1/month (recurring subscription)
    - Annual: $10/year (recurring subscription)
    - Lifetime: $30 (one-time payment)
@@ -92,12 +92,12 @@ Complete guide to launch OffNotes to production via GitHub Pages + LemonSqueezy.
 
 2. **Create Store**
    - Settings → Stores → Create Store
-   - Name: "OffNotes"
+   - Name: "ZetaNotes"
    - Currency: USD
 
 3. **Create Product**
    - Products → New Product
-   - Name: **OffNotes Pro**
+   - Name: **ZetaNotes Pro**
    - Description: "Unlock 8 open-source AI models and custom prompt editing."
    - Type: **Digital Product**
 
@@ -142,11 +142,11 @@ Complete guide to launch OffNotes to production via GitHub Pages + LemonSqueezy.
    ```swift
    // In UpgradePromptView.swift - Update all three checkout URLs
    case "monthly":
-       checkoutURL = "https://offnotes.lemonsqueezy.com/checkout/buy/MONTHLY_VARIANT_ID"
+       checkoutURL = "https://zetanotes.lemonsqueezy.com/checkout/buy/MONTHLY_VARIANT_ID"
    case "annual":
-       checkoutURL = "https://offnotes.lemonsqueezy.com/checkout/buy/ANNUAL_VARIANT_ID"
+       checkoutURL = "https://zetanotes.lemonsqueezy.com/checkout/buy/ANNUAL_VARIANT_ID"
    case "lifetime":
-       checkoutURL = "https://offnotes.lemonsqueezy.com/checkout/buy/LIFETIME_VARIANT_ID"
+       checkoutURL = "https://zetanotes.lemonsqueezy.com/checkout/buy/LIFETIME_VARIANT_ID"
    ```
 
 8. **Update Website**
@@ -163,7 +163,7 @@ Complete guide to launch OffNotes to production via GitHub Pages + LemonSqueezy.
 
 **First time only (5 minutes):**
 ```bash
-cd /Users/projects/Documents/notetaker
+cd /Users/projects/Documents/zetanotes
 chmod +x scripts/*.sh
 ./scripts/setup-signing.sh
 ```
@@ -198,14 +198,14 @@ The script automatically:
 2. **Build App**
    ```bash
    # In Xcode: Product → Archive
-   # Export to ~/Desktop/OffNotes-Release/
+   # Export to ~/Desktop/ZetaNotes-Release/
    ```
 
 3. **Bundle TinyLlama**
    ```bash
-   mkdir -p ~/Desktop/OffNotes-Release/OffNotes.app/Contents/Resources/Models
+   mkdir -p ~/Desktop/ZetaNotes-Release/ZetaNotes.app/Contents/Resources/Models
    curl -L "https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf" \
-     -o ~/Desktop/OffNotes-Release/OffNotes.app/Contents/Resources/Models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+     -o ~/Desktop/ZetaNotes-Release/ZetaNotes.app/Contents/Resources/Models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
    ```
 
 4. **Sign App**
@@ -215,40 +215,40 @@ The script automatically:
      --sign "$CERT_NAME" \
      --options runtime \
      --timestamp \
-     ~/Desktop/OffNotes-Release/OffNotes.app
+     ~/Desktop/ZetaNotes-Release/ZetaNotes.app
    ```
 
 5. **Create DMG**
    ```bash
    create-dmg \
-     --volname "OffNotes Installer" \
+     --volname "ZetaNotes Installer" \
      --window-size 800 400 \
-     --icon "OffNotes.app" 200 190 \
+     --icon "ZetaNotes.app" 200 190 \
      --app-drop-link 600 185 \
-     OffNotes-v1.0.0.dmg \
-     ~/Desktop/OffNotes-Release/OffNotes.app
+     ZetaNotes-v1.0.0.dmg \
+     ~/Desktop/ZetaNotes-Release/ZetaNotes.app
    ```
 
 6. **Sign DMG**
    ```bash
-   codesign --sign "$CERT_NAME" --timestamp OffNotes-v1.0.0.dmg
+   codesign --sign "$CERT_NAME" --timestamp ZetaNotes-v1.0.0.dmg
    ```
 
 7. **Notarize**
    ```bash
-   xcrun notarytool submit OffNotes-v1.0.0.dmg \
+   xcrun notarytool submit ZetaNotes-v1.0.0.dmg \
      --keychain-profile "notary-profile" \
      --wait
    ```
 
 8. **Staple**
    ```bash
-   xcrun stapler staple OffNotes-v1.0.0.dmg
+   xcrun stapler staple ZetaNotes-v1.0.0.dmg
    ```
 
 9. **Generate Checksum**
    ```bash
-   shasum -a 256 OffNotes-v1.0.0.dmg
+   shasum -a 256 ZetaNotes-v1.0.0.dmg
    # Save this checksum!
    ```
 
@@ -259,16 +259,16 @@ The script automatically:
 1. **Create Release**
    - Go to GitHub → Releases → **Draft a new release**
    - Tag: `v1.0.0`
-   - Title: **OffNotes v1.0.0**
+   - Title: **ZetaNotes v1.0.0**
    - Description: (See template in DISTRIBUTION.md)
 
 2. **Upload DMG**
-   - Drag `OffNotes-v1.0.0.dmg` to assets
+   - Drag `ZetaNotes-v1.0.0.dmg` to assets
    - Publish release
 
 3. **Get Download URL**
    - Copy the DMG download URL
-   - Format: `https://github.com/YOUR_USERNAME/offnotes/releases/download/v1.0.0/OffNotes-v1.0.0.dmg`
+   - Format: `https://github.com/YOUR_USERNAME/zetanotes/releases/download/v1.0.0/ZetaNotes-v1.0.0.dmg`
 
 4. **Update Website**
    - Replace `YOUR_USERNAME` in `docs/index.html`
@@ -291,7 +291,7 @@ The script automatically:
    - Check Actions tab for progress
 
 3. **Verify**
-   - Visit `https://YOUR_USERNAME.github.io/offnotes/`
+   - Visit `https://YOUR_USERNAME.github.io/zetanotes/`
    - Test download button
    - Test upgrade button (should go to LemonSqueezy)
 
@@ -370,7 +370,7 @@ The script automatically:
    - [ ] `YOUR_PRODUCT_ID` → LemonSqueezy Product ID
    - [ ] `YOUR_VARIANT_ID` → LemonSqueezy Variant ID
    - [ ] `CHECKSUM_WILL_BE_ADDED_HERE` → actual SHA256 checksum
-   - [ ] `support@offnotes.app` → your support email
+   - [ ] `support@zetanotes.app` → your support email
 
 2. **Test Credentials:**
    - [ ] LemonSqueezy API key works

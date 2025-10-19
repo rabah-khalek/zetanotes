@@ -1,20 +1,20 @@
 #!/bin/bash
 #
 # setup-dev.sh
-# One-command setup for NoteTaker development environment
+# One-command setup for ZetaNotes development environment
 # Run this once to set up everything needed for development
 #
 
 set -e  # Exit on error
 
-echo "🚀 NoteTaker Development Setup"
+echo "🚀 ZetaNotes Development Setup"
 echo "================================"
 echo ""
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 LLAMA_DIR="$PROJECT_ROOT/llama.cpp"
-MODEL_DIR="$HOME/Library/Application Support/NoteTaker/Models"
+MODEL_DIR="$HOME/Library/Application Support/ZetaNotes/Models"
 MODEL_FILE="tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"
 MODEL_URL="https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/$MODEL_FILE"
 
@@ -148,24 +148,24 @@ echo ""
 echo "🔗 Step 3/5: Setting up Swift-C++ bridge..."
 echo ""
 
-BRIDGING_HEADER="$PROJECT_ROOT/NoteTaker/NoteTaker-Bridging-Header.h"
+BRIDGING_HEADER="$PROJECT_ROOT/ZetaNotes/ZetaNotes-Bridging-Header.h"
 
 if [ -f "$BRIDGING_HEADER" ]; then
     print_status "Bridging header already exists"
 else
     cat > "$BRIDGING_HEADER" << 'EOF'
 //
-//  NoteTaker-Bridging-Header.h
+//  ZetaNotes-Bridging-Header.h
 //  Bridge between Swift and llama.cpp C API
 //
 
-#ifndef NoteTaker_Bridging_Header_h
-#define NoteTaker_Bridging_Header_h
+#ifndef ZetaNotes_Bridging_Header_h
+#define ZetaNotes_Bridging_Header_h
 
 // Include llama.cpp public API
 #include "llama.h"
 
-#endif /* NoteTaker_Bridging_Header_h */
+#endif /* ZetaNotes_Bridging_Header_h */
 EOF
     print_status "Bridging header created"
 fi
@@ -250,7 +250,7 @@ if [ "$CHECKS_PASSED" = true ]; then
     echo "1. Configure Xcode build settings:"
     echo "   ${YELLOW}./scripts/configure-xcode.sh${NC}"
     echo ""
-    echo "2. Open NoteTaker.xcodeproj in Xcode"
+    echo "2. Open ZetaNotes.xcodeproj in Xcode"
     echo ""
     echo "3. Follow the configuration instructions"
     echo ""

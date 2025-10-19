@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e  # Exit on any error
 
-# OffNotes Release Packaging Script
+# ZetaNotes Release Packaging Script
 # This script automates the entire release process:
 # 1. Builds the app in Xcode
 # 2. Bundles TinyLlama model
@@ -25,10 +25,10 @@ NOTARY_PROFILE="notary-profile"  # Name you used in 'notarytool store-credential
 VERSION="1.0.0"  # Update this for each release
 
 # Paths
-PROJECT_DIR="/Users/projects/Documents/notetaker"
-BUILD_DIR="$HOME/Desktop/OffNotes-Release-$(date +%Y%m%d-%H%M%S)"
-ARCHIVE_PATH="$HOME/Desktop/OffNotes.xcarchive"
-APP_NAME="OffNotes"
+PROJECT_DIR="/Users/projects/Documents/zetanotes"
+BUILD_DIR="$HOME/Desktop/ZetaNotes-Release-$(date +%Y%m%d-%H%M%S)"
+ARCHIVE_PATH="$HOME/Desktop/ZetaNotes.xcarchive"
+APP_NAME="ZetaNotes"
 DMG_NAME="${APP_NAME}-v${VERSION}.dmg"
 
 # TinyLlama model
@@ -36,7 +36,7 @@ MODEL_URL="https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve
 MODEL_FILE="tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"
 
 echo -e "${BLUE}╔═══════════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║   OffNotes Release Packaging Script v1.0     ║${NC}"
+echo -e "${BLUE}║   ZetaNotes Release Packaging Script v1.0     ║${NC}"
 echo -e "${BLUE}╚═══════════════════════════════════════════════╝${NC}"
 echo ""
 echo -e "${GREEN}Version:${NC} ${VERSION}"
@@ -116,13 +116,13 @@ echo "This may take 5-10 minutes..."
 cd "$PROJECT_DIR"
 
 # Clean first
-xcodebuild clean -project NoteTaker.xcodeproj -scheme NoteTaker -configuration Release || print_error "Clean failed"
+xcodebuild clean -project ZetaNotes.xcodeproj -scheme ZetaNotes -configuration Release || print_error "Clean failed"
 print_success "Clean completed"
 
 # Archive
 xcodebuild archive \
-    -project NoteTaker.xcodeproj \
-    -scheme NoteTaker \
+    -project ZetaNotes.xcodeproj \
+    -scheme ZetaNotes \
     -configuration Release \
     -archivePath "$ARCHIVE_PATH" \
     | grep -E "^(==|note:|warning:|error:)" || true
@@ -290,7 +290,7 @@ echo -e "${BLUE}SHA256:${NC} ${CHECKSUM}"
 echo ""
 echo -e "${YELLOW}Next steps:${NC}"
 echo "1. Test the DMG on a clean Mac (or in a VM)"
-echo "2. Create GitHub release: https://github.com/YOUR_USERNAME/offnotes/releases/new"
+echo "2. Create GitHub release: https://github.com/YOUR_USERNAME/zetanotes/releases/new"
 echo "3. Upload: ${DMG_NAME}"
 echo "4. Update docs/download.html with checksum: ${CHECKSUM}"
 echo "5. Tag release: v${VERSION}"

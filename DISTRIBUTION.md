@@ -1,6 +1,6 @@
-# OffNotes Distribution Guide
+# ZetaNotes Distribution Guide
 
-This guide covers signing, notarizing, and distributing OffNotes via GitHub Pages.
+This guide covers signing, notarizing, and distributing ZetaNotes via GitHub Pages.
 
 ## Prerequisites
 
@@ -36,7 +36,7 @@ security find-identity -v -p codesigning
 
 ### Update Version Numbers
 1. Open Xcode
-2. Select **NoteTaker** target → **General**
+2. Select **ZetaNotes** target → **General**
 3. Update **Version** (e.g., `1.0.0`) and **Build** (e.g., `1`)
 
 ### Build in Xcode
@@ -44,7 +44,7 @@ security find-identity -v -p codesigning
 2. Wait for build to complete
 3. In Organizer, select your archive
 4. Click **Distribute App** → **Copy App**
-5. Save `OffNotes.app` to a clean folder (e.g., `~/Desktop/OffNotes-Release/`)
+5. Save `ZetaNotes.app` to a clean folder (e.g., `~/Desktop/ZetaNotes-Release/`)
 
 **OR Build via Command Line:**
 ```bash
@@ -52,15 +52,15 @@ security find-identity -v -p codesigning
 rm -rf ~/Library/Developer/Xcode/DerivedData/*
 
 # Build for release
-xcodebuild -scheme NoteTaker \
+xcodebuild -scheme ZetaNotes \
   -configuration Release \
-  -archivePath ~/Desktop/OffNotes.xcarchive \
+  -archivePath ~/Desktop/ZetaNotes.xcarchive \
   archive
 
 # Export the app
 xcodebuild -exportArchive \
-  -archivePath ~/Desktop/OffNotes.xcarchive \
-  -exportPath ~/Desktop/OffNotes-Release \
+  -archivePath ~/Desktop/ZetaNotes.xcarchive \
+  -exportPath ~/Desktop/ZetaNotes-Release \
   -exportOptionsPlist ExportOptions.plist
 ```
 
@@ -73,11 +73,11 @@ The TinyLlama model should be bundled with the app so users can use AI features 
 ### Download TinyLlama
 ```bash
 # Create models directory
-mkdir -p ~/Desktop/OffNotes-Release/OffNotes.app/Contents/Resources/Models
+mkdir -p ~/Desktop/ZetaNotes-Release/ZetaNotes.app/Contents/Resources/Models
 
 # Download TinyLlama model (~700MB)
 curl -L "https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf" \
-  -o ~/Desktop/OffNotes-Release/OffNotes.app/Contents/Resources/Models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+  -o ~/Desktop/ZetaNotes-Release/ZetaNotes.app/Contents/Resources/Models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
 ```
 
 **Important:** After adding the model, you must re-sign the app (see Step 3).
@@ -97,18 +97,18 @@ codesign --deep --force --verify --verbose \
   --sign "$CERT_NAME" \
   --options runtime \
   --timestamp \
-  ~/Desktop/OffNotes-Release/OffNotes.app
+  ~/Desktop/ZetaNotes-Release/ZetaNotes.app
 ```
 
 ### Verify Signature
 ```bash
 # Verify the signature is valid
 codesign --verify --deep --strict --verbose=2 \
-  ~/Desktop/OffNotes-Release/OffNotes.app
+  ~/Desktop/ZetaNotes-Release/ZetaNotes.app
 
 # Check if hardened runtime is enabled
 codesign -d --entitlements - \
-  ~/Desktop/OffNotes-Release/OffNotes.app
+  ~/Desktop/ZetaNotes-Release/ZetaNotes.app
 ```
 
 **Expected output:** Should show no errors and display entitlements.
@@ -126,44 +126,44 @@ brew install create-dmg
 
 Create the DMG:
 ```bash
-cd ~/Desktop/OffNotes-Release
+cd ~/Desktop/ZetaNotes-Release
 
 create-dmg \
-  --volname "OffNotes Installer" \
-  --volicon "OffNotes.app/Contents/Resources/AppIcon.icns" \
+  --volname "ZetaNotes Installer" \
+  --volicon "ZetaNotes.app/Contents/Resources/AppIcon.icns" \
   --window-pos 200 120 \
   --window-size 800 400 \
   --icon-size 100 \
-  --icon "OffNotes.app" 200 190 \
-  --hide-extension "OffNotes.app" \
+  --icon "ZetaNotes.app" 200 190 \
+  --hide-extension "ZetaNotes.app" \
   --app-drop-link 600 185 \
   --background dmg-background.png \
-  OffNotes-v1.0.0.dmg \
-  OffNotes.app
+  ZetaNotes-v1.0.0.dmg \
+  ZetaNotes.app
 ```
 
 ### Option B: Manual DMG Creation
 
 ```bash
-cd ~/Desktop/OffNotes-Release
+cd ~/Desktop/ZetaNotes-Release
 
 # Create a temporary DMG
-hdiutil create -size 1g -fs HFS+ -volname "OffNotes" temp.dmg
+hdiutil create -size 1g -fs HFS+ -volname "ZetaNotes" temp.dmg
 
 # Mount it
-hdiutil attach temp.dmg -readwrite -mountpoint /Volumes/OffNotes
+hdiutil attach temp.dmg -readwrite -mountpoint /Volumes/ZetaNotes
 
 # Copy app to DMG
-cp -R OffNotes.app /Volumes/OffNotes/
+cp -R ZetaNotes.app /Volumes/ZetaNotes/
 
 # Create Applications symlink for drag-drop
-ln -s /Applications /Volumes/OffNotes/Applications
+ln -s /Applications /Volumes/ZetaNotes/Applications
 
 # Unmount
-hdiutil detach /Volumes/OffNotes
+hdiutil detach /Volumes/ZetaNotes
 
 # Convert to compressed, read-only DMG
-hdiutil convert temp.dmg -format UDZO -o OffNotes-v1.0.0.dmg
+hdiutil convert temp.dmg -format UDZO -o ZetaNotes-v1.0.0.dmg
 
 # Clean up
 rm temp.dmg
@@ -171,10 +171,10 @@ rm temp.dmg
 
 ### Sign the DMG
 ```bash
-codesign --sign "$CERT_NAME" --timestamp OffNotes-v1.0.0.dmg
+codesign --sign "$CERT_NAME" --timestamp ZetaNotes-v1.0.0.dmg
 
 # Verify DMG signature
-codesign --verify --deep --strict --verbose=2 OffNotes-v1.0.0.dmg
+codesign --verify --deep --strict --verbose=2 ZetaNotes-v1.0.0.dmg
 ```
 
 ---
@@ -195,7 +195,7 @@ xcrun notarytool store-credentials "notary-profile" \
 ### Submit for Notarization
 ```bash
 # Submit the DMG for notarization
-xcrun notarytool submit OffNotes-v1.0.0.dmg \
+xcrun notarytool submit ZetaNotes-v1.0.0.dmg \
   --keychain-profile "notary-profile" \
   --wait
 
@@ -204,11 +204,11 @@ xcrun notarytool submit OffNotes-v1.0.0.dmg \
 
 **Expected output:**
 ```
-Conducting pre-submission checks for OffNotes-v1.0.0.dmg...
+Conducting pre-submission checks for ZetaNotes-v1.0.0.dmg...
 Submission ID: xxxxx-xxxx-xxxx-xxxx-xxxxxxxxx
 Successfully uploaded file
   id: xxxxx-xxxx-xxxx-xxxx-xxxxxxxxx
-  path: /path/to/OffNotes-v1.0.0.dmg
+  path: /path/to/ZetaNotes-v1.0.0.dmg
 Waiting for processing to complete...
 Current status: Accepted
 ```
@@ -227,10 +227,10 @@ xcrun notarytool log SUBMISSION_ID \
 ### Staple the Notarization Ticket
 ```bash
 # Attach the notarization ticket to the DMG
-xcrun stapler staple OffNotes-v1.0.0.dmg
+xcrun stapler staple ZetaNotes-v1.0.0.dmg
 
 # Verify stapling worked
-xcrun stapler validate OffNotes-v1.0.0.dmg
+xcrun stapler validate ZetaNotes-v1.0.0.dmg
 ```
 
 **Expected output:** `The validate action worked!`
@@ -241,10 +241,10 @@ xcrun stapler validate OffNotes-v1.0.0.dmg
 
 ```bash
 # Generate checksum for download page
-shasum -a 256 OffNotes-v1.0.0.dmg
+shasum -a 256 ZetaNotes-v1.0.0.dmg
 
 # Example output:
-# a1b2c3d4e5f6... OffNotes-v1.0.0.dmg
+# a1b2c3d4e5f6... ZetaNotes-v1.0.0.dmg
 ```
 
 **Save this checksum** - you'll add it to `docs/download.html`.
@@ -256,22 +256,22 @@ shasum -a 256 OffNotes-v1.0.0.dmg
 ### Test on Clean Mac (Recommended)
 1. Copy DMG to a different Mac (or VM)
 2. Double-click to mount
-3. Drag OffNotes to Applications
+3. Drag ZetaNotes to Applications
 4. Try to open (should work without warnings)
 
 ### Test Locally
 ```bash
 # Remove quarantine flag to simulate download
-xattr -cr ~/Desktop/OffNotes-Release/OffNotes-v1.0.0.dmg
+xattr -cr ~/Desktop/ZetaNotes-Release/ZetaNotes-v1.0.0.dmg
 
 # Mount and test
-open OffNotes-v1.0.0.dmg
+open ZetaNotes-v1.0.0.dmg
 ```
 
 ### Verify Gatekeeper Approval
 ```bash
 # Check if Gatekeeper accepts it
-spctl --assess --verbose --type execute /Applications/OffNotes.app
+spctl --assess --verbose --type execute /Applications/ZetaNotes.app
 
 # Expected output: "accepted" and "notarized"
 ```
@@ -284,16 +284,16 @@ spctl --assess --verbose --type execute /Applications/OffNotes.app
 1. Go to your repository on GitHub
 2. Click **Releases** → **Draft a new release**
 3. Tag version: `v1.0.0`
-4. Release title: `OffNotes v1.0.0`
+4. Release title: `ZetaNotes v1.0.0`
 5. Write release notes (see template below)
 
 ### Upload the DMG
-1. Drag `OffNotes-v1.0.0.dmg` to the release assets
+1. Drag `ZetaNotes-v1.0.0.dmg` to the release assets
 2. Publish release
 
 ### Release Notes Template
 ```markdown
-# OffNotes v1.0.0
+# ZetaNotes v1.0.0
 
 Privacy-first note-taking with offline AI. Your notes never leave your device.
 
@@ -323,9 +323,9 @@ Privacy-first note-taking with offline AI. Your notes never leave your device.
 - Priority support
 
 ## Installation
-1. Download `OffNotes-v1.0.0.dmg`
-2. Open DMG and drag OffNotes to Applications
-3. Open OffNotes from Applications
+1. Download `ZetaNotes-v1.0.0.dmg`
+2. Open DMG and drag ZetaNotes to Applications
+3. Open ZetaNotes from Applications
 
 ## System Requirements
 - macOS 13.0+ (Ventura or later)
@@ -337,7 +337,7 @@ SHA256: `YOUR_CHECKSUM_HERE`
 
 ---
 
-**Download:** [OffNotes-v1.0.0.dmg](https://github.com/YOUR_USERNAME/offnotes/releases/download/v1.0.0/OffNotes-v1.0.0.dmg)
+**Download:** [ZetaNotes-v1.0.0.dmg](https://github.com/YOUR_USERNAME/zetanotes/releases/download/v1.0.0/ZetaNotes-v1.0.0.dmg)
 ```
 
 ---
@@ -352,7 +352,7 @@ SHA256: `YOUR_CHECKSUM_HERE`
    ```
 3. Update download URL:
    ```html
-   https://github.com/YOUR_USERNAME/offnotes/releases/download/v1.0.0/OffNotes-v1.0.0.dmg
+   https://github.com/YOUR_USERNAME/zetanotes/releases/download/v1.0.0/ZetaNotes-v1.0.0.dmg
    ```
 
 ### Update index.html
@@ -361,7 +361,7 @@ SHA256: `YOUR_CHECKSUM_HERE`
 
 ### Commit and Push
 ```bash
-cd /Users/projects/Documents/notetaker
+cd /Users/projects/Documents/zetanotes
 git add docs/
 git commit -m "Update download links for v1.0.0"
 git push origin main
@@ -374,7 +374,7 @@ git push origin main
 4. Branch: `main` → folder: `/docs`
 5. Save
 
-Your site will be live at: `https://YOUR_USERNAME.github.io/offnotes/`
+Your site will be live at: `https://YOUR_USERNAME.github.io/zetanotes/`
 
 ---
 
@@ -388,14 +388,14 @@ set -e
 
 VERSION="1.0.0"
 CERT_NAME="Developer ID Application: Your Name (TEAM_ID)"
-APP_PATH="$HOME/Desktop/OffNotes-Release/OffNotes.app"
-DMG_NAME="OffNotes-v${VERSION}.dmg"
+APP_PATH="$HOME/Desktop/ZetaNotes-Release/ZetaNotes.app"
+DMG_NAME="ZetaNotes-v${VERSION}.dmg"
 
-echo "🔨 Building OffNotes v${VERSION}..."
+echo "🔨 Building ZetaNotes v${VERSION}..."
 
 # Step 1: Build
-xcodebuild -scheme NoteTaker -configuration Release -archivePath ~/Desktop/OffNotes.xcarchive archive
-xcodebuild -exportArchive -archivePath ~/Desktop/OffNotes.xcarchive -exportPath ~/Desktop/OffNotes-Release -exportOptionsPlist ExportOptions.plist
+xcodebuild -scheme ZetaNotes -configuration Release -archivePath ~/Desktop/ZetaNotes.xcarchive archive
+xcodebuild -exportArchive -archivePath ~/Desktop/ZetaNotes.xcarchive -exportPath ~/Desktop/ZetaNotes-Release -exportOptionsPlist ExportOptions.plist
 
 # Step 2: Download TinyLlama
 echo "📦 Downloading TinyLlama model..."
@@ -409,7 +409,7 @@ codesign --deep --force --verify --verbose --sign "$CERT_NAME" --options runtime
 
 # Step 4: Create DMG
 echo "💿 Creating DMG..."
-create-dmg --volname "OffNotes Installer" --window-size 800 400 --icon "OffNotes.app" 200 190 --app-drop-link 600 185 "$DMG_NAME" "$APP_PATH"
+create-dmg --volname "ZetaNotes Installer" --window-size 800 400 --icon "ZetaNotes.app" 200 190 --app-drop-link 600 185 "$DMG_NAME" "$APP_PATH"
 
 # Step 5: Sign DMG
 echo "✍️ Signing DMG..."
@@ -454,7 +454,7 @@ xcrun notarytool log SUBMISSION_ID --keychain-profile "notary-profile"
 ### Gatekeeper Still Blocks App
 ```bash
 # Check what Gatekeeper sees
-spctl --assess --verbose=4 /Applications/OffNotes.app
+spctl --assess --verbose=4 /Applications/ZetaNotes.app
 
 # If it says "no usable signature":
 # - Re-sign the app
@@ -464,7 +464,7 @@ spctl --assess --verbose=4 /Applications/OffNotes.app
 ### App Crashes on Launch
 ```bash
 # Check for code signing issues
-codesign --verify --deep --strict --verbose=2 /Applications/OffNotes.app
+codesign --verify --deep --strict --verbose=2 /Applications/ZetaNotes.app
 
 # View crash logs
 open ~/Library/Logs/DiagnosticReports/

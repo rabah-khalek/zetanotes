@@ -1,0 +1,1471 @@
+//
+//  AISettingsView.swift
+//  ZetaNotes
+//
+//  AI settings with sidebar navigation and custom services
+//
+
+import SwiftUI
+
+enum SettingsSection: String, CaseIterable, Identifiable {
+    case general = "General"
+    case model = "AI Model"
+    case tools = "Tools"
+    case chat = "Chat"
+
+    var id: String { rawValue }
+
+    var icon: String {
+        switch self {
+        case .general: return "gearshape"
+        case .model: return "cpu"
+        case .tools: return "wand.and.stars"
+        case .chat: return "bubble.left.and.bubble.right"
+        }
+    }
+}
+
+// MARK: - Tool Editor State
+
+enum ToolEditorState: Identifiable {
+    case create
+    case edit(AITool)
+
+    var id: String {
+        switch self {
+        case .create:
+            return "create"
+        case let .edit(tool):
+            return "edit_\(tool.id)"
+        }
+    }
+}
+
+struct AISettingsView: View {
+    @ObservedObject var viewModel: NoteViewModel
+    @EnvironmentObject var aiEngine: AIEngine
+    @StateObject private var modelDownloader = ModelDownloader()
+    @StateObject private var toolManager = ToolManager.shared
+    @StateObject private var licenseManager = LicenseManager.shared
+    @Environment(\.dismiss) var dismiss
+
+    @State private var selectedSection: SettingsSection = .general
+    @State private var toolEditorState: ToolEditorState?
+
+    var body: some View {
+        HStack(spacing: 0) {
+            // Sidebar Navigation
+            VStack(alignment: .leading, spacing: 0) {
+                // Header with subtle gradient
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Settings")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                    Text("Configure AI & Services")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 16)
+                .background(
+                    LinearGradient(
+                        colors: [
+                            Color(nsColor: .controlBackgroundColor).opacity(0.3),
+                            Color(nsColor: .controlBackgroundColor).opacity(0.1)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+
+                Divider()
+
+                // Navigation Items with improved spacing
+                VStack(alignment: .leading, spacing: 4) {
+                    ForEach(SettingsSection.allCases) { section in
+                        SidebarButton(
+                            section: section,
+                            isSelected: selectedSection == section,
+                            action: {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    selectedSection = section
+                                }
+                            }
+                        )
+                    }
+                }
+                .padding(.vertical, 12)
+                .padding(.horizontal, 8)
+
+                Spacer()
+            }
+            .frame(width: 210)
+            .background(Color(nsColor: .controlBackgroundColor).opacity(0.3))
+
+            Divider()
+                .opacity(0.5)
+
+            // Main Content Area
+            VStack(spacing: 0) {
+                // Top bar with close button
+                HStack {
+                    Spacer()
+                    Button(action: { dismiss() }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.secondary)
+                            .font(.system(size: 20))
+                    }
+                    .buttonStyle(.plain)
+                    .keyboardShortcut("w", modifiers: .command)
+                    .help("Close Settings (⌘W)")
+                    .padding(.trailing, 16)
+                    .padding(.top, 12)
+                }
+
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 24) {
+                        switch selectedSection {
+                        case .general:
+                            GeneralSettingsContent(dismiss: dismiss, viewModel: viewModel)
+                        case .model:
+                            ModelSettingsContent(
+                                aiEngine: aiEngine,
+                                modelDownloader: modelDownloader
+                            )
+                        case .tools:
+                            ToolsSettingsContent(
+                                viewModel: viewModel,
+                                toolManager: toolManager,
+                                licenseManager: licenseManager,
+                                toolEditorState: $toolEditorState
+                            )
+                        case .chat:
+                            ChatSettingsContent()
+                        }
+                    }
+                    .padding()
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .frame(width: 850, height: 650)
+        .sheet(item: $toolEditorState) { state in
+            switch state {
+            case .create:
+                ToolEditorView(
+                    tool: AITool(
+                        name: "",
+                        icon: "star.fill",
+                        keyboardShortcut: "",
+                        color: .purple,
+                        llmConfig: LLMConfig(
+                            prompt: "",
+                            temperature: 0.7,
+                            maxTokens: nil,
+                            stopSequences: []
+                        )
+                    ),
+                    isPresented: Binding(
+                        get: { toolEditorState != nil },
+                        set: { if !$0 { toolEditorState = nil } }
+                    ),
+                    onSave: { tool in
+                        toolManager.addTool(tool)
+                        toolEditorState = nil
+                    }
+                )
+            case let .edit(tool):
+                ToolEditorView(
+                    tool: tool,
+                    isPresented: Binding(
+                        get: { toolEditorState != nil },
+                        set: { if !$0 { toolEditorState = nil } }
+                    ),
+                    isReadOnly: tool.isDefault && !licenseManager.isPro,
+                    onSave: { updatedTool in
+                        toolManager.updateTool(updatedTool)
+                        toolEditorState = nil
+                    }
+                )
+            }
+        }
+    }
+}
+
+// MARK: - Sidebar Button
+
+struct SidebarButton: View {
+    let section: SettingsSection
+    let isSelected: Bool
+    let action: () -> Void
+
+    @State private var isHovered = false
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 10) {
+                // Icon with subtle background
+                ZStack {
+                    Circle()
+                        .fill(isSelected ? Color.blue.opacity(0.2) : Color.clear)
+                        .frame(width: 28, height: 28)
+
+                    Image(systemName: section.icon)
+                        .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
+                        .foregroundColor(isSelected ? .blue : .secondary)
+                }
+
+                Text(section.rawValue)
+                    .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
+                    .foregroundColor(isSelected ? .primary : .primary.opacity(0.8))
+
+                Spacer()
+
+                // Subtle chevron indicator
+                if isSelected {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundColor(.blue.opacity(0.6))
+                }
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(isSelected ? Color.blue
+                        .opacity(0.08) : (isHovered ? Color.secondary.opacity(0.06) : Color.clear))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .strokeBorder(isSelected ? Color.blue.opacity(0.3) : Color.clear, lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering in
+            withAnimation(.easeInOut(duration: 0.15)) {
+                isHovered = hovering
+            }
+        }
+    }
+}
+
+// MARK: - Close Button
+
+struct CloseButton: View {
+    let dismiss: DismissAction
+    @State private var isHovered = false
+
+    var body: some View {
+        Button(action: { dismiss() }) {
+            HStack(spacing: 8) {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 14))
+                    .foregroundColor(isHovered ? .red.opacity(0.8) : .secondary)
+                Text("Close")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.primary)
+                Spacer()
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(isHovered ? Color.red.opacity(0.05) : Color.clear)
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering in
+            withAnimation(.easeInOut(duration: 0.15)) {
+                isHovered = hovering
+            }
+        }
+        .help("Close Settings (⌘W)")
+    }
+}
+
+// MARK: - General Settings Content
+
+struct GeneralSettingsContent: View {
+    let dismiss: DismissAction
+    @ObservedObject var viewModel: NoteViewModel
+    @ObservedObject var licenseManager = LicenseManager.shared
+    @AppStorage("preferredAppearance") private var preferredAppearance: String = "dark"
+    @State private var showResetConfirmation = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            Text("General Settings")
+                .font(.title2)
+                .fontWeight(.semibold)
+
+            // Pro Status / Upgrade Section
+            ProStatusSection(dismiss: dismiss)
+
+            Divider()
+
+            // Appearance and Reset Settings (side-by-side)
+            HStack(alignment: .top, spacing: 16) {
+                // Reset to Defaults Section (Left)
+                VStack(alignment: .leading, spacing: 10) {
+                    Label("Reset Settings", systemImage: "arrow.counterclockwise")
+                        .font(.headline)
+                        .fontWeight(.semibold)
+
+                    Text("Restore all defaults")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    Spacer()
+
+                    Button(action: {
+                        showResetConfirmation = true
+                    }) {
+                        HStack {
+                            Image(systemName: "arrow.counterclockwise.circle.fill")
+                            Text("Reset")
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 6)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.orange)
+                    .confirmationDialog(
+                        "Reset All Settings?",
+                        isPresented: $showResetConfirmation,
+                        titleVisibility: .visible
+                    ) {
+                        Button("Reset to Defaults", role: .destructive) {
+                            viewModel.resetAllSettingsToDefaults()
+                        }
+                        Button("Cancel", role: .cancel) {}
+                    } message: {
+                        Text(
+                            "This will reset:\n• All prompts to defaults\n• All tools to defaults (removes custom tools)\n• Chat settings to defaults\n• AI model to TinyLlama\n• Appearance to Dark mode\n\nThis action cannot be undone."
+                        )
+                    }
+                }
+                .padding()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
+                .cornerRadius(8)
+
+                // Appearance Settings (Right)
+                VStack(alignment: .leading, spacing: 10) {
+                    Label("Appearance", systemImage: "paintbrush")
+                        .font(.headline)
+                        .fontWeight(.semibold)
+
+                    Text("Theme")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    Spacer()
+
+                    Picker("", selection: $preferredAppearance) {
+                        Label("Light", systemImage: "sun.max.fill")
+                            .tag("light")
+                        Label("Dark", systemImage: "moon.fill")
+                            .tag("dark")
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                }
+                .padding()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
+                .cornerRadius(8)
+            }
+            .frame(height: 140)
+
+            Divider()
+
+            // About Section
+            VStack(alignment: .leading, spacing: 8) {
+                Label("About ZetaNotes", systemImage: "info.circle")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+
+                HStack {
+                    Text("Version")
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Text("1.0.0")
+                        .fontWeight(.medium)
+                }
+
+                if licenseManager.isPro {
+                    HStack {
+                        Text("License")
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        HStack(spacing: 4) {
+                            Image(systemName: "checkmark.seal.fill")
+                                .foregroundColor(.green)
+                            Text("Pro")
+                                .fontWeight(.medium)
+                                .foregroundColor(.green)
+                        }
+                    }
+                }
+            }
+            .padding()
+            .background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
+            .cornerRadius(8)
+        }
+    }
+}
+
+// MARK: - Model Settings Content
+
+struct ModelSettingsContent: View {
+    @ObservedObject var aiEngine: AIEngine
+    @ObservedObject var modelDownloader: ModelDownloader
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            Text("AI Model")
+                .font(.title2)
+                .fontWeight(.semibold)
+
+            Text("Choose between fast lightweight mode or high-quality mode")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+
+            // Model Cards directly without extra container
+            VStack(spacing: 12) {
+                ForEach(AIModel.allCases, id: \.self) { model in
+                    ModelCard(
+                        model: model,
+                        isSelected: aiEngine.selectedModel == model,
+                        isDownloaded: aiEngine.isModelDownloaded(model),
+                        isDownloading: modelDownloader.isDownloading && modelDownloader.downloadingModel == model,
+                        downloadProgress: modelDownloader.downloadProgress,
+                        onSelect: {
+                            Task {
+                                await aiEngine.switchModel(to: model)
+                            }
+                        },
+                        onDownload: {
+                            modelDownloader.downloadModel(model) { result in
+                                switch result {
+                                case .success:
+                                    print("✅ Model download completed")
+                                case let .failure(error):
+                                    print("❌ Download failed: \(error)")
+                                }
+                            }
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Prompts Settings Content
+
+struct PromptsSettingsContent: View {
+    @ObservedObject var viewModel: NoteViewModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            HStack {
+                Text("AI Prompts")
+                    .font(.title2)
+                    .fontWeight(.semibold)
+
+                Spacer()
+
+                Button("Reset to Defaults") {
+                    viewModel.resetPromptsToDefaults()
+                }
+                .buttonStyle(.bordered)
+            }
+
+            // Autocomplete Prompt
+            PromptSection(
+                title: "Autocomplete",
+                icon: "text.cursor",
+                prompt: $viewModel.autocompletePrompt,
+                placeholder: "Enter prompt for text completion...",
+                defaultPrompt: DefaultPrompts.autocomplete
+            )
+
+            Divider()
+
+            // Title Generation Prompt
+            PromptSection(
+                title: "Title Generation",
+                icon: "arrow.triangle.2.circlepath",
+                prompt: $viewModel.titleGenerationPrompt,
+                placeholder: "Enter prompt for title generation...",
+                defaultPrompt: DefaultPrompts.titleGeneration
+            )
+
+            Divider()
+
+            // Summarization Prompt
+            PromptSection(
+                title: "Summarization",
+                icon: "doc.text.magnifyingglass",
+                prompt: $viewModel.summarizationPrompt,
+                placeholder: "Enter prompt for summarization...",
+                defaultPrompt: DefaultPrompts.summarization
+            )
+
+            Divider()
+
+            // Translation Prompt with Language Selector
+            TranslationPromptSection(viewModel: viewModel)
+
+            Divider()
+
+            // Patch Prompt
+            PromptSection(
+                title: "Patch",
+                icon: "checkmark.circle",
+                prompt: $viewModel.autoCorrectPrompt,
+                placeholder: "Enter prompt for patching...",
+                defaultPrompt: DefaultPrompts.autoCorrect
+            )
+
+            Divider()
+
+            // Reformulate Prompt
+            PromptSection(
+                title: "Reformulate",
+                icon: "arrow.2.squarepath",
+                prompt: $viewModel.reformulatePrompt,
+                placeholder: "Enter prompt for reformulation...",
+                defaultPrompt: DefaultPrompts.reformulate
+            )
+        }
+    }
+}
+
+// MARK: - Reusable Components (from original AISettingsView)
+
+struct ModelSelectionSection: View {
+    @ObservedObject var aiEngine: AIEngine
+    @ObservedObject var modelDownloader: ModelDownloader
+    @ObservedObject var licenseManager = LicenseManager.shared
+
+    var body: some View {
+        VStack(spacing: 12) {
+            ForEach(AIModel.allCases, id: \.self) { model in
+                ModelCard(
+                    model: model,
+                    isSelected: aiEngine.selectedModel == model,
+                    isDownloaded: aiEngine.isModelDownloaded(model),
+                    isDownloading: modelDownloader.isDownloading && modelDownloader.downloadingModel == model,
+                    downloadProgress: modelDownloader.downloadProgress,
+                    onSelect: {
+                        Task {
+                            await aiEngine.switchModel(to: model)
+                        }
+                    },
+                    onDownload: {
+                        modelDownloader.downloadModel(model) { result in
+                            switch result {
+                            case .success:
+                                print("✅ Model download completed")
+                            case let .failure(error):
+                                print("❌ Download failed: \(error)")
+                            }
+                        }
+                    }
+                )
+            }
+        }
+    }
+}
+
+struct ModelCard: View {
+    let model: AIModel
+    let isSelected: Bool
+    let isDownloaded: Bool
+    let isDownloading: Bool
+    let downloadProgress: Double
+    let onSelect: () -> Void
+    let onDownload: () -> Void
+
+    @ObservedObject var licenseManager = LicenseManager.shared
+    @ObservedObject var aiEngine = AIEngine.shared
+
+    private var isLocked: Bool {
+        !licenseManager.canUseModel(model)
+    }
+
+    private var isSwitchingToThisModel: Bool {
+        aiEngine.isSwitchingModel && aiEngine.switchingToModel == model
+    }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                // Model name with lock icon
+                HStack(spacing: 6) {
+                    Text(model.displayName)
+                        .font(.system(size: 14, weight: .semibold))
+
+                    if isLocked {
+                        Image(systemName: "lock.fill")
+                            .font(.caption)
+                            .foregroundColor(.orange)
+                    }
+                }
+
+                // Model specs
+                HStack(spacing: 8) {
+                    Label(model.fileSize, systemImage: "doc")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    Label(model.memoryUsage, systemImage: "memorychip")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    Label(model.speedRating, systemImage: "speedometer")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    Label(model.qualityRating, systemImage: "star")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                // Description
+                Text(model.description)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .lineLimit(2)
+            }
+
+            Spacer()
+
+            // Action button
+            if isLocked {
+                // Show upgrade button for locked models
+                Button(action: {
+                    NotificationCenter.default.post(
+                        name: .showUpgradePrompt,
+                        object: UpgradePromptView.PromptType.modelSwitching
+                    )
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "lock.fill")
+                        Text("Upgrade")
+                            .font(.caption)
+                    }
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .foregroundColor(.orange)
+            } else if isDownloading {
+                VStack(spacing: 4) {
+                    ProgressView(value: downloadProgress)
+                        .frame(width: 80)
+                    Text("\(Int(downloadProgress * 100))%")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+            } else if !isDownloaded {
+                Button(action: onDownload) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.down.circle")
+                        Text("Download")
+                            .font(.caption)
+                    }
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+            } else if isSwitchingToThisModel {
+                // Show loading spinner when switching to this model
+                HStack(spacing: 6) {
+                    ProgressView()
+                        .scaleEffect(0.7)
+                        .frame(width: 12, height: 12)
+                    Text("Loading...")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            } else if !isSelected {
+                Button(action: onSelect) {
+                    Text("Use This")
+                        .font(.caption)
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.small)
+                .disabled(aiEngine.isSwitchingModel)
+            } else {
+                HStack(spacing: 4) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                    Text("Active")
+                        .font(.caption)
+                        .foregroundColor(.green)
+                }
+            }
+        }
+        .padding(12)
+        .background(isSelected ? Color.blue.opacity(0.08) : Color(nsColor: .controlBackgroundColor))
+        .cornerRadius(8)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .strokeBorder(isSelected ? Color.blue.opacity(0.3) : Color.gray.opacity(0.2), lineWidth: 1.5)
+        )
+    }
+}
+
+struct TranslationPromptSection: View {
+    @ObservedObject var viewModel: NoteViewModel
+    @ObservedObject var licenseManager = LicenseManager.shared
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Label("Translation", systemImage: "globe")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+
+                // Language picker next to title
+                Picker("Target Language", selection: $viewModel.targetLanguage) {
+                    Text("To English").tag("English")
+                    Text("To Chinese").tag("Chinese")
+                    Text("To Spanish").tag("Spanish")
+                    Text("To French").tag("French")
+                    Text("To German").tag("German")
+                    Text("To Portuguese").tag("Portuguese")
+                    Text("To Italian").tag("Italian")
+                    Text("To Dutch").tag("Dutch")
+                    Text("To Japanese").tag("Japanese")
+                    Text("To Korean").tag("Korean")
+                    Text("To Russian").tag("Russian")
+                    Text("To Arabic").tag("Arabic")
+                }
+                .pickerStyle(.menu)
+                .labelsHidden()
+                .frame(width: 150)
+
+                Spacer()
+
+                // Pro badge (moved to the right)
+                if !licenseManager.canEditPrompts {
+                    HStack(spacing: 4) {
+                        Image(systemName: "pencil")
+                            .font(.caption2)
+                        Text("Pro")
+                            .font(.caption2)
+                            .fontWeight(.semibold)
+                    }
+                    .foregroundColor(.orange)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Color.orange.opacity(0.1))
+                    .cornerRadius(8)
+                }
+            }
+
+            // Display prompt with {language} replaced by actual language
+            TextEditor(text: Binding(
+                get: {
+                    viewModel.translationPrompt.replacingOccurrences(of: "{language}", with: viewModel.targetLanguage)
+                },
+                set: { newValue in
+                    // When editing, replace the actual language back to {language} placeholder
+                    viewModel.translationPrompt = newValue.replacingOccurrences(
+                        of: viewModel.targetLanguage,
+                        with: "{language}"
+                    )
+                }
+            ))
+            .font(.system(size: 13))
+            .frame(height: 80)
+            .padding(8)
+            .background(Color(nsColor: .controlBackgroundColor))
+            .cornerRadius(6)
+            .overlay(
+                RoundedRectangle(cornerRadius: 6)
+                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+            )
+            .disabled(!licenseManager.canEditPrompts)
+            .opacity(licenseManager.canEditPrompts ? 1.0 : 0.6)
+
+            if viewModel.translationPrompt.isEmpty {
+                Text("Enter prompt for translation (use {language} as placeholder)...")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+    }
+}
+
+struct PromptSection: View {
+    let title: String
+    let icon: String
+    @Binding var prompt: String
+    let placeholder: String
+    let defaultPrompt: String
+
+    @ObservedObject var licenseManager = LicenseManager.shared
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Label(title, systemImage: icon)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+
+                if !licenseManager.canEditPrompts {
+                    Spacer()
+                    HStack(spacing: 4) {
+                        Image(systemName: "pencil")
+                            .font(.caption2)
+                        Text("Pro")
+                            .font(.caption2)
+                            .fontWeight(.semibold)
+                    }
+                    .foregroundColor(.orange)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Color.orange.opacity(0.1))
+                    .cornerRadius(8)
+                }
+            }
+
+            TextEditor(text: $prompt)
+                .font(.system(size: 13))
+                .frame(height: 80)
+                .padding(8)
+                .background(Color(nsColor: .controlBackgroundColor))
+                .cornerRadius(6)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                )
+                .disabled(!licenseManager.canEditPrompts)
+                .opacity(licenseManager.canEditPrompts ? 1.0 : 0.6)
+
+            if prompt.isEmpty {
+                Text(placeholder)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+    }
+}
+
+struct ProStatusSection: View {
+    @ObservedObject var licenseManager = LicenseManager.shared
+    let dismiss: DismissAction
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if licenseManager.isPro {
+                // Pro Active State
+                HStack(spacing: 12) {
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.system(size: 32))
+                        .foregroundColor(.green)
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Pro Active")
+                            .font(.headline)
+                            .fontWeight(.semibold)
+
+                        if let email = licenseManager.licenseEmail {
+                            Text(email)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+
+                    Spacer()
+
+                    #if DEBUG
+                    Button("Deactivate (Dev)") {
+                        licenseManager.deactivateLicense()
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .foregroundColor(.orange)
+                    #endif
+                }
+                .padding()
+                .background(Color.green.opacity(0.1))
+                .cornerRadius(8)
+            } else {
+                // Free Tier State
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(spacing: 12) {
+                        Image(systemName: "bolt.fill")
+                            .font(.system(size: 32))
+                            .foregroundColor(.orange)
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Upgrade to Pro")
+                                .font(.headline)
+                                .fontWeight(.semibold)
+
+                            Text("Download open-source AI models & customize prompts")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+
+                        Spacer()
+                    }
+
+                    HStack(spacing: 12) {
+                        Button(action: {
+                            dismiss()
+                            // Small delay to ensure settings closes before upgrade prompt shows
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                NotificationCenter.default.post(
+                                    name: .showUpgradePrompt,
+                                    object: UpgradePromptView.PromptType.general
+                                )
+                            }
+                        }) {
+                            HStack {
+                                Image(systemName: "cart.fill")
+                                Text("Upgrade Starting at $1/month")
+                            }
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.large)
+
+                        Button("Enter License Key") {
+                            dismiss()
+                            // Small delay to ensure settings closes before activation prompt shows
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                NotificationCenter.default.post(name: .showLicenseActivation, object: nil)
+                            }
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.large)
+                    }
+                }
+                .padding()
+                .background(Color.orange.opacity(0.1))
+                .cornerRadius(8)
+            }
+        }
+        .padding(.horizontal)
+    }
+}
+
+// MARK: - Tools Settings Content (Unified)
+
+struct ToolsSettingsContent: View {
+    @ObservedObject var viewModel: NoteViewModel
+    @ObservedObject var toolManager: ToolManager
+    @ObservedObject var licenseManager: LicenseManager
+    @Binding var toolEditorState: ToolEditorState?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            // Header
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("AI Tools")
+                        .font(.title2)
+                        .fontWeight(.semibold)
+
+                    Text("Manage default and custom AI tools")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                Spacer()
+
+                // Add Custom Tool button
+                Button(action: {
+                    if licenseManager.isPro {
+                        toolEditorState = .create
+                    } else {
+                        NotificationCenter.default.post(
+                            name: .showUpgradePrompt,
+                            object: UpgradePromptView.PromptType.general
+                        )
+                    }
+                }) {
+                    HStack(spacing: 6) {
+                        if !licenseManager.isPro {
+                            Image(systemName: "lock.fill")
+                                .font(.system(size: 11))
+                        }
+                        Image(systemName: "plus.circle.fill")
+                            .font(.system(size: 14))
+                        Text(licenseManager.isPro ? "Add Custom Tool" : "Upgrade to Add")
+                            .font(.system(size: 13, weight: .semibold))
+                    }
+                    .foregroundColor(licenseManager.isPro ? .white : .orange)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 7)
+                    .background(licenseManager.isPro ? Color.blue : Color.orange.opacity(0.15))
+                    .cornerRadius(8)
+                }
+                .buttonStyle(.plain)
+            }
+
+            // Default Tools Section
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Text("Default Tools")
+                        .font(.headline)
+
+                    if !licenseManager.isPro {
+                        HStack(spacing: 4) {
+                            Image(systemName: "lock.fill")
+                                .font(.system(size: 10))
+                            Text("Pro required to edit")
+                                .font(.caption)
+                        }
+                        .foregroundColor(.orange)
+                    }
+                }
+
+                // Show all default tools (keyboard shortcut is optional)
+                ForEach(toolManager.defaultTools) { tool in
+                    ToolRow(
+                        tool: tool,
+                        canEdit: licenseManager.isPro,
+                        onEdit: {
+                            toolEditorState = .edit(tool)
+                        }
+                    )
+                }
+            }
+
+            if !toolManager.customTools.isEmpty {
+                Divider()
+                    .padding(.vertical, 8)
+
+                // Custom Tools Section
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Custom Tools")
+                        .font(.headline)
+
+                    ForEach(toolManager.customTools) { tool in
+                        ToolRow(
+                            tool: tool,
+                            canEdit: true,
+                            canDelete: true,
+                            onEdit: {
+                                toolEditorState = .edit(tool)
+                            },
+                            onDelete: {
+                                toolManager.deleteTool(tool)
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Tool Row
+
+struct ToolRow: View {
+    let tool: AITool
+    let canEdit: Bool
+    var canDelete: Bool = false
+    let onEdit: () -> Void
+    var onDelete: (() -> Void)?
+
+    var body: some View {
+        HStack(spacing: 12) {
+            // Colored keyboard shortcut indicator (only show if shortcut exists)
+            if !tool.keyboardShortcut.isEmpty {
+                HStack(spacing: 2) {
+                    Text("⌘")
+                        .font(.system(size: 12, weight: .medium))
+                    Text(tool.keyboardShortcut)
+                        .font(.system(size: 13, weight: .bold))
+                }
+                .foregroundColor(.white)
+                .frame(width: 36, height: 36)
+                .background(tool.color.color)
+                .cornerRadius(6)
+            } else {
+                // For tools without shortcuts (e.g., custom tools), show icon instead
+                Image(systemName: tool.icon)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.white)
+                    .frame(width: 36, height: 36)
+                    .background(tool.color.color)
+                    .cornerRadius(6)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 8) {
+                    Text(tool.name)
+                        .font(.system(size: 14, weight: .semibold))
+                }
+
+                Text(tool.prompt.prefix(100) + (tool.prompt.count > 100 ? "..." : ""))
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .lineLimit(2)
+            }
+
+            Spacer()
+
+            HStack(spacing: 8) {
+                // View/Edit button
+                Button(action: onEdit) {
+                    if canEdit {
+                        Image(systemName: "pencil")
+                            .font(.system(size: 12))
+                            .foregroundColor(.blue)
+                    } else {
+                        Image(systemName: "eye")
+                            .font(.system(size: 12))
+                            .foregroundColor(.blue)
+                    }
+                }
+                .buttonStyle(.plain)
+                .help(canEdit ? "Edit tool" : "View tool settings")
+
+                // Delete button (custom tools only)
+                if canDelete, let delete = onDelete {
+                    Button(action: delete) {
+                        Image(systemName: "trash")
+                            .font(.system(size: 12))
+                            .foregroundColor(.red)
+                    }
+                    .buttonStyle(.plain)
+                    .help("Delete tool")
+                }
+            }
+        }
+        .padding(12)
+        .background(Color(nsColor: .controlBackgroundColor).opacity(0.3))
+        .cornerRadius(8)
+    }
+}
+
+// MARK: - Autocomplete Settings Row
+
+struct AutocompleteSettingsRow: View {
+    @EnvironmentObject var viewModel: NoteViewModel
+
+    var body: some View {
+        HStack(spacing: 12) {
+            // Purple indicator icon
+            ZStack {
+                Circle()
+                    .fill(Color.purple.opacity(0.15))
+                    .frame(width: 36, height: 36)
+                Image(systemName: "wand.and.stars")
+                    .font(.system(size: 16))
+                    .foregroundColor(.purple)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 8) {
+                    Text("AI Autocomplete")
+                        .font(.system(size: 14, weight: .semibold))
+                }
+
+                Text("Provides intelligent text suggestions as you type")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .lineLimit(2)
+            }
+
+            Spacer()
+
+            // Toggle
+            Toggle("", isOn: $viewModel.isAutocompleteEnabled)
+                .labelsHidden()
+                .toggleStyle(.switch)
+                .tint(.purple)
+        }
+        .padding(12)
+        .background(Color(nsColor: .controlBackgroundColor).opacity(0.3))
+        .cornerRadius(8)
+    }
+}
+
+// MARK: - Chat Settings Content
+
+struct ChatSettingsContent: View {
+    @ObservedObject private var chatManager = ChatManager.shared
+    @StateObject private var licenseManager = LicenseManager.shared
+    @State private var settings: ChatSettings
+
+    init() {
+        _settings = State(initialValue: ChatSettings.load())
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            // Header
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 8) {
+                    Image(systemName: "bubble.left.and.bubble.right.fill")
+                        .font(.system(size: 24))
+                        .foregroundColor(.blue)
+                    Text("Chat Settings")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                }
+
+                Text("Configure AI chat parameters for conversations")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+            }
+
+            // Pro Check
+            if !licenseManager.isPro {
+                ProFeaturePrompt(
+                    icon: "bubble.left.and.bubble.right.fill",
+                    title: "Chat is a Pro Feature",
+                    description: "Upgrade to Pro to access AI chat conversations with customizable parameters"
+                )
+            } else {
+                // Temperature
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Temperature")
+                            .font(.headline)
+                        Spacer()
+                        Text(String(format: "%.2f", settings.temperature))
+                            .font(.system(size: 13, weight: .medium, design: .monospaced))
+                            .foregroundColor(.secondary)
+                    }
+
+                    Slider(value: $settings.temperature, in: 0.01 ... 2.0, step: 0.05)
+                        .onChange(of: settings.temperature) { _ in
+                            saveSettings()
+                        }
+
+                    Text("Controls randomness: 0.01 = focused, 2 = creative")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                Divider()
+
+                // Max Tokens
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Max Tokens")
+                            .font(.headline)
+                        Spacer()
+                        Text("\(settings.maxTokens)")
+                            .font(.system(size: 13, weight: .medium, design: .monospaced))
+                            .foregroundColor(.secondary)
+                    }
+
+                    Slider(value: Binding(
+                        get: { Double(settings.maxTokens) },
+                        set: { settings.maxTokens = Int($0) }
+                    ), in: 256 ... 2048, step: 128)
+                        .onChange(of: settings.maxTokens) { _ in
+                            saveSettings()
+                        }
+
+                    Text("Maximum length of AI responses")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                Divider()
+
+                // Top P
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Top P")
+                            .font(.headline)
+                        Spacer()
+                        Text(String(format: "%.2f", settings.topP))
+                            .font(.system(size: 13, weight: .medium, design: .monospaced))
+                            .foregroundColor(.secondary)
+                    }
+
+                    Slider(value: $settings.topP, in: 0.0 ... 1.0, step: 0.05)
+                        .onChange(of: settings.topP) { _ in
+                            saveSettings()
+                        }
+
+                    Text("Nucleus sampling: limits token choices to top probability mass")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                Divider()
+
+                // Top K
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Top K")
+                            .font(.headline)
+                        Spacer()
+                        Text("\(settings.topK)")
+                            .font(.system(size: 13, weight: .medium, design: .monospaced))
+                            .foregroundColor(.secondary)
+                    }
+
+                    Slider(value: Binding(
+                        get: { Double(settings.topK) },
+                        set: { settings.topK = Int($0) }
+                    ), in: 1 ... 100, step: 1)
+                        .onChange(of: settings.topK) { _ in
+                            saveSettings()
+                        }
+
+                    Text("Limits token choices to top K most likely tokens")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                Divider()
+
+                // Repeat Penalty
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Repeat Penalty")
+                            .font(.headline)
+                        Spacer()
+                        Text(String(format: "%.2f", settings.repeatPenalty))
+                            .font(.system(size: 13, weight: .medium, design: .monospaced))
+                            .foregroundColor(.secondary)
+                    }
+
+                    Slider(value: $settings.repeatPenalty, in: 1.0 ... 2.0, step: 0.05)
+                        .onChange(of: settings.repeatPenalty) { _ in
+                            saveSettings()
+                        }
+
+                    Text("Penalizes repetition: higher values reduce repeated phrases")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                Divider()
+
+                // System Prompt
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("System Prompt")
+                        .font(.headline)
+
+                    TextEditor(text: $settings.systemPrompt)
+                        .font(.system(size: 13, design: .monospaced))
+                        .frame(minHeight: 100)
+                        .padding(8)
+                        .background(Color(nsColor: .textBackgroundColor))
+                        .cornerRadius(6)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6)
+                                .strokeBorder(Color.secondary.opacity(0.2), lineWidth: 1)
+                        )
+                        .onChange(of: settings.systemPrompt) { _ in
+                            saveSettings()
+                        }
+
+                    Text("Sets the AI's behavior and personality for chat conversations")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                Divider()
+
+                // Reset Button
+                HStack {
+                    Spacer()
+                    Button(action: {
+                        settings = .default
+                        saveSettings()
+                    }) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "arrow.counterclockwise")
+                                .font(.system(size: 11))
+                            Text("Reset to Defaults")
+                                .font(.system(size: 13, weight: .medium))
+                        }
+                        .foregroundColor(.blue)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(Color.blue.opacity(0.1))
+                        )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
+    private func saveSettings() {
+        chatManager.updateSettings(settings)
+    }
+}
+
+// MARK: - Pro Feature Prompt
+
+struct ProFeaturePrompt: View {
+    let icon: String
+    let title: String
+    let description: String
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Image(systemName: icon)
+                .font(.system(size: 48))
+                .foregroundColor(.orange.opacity(0.8))
+
+            VStack(spacing: 8) {
+                Text(title)
+                    .font(.headline)
+                    .foregroundColor(.primary)
+
+                Text(description)
+                    .font(.body)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+
+            Button(action: {
+                NotificationCenter.default.post(
+                    name: .showUpgradePrompt,
+                    object: UpgradePromptView.PromptType.chat
+                )
+            }) {
+                HStack(spacing: 6) {
+                    Image(systemName: "lock.open.fill")
+                        .font(.system(size: 12))
+                    Text("Upgrade to Pro")
+                        .font(.system(size: 14, weight: .semibold))
+                }
+                .foregroundColor(.white)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 10)
+                .background(Color.orange)
+                .cornerRadius(8)
+            }
+            .buttonStyle(.plain)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(40)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.orange.opacity(0.05))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .strokeBorder(Color.orange.opacity(0.2), lineWidth: 1)
+                )
+        )
+    }
+}
+
+// MARK: - Preview
+
+struct AISettingsView_Previews: PreviewProvider {
+    static var previews: some View {
+        AISettingsView(viewModel: NoteViewModel())
+            .environmentObject(AIEngine.shared)
+    }
+}

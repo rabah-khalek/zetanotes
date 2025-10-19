@@ -13,7 +13,7 @@ echo ""
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-XCODE_PROJECT="$PROJECT_ROOT/NoteTaker.xcodeproj/project.pbxproj"
+XCODE_PROJECT="$PROJECT_ROOT/ZetaNotes.xcodeproj/project.pbxproj"
 
 # Colors
 GREEN='\033[0;32m'
@@ -56,12 +56,12 @@ cat << 'EOF'
 
 Since llama.cpp now builds dynamic libraries (.dylib), you need to configure:
 
-1. Open NoteTaker.xcodeproj in Xcode
-2. Select NoteTaker target → Build Settings
+1. Open ZetaNotes.xcodeproj in Xcode
+2. Select ZetaNotes target → Build Settings
 3. Add these settings:
 
    Bridging Header:
-   $(SRCROOT)/NoteTaker/NoteTaker-Bridging-Header.h
+   $(SRCROOT)/ZetaNotes/ZetaNotes-Bridging-Header.h
 
    Header Search Paths:
    $(SRCROOT)/llama.cpp/include
@@ -139,7 +139,7 @@ echo ""
 echo "================================"
 echo -e "${GREEN}Next Steps:${NC}"
 echo ""
-echo "1. Open NoteTaker.xcodeproj in Xcode"
+echo "1. Open ZetaNotes.xcodeproj in Xcode"
 echo "2. Configure build settings (see above)"
 echo "3. Add Copy Files Phase for dylibs"
 echo "4. Build and run (Cmd+R)"

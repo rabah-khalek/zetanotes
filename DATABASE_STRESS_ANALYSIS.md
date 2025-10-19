@@ -1,4 +1,4 @@
-# Database Stress Test Analysis for NoteTaker
+# Database Stress Test Analysis for ZetaNotes
 
 ## Executive Summary
 

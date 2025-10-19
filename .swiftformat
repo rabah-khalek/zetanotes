@@ -1,4 +1,4 @@
-# SwiftFormat Configuration for NoteTaker
+# SwiftFormat Configuration for ZetaNotes
 
 # File options
 --exclude llama.cpp,build,.build

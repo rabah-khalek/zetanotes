@@ -1,4 +1,4 @@
-ye# NoteTaker Monetization Strategy
+ye# ZetaNotes Monetization Strategy
 
 ## Free vs Pro Feature Matrix
 
@@ -138,7 +138,7 @@ If we charged $4.99/month:
 
 ### Free User Experience
 
-1. **Downloads NoteTaker** (comes with TinyLlama)
+1. **Downloads ZetaNotes** (comes with TinyLlama)
 2. **Creates notes** - Everything works great
 3. **Tries AI features** - Autocomplete, summarize, translate all work!
 4. **Uses for 1-2 weeks** - Falls in love with the app
@@ -155,7 +155,7 @@ If we charged $4.99/month:
 3. **Tries autocomplete** - "Wow, this is so much better!"
 4. **Customizes prompts** - Tunes AI for their writing style
 5. **Switches models** - Qwen for translations, Phi-3 for writing
-6. **Recommends to friends** - Tells everyone about NoteTaker
+6. **Recommends to friends** - Tells everyone about ZetaNotes
 7. **Lifetime value** - Happy user forever, no churn
 
 ---
@@ -234,12 +234,12 @@ if LicenseManager.shared.canEditPrompts {
 
 ### Gumroad Product Page
 
-**Title:** NoteTaker Pro - Open-Source AI Models
+**Title:** ZetaNotes Pro - Open-Source AI Models
 
 **Price:** $29
 
 **Description:**
-Unlock open-source AI models for better quality in NoteTaker.
+Unlock open-source AI models for better quality in ZetaNotes.
 
 **What's Included:**
 ✓ Phi-3 Mini (3.8B parameters) - Best-in-class compact model
@@ -252,7 +252,7 @@ Unlock open-source AI models for better quality in NoteTaker.
 
 **Requirements:**
 
-- NoteTaker app (free download)
+- ZetaNotes app (free download)
 - macOS 13.0 or later
 - Apple Silicon Mac (M1/M2/M3)
 
@@ -263,7 +263,7 @@ Unlock open-source AI models for better quality in NoteTaker.
 ### Before Launch
 
 1. **Set up Gumroad:**
-   - Create product "NoteTaker Pro"
+   - Create product "ZetaNotes Pro"
    - Set price: $29
    - Enable license keys
    - Configure webhook (optional)
@@ -353,7 +353,7 @@ A: 100%. Everything runs locally on your Mac. Notes never leave your device. We 
 ### Refund Policy
 
 - 30-day money-back guarantee
-- Contact: <support@notetaker.com>
+- Contact: <support@zetanotes.com>
 - Processed within 3-5 business days
 
 ---

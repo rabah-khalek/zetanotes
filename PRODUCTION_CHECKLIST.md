@@ -10,7 +10,7 @@ This document ensures NO development code leaks into your production release.
 
 ### LemonSqueezy Configuration
 
-**File:** `NoteTaker/Managers/LicenseManager.swift`
+**File:** `ZetaNotes/Managers/LicenseManager.swift`
 
 ```swift
 // Lines 84-87
@@ -31,21 +31,21 @@ let productId = "789012" // Your actual LemonSqueezy product ID
 
 ---
 
-**File:** `NoteTaker/Views/UpgradePromptView.swift`
+**File:** `ZetaNotes/Views/UpgradePromptView.swift`
 
 ```swift
 // Line 155
 // BEFORE (Development):
-let checkoutURL = "https://offnotes.lemonsqueezy.com/checkout/buy/DEV_VARIANT_ID"
+let checkoutURL = "https://zetanotes.lemonsqueezy.com/checkout/buy/DEV_VARIANT_ID"
 
 // AFTER (Production):
-let checkoutURL = "https://offnotes.lemonsqueezy.com/checkout/buy/abc123def456"
+let checkoutURL = "https://zetanotes.lemonsqueezy.com/checkout/buy/abc123def456"
 ```
 
 **How to get this value:**
 
 1. Go to <https://app.lemonsqueezy.com/products>
-2. Click on "OffNotes Pro"
+2. Click on "ZetaNotes Pro"
 3. Go to "Checkout" tab
 4. Copy the full checkout URL or just the variant ID
 
@@ -55,7 +55,7 @@ let checkoutURL = "https://offnotes.lemonsqueezy.com/checkout/buy/abc123def456"
 
 ### Test License Code (Safe - Already Protected)
 
-**File:** `NoteTaker/Managers/LicenseManager.swift`
+**File:** `ZetaNotes/Managers/LicenseManager.swift`
 
 ```swift
 // Lines 28-32 - ALREADY SAFE ✅
@@ -66,7 +66,7 @@ private let testLicenseEmail = "ADMIN"
 #endif
 ```
 
-**File:** `NoteTaker/Views/UpgradePromptView.swift`
+**File:** `ZetaNotes/Views/UpgradePromptView.swift`
 
 ```swift
 // Lines 290-294 - ALREADY SAFE ✅
@@ -107,7 +107,7 @@ The package script will automatically check for issues:
 
 ```bash
 # Should return ZERO results in production code:
-grep -rn "DEV_STORE_ID\|DEV_PRODUCT_ID\|DEV_VARIANT_ID" NoteTaker/
+grep -rn "DEV_STORE_ID\|DEV_PRODUCT_ID\|DEV_VARIANT_ID" ZetaNotes/
 
 # If you see results, replace them with real values!
 ```
@@ -116,7 +116,7 @@ grep -rn "DEV_STORE_ID\|DEV_PRODUCT_ID\|DEV_VARIANT_ID" NoteTaker/
 
 ```bash
 # Should only appear inside #if DEBUG blocks:
-grep -B2 -A2 "testLicenseKey" NoteTaker/Managers/LicenseManager.swift
+grep -B2 -A2 "testLicenseKey" ZetaNotes/Managers/LicenseManager.swift
 
 # You should see:
 # #if DEBUG
@@ -167,13 +167,13 @@ func validateLicense(key: String, email: String) async -> Bool {
 
 ```bash
 # Build in Release mode
-xcodebuild -project NoteTaker.xcodeproj \
-           -scheme NoteTaker \
+xcodebuild -project ZetaNotes.xcodeproj \
+           -scheme ZetaNotes \
            -configuration Release \
            build
 
 # Run the Release build
-open ~/Library/Developer/Xcode/DerivedData/NoteTaker-*/Build/Products/Release/NoteTaker.app
+open ~/Library/Developer/Xcode/DerivedData/ZetaNotes-*/Build/Products/Release/ZetaNotes.app
 ```
 
 ### Verify Test Credentials DON'T Work

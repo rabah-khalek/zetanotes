@@ -1,13 +1,13 @@
 #!/bin/bash
 
-# Auto-rebuild and run NoteTaker in debug mode when files change
+# Auto-rebuild and run ZetaNotes in debug mode when files change
 # Uses fswatch to monitor for changes
 
 set -e  # Exit on error
 
-PROJECT_DIR="/Users/projects/Documents/notetaker"
-PROJECT_NAME="NoteTaker"
-SCHEME="NoteTaker"
+PROJECT_DIR="/Users/projects/Documents/zetanotes"
+PROJECT_NAME="ZetaNotes"
+SCHEME="ZetaNotes"
 APP_PID=""
 
 # Colors for output
@@ -28,7 +28,7 @@ cleanup() {
         kill "$APP_PID" 2>/dev/null || true
     fi
 
-    # Kill any remaining NoteTaker processes
+    # Kill any remaining ZetaNotes processes
     killall "$PROJECT_NAME" 2>/dev/null || true
 
     echo -e "${GREEN}✓ Cleanup complete${NC}"
@@ -39,7 +39,7 @@ cleanup() {
 trap cleanup SIGINT SIGTERM
 
 echo -e "${BLUE}🔍 Starting watch mode for $PROJECT_NAME${NC}"
-echo -e "${BLUE}📂 Watching: $PROJECT_DIR/NoteTaker${NC}"
+echo -e "${BLUE}📂 Watching: $PROJECT_DIR/ZetaNotes${NC}"
 echo -e "${YELLOW}Press Ctrl+C to stop${NC}"
 echo ""
 
@@ -124,7 +124,7 @@ build_and_run() {
 build_and_run
 
 # Watch for changes
-fswatch -o "$PROJECT_DIR/NoteTaker" \
+fswatch -o "$PROJECT_DIR/ZetaNotes" \
         --exclude '.*\.DS_Store' \
         --exclude '.*/\..*' \
         --exclude '.*~' \

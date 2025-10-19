@@ -5,23 +5,23 @@
 The following files have been created for the chat feature:
 
 ### Models
-- `/Users/projects/Documents/notetaker/NoteTaker/Models/ChatMessage.swift`
-- `/Users/projects/Documents/notetaker/NoteTaker/Models/ChatSettings.swift`
+- `/Users/projects/Documents/zetanotes/ZetaNotes/Models/ChatMessage.swift`
+- `/Users/projects/Documents/zetanotes/ZetaNotes/Models/ChatSettings.swift`
 
 ### Managers
-- `/Users/projects/Documents/notetaker/NoteTaker/Managers/ChatManager.swift`
+- `/Users/projects/Documents/zetanotes/ZetaNotes/Managers/ChatManager.swift`
 
 ### AI Services
-- `/Users/projects/Documents/notetaker/NoteTaker/AI/ChatService.swift`
+- `/Users/projects/Documents/zetanotes/ZetaNotes/AI/ChatService.swift`
 
 ### Views
-- `/Users/projects/Documents/notetaker/NoteTaker/Views/ChatView.swift` (OLD - can be removed)
-- `/Users/projects/Documents/notetaker/NoteTaker/Views/ChatSidebarView.swift` (NEW - native sidebar)
+- `/Users/projects/Documents/zetanotes/ZetaNotes/Views/ChatView.swift` (OLD - can be removed)
+- `/Users/projects/Documents/zetanotes/ZetaNotes/Views/ChatSidebarView.swift` (NEW - native sidebar)
 
 ### Modified Files
-- `/Users/projects/Documents/notetaker/NoteTaker/Views/ContentView.swift` - Uses native 3-column NavigationSplitView with chat sidebar
-- `/Users/projects/Documents/notetaker/NoteTaker/Views/AISettingsView.swift` - Added Chat settings tab
-- `/Users/projects/Documents/notetaker/NoteTaker/Views/UpgradePromptView.swift` - Added chat to Pro features
+- `/Users/projects/Documents/zetanotes/ZetaNotes/Views/ContentView.swift` - Uses native 3-column NavigationSplitView with chat sidebar
+- `/Users/projects/Documents/zetanotes/ZetaNotes/Views/AISettingsView.swift` - Added Chat settings tab
+- `/Users/projects/Documents/zetanotes/ZetaNotes/Views/UpgradePromptView.swift` - Added chat to Pro features
 
 ## Integration Steps
 
@@ -29,13 +29,13 @@ The following files have been created for the chat feature:
 
 You need to add the newly created files to the Xcode project:
 
-1. Open `NoteTaker.xcodeproj` in Xcode
+1. Open `ZetaNotes.xcodeproj` in Xcode
 2. Right-click on the `Models` folder in the Project Navigator
-3. Select "Add Files to NoteTaker..."
+3. Select "Add Files to ZetaNotes..."
 4. Navigate to and select:
    - `ChatMessage.swift`
    - `ChatSettings.swift`
-5. Ensure "Add to targets: NoteTaker" is checked
+5. Ensure "Add to targets: ZetaNotes" is checked
 6. Click "Add"
 
 7. Right-click on the `Managers` folder
@@ -53,8 +53,8 @@ You need to add the newly created files to the Xcode project:
 
 After adding the files, build the project:
 ```bash
-cd /Users/projects/Documents/notetaker
-xcodebuild -project NoteTaker.xcodeproj -scheme NoteTaker -configuration Debug build
+cd /Users/projects/Documents/zetanotes
+xcodebuild -project ZetaNotes.xcodeproj -scheme ZetaNotes -configuration Debug build
 ```
 
 ## Feature Description

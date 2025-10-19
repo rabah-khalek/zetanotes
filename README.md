@@ -1,4 +1,4 @@
-# OffNotes
+# ZetaNotes
 
 **Privacy-first note-taking with offline AI for Mac**
 
@@ -6,11 +6,11 @@
 ![Platform](https://img.shields.io/badge/platform-macOS%2013.0+-lightgrey.svg)
 ![Swift](https://img.shields.io/badge/Swift-5.9-orange.svg)
 
-OffNotes is a native macOS note-taking app that runs AI models completely offline on your device. No cloud, no tracking, no data collection. Everything stays on your Mac.
+ZetaNotes is a native macOS note-taking app that runs AI models completely offline on your device. No cloud, no tracking, no data collection. Everything stays on your Mac.
 
 🔒 **100% Private** • ✨ **AI Autocomplete** • 📝 **Instant Summaries** • 🌍 **Translate to 12+ Languages** • 🔍 **Semantic Search**
 
-**[Download Latest Release](https://github.com/YOUR_USERNAME/offnotes/releases/latest)** | **[Documentation](https://YOUR_USERNAME.github.io/offnotes/)** | **[Upgrade to Pro (from $1/month)](https://offnotes.lemonsqueezy.com/checkout)**
+**[Download Latest Release](https://github.com/YOUR_USERNAME/zetanotes/releases/latest)** | **[Documentation](https://YOUR_USERNAME.github.io/zetanotes/)** | **[Upgrade to Pro (from $1/month)](https://zetanotes.lemonsqueezy.com/checkout)**
 
 ---
 
@@ -37,9 +37,9 @@ OffNotes is a native macOS note-taking app that runs AI models completely offlin
 
 ---
 
-## 🎯 Why OffNotes?
+## 🎯 Why ZetaNotes?
 
-| Feature | OffNotes | Cloud-Based Apps |
+| Feature | ZetaNotes | Cloud-Based Apps |
 |---------|----------|------------------|
 | **Privacy** | 100% offline | ❌ Data sent to servers |
 | **AI Features** | ✅ Local models | ⚠️ Requires internet |
@@ -60,21 +60,21 @@ OffNotes is a native macOS note-taking app that runs AI models completely offlin
 
 ### Download
 
-1. Download the latest DMG from [Releases](https://github.com/YOUR_USERNAME/offnotes/releases/latest)
-2. Open `OffNotes.dmg`
-3. Drag **OffNotes** to Applications folder
-4. Open OffNotes from Applications
+1. Download the latest DMG from [Releases](https://github.com/YOUR_USERNAME/zetanotes/releases/latest)
+2. Open `ZetaNotes.dmg`
+3. Drag **ZetaNotes** to Applications folder
+4. Open ZetaNotes from Applications
 
 ### First Launch
 
 On first launch, macOS may show a security warning. To open:
-1. Right-click OffNotes in Applications
+1. Right-click ZetaNotes in Applications
 2. Select "Open" from the menu
 3. Click "Open" in the dialog
 
 Or: System Settings → Privacy & Security → "Open Anyway"
 
-**Full installation guide:** [docs/download.html](https://YOUR_USERNAME.github.io/offnotes/download.html)
+**Full installation guide:** [docs/download.html](https://YOUR_USERNAME.github.io/zetanotes/download.html)
 
 ---
 
@@ -148,9 +148,9 @@ All models run with **Metal GPU acceleration** on Apple Silicon for maximum perf
 
 ### Storage Location
 
-- **Notes Database**: `~/Library/Application Support/NoteTaker/notes.sqlite`
-- **Downloaded Models**: `~/Library/Application Support/NoteTaker/Models/`
-- **Logs**: `~/Library/Logs/NoteTaker/`
+- **Notes Database**: `~/Library/Application Support/ZetaNotes/notes.sqlite`
+- **Downloaded Models**: `~/Library/Application Support/ZetaNotes/Models/`
+- **Logs**: `~/Library/Logs/ZetaNotes/`
 
 ---
 
@@ -195,8 +195,8 @@ All models run with **Metal GPU acceleration** on Apple Silicon for maximum perf
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/offnotes.git
-cd offnotes
+git clone https://github.com/YOUR_USERNAME/zetanotes.git
+cd zetanotes
 
 # Initialize llama.cpp submodule
 git submodule update --init --recursive
@@ -208,7 +208,7 @@ cmake --build build --config Release
 
 # Open in Xcode
 cd ..
-open NoteTaker.xcodeproj
+open ZetaNotes.xcodeproj
 
 # Run in Xcode
 # Product → Run (Cmd+R)
@@ -217,7 +217,7 @@ open NoteTaker.xcodeproj
 ### Project Structure
 
 ```
-NoteTaker/
+ZetaNotes/
 ├── AI/                    # AI engine & inference
 │   ├── AIEngine.swift
 │   ├── LLMInferenceService.swift
@@ -243,7 +243,7 @@ NoteTaker/
 
 ```bash
 # Unit tests
-xcodebuild test -scheme NoteTaker -destination 'platform=macOS'
+xcodebuild test -scheme ZetaNotes -destination 'platform=macOS'
 
 # Or in Xcode
 # Product → Test (Cmd+U)
@@ -279,7 +279,7 @@ Contributions are welcome! Here's how you can help:
 
 ### Ways to Contribute
 
-- 🐛 **Report bugs** via [GitHub Issues](https://github.com/YOUR_USERNAME/offnotes/issues)
+- 🐛 **Report bugs** via [GitHub Issues](https://github.com/YOUR_USERNAME/zetanotes/issues)
 - 💡 **Suggest features** in Discussions
 - 📝 **Improve documentation**
 - 🔧 **Submit pull requests**
@@ -297,7 +297,7 @@ Contributions are welcome! Here's how you can help:
 
 ## 📄 License
 
-OffNotes is open source under the MIT License. See [LICENSE](LICENSE) for details.
+ZetaNotes is open source under the MIT License. See [LICENSE](LICENSE) for details.
 
 **TL;DR:** You can use, modify, and distribute this software freely, including for commercial purposes.
 
@@ -305,7 +305,7 @@ OffNotes is open source under the MIT License. See [LICENSE](LICENSE) for detail
 
 ## 🙏 Acknowledgments
 
-OffNotes is built with these amazing open-source projects:
+ZetaNotes is built with these amazing open-source projects:
 
 - [llama.cpp](https://github.com/ggerganov/llama.cpp) - LLM inference in C/C++
 - [TinyLlama](https://github.com/jzhang38/TinyLlama) - Compact 1.1B parameter model
@@ -317,20 +317,20 @@ OffNotes is built with these amazing open-source projects:
 
 ## 📞 Support
 
-- **Website**: https://YOUR_USERNAME.github.io/offnotes/
-- **Email**: support@offnotes.app
-- **GitHub Issues**: https://github.com/YOUR_USERNAME/offnotes/issues
+- **Website**: https://YOUR_USERNAME.github.io/zetanotes/
+- **Email**: support@zetanotes.app
+- **GitHub Issues**: https://github.com/YOUR_USERNAME/zetanotes/issues
 
 ---
 
 ## ⭐ Star History
 
-If you find OffNotes useful, please consider starring the repository!
+If you find ZetaNotes useful, please consider starring the repository!
 
-[![Star History Chart](https://api.star-history.com/svg?repos=YOUR_USERNAME/offnotes&type=Date)](https://star-history.com/#YOUR_USERNAME/offnotes&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=YOUR_USERNAME/zetanotes&type=Date)](https://star-history.com/#YOUR_USERNAME/zetanotes&Date)
 
 ---
 
 **Made with ❤️ for privacy-conscious note-takers**
 
-[Download](https://YOUR_USERNAME.github.io/offnotes/) • [Website](https://YOUR_USERNAME.github.io/offnotes/) • [Upgrade to Pro](https://offnotes.lemonsqueezy.com/checkout)
+[Download](https://YOUR_USERNAME.github.io/zetanotes/) • [Website](https://YOUR_USERNAME.github.io/zetanotes/) • [Upgrade to Pro](https://zetanotes.lemonsqueezy.com/checkout)

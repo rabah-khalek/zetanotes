@@ -1,10 +1,10 @@
-# NoteTaker Project Specific
+# ZetaNotes Project Specific
 #
 # External dependencies (large, should be cloned/built separately)
 llama.cpp/
 
 # AI Models (large GGUF files - download separately)
-NoteTaker/Resources/Models/*.gguf
+ZetaNotes/Resources/Models/*.gguf
 
 # Backup files
 *.backup

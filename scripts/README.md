@@ -1,6 +1,6 @@
-# OffNotes Release Scripts
+# ZetaNotes Release Scripts
 
-Automated scripts to package and release OffNotes with one command.
+Automated scripts to package and release ZetaNotes with one command.
 
 ## 🚀 Quick Start
 
@@ -8,7 +8,7 @@ Automated scripts to package and release OffNotes with one command.
 
 1. **Run setup script:**
    ```bash
-   cd /Users/projects/Documents/notetaker
+   cd /Users/projects/Documents/zetanotes
    chmod +x scripts/*.sh
    ./scripts/setup-signing.sh
    ```
@@ -41,9 +41,9 @@ Automated scripts to package and release OffNotes with one command.
    - Total: 15-20 minutes hands-off
 
 4. **Get your DMG:**
-   - Location: `~/Desktop/OffNotes-Release-YYYYMMDD-HHMMSS/`
-   - File: `OffNotes-v1.0.0.dmg`
-   - Checksum: `OffNotes-v1.0.0.dmg.sha256`
+   - Location: `~/Desktop/ZetaNotes-Release-YYYYMMDD-HHMMSS/`
+   - File: `ZetaNotes-v1.0.0.dmg`
+   - Checksum: `ZetaNotes-v1.0.0.dmg.sha256`
 
 ## 📁 Scripts Included
 
@@ -131,10 +131,10 @@ If not installed, the script uses a fallback method (works fine, just less prett
 After running `package-release.sh`, you get a folder like:
 
 ```
-~/Desktop/OffNotes-Release-20241016-143022/
-├── OffNotes.app                          # Signed app (for testing)
-├── OffNotes-v1.0.0.dmg                   # Upload this to GitHub ✅
-└── OffNotes-v1.0.0.dmg.sha256            # Checksum (update website)
+~/Desktop/ZetaNotes-Release-20241016-143022/
+├── ZetaNotes.app                          # Signed app (for testing)
+├── ZetaNotes-v1.0.0.dmg                   # Upload this to GitHub ✅
+└── ZetaNotes-v1.0.0.dmg.sha256            # Checksum (update website)
 ```
 
 ## 📤 Upload to GitHub
@@ -143,16 +143,16 @@ After running `package-release.sh`, you get a folder like:
    ```bash
    # On GitHub: Releases → Draft a new release
    # Tag: v1.0.0
-   # Title: OffNotes v1.0.0
+   # Title: ZetaNotes v1.0.0
    ```
 
 2. **Upload DMG:**
-   - Drag `OffNotes-v1.0.0.dmg` to release assets
+   - Drag `ZetaNotes-v1.0.0.dmg` to release assets
 
 3. **Update website:**
    ```bash
    # Copy checksum
-   cat ~/Desktop/OffNotes-Release-*/OffNotes-v1.0.0.dmg.sha256
+   cat ~/Desktop/ZetaNotes-Release-*/ZetaNotes-v1.0.0.dmg.sha256
 
    # Update docs/download.html line 29
    SHA256: <span id="checksum">PASTE_CHECKSUM_HERE</span>
@@ -216,9 +216,9 @@ xcrun notarytool log SUBMISSION_ID --keychain-profile "notary-profile"
 **Solution:**
 ```bash
 # Clean and rebuild manually first
-cd /Users/projects/Documents/notetaker
-xcodebuild clean -project NoteTaker.xcodeproj -scheme NoteTaker
-xcodebuild build -project NoteTaker.xcodeproj -scheme NoteTaker
+cd /Users/projects/Documents/zetanotes
+xcodebuild clean -project ZetaNotes.xcodeproj -scheme ZetaNotes
+xcodebuild build -project ZetaNotes.xcodeproj -scheme ZetaNotes
 
 # Fix any errors, then re-run package-release.sh
 ```

@@ -1,4 +1,4 @@
-# Data Separation in OffNotes
+# Data Separation in ZetaNotes
 
 Understanding how user data is stored and why your dev data won't ship with the app.
 
@@ -7,7 +7,7 @@ Understanding how user data is stored and why your dev data won't ship with the 
 ## 📁 Where Data Lives
 
 ### App Bundle (Shipped with App)
-**Location:** `/Applications/OffNotes.app/Contents/Resources/`
+**Location:** `/Applications/ZetaNotes.app/Contents/Resources/`
 
 **What's here:**
 - ✅ App code (Swift binaries)
@@ -18,7 +18,7 @@ Understanding how user data is stored and why your dev data won't ship with the 
 **This is READ-ONLY after installation.**
 
 ### User Data Directory (Per-User, Not Shipped)
-**Location:** `~/Library/Application Support/NoteTaker/`
+**Location:** `~/Library/Application Support/ZetaNotes/`
 
 **What's here:**
 - ✅ User's notes database (`notes.sqlite`)
@@ -29,7 +29,7 @@ Understanding how user data is stored and why your dev data won't ship with the 
 **This is unique to each user.**
 
 ### User Preferences (Per-User, Not Shipped)
-**Location:** `~/Library/Preferences/com.notetaker.NoteTaker.plist`
+**Location:** `~/Library/Preferences/com.zetanotes.ZetaNotes.plist`
 
 **What's here:**
 - ✅ Selected AI model
@@ -58,16 +58,16 @@ Understanding how user data is stored and why your dev data won't ship with the 
 ### What Happens:
 
 **When you develop:**
-- Your notes go to: `/Users/YOUR_USERNAME/Library/Application Support/NoteTaker/`
+- Your notes go to: `/Users/YOUR_USERNAME/Library/Application Support/ZetaNotes/`
 - Your model preference goes to: `/Users/YOUR_USERNAME/Library/Preferences/`
 
 **When you build a release:**
-- Script copies: `/Applications/OffNotes.app/` (just the code)
-- Script does NOT copy: `~/Library/Application Support/NoteTaker/` (your data)
+- Script copies: `/Applications/ZetaNotes.app/` (just the code)
+- Script does NOT copy: `~/Library/Application Support/ZetaNotes/` (your data)
 
 **When a user installs:**
-- They get: Clean OffNotes.app (no data)
-- They create: Fresh `~/Library/Application Support/NoteTaker/` folder
+- They get: Clean ZetaNotes.app (no data)
+- They create: Fresh `~/Library/Application Support/ZetaNotes/` folder
 - They start with: Empty database, default settings
 
 ---
@@ -78,8 +78,8 @@ Both scripts include cleanup steps:
 
 ```bash
 # Remove any development databases from app bundle
-rm -rf "$BUILD_DIR/OffNotes.app/Contents/Resources/"*.sqlite*
-rm -rf "$BUILD_DIR/OffNotes.app/Contents/Resources/"*.db
+rm -rf "$BUILD_DIR/ZetaNotes.app/Contents/Resources/"*.sqlite*
+rm -rf "$BUILD_DIR/ZetaNotes.app/Contents/Resources/"*.db
 ```
 
 This is a **safety precaution** in case you accidentally:
@@ -97,12 +97,12 @@ This is a **safety precaution** in case you accidentally:
 - **Default:** TinyLlama 1.1B (line 56 in AIEngine.swift)
 - **Bundled:** Yes, included in .app
 - **Active:** Automatically selected on first launch
-- **Location:** `/Applications/OffNotes.app/Contents/Resources/Models/`
+- **Location:** `/Applications/ZetaNotes.app/Contents/Resources/Models/`
 
 ### Notes Database
 - **Default:** Empty (no notes)
 - **Created:** On first launch
-- **Location:** `~/Library/Application Support/NoteTaker/notes.sqlite`
+- **Location:** `~/Library/Application Support/ZetaNotes/notes.sqlite`
 
 ### Settings
 - **Default:** All features enabled (free tier)
@@ -116,7 +116,7 @@ After building, check what's in the app bundle:
 
 ```bash
 # List all files in Resources
-ls -la ~/Desktop/OffNotes-Release-*/OffNotes.app/Contents/Resources/
+ls -la ~/Desktop/ZetaNotes-Release-*/ZetaNotes.app/Contents/Resources/
 
 # Should see:
 # - Models/ folder (with TinyLlama)
@@ -142,7 +142,7 @@ ls -la ~/Desktop/OffNotes-Release-*/OffNotes.app/Contents/Resources/
 
 # 2. Log in as test user
 
-# 3. Install OffNotes
+# 3. Install ZetaNotes
 
 # 4. Launch - should be completely clean:
 #    - No notes
@@ -154,17 +154,17 @@ ls -la ~/Desktop/OffNotes-Release-*/OffNotes.app/Contents/Resources/
 
 ```bash
 # 1. Backup your data
-cp -R ~/Library/Application\ Support/NoteTaker ~/Desktop/NoteTaker-backup
+cp -R ~/Library/Application\ Support/ZetaNotes ~/Desktop/ZetaNotes-backup
 
 # 2. Remove app data
-rm -rf ~/Library/Application\ Support/NoteTaker
-rm ~/Library/Preferences/com.notetaker.NoteTaker.plist
+rm -rf ~/Library/Application\ Support/ZetaNotes
+rm ~/Library/Preferences/com.zetanotes.ZetaNotes.plist
 
 # 3. Launch app - fresh install simulation
 
 # 4. Restore your data
-rm -rf ~/Library/Application\ Support/NoteTaker
-mv ~/Desktop/NoteTaker-backup ~/Library/Application\ Support/NoteTaker
+rm -rf ~/Library/Application\ Support/ZetaNotes
+mv ~/Desktop/ZetaNotes-backup ~/Library/Application\ Support/ZetaNotes
 ```
 
 ---
@@ -173,12 +173,12 @@ mv ~/Desktop/NoteTaker-backup ~/Library/Application\ Support/NoteTaker
 
 | Data Type | Location | Shipped? | Default for New Users |
 |-----------|----------|----------|----------------------|
-| **App Code** | `/Applications/OffNotes.app/` | ✅ Yes | Same for everyone |
+| **App Code** | `/Applications/ZetaNotes.app/` | ✅ Yes | Same for everyone |
 | **TinyLlama Model** | `.../Resources/Models/` | ✅ Yes | Bundled, active |
-| **User Notes** | `~/Library/Application Support/NoteTaker/` | ❌ No | Empty database |
+| **User Notes** | `~/Library/Application Support/ZetaNotes/` | ❌ No | Empty database |
 | **Settings** | `~/Library/Preferences/` | ❌ No | Default values |
 | **License** | Keychain | ❌ No | Free tier |
-| **Pro Models** | `~/Library/Application Support/NoteTaker/Models/` | ❌ No | Not downloaded |
+| **Pro Models** | `~/Library/Application Support/ZetaNotes/Models/` | ❌ No | Not downloaded |
 
 ---
 
@@ -200,7 +200,7 @@ let appSupport = FileManager.default.urls(
     in: .userDomainMask
 ).first!
 let storeURL = appSupport
-    .appendingPathComponent("NoteTaker")
+    .appendingPathComponent("ZetaNotes")
     .appendingPathComponent("notes.sqlite")
 ```
 
@@ -240,7 +240,7 @@ let storeURL = appSupport
 - ✅ All your development notes
 - ✅ Your settings
 - ✅ Your downloaded models
-- ✅ Everything in `~/Library/Application Support/NoteTaker/`
+- ✅ Everything in `~/Library/Application Support/ZetaNotes/`
 
 ---
 
@@ -248,8 +248,8 @@ let storeURL = appSupport
 
 ```bash
 # Nuclear option - completely reset app data
-rm -rf ~/Library/Application\ Support/NoteTaker
-rm ~/Library/Preferences/com.notetaker.NoteTaker.plist
+rm -rf ~/Library/Application\ Support/ZetaNotes
+rm ~/Library/Preferences/com.zetanotes.ZetaNotes.plist
 
 # Restart app - fresh install!
 ```

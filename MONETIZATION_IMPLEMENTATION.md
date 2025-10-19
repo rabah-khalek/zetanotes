@@ -14,15 +14,15 @@ All code is written and integrated. You just need to:
 
 ### New Files (Need to Add to Xcode)
 
-1. ✅ `NoteTaker/Managers/LicenseManager.swift`
-2. ✅ `NoteTaker/Views/UpgradePromptView.swift`
+1. ✅ `ZetaNotes/Managers/LicenseManager.swift`
+2. ✅ `ZetaNotes/Views/UpgradePromptView.swift`
 
 ### Updated Files (Already Modified)
 
-3. ✅ `NoteTaker/AI/AIEngine.swift`
-4. ✅ `NoteTaker/NoteTakerApp.swift`
-5. ✅ `NoteTaker/Views/ContentView.swift`
-6. ✅ `NoteTaker/Views/AISettingsView.swift`
+3. ✅ `ZetaNotes/AI/AIEngine.swift`
+4. ✅ `ZetaNotes/ZetaNotesApp.swift`
+5. ✅ `ZetaNotes/Views/ContentView.swift`
+6. ✅ `ZetaNotes/Views/AISettingsView.swift`
 
 ---
 
@@ -35,25 +35,25 @@ All code is written and integrated. You just need to:
 3. Open **Finder** and navigate to:
 
    ```
-   /Users/projects/Documents/notetaker/NoteTaker/Managers/
+   /Users/projects/Documents/zetanotes/ZetaNotes/Managers/
    ```
 
 4. **Drag** `LicenseManager.swift` into Xcode's Managers folder
 5. In the popup:
-   - ✅ CHECK "NoteTaker" target
+   - ✅ CHECK "ZetaNotes" target
    - ❌ UNCHECK "Copy items if needed"
    - Click **Finish**
 
 6. Repeat for **UpgradePromptView.swift**:
    - Find the **Views** folder in Xcode
-   - Drag from Finder: `/Users/projects/Documents/notetaker/NoteTaker/Views/UpgradePromptView.swift`
+   - Drag from Finder: `/Users/projects/Documents/zetanotes/ZetaNotes/Views/UpgradePromptView.swift`
    - Same settings, click **Finish**
 
 ### Option B: Add Files Menu
 
 1. Right-click **Managers** folder in Xcode
-2. Select **"Add Files to 'NoteTaker'..."**
-3. Navigate to: `/Users/projects/Documents/notetaker/NoteTaker/Managers/`
+2. Select **"Add Files to 'ZetaNotes'..."**
+3. Navigate to: `/Users/projects/Documents/zetanotes/ZetaNotes/Managers/`
 4. Select `LicenseManager.swift`
 5. UNCHECK "Copy items if needed"
 6. Click **Add**
@@ -67,11 +67,11 @@ All code is written and integrated. You just need to:
 Once files are added:
 
 ```bash
-cd /Users/projects/Documents/notetaker
+cd /Users/projects/Documents/zetanotes
 
 # Clean and build
-xcodebuild -project NoteTaker.xcodeproj \
-  -scheme NoteTaker \
+xcodebuild -project ZetaNotes.xcodeproj \
+  -scheme ZetaNotes \
   clean build
 ```
 
@@ -150,12 +150,12 @@ Or in Xcode: **Cmd+B** to build
 
 1. Create account: <https://gumroad.com/start>
 2. Create product:
-   - Name: **NoteTaker Pro**
+   - Name: **ZetaNotes Pro**
    - Price: **$29**
    - Type: **Digital Product**
    - Enable **"Generate license keys"**
 
-3. Get your product permalink (e.g., "notetaker-pro")
+3. Get your product permalink (e.g., "zetanotes-pro")
 
 4. Update code with YOUR actual Gumroad URL:
 
@@ -168,7 +168,7 @@ let productPermalink = "YOUR-ACTUAL-PERMALINK" // Change this!
 **File: `UpgradePromptView.swift` (line 150)**
 
 ```swift
-let gumroadURL = "https://YOUR-USERNAME.gumroad.com/l/notetaker-pro"
+let gumroadURL = "https://YOUR-USERNAME.gumroad.com/l/zetanotes-pro"
 ```
 
 ### 2. Create App Icon
@@ -180,7 +180,7 @@ Your app still needs an icon! Options:
 - Use <https://appicon.co/>
 - Upload a 1024x1024 image
 - Downloads all required sizes
-- Add to `NoteTaker/Assets.xcassets/AppIcon.appiconset/`
+- Add to `ZetaNotes/Assets.xcassets/AppIcon.appiconset/`
 
 **Icon Ideas:**
 
@@ -193,35 +193,35 @@ Your app still needs an icon! Options:
 
 In Xcode:
 
-1. Select **NoteTaker** project
+1. Select **ZetaNotes** project
 2. General tab
 3. Change **Bundle Identifier** from:
-   - ❌ `com.example.NoteTaker`
-   - ✅ `com.yourname.notetaker`
+   - ❌ `com.example.ZetaNotes`
+   - ✅ `com.yourname.zetanotes`
 
 ### 4. Build Release DMG
 
 ```bash
 # Build release version
-xcodebuild -project NoteTaker.xcodeproj \
-  -scheme NoteTaker \
+xcodebuild -project ZetaNotes.xcodeproj \
+  -scheme ZetaNotes \
   -configuration Release \
   clean build
 
 # Navigate to build
-cd ~/Library/Developer/Xcode/DerivedData/NoteTaker-*/Build/Products/Release
+cd ~/Library/Developer/Xcode/DerivedData/ZetaNotes-*/Build/Products/Release
 
 # Install DMG tool
 brew install create-dmg
 
 # Create distributable DMG
 create-dmg \
-  --volname "NoteTaker" \
+  --volname "ZetaNotes" \
   --window-size 600 400 \
   --icon-size 100 \
   --app-drop-link 425 120 \
-  "NoteTaker-1.0.dmg" \
-  "NoteTaker.app"
+  "ZetaNotes-1.0.dmg" \
+  "ZetaNotes.app"
 ```
 
 ---
