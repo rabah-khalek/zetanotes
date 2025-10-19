@@ -231,7 +231,8 @@ class DataExportManager: ObservableObject {
         let modelsData = [
             "downloadedModels": modelFiles,
             "selectedModel": AIEngine.shared.selectedModel.rawValue,
-            "note": "Model files are not included in export due to their large size. You can re-download them from AI Settings."
+            "note": "Model files are not included in export due to their large size. " +
+                "You can re-download them from AI Settings."
         ] as [String: Any]
 
         let jsonData = try JSONSerialization.data(withJSONObject: modelsData, options: .prettyPrinted)
@@ -249,7 +250,8 @@ class DataExportManager: ObservableObject {
             "buildNumber": Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "Unknown",
             "platform": "macOS",
             "exportVersion": "1.0",
-            "description": "ZetaNotes user data export containing notes, chat history, settings, and AI models information."
+            "description": "ZetaNotes user data export containing notes, chat history, " +
+                "settings, and AI models information."
         ] as [String: Any]
 
         let jsonData = try JSONSerialization.data(withJSONObject: metadata, options: .prettyPrinted)
@@ -291,7 +293,7 @@ class DataExportManager: ObservableObject {
 
     // MARK: - Formatters
 
-    private static let iso8601Formatter = ISO8601DateFormatter()
+    private nonisolated(unsafe) static let iso8601Formatter = ISO8601DateFormatter()
 }
 
 // MARK: - Export Errors

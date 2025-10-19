@@ -133,11 +133,9 @@ class TitleGenerationService: AIService {
 
         // Remove common prefixes that models might add
         let prefixesToRemove = ["Title:", "Title :", "Title-", "Title –", "Title—"]
-        for prefix in prefixesToRemove {
-            if cleaned.hasPrefix(prefix) {
-                cleaned = String(cleaned.dropFirst(prefix.count)).trimmingCharacters(in: .whitespacesAndNewlines)
-                break
-            }
+        for prefix in prefixesToRemove where cleaned.hasPrefix(prefix) {
+            cleaned = String(cleaned.dropFirst(prefix.count)).trimmingCharacters(in: .whitespacesAndNewlines)
+            break
         }
 
         // Title-specific post-processing

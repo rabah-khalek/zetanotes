@@ -301,7 +301,7 @@ class AnalyticsManager: ObservableObject {
     }
 
     func exportAnalytics() -> String {
-        let summary = getEventsSummary()
+        _ = getEventsSummary()
 
         var report = "# ZetaNotes Analytics Report\n\n"
         report += "Generated: \(Date())\n"

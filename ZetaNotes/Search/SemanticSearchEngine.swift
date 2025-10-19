@@ -11,6 +11,7 @@ import Foundation
 
 /// Search engine for finding semantically similar notes
 /// Uses cosine similarity on cached embeddings for fast retrieval
+@MainActor
 class SemanticSearchEngine {
     private let embeddingService: EmbeddingService
     private let persistenceController: PersistenceController
@@ -265,8 +266,9 @@ class SemanticSearchEngine {
 
                 if !notesWithoutEmbeddings.isEmpty {
                     print("🔄 Lazy indexing \(notesWithoutEmbeddings.count) recent notes (max: \(maxNotes))...")
+                    let embeddingService = self.embeddingService
                     Task {
-                        await self.embeddingService.batchGenerateEmbeddings(for: notesWithoutEmbeddings, in: context)
+                        await embeddingService.batchGenerateEmbeddings(for: notesWithoutEmbeddings, in: context)
                     }
                 } else {
                     print("✅ All recent notes already indexed")
@@ -291,8 +293,9 @@ class SemanticSearchEngine {
 
                 if !notesWithoutEmbeddings.isEmpty {
                     print("🔄 Full indexing \(notesWithoutEmbeddings.count) notes (this may take a while)...")
+                    let embeddingService = self.embeddingService
                     Task {
-                        await self.embeddingService.batchGenerateEmbeddings(for: notesWithoutEmbeddings, in: context)
+                        await embeddingService.batchGenerateEmbeddings(for: notesWithoutEmbeddings, in: context)
                     }
                 }
             } catch {
@@ -316,8 +319,9 @@ class SemanticSearchEngine {
             do {
                 let bgNote = try context.existingObject(with: noteId) as? Note
                 if let bgNote = bgNote {
+                    let embeddingService = self.embeddingService
                     Task {
-                        await self.embeddingService.generateAndStoreEmbedding(for: bgNote, in: context)
+                        await embeddingService.generateAndStoreEmbedding(for: bgNote, in: context)
                     }
                 }
             } catch {
@@ -351,9 +355,10 @@ class SemanticSearchEngine {
     private func performKeywordSearch(query: String) async -> [Note] {
         return await withCheckedContinuation { continuation in
             let context = persistenceController.container.viewContext
+            let persistenceController = self.persistenceController
 
             context.perform {
-                let notes = self.persistenceController.searchNotes(query: query)
+                let notes = persistenceController.searchNotes(query: query)
                 continuation.resume(returning: notes)
             }
         }

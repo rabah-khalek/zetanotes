@@ -189,8 +189,8 @@ class AutocompleteService: AIService {
             self?.debounceTimer?.invalidate()
 
             self?.debounceTimer = Timer
-                .scheduledTimer(withTimeInterval: self?.debounceDelay ?? 0.2, repeats: false) { _ in
-                    Task {
+                .scheduledTimer(withTimeInterval: self?.debounceDelay ?? 0.2, repeats: false) { [weak self] _ in
+                    Task { [weak self] in
                         let suggestion = await self?.generateSuggestion(for: text)
                         promise(.success(suggestion))
                     }

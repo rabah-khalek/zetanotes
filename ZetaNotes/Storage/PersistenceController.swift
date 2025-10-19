@@ -79,7 +79,8 @@ class PersistenceController: ObservableObject {
                     "Failed to load Core Data stack",
                     severity: .error,
                     operation: "Core Data Initialization",
-                    details: "\(error.localizedDescription)\n\nError Code: \(nsError.code)\nDomain: \(nsError.domain)\n\nThis is a critical error. The app may not function correctly."
+                    details: "\(error.localizedDescription)\n\nError Code: \(nsError.code)\nDomain: \(nsError.domain)\n\n" +
+                        "This is a critical error. The app may not function correctly."
                 )
 
                 // In production, handle this error appropriately

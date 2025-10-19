@@ -114,7 +114,9 @@ private enum TinyLlamaConfigs {
                 prompt: """
                 <|begin_of_text|><|start_header_id|>system<|end_header_id|>
 
-                You translate text to {targetLanguage}. Output ONLY the translated text with NO preamble, NO labels, NO phrases like "translation:", "here's the translation:", or "---". Begin IMMEDIATELY with the first word of the translated text.<|eot_id|><|start_header_id|>user<|end_header_id|>
+                You translate text to {targetLanguage}. Output ONLY the translated text with NO preamble, NO labels,
+                NO phrases like "translation:", "here's the translation:", or "---". Begin IMMEDIATELY with the first
+                word of the translated text.<|eot_id|><|start_header_id|>user<|end_header_id|>
 
                 {content}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
 
@@ -192,7 +194,8 @@ private enum LlamaThreeTwoConfigs {
                 prompt: """
                 <|begin_of_text|><|start_header_id|>system<|end_header_id|>
 
-                Fix grammar and spelling. Output ONLY the corrected text. Do not add: explanations, offers to help, "Let me know", "Please", "I'm here", or any follow-up text.<|eot_id|><|start_header_id|>user<|end_header_id|>
+                Fix grammar and spelling. Output ONLY the corrected text. Do not add: explanations, offers to help,
+                "Let me know", "Please", "I'm here", or any follow-up text.<|eot_id|><|start_header_id|>user<|end_header_id|>
 
                 {content}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
 

@@ -229,6 +229,7 @@ class NoteViewModel: ObservableObject {
     /// Uses background context to avoid blocking UI
     func saveNoteDebounced(_ note: Note) {
         guard let noteID = note.id else { return }
+        let noteObjectID = note.objectID
 
         // Cancel existing timer for this note
         saveDebounceTimers[noteID]?.invalidate()
@@ -238,7 +239,11 @@ class NoteViewModel: ObservableObject {
             // Use background save for non-critical operation
             Task { @MainActor in
                 guard let self = self else { return }
-                await self.saveNoteInBackground(note)
+                // Get the note from the object ID
+                if let note = try? self.persistenceController.container.viewContext
+                    .existingObject(with: noteObjectID) as? Note {
+                    await self.saveNoteInBackground(note)
+                }
                 self.saveDebounceTimers[noteID] = nil
             }
         }
@@ -700,56 +705,61 @@ class NoteViewModel: ObservableObject {
     /// Helper functions to check if each prompt is at default (not customized)
     /// Only checks if the prompt matches any model's default for that specific prompt type
     private func isAutocompletePromptAtDefault() -> Bool {
-        for model in AIModel.allCases {
-            if autocompletePrompt == ModelToolConfigRegistry.getConfig(for: model, toolType: .autocomplete).prompt {
-                return true
-            }
+        for model in AIModel.allCases where autocompletePrompt == ModelToolConfigRegistry.getConfig(
+            for: model,
+            toolType: .autocomplete
+        ).prompt {
+            return true
         }
         return false
     }
 
     private func isSummarizationPromptAtDefault() -> Bool {
-        for model in AIModel.allCases {
-            if summarizationPrompt == ModelToolConfigRegistry.getConfig(for: model, toolType: .summarize).prompt {
-                return true
-            }
+        for model in AIModel.allCases where summarizationPrompt == ModelToolConfigRegistry.getConfig(
+            for: model,
+            toolType: .summarize
+        ).prompt {
+            return true
         }
         return false
     }
 
     private func isTranslationPromptAtDefault() -> Bool {
-        for model in AIModel.allCases {
-            if translationPrompt == ModelToolConfigRegistry.getConfig(for: model, toolType: .translate).prompt {
-                return true
-            }
+        for model in AIModel.allCases where translationPrompt == ModelToolConfigRegistry.getConfig(
+            for: model,
+            toolType: .translate
+        ).prompt {
+            return true
         }
         return false
     }
 
     private func isTitleGenerationPromptAtDefault() -> Bool {
-        for model in AIModel.allCases {
-            if titleGenerationPrompt == ModelToolConfigRegistry.getConfig(for: model, toolType: .titleGeneration)
-                .prompt {
-                return true
-            }
+        for model in AIModel.allCases where titleGenerationPrompt == ModelToolConfigRegistry.getConfig(
+            for: model,
+            toolType: .titleGeneration
+        ).prompt {
+            return true
         }
         return false
     }
 
     private func isAutoCorrectPromptAtDefault() -> Bool {
-        for model in AIModel.allCases {
-            if autoCorrectPrompt == ModelToolConfigRegistry.getConfig(for: model, toolType: .patch).prompt {
-                return true
-            }
+        for model in AIModel.allCases where autoCorrectPrompt == ModelToolConfigRegistry.getConfig(
+            for: model,
+            toolType: .patch
+        ).prompt {
+            return true
         }
         return false
     }
 
     private func isReformulatePromptAtDefault() -> Bool {
-        for model in AIModel.allCases {
-            if reformulatePrompt == ModelToolConfigRegistry.getConfig(for: model, toolType: .rephrase).prompt {
-                return true
-            }
+        for model in AIModel.allCases where reformulatePrompt == ModelToolConfigRegistry.getConfig(
+            for: model,
+            toolType: .rephrase
+        ).prompt {
+            return true
         }
         return false
     }
