@@ -53,9 +53,9 @@ jobs:
 
           # Install Sparkle's generate_appcast tool (required for auto-updates)
           mkdir -p $HOME/bin
-          
+
           echo "Setting up generate_appcast tool..."
-          
+
           # First try to use generate_appcast from our Sparkle framework
           SPARKLE_TOOL="Frameworks/Sparkle.xcframework/macos-arm64_x86_64/Sparkle.framework/Versions/Current/Resources/generate_appcast"
           if [ -f "$SPARKLE_TOOL" ]; then
@@ -67,37 +67,57 @@ jobs:
             echo "📥 Downloading Sparkle framework to extract generate_appcast..."
             SPARKLE_VERSION="2.6.4"
             SPARKLE_URL="https://github.com/sparkle-project/Sparkle/releases/download/${SPARKLE_VERSION}/Sparkle-${SPARKLE_VERSION}.tar.xz"
-            
+
             if curl -L --fail --silent "$SPARKLE_URL" -o /tmp/sparkle.tar.xz; then
               echo "✅ Downloaded Sparkle archive"
-              
-              # Extract and find generate_appcast
-              cd /tmp
-              tar -xf sparkle.tar.xz
-              
-              # Look for generate_appcast in the extracted files
-              TOOL_PATH=$(find /tmp -name "generate_appcast" -type f 2>/dev/null | head -1)
-              if [ -n "$TOOL_PATH" ]; then
-                cp "$TOOL_PATH" $HOME/bin/generate_appcast
-                chmod +x $HOME/bin/generate_appcast
-                echo "✅ Extracted generate_appcast successfully"
-              else
-                echo "❌ Could not find generate_appcast in Sparkle archive"
-                echo "Available files in archive:"
-                find /tmp -name "*generate*" -o -name "*appcast*" 2>/dev/null | head -10
-                rm -rf /tmp/sparkle.tar.xz /tmp/Sparkle*
+
+              # Extract to a clean directory
+              mkdir -p /tmp/sparkle_extract
+              cd /tmp/sparkle_extract
+              tar -xf /tmp/sparkle.tar.xz
+
+              echo "Archive contents:"
+              ls -la /tmp/sparkle_extract/
+
+              # Look for generate_appcast in common locations within Sparkle framework
+              TOOL_PATHS=(
+                "Sparkle.framework/Resources/generate_appcast"
+                "Sparkle.framework/Versions/B/Resources/generate_appcast"
+                "Sparkle.framework/Versions/Current/Resources/generate_appcast"
+                "bin/generate_appcast"
+              )
+
+              FOUND=false
+              for TOOL_PATH in "${TOOL_PATHS[@]}"; do
+                if [ -f "/tmp/sparkle_extract/$TOOL_PATH" ]; then
+                  cp "/tmp/sparkle_extract/$TOOL_PATH" $HOME/bin/generate_appcast
+                  chmod +x $HOME/bin/generate_appcast
+                  echo "✅ Found and extracted generate_appcast from $TOOL_PATH"
+                  FOUND=true
+                  break
+                fi
+              done
+
+              if [ "$FOUND" = false ]; then
+                echo "❌ Could not find generate_appcast in expected locations"
+                echo "Searching entire archive for generate_appcast..."
+                find /tmp/sparkle_extract -name "generate_appcast" -type f 2>/dev/null | head -10
+                echo ""
+                echo "All executable files in archive:"
+                find /tmp/sparkle_extract -type f -perm +111 2>/dev/null | head -20
+                rm -rf /tmp/sparkle.tar.xz /tmp/sparkle_extract
                 exit 1
               fi
-              
+
               # Clean up
-              rm -rf /tmp/sparkle.tar.xz /tmp/Sparkle*
+              rm -rf /tmp/sparkle.tar.xz /tmp/sparkle_extract
             else
               echo "❌ Failed to download Sparkle archive from $SPARKLE_URL"
               echo "This tool is required for generating Sparkle signatures for auto-updates."
               exit 1
             fi
           fi
-          
+
           # Verify the tool works
           if $HOME/bin/generate_appcast --help >/dev/null 2>&1; then
             echo "✅ generate_appcast is working correctly"
