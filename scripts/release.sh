@@ -183,7 +183,7 @@ cd "$PROJECT_DIR"
 print_warning "Performing thorough clean..."
 xcodebuild clean -project ZetaNotes.xcodeproj -scheme ZetaNotes -configuration Release
 rm -rf ~/Library/Developer/Xcode/DerivedData/ZetaNotes-*
-rm -rf "$BUILD_DIR/DerivedData"
+# Don't delete $BUILD_DIR/DerivedData - we need it for the build!
 print_success "Clean completed"
 
 # Build with proper error handling
@@ -217,13 +217,36 @@ fi
 
 print_success "Build completed successfully"
 
-# Find the built app
-BUILT_APP=$(find "$BUILD_DIR/DerivedData/Build/Products/Release" -name "*.app" -maxdepth 1 | head -n 1)
+# Find the built app - check both Debug and Release folders (naming might be swapped in project)
+BUILT_APP=""
+for CONFIG in "Release" "Debug"; do
+    if [ -d "$BUILD_DIR/DerivedData/Build/Products/$CONFIG" ]; then
+        BUILT_APP=$(find "$BUILD_DIR/DerivedData/Build/Products/$CONFIG" -name "*.app" -maxdepth 1 | head -n 1)
+        if [ -n "$BUILT_APP" ]; then
+            echo "Found app in $CONFIG configuration"
+            break
+        fi
+    fi
+done
+
+# If not found in custom location, check default Xcode DerivedData
+if [ -z "$BUILT_APP" ]; then
+    echo "Checking default Xcode DerivedData location..."
+    BUILT_APP=$(find ~/Library/Developer/Xcode/DerivedData/*/Build/Products/Release -name "ZetaNotes.app" 2>/dev/null | head -n 1)
+    if [ -z "$BUILT_APP" ]; then
+        BUILT_APP=$(find ~/Library/Developer/Xcode/DerivedData/*/Build/Products/Debug -name "ZetaNotes.app" 2>/dev/null | head -n 1)
+    fi
+fi
 
 if [ -z "$BUILT_APP" ] || [ ! -d "$BUILT_APP" ]; then
+    echo "Checked locations:"
+    echo "  - $BUILD_DIR/DerivedData/Build/Products/Release"
+    echo "  - $BUILD_DIR/DerivedData/Build/Products/Debug"
+    echo "  - ~/Library/Developer/Xcode/DerivedData/*/Build/Products/Release"
+    echo "  - ~/Library/Developer/Xcode/DerivedData/*/Build/Products/Debug"
     print_error "Build failed - no .app created"
 fi
-print_success "App built successfully"
+print_success "App built successfully at: $BUILT_APP"
 
 # Copy app and clean development data
 print_step "Step 4: Copying app and cleaning development data"
@@ -365,6 +388,11 @@ if [ "$USE_CREATE_DMG" = false ]; then
     cat > "$MOUNT_POINT/README.txt" << 'EOF'
 ZetaNotes Installation Instructions
 
+EASY METHOD (Recommended):
+  Double-click "Install ZetaNotes.command" in this window
+  → It will automatically copy the app and remove security restrictions
+
+MANUAL METHOD:
 1. Drag ZetaNotes to Applications folder
 2. Go to Applications folder
 3. RIGHT-CLICK on ZetaNotes
@@ -380,14 +408,17 @@ The AI model will be downloaded automatically when you first launch the app.
 TROUBLESHOOTING:
 If you see "damaged" or "malware" warnings that won't let you open:
 
-Option 1 - Terminal Fix (Recommended):
+Option 1 - Use Automatic Installer:
+  Double-click "Install ZetaNotes.command" in the DMG
+
+Option 2 - Terminal Fix:
   1. Open Terminal (Applications → Utilities → Terminal)
   2. Copy and paste this command:
      sudo xattr -cr /Applications/ZetaNotes.app && sudo chmod +x /Applications/ZetaNotes.app/Contents/MacOS/ZetaNotes
   3. Enter your password when prompted
-  4. Try opening ZetaNotes again (right-click → Open)
+  4. Try opening ZetaNotes again
 
-Option 2 - System Settings:
+Option 3 - System Settings:
   1. Go to System Settings → Privacy & Security
   2. Scroll down to Security section
   3. Click "Open Anyway" next to ZetaNotes warning
@@ -401,6 +432,15 @@ EOF
         cp "$PROJECT_DIR/scripts/fix-zetanotes.sh" "$MOUNT_POINT/"
         chmod +x "$MOUNT_POINT/fix-zetanotes.sh"
         print_success "Added troubleshooting script to DMG"
+    fi
+
+    # Copy automatic installer script
+    if [ -f "$PROJECT_DIR/scripts/Install ZetaNotes.command" ]; then
+        cp "$PROJECT_DIR/scripts/Install ZetaNotes.command" "$MOUNT_POINT/"
+        chmod +x "$MOUNT_POINT/Install ZetaNotes.command"
+        # Remove quarantine from installer too
+        xattr -cr "$MOUNT_POINT/Install ZetaNotes.command" 2>/dev/null || true
+        print_success "Added automatic installer to DMG"
     fi
 
     # CRITICAL: Remove quarantine from files BEFORE creating DMG
