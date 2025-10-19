@@ -382,6 +382,109 @@ struct GeneralSettingsContent: View {
 
             Divider()
 
+            // Data Export Section
+            VStack(alignment: .leading, spacing: 16) {
+                HStack(spacing: 12) {
+                    Image(systemName: "square.and.arrow.up.fill")
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundColor(.white)
+                        .frame(width: 36, height: 36)
+                        .background(
+                            Circle()
+                                .fill(
+                                    LinearGradient(
+                                        gradient: Gradient(colors: [Color.blue, Color.blue.opacity(0.8)]),
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                        )
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Export Data")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(.primary)
+
+                        Text("Backup your notes, settings, and chat history")
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                    }
+
+                    Spacer()
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 12)
+
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(alignment: .top) {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Export User Data")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundColor(.primary)
+
+                            Text("Creates a folder with all your data in JSON format for backup or migration")
+                                .font(.system(size: 12))
+                                .foregroundColor(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+
+                        Spacer()
+
+                        Button(action: {
+                            exportUserData()
+                        }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "square.and.arrow.up")
+                                    .font(.system(size: 11))
+                                Text("Export Data")
+                                    .font(.system(size: 13, weight: .medium))
+                            }
+                            .foregroundColor(.blue)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .fill(Color.blue.opacity(0.1))
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Export includes:")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(.blue.opacity(0.9))
+                            .textCase(.uppercase)
+                            .tracking(0.5)
+
+                        VStack(alignment: .leading, spacing: 6) {
+                            ExportItemView(icon: "doc.text.fill", text: "All notes and their content")
+                            ExportItemView(icon: "bubble.left.and.bubble.right.fill", text: "Chat history and settings")
+                            ExportItemView(icon: "gearshape.fill", text: "App preferences and AI prompts")
+                            ExportItemView(icon: "info.circle.fill", text: "AI models information (files not included)")
+                        }
+
+                        // Export location info
+                        HStack(spacing: 6) {
+                            Image(systemName: "folder.fill")
+                                .font(.system(size: 10))
+                                .foregroundColor(.blue.opacity(0.7))
+
+                            Text("Export location: ~/Library/Application Support/ZetaNotes/Exports/")
+                                .font(.system(size: 11, design: .monospaced))
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.top, 4)
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 16)
+            }
+            .background(Color(nsColor: .controlBackgroundColor).opacity(0.3))
+            .cornerRadius(8)
+
+            Divider()
+
             // Danger Zone Section
             VStack(alignment: .leading, spacing: 0) {
                 // Header with warning stripe
@@ -645,6 +748,51 @@ struct GeneralSettingsContent: View {
 
         // Quit the app (user can relaunch)
         NSApplication.shared.terminate(nil)
+    }
+
+    private func exportUserData() {
+        print("🔄 Export Data button clicked")
+
+        // Export to Application Support directory (sandboxed location)
+        guard let appSupportURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)
+            .first
+        else {
+            let alert = NSAlert()
+            alert.messageText = "Export Failed"
+            alert.informativeText = "Could not access Application Support directory."
+            alert.alertStyle = .critical
+            alert.addButton(withTitle: "OK")
+            alert.runModal()
+            return
+        }
+
+        let exportBaseURL = appSupportURL.appendingPathComponent("ZetaNotes/Exports")
+        print("📁 Exporting to: \(exportBaseURL.path)")
+
+        Task {
+            let success = await DataExportManager.shared.exportAllData(to: exportBaseURL)
+            await MainActor.run {
+                if success {
+                    let alert = NSAlert()
+                    alert.messageText = "Export Successful"
+                    alert.informativeText = "Your data has been exported to:\n\(exportBaseURL.path)"
+                    alert.alertStyle = .informational
+                    alert.addButton(withTitle: "Show in Finder")
+                    alert.addButton(withTitle: "OK")
+                    let response = alert.runModal()
+                    if response == .alertFirstButtonReturn {
+                        NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: exportBaseURL.path)
+                    }
+                } else {
+                    let alert = NSAlert()
+                    alert.messageText = "Export Failed"
+                    alert.informativeText = "An error occurred while exporting your data. Please try again."
+                    alert.alertStyle = .critical
+                    alert.addButton(withTitle: "OK")
+                    alert.runModal()
+                }
+            }
+        }
     }
 }
 
@@ -1774,6 +1922,28 @@ struct DangerZoneItemView: View {
             Image(systemName: icon)
                 .font(.system(size: 11))
                 .foregroundColor(.red.opacity(0.8))
+                .frame(width: 16, alignment: .center)
+
+            Text(text)
+                .font(.system(size: 12))
+                .foregroundColor(.secondary)
+
+            Spacer()
+        }
+    }
+}
+
+// MARK: - Export Item View
+
+struct ExportItemView: View {
+    let icon: String
+    let text: String
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.system(size: 11))
+                .foregroundColor(.blue.opacity(0.8))
                 .frame(width: 16, alignment: .center)
 
             Text(text)

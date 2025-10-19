@@ -7,10 +7,10 @@
 set -e
 
 echo "🧹 Cleaning project..."
-xcodebuild -project ZetaNotes.xcodeproj -scheme ZetaNotes clean
+xcodebuild -project ZetaNotes.xcodeproj -scheme ZetaNotes -configuration Debug clean
 
-echo "🔨 Building project..."
-xcodebuild -project ZetaNotes.xcodeproj -scheme ZetaNotes build
+echo "🔨 Building project in Debug mode..."
+xcodebuild -project ZetaNotes.xcodeproj -scheme ZetaNotes -configuration Debug build
 
 echo "🚀 Running ZetaNotes in debug mode..."
 
@@ -20,22 +20,29 @@ echo "🔍 Looking for built app..."
 # More comprehensive search for the built app
 APP_PATH=""
 
-# Search in common build locations
+# Search in common build locations, excluding Index.noindex directories
 for BUILD_PATH in \
     "build/Debug/ZetaNotes.app" \
     "build/Release/ZetaNotes.app" \
-    $(find "$HOME/Library/Developer/Xcode/DerivedData" -name "ZetaNotes.app" -type d 2>/dev/null | head -1)
+    $(find "$HOME/Library/Developer/Xcode/DerivedData" -path "*/Build/Products/Debug/ZetaNotes.app" -not -path "*/Index.noindex/*" -type d 2>/dev/null | head -1)
 do
     if [ -d "$BUILD_PATH" ]; then
-        APP_PATH="$BUILD_PATH"
-        echo "✅ Found app at: $APP_PATH"
-        break
+        # Verify the executable exists inside the app bundle
+        if [ -f "$BUILD_PATH/Contents/MacOS/ZetaNotes" ]; then
+            APP_PATH="$BUILD_PATH"
+            echo "✅ Found app at: $APP_PATH"
+            break
+        fi
     fi
 done
 
 if [ -z "$APP_PATH" ]; then
-    echo "❌ Could not find built app."
+    echo "❌ Could not find built app with executable."
     echo "💡 Try building first or check Xcode build settings."
+    echo ""
+    echo "Searched locations:"
+    echo "  - build/Debug/ZetaNotes.app"
+    echo "  - $HOME/Library/Developer/Xcode/DerivedData/*/Build/Products/Debug/ZetaNotes.app"
     exit 1
 fi
 
