@@ -246,6 +246,35 @@ print_success "App copied and cleaned: $BUILD_DIR/${APP_NAME}.app"
 print_success "Models directory removed (users will download on first run)"
 print_success "Development preferences cleared"
 
+# Ad-hoc code signing (improves user experience without Apple Developer account)
+print_step "Step 4.5: Applying ad-hoc code signature"
+echo "This provides code integrity without Apple Developer certificate..."
+
+# Sign all frameworks and dylibs first
+print_warning "Signing embedded frameworks and libraries..."
+find "$BUILD_DIR/${APP_NAME}.app/Contents" -type f \( -name "*.dylib" -o -name "*.framework" \) -exec codesign --force --deep --sign - {} \; 2>/dev/null || true
+
+# Sign the main app bundle with ad-hoc signature
+if codesign --force --deep --sign - "$BUILD_DIR/${APP_NAME}.app" 2>/dev/null; then
+    print_success "Ad-hoc signature applied successfully"
+    
+    # Verify the signature
+    if codesign --verify --verbose "$BUILD_DIR/${APP_NAME}.app" 2>&1 | grep -q "adhoc"; then
+        print_success "Signature verified (ad-hoc)"
+        echo "  └─ This improves code integrity and user trust"
+    else
+        print_warning "Signature applied but verification unclear"
+    fi
+else
+    print_warning "Ad-hoc signing failed (non-critical)"
+    echo "  └─ App will still work, but without code signature"
+fi
+
+# Display signature info
+print_warning "Signature details:"
+codesign -dvvv "$BUILD_DIR/${APP_NAME}.app" 2>&1 | grep -E "(Identifier|Authority|Signature)" || true
+echo ""
+
 # Verify Release configuration
 print_warning "Verifying build configuration..."
 if [ -f "$BUILD_DIR/DerivedData/Build/Products/Release/ZetaNotes.app/Contents/MacOS/ZetaNotes" ]; then
@@ -254,10 +283,32 @@ else
     print_warning "Could not verify Release configuration"
 fi
 
-# Remove quarantine attribute
-print_step "Step 5: Removing quarantine attributes"
+# Remove quarantine attributes and fix common issues
+print_step "Step 5: Removing quarantine attributes and fixing permissions"
+
+# Remove ALL extended attributes (quarantine, download history, etc.)
+print_warning "Removing all extended attributes..."
 xattr -cr "$BUILD_DIR/${APP_NAME}.app" 2>/dev/null || true
-print_success "Quarantine attributes removed"
+
+# Specifically target quarantine attributes
+xattr -d com.apple.quarantine "$BUILD_DIR/${APP_NAME}.app" 2>/dev/null || true
+find "$BUILD_DIR/${APP_NAME}.app" -type f -exec xattr -d com.apple.quarantine {} \; 2>/dev/null || true
+
+# Fix executable permissions (common issue with DMG distribution)
+print_warning "Fixing executable permissions..."
+chmod +x "$BUILD_DIR/${APP_NAME}.app/Contents/MacOS/"* 2>/dev/null || true
+chmod -R u+rwX,go+rX,go-w "$BUILD_DIR/${APP_NAME}.app" 2>/dev/null || true
+
+# Verify the app structure is intact
+print_warning "Verifying app bundle structure..."
+if [ ! -f "$BUILD_DIR/${APP_NAME}.app/Contents/Info.plist" ]; then
+    print_error "Info.plist missing - app bundle is corrupted!"
+fi
+if [ ! -x "$BUILD_DIR/${APP_NAME}.app/Contents/MacOS/ZetaNotes" ]; then
+    print_error "Main executable is not executable!"
+fi
+
+print_success "Quarantine attributes removed and permissions fixed"
 
 # Create DMG
 print_step "Step 6: Creating DMG"
@@ -326,8 +377,42 @@ After the first time, you can open it normally.
 
 The AI model will be downloaded automatically when you first launch the app.
 
-For more help: https://github.com/rabah-khalek/zetanotes
+TROUBLESHOOTING:
+If you see "damaged" or "malware" warnings that won't let you open:
+
+Option 1 - Terminal Fix (Recommended):
+  1. Open Terminal (Applications → Utilities → Terminal)
+  2. Copy and paste this command:
+     sudo xattr -cr /Applications/ZetaNotes.app && sudo chmod +x /Applications/ZetaNotes.app/Contents/MacOS/ZetaNotes
+  3. Enter your password when prompted
+  4. Try opening ZetaNotes again (right-click → Open)
+
+Option 2 - System Settings:
+  1. Go to System Settings → Privacy & Security
+  2. Scroll down to Security section
+  3. Click "Open Anyway" next to ZetaNotes warning
+  4. Confirm by clicking "Open"
+
+For more help: https://github.com/rabah-khalek/zetanotes/issues
 EOF
+
+    # Copy troubleshooting script
+    if [ -f "$PROJECT_DIR/scripts/fix-zetanotes.sh" ]; then
+        cp "$PROJECT_DIR/scripts/fix-zetanotes.sh" "$MOUNT_POINT/"
+        chmod +x "$MOUNT_POINT/fix-zetanotes.sh"
+        print_success "Added troubleshooting script to DMG"
+    fi
+
+    # CRITICAL: Remove quarantine from files BEFORE creating DMG
+    print_warning "Removing quarantine from all files before DMG creation..."
+    xattr -cr "$MOUNT_POINT/${APP_NAME}.app" 2>/dev/null || true
+    xattr -d com.apple.quarantine "$MOUNT_POINT/${APP_NAME}.app" 2>/dev/null || true
+    find "$MOUNT_POINT/${APP_NAME}.app" -exec xattr -c {} \; 2>/dev/null || true
+    
+    # Fix permissions inside mount
+    chmod +x "$MOUNT_POINT/${APP_NAME}.app/Contents/MacOS/"* 2>/dev/null || true
+    
+    print_success "Quarantine removed from files in DMG"
 
     # Sync and wait a moment for filesystem operations to complete
     sync
@@ -363,10 +448,50 @@ fi
 DMG_SIZE=$(du -h "$DMG_NAME" | cut -f1)
 print_success "DMG created: $DMG_SIZE"
 
-# Remove quarantine from DMG
-print_step "Step 7: Removing quarantine from DMG"
+# Remove quarantine from DMG itself and verify
+print_step "Step 7: Final DMG cleanup and verification"
+
+# Remove quarantine from the DMG file itself
+print_warning "Removing quarantine from DMG file..."
 xattr -cr "$DMG_NAME" 2>/dev/null || true
-print_success "Quarantine removed from DMG"
+xattr -d com.apple.quarantine "$DMG_NAME" 2>/dev/null || true
+
+# Verify no quarantine attributes remain
+XATTR_COUNT=$(xattr "$DMG_NAME" 2>/dev/null | wc -l | tr -d ' ')
+if [ "$XATTR_COUNT" -eq 0 ]; then
+    print_success "DMG is clean (no extended attributes)"
+else
+    print_warning "DMG still has extended attributes (may be added on download)"
+    xattr -l "$DMG_NAME" || true
+fi
+
+# Test mount the DMG to verify integrity
+print_warning "Verifying DMG integrity..."
+TEST_MOUNT="/Volumes/${APP_NAME}_test_$$"
+if hdiutil attach "$DMG_NAME" -readonly -mountpoint "$TEST_MOUNT" -nobrowse 2>/dev/null; then
+    # Check if app is readable
+    if [ -d "$TEST_MOUNT/${APP_NAME}.app" ]; then
+        print_success "DMG verification passed - app is accessible"
+        
+        # Check for quarantine in mounted app
+        MOUNTED_XATTR=$(xattr "$TEST_MOUNT/${APP_NAME}.app" 2>/dev/null | wc -l | tr -d ' ')
+        if [ "$MOUNTED_XATTR" -eq 0 ]; then
+            print_success "App inside DMG has no quarantine attributes"
+        else
+            print_warning "App inside DMG has extended attributes:"
+            xattr -l "$TEST_MOUNT/${APP_NAME}.app" || true
+        fi
+    else
+        print_error "App not found in DMG!"
+    fi
+    
+    # Unmount test volume
+    hdiutil detach "$TEST_MOUNT" -force 2>/dev/null || true
+else
+    print_warning "Could not verify DMG (non-critical)"
+fi
+
+print_success "DMG cleanup and verification complete"
 
 # Generate checksum
 print_step "Step 8: Generating SHA256 checksum"
@@ -418,6 +543,18 @@ Alternative Method (if above doesn't work):
 5. Click "Open Anyway"
 
 6. Confirm by clicking "Open"
+
+Terminal Fix (if you see "damaged" or persistent malware warnings):
+-------------------------------------------------------------------
+
+If the right-click method doesn't work at all, run this in Terminal:
+
+  sudo xattr -cr /Applications/ZetaNotes.app && sudo chmod +x /Applications/ZetaNotes.app/Contents/MacOS/ZetaNotes
+
+This removes quarantine attributes and fixes permissions.
+You'll need to enter your Mac password.
+
+After running this, try opening ZetaNotes normally or via right-click.
 
 Why do I see this warning?
 --------------------------
