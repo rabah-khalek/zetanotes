@@ -133,8 +133,12 @@ struct ContentView: View {
                 // Check if this is a chat dump (starts with ---\n`Chat •)
                 if text.hasPrefix("---\n`Chat •") {
                     // Look for existing chat section to replace
+                    // Match pattern: ---\n`Chat • {date}`\n---\n\n{content}
+                    // The content continues until we hit another section marker or end of string
+                    let pattern = #"---\n`Chat • [^`]+`\n---\n\n(?:(?!---\n`(?:Chat|[A-Z][a-z]+ • )).|\n)*"#
+
                     if let range = currentContent.range(
-                        of: #"---\n`Chat • .*?`\n---\n\n.*?(?=\n\n---|$)"#,
+                        of: pattern,
                         options: .regularExpression
                     ) {
                         // Replace existing chat section

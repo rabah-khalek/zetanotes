@@ -53,9 +53,9 @@ private enum TinyLlamaConfigs {
 
                 Continuation:
                 """,
-                temperature: 0.7,
-                maxTokens: 50,
-                stopSequences: ["\n", ".", "!", "?"]
+                temperature: 0.3,
+                maxTokens: 20,
+                stopSequences: ["\n\n", "\n\n\n", "</s>", "<|im_end|>"]
             )
 
         case .patch:
@@ -171,7 +171,7 @@ private enum LlamaThreeTwoConfigs {
                 """,
                 temperature: 0.6,
                 maxTokens: 50,
-                stopSequences: ["\n", ".", "!", "?", "<|eot_id|>"]
+                stopSequences: ["<|eot_id|>", "\n\n"] // Allow single newlines for natural continuation
             )
 
         case .patch:
@@ -283,7 +283,7 @@ private enum QwenTwoFiveConfigs {
                 """,
                 temperature: 0.7,
                 maxTokens: 50,
-                stopSequences: ["\n", ".", "!", "?", "<|im_end|>"]
+                stopSequences: ["<|im_end|>", "\n\n"]
             )
 
         case .patch:
@@ -395,7 +395,7 @@ private enum SmolLMTwoConfigs {
                 """,
                 temperature: 0.5,
                 maxTokens: 50,
-                stopSequences: ["\n", ".", "!", "?", "<|im_end|>"]
+                stopSequences: ["<|im_end|>", "\n\n"]
             )
 
         case .patch:
@@ -509,7 +509,7 @@ private enum Phi2Configs {
                 prompt: "Instruct: Continue the following text naturally. Write only the next few words.\n\n{content}\n\nOutput:",
                 temperature: 0.6,
                 maxTokens: 50,
-                stopSequences: ["\n", ".", "!", "?"] + stopSequences
+                stopSequences: ["\n\n"] + stopSequences
             )
 
         case .patch:
@@ -577,7 +577,7 @@ private enum GemmaTwoConfigs {
                 """,
                 temperature: 0.6,
                 maxTokens: 50,
-                stopSequences: ["\n", ".", "!", "?", "<end_of_turn>"]
+                stopSequences: ["<end_of_turn>", "\n\n"]
             )
 
         case .patch:
@@ -687,7 +687,7 @@ private enum PhiThreeFiveConfigs {
                 """,
                 temperature: 0.6,
                 maxTokens: 50,
-                stopSequences: ["\n", ".", "!", "?", "<|end|>"]
+                stopSequences: ["<|end|>", "\n\n"]
             )
 
         case .patch:
