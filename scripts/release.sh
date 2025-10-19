@@ -100,11 +100,16 @@ else
 fi
 
 echo ""
-read -p "Continue with build? (y/n) " -n 1 -r
-echo
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "Aborted."
-    exit 0
+# Skip interactive prompt in CI environment
+if [ -z "$CI" ]; then
+    read -p "Continue with build? (y/n) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "Aborted."
+        exit 0
+    fi
+else
+    print_success "Running in CI environment - skipping confirmation prompt"
 fi
 
 # Create build directory
