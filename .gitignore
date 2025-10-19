@@ -3,8 +3,9 @@
 # External dependencies (large, should be cloned/built separately)
 llama.cpp/
 
-# AI Models (large GGUF files - download separately)
+# AI Models (large GGUF files - download on first run, not bundled)
 ZetaNotes/Resources/Models/*.gguf
+ZetaNotes/Resources/Models/
 
 # Backup files
 *.backup

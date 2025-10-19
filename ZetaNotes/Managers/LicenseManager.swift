@@ -29,8 +29,8 @@ enum SubscriptionTier: String, Codable {
         switch self {
         case .free: return "$0"
         case .monthly: return "$1/month"
-        case .annual: return "$10/year"
-        case .lifetime: return "$30 one-time"
+        case .annual: return "$6/year"
+        case .lifetime: return "$20 one-time"
         }
     }
 }
@@ -117,8 +117,8 @@ class LicenseManager: ObservableObject {
     private func validateWithLemonSqueezy(key: String, email: String) async -> Bool {
         // DEV_TODO: Replace with your actual LemonSqueezy store ID and product ID
         // Get these from: https://app.lemonsqueezy.com/settings/api
-        let storeId = "DEV_STORE_ID" // DEV_TODO: CHANGE THIS
-        let productId = "DEV_PRODUCT_ID" // DEV_TODO: CHANGE THIS (optional, can validate without)
+        let _ = "DEV_STORE_ID" // DEV_TODO: CHANGE THIS
+        let _ = "DEV_PRODUCT_ID" // DEV_TODO: CHANGE THIS (optional, can validate without)
 
         // LemonSqueezy license activation endpoint
         let urlString = "https://api.lemonsqueezy.com/v1/licenses/activate"
@@ -524,7 +524,7 @@ class LicenseManager: ObservableObject {
         if isPro {
             return AIModel.allCases
         } else {
-            return [.tinyLlama] // Free tier only gets TinyLlama
+            return [.llamaThreeTwoOneB] // Free tier gets Llama 3.2 1B
         }
     }
 

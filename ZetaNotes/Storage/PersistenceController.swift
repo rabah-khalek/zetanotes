@@ -23,6 +23,27 @@ class PersistenceController: ObservableObject {
 
         if inMemory {
             container.persistentStoreDescriptions.first?.url = URL(fileURLWithPath: "/dev/null")
+        } else {
+            // Ensure the ZetaNotes directory exists before loading the store
+            // This is critical after a full app reset that deletes the directory
+            // Get the default store URL
+            let appSupportURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+            let zetaNotesDirectory = appSupportURL.appendingPathComponent("ZetaNotes")
+            let storeURL = zetaNotesDirectory.appendingPathComponent("NotesDataModel.sqlite")
+
+            // Create directory if it doesn't exist
+            if !FileManager.default.fileExists(atPath: zetaNotesDirectory.path) {
+                do {
+                    try FileManager.default.createDirectory(at: zetaNotesDirectory, withIntermediateDirectories: true, attributes: nil)
+                    print("✅ Created Core Data directory: \(zetaNotesDirectory.path)")
+                } catch {
+                    print("❌ Failed to create Core Data directory: \(error)")
+                }
+            }
+
+            // Set the store URL explicitly
+            let storeDescription = NSPersistentStoreDescription(url: storeURL)
+            container.persistentStoreDescriptions = [storeDescription]
         }
 
         // Configure for performance on Apple Silicon
@@ -43,6 +64,20 @@ class PersistenceController: ObservableObject {
 
         container.loadPersistentStores { description, error in
             if let error = error {
+                let nsError = error as NSError
+
+                // Log to console
+                print("❌ Failed to load Core Data stack: \(error.localizedDescription)")
+                print("   Error details: \(nsError)")
+
+                // Log to ErrorLogger for UI visibility
+                ErrorLogger.shared.logError(
+                    "Failed to load Core Data stack",
+                    severity: .error,
+                    operation: "Core Data Initialization",
+                    details: "\(error.localizedDescription)\n\nError Code: \(nsError.code)\nDomain: \(nsError.domain)\n\nThis is a critical error. The app may not function correctly."
+                )
+
                 // In production, handle this error appropriately
                 fatalError("Failed to load Core Data stack: \(error)")
             }
@@ -137,6 +172,14 @@ class PersistenceController: ObservableObject {
                     // Non-recoverable error
                     print("❌ Failed to save context: \(error.localizedDescription)")
                     print("   Error details: \(error)")
+
+                    // Log to ErrorLogger for UI visibility
+                    ErrorLogger.shared.logError(
+                        "Failed to save Core Data context",
+                        severity: .error,
+                        operation: "Core Data Save",
+                        details: "\(error.localizedDescription)\n\nError Code: \(error.code)\nDomain: \(error.domain)"
+                    )
 
                     // For critical errors, we must handle gracefully
                     // Don't crash the app, but ensure data integrity

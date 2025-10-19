@@ -44,7 +44,7 @@ enum ToolEditorState: Identifiable {
 struct AISettingsView: View {
     @ObservedObject var viewModel: NoteViewModel
     @EnvironmentObject var aiEngine: AIEngine
-    @StateObject private var modelDownloader = ModelDownloader()
+    @ObservedObject private var modelDownloader = ModelDownloader.shared
     @StateObject private var toolManager = ToolManager.shared
     @StateObject private var licenseManager = LicenseManager.shared
     @Environment(\.dismiss) var dismiss
@@ -291,6 +291,8 @@ struct GeneralSettingsContent: View {
     @ObservedObject var licenseManager = LicenseManager.shared
     @AppStorage("preferredAppearance") private var preferredAppearance: String = "dark"
     @State private var showResetConfirmation = false
+    @State private var showDangerZoneConfirmation = false
+    @State private var confirmationText = ""
 
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
@@ -380,39 +382,261 @@ struct GeneralSettingsContent: View {
 
             Divider()
 
-            // About Section
-            VStack(alignment: .leading, spacing: 8) {
-                Label("About ZetaNotes", systemImage: "info.circle")
-                    .font(.headline)
-                    .fontWeight(.semibold)
+            // Danger Zone Section
+            VStack(alignment: .leading, spacing: 0) {
+                // Header with warning stripe
+                HStack(spacing: 12) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundColor(.white)
+                        .frame(width: 36, height: 36)
+                        .background(
+                            Circle()
+                                .fill(
+                                    LinearGradient(
+                                        gradient: Gradient(colors: [Color.red, Color.red.opacity(0.8)]),
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                        )
 
-                HStack {
-                    Text("Version")
-                        .foregroundColor(.secondary)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Danger Zone")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(.red)
+
+                        Text("Irreversible actions — proceed with extreme caution")
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                    }
+
                     Spacer()
-                    Text("1.0.0")
-                        .fontWeight(.medium)
+                }
+                .padding(16)
+                .background(
+                    LinearGradient(
+                        gradient: Gradient(colors: [
+                            Color.red.opacity(0.08),
+                            Color.red.opacity(0.12)
+                        ]),
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+
+                // Divider with gradient
+                Rectangle()
+                    .fill(
+                        LinearGradient(
+                            gradient: Gradient(colors: [
+                                Color.red.opacity(0.3),
+                                Color.red.opacity(0.5),
+                                Color.red.opacity(0.3)
+                            ]),
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .frame(height: 2)
+
+                // Content area
+                VStack(alignment: .leading, spacing: 16) {
+                    // Reset App Card
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack(alignment: .top) {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("Reset Entire App")
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundColor(.primary)
+
+                                Text("Permanently delete all data and restore to factory defaults")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.secondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+
+                            Spacer()
+                        }
+
+                        // What will be deleted
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("This will permanently delete:")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundColor(.red.opacity(0.9))
+                                .textCase(.uppercase)
+                                .tracking(0.5)
+
+                            VStack(alignment: .leading, spacing: 6) {
+                                DangerZoneItemView(icon: "doc.text.fill", text: "All notes and their content")
+                                DangerZoneItemView(icon: "brain.head.profile", text: "All downloaded AI models (~1-2GB)")
+                                DangerZoneItemView(icon: "wand.and.stars", text: "All custom prompts and tools")
+                                DangerZoneItemView(icon: "gearshape.fill", text: "All settings and preferences")
+                                DangerZoneItemView(icon: "bubble.left.and.bubble.right.fill", text: "Complete chat history")
+                            }
+                        }
+                        .padding(12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(Color(nsColor: .controlBackgroundColor).opacity(0.5))
+                        )
+
+                        // Reset button
+                        Button(action: {
+                            showDangerZoneConfirmation = true
+                            confirmationText = ""
+                        }) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "trash.fill")
+                                    .font(.system(size: 13, weight: .semibold))
+                                Text("Reset Entire App")
+                                    .font(.system(size: 13, weight: .semibold))
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                            .background(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .fill(Color.red)
+                            )
+                            .foregroundColor(.white)
+                        }
+                        .buttonStyle(.plain)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6)
+                                .strokeBorder(Color.red.opacity(0.5), lineWidth: 1)
+                        )
+                    }
+                    .padding(16)
+                }
+            }
+            .background(Color(nsColor: .textBackgroundColor))
+            .cornerRadius(10)
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .strokeBorder(
+                        LinearGradient(
+                            gradient: Gradient(colors: [
+                                Color.red.opacity(0.4),
+                                Color.red.opacity(0.6),
+                                Color.red.opacity(0.4)
+                            ]),
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 2
+                    )
+            )
+            .shadow(color: Color.red.opacity(0.15), radius: 8, x: 0, y: 2)
+            .alert("Reset Entire App", isPresented: $showDangerZoneConfirmation) {
+                TextField("Type DELETE to confirm", text: $confirmationText)
+                Button("Cancel", role: .cancel) {
+                    confirmationText = ""
+                }
+                Button("Delete Everything", role: .destructive) {
+                    if confirmationText.uppercased() == "DELETE" {
+                        performFullReset()
+                    }
+                }
+                .disabled(confirmationText.uppercased() != "DELETE")
+            } message: {
+                Text("⚠️ WARNING: This action cannot be undone!\n\nThis will permanently delete:\n• All your notes\n• All AI models (~1-2GB)\n• All custom prompts and tools\n• All settings\n• Chat history\n\nThe app will restart as if freshly installed.\n\nType DELETE to confirm.")
+            }
+
+            Divider()
+
+            // About Section
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 10) {
+                    Image(systemName: "info.circle.fill")
+                        .font(.system(size: 18))
+                        .foregroundColor(.blue)
+
+                    Text("About ZetaNotes")
+                        .font(.headline)
+                        .fontWeight(.semibold)
                 }
 
-                if licenseManager.isPro {
+                VStack(alignment: .leading, spacing: 8) {
                     HStack {
-                        Text("License")
+                        Text("Version")
+                            .font(.system(size: 13))
                             .foregroundColor(.secondary)
                         Spacer()
-                        HStack(spacing: 4) {
-                            Image(systemName: "checkmark.seal.fill")
-                                .foregroundColor(.green)
-                            Text("Pro")
-                                .fontWeight(.medium)
-                                .foregroundColor(.green)
+                        Text("1.0.0")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(.primary)
+                    }
+
+                    if licenseManager.isPro {
+                        HStack {
+                            Text("License")
+                                .font(.system(size: 13))
+                                .foregroundColor(.secondary)
+                            Spacer()
+                            HStack(spacing: 4) {
+                                Image(systemName: "checkmark.seal.fill")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.green)
+                                Text("Pro")
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundColor(.green)
+                            }
                         }
                     }
+
+                    Divider()
+                        .padding(.vertical, 4)
+
+                    Text("Privacy-first note-taking with offline AI. All processing happens on your device.")
+                        .font(.system(size: 12))
+                        .foregroundColor(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
             .padding()
             .background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
             .cornerRadius(8)
         }
+    }
+
+    private func performFullReset() {
+        // Delete all Core Data (notes)
+        viewModel.deleteAllNotes()
+
+        // Delete all downloaded models
+        if let modelsDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?
+            .appendingPathComponent("ZetaNotes/Models") {
+            try? FileManager.default.removeItem(at: modelsDir)
+        }
+
+        // Delete Core Data SQLite files (but keep the directory structure)
+        if let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first {
+            let zetaNotesDir = appSupport.appendingPathComponent("ZetaNotes")
+
+            // Delete only the Core Data store files, not the directory
+            let sqliteFile = zetaNotesDir.appendingPathComponent("NotesDataModel.sqlite")
+            let sqliteShmFile = zetaNotesDir.appendingPathComponent("NotesDataModel.sqlite-shm")
+            let sqliteWalFile = zetaNotesDir.appendingPathComponent("NotesDataModel.sqlite-wal")
+
+            try? FileManager.default.removeItem(at: sqliteFile)
+            try? FileManager.default.removeItem(at: sqliteShmFile)
+            try? FileManager.default.removeItem(at: sqliteWalFile)
+
+            print("✅ Deleted Core Data store files (directory preserved)")
+        }
+
+        // Reset all UserDefaults
+        if let bundleID = Bundle.main.bundleIdentifier {
+            UserDefaults.standard.removePersistentDomain(forName: bundleID)
+            UserDefaults.standard.synchronize()
+        }
+
+        // Reset first-run flag
+        UserDefaults.standard.set(false, forKey: "hasCompletedFirstRun")
+        UserDefaults.standard.synchronize()
+
+        // Quit the app (user can relaunch)
+        NSApplication.shared.terminate(nil)
     }
 }
 
@@ -455,6 +679,9 @@ struct ModelSettingsContent: View {
                                     print("❌ Download failed: \(error)")
                                 }
                             }
+                        },
+                        onDelete: {
+                            let _ = aiEngine.deleteModel(model)
                         }
                     )
                 }
@@ -574,6 +801,9 @@ struct ModelSelectionSection: View {
                                 print("❌ Download failed: \(error)")
                             }
                         }
+                    },
+                    onDelete: {
+                        let _ = aiEngine.deleteModel(model)
                     }
                 )
             }
@@ -589,9 +819,11 @@ struct ModelCard: View {
     let downloadProgress: Double
     let onSelect: () -> Void
     let onDownload: () -> Void
+    let onDelete: (() -> Void)? // Optional delete callback
 
     @ObservedObject var licenseManager = LicenseManager.shared
     @ObservedObject var aiEngine = AIEngine.shared
+    @State private var showingDeleteConfirmation = false
 
     private var isLocked: Bool {
         !licenseManager.canUseModel(model)
@@ -691,20 +923,52 @@ struct ModelCard: View {
                         .foregroundColor(.secondary)
                 }
             } else if !isSelected {
-                Button(action: onSelect) {
-                    Text("Use This")
-                        .font(.caption)
+                HStack(spacing: 6) {
+                    Button(action: onSelect) {
+                        Text("Use This")
+                            .font(.caption)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+                    .disabled(aiEngine.isSwitchingModel)
+
+                    // Delete button (only if downloaded and not selected)
+                    if isDownloaded, onDelete != nil {
+                        Button(action: {
+                            showingDeleteConfirmation = true
+                        }) {
+                            Image(systemName: "trash")
+                                .font(.caption)
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                        .foregroundColor(.red)
+                        .help("Delete this model")
+                    }
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.small)
-                .disabled(aiEngine.isSwitchingModel)
             } else {
-                HStack(spacing: 4) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
-                    Text("Active")
-                        .font(.caption)
-                        .foregroundColor(.green)
+                HStack(spacing: 6) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                        Text("Active")
+                            .font(.caption)
+                            .foregroundColor(.green)
+                    }
+
+                    // Delete button (even for active model)
+                    if isDownloaded, onDelete != nil {
+                        Button(action: {
+                            showingDeleteConfirmation = true
+                        }) {
+                            Image(systemName: "trash")
+                                .font(.caption)
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                        .foregroundColor(.red)
+                        .help("Delete this model")
+                    }
                 }
             }
         }
@@ -715,6 +979,20 @@ struct ModelCard: View {
             RoundedRectangle(cornerRadius: 8)
                 .strokeBorder(isSelected ? Color.blue.opacity(0.3) : Color.gray.opacity(0.2), lineWidth: 1.5)
         )
+        .alert("Delete Model", isPresented: $showingDeleteConfirmation) {
+            Button("Cancel", role: .cancel) {}
+            Button("Delete", role: .destructive) {
+                if let deleteAction = onDelete {
+                    deleteAction()
+                }
+            }
+        } message: {
+            if isSelected {
+                Text("Are you sure you want to delete \(model.displayName)? This is your currently active model. All AI features will be disabled until you download another model. This will free up \(model.fileSize) of storage.")
+            } else {
+                Text("Are you sure you want to delete \(model.displayName)? This will free up \(model.fileSize) of storage. You can download it again later.")
+            }
+        }
     }
 }
 
@@ -1460,6 +1738,28 @@ struct ProFeaturePrompt: View {
                         .strokeBorder(Color.orange.opacity(0.2), lineWidth: 1)
                 )
         )
+    }
+}
+
+// MARK: - Danger Zone Item View
+
+struct DangerZoneItemView: View {
+    let icon: String
+    let text: String
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.system(size: 11))
+                .foregroundColor(.red.opacity(0.8))
+                .frame(width: 16, alignment: .center)
+
+            Text(text)
+                .font(.system(size: 12))
+                .foregroundColor(.secondary)
+
+            Spacer()
+        }
     }
 }
 

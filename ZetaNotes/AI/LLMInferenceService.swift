@@ -148,7 +148,7 @@ enum AIModel: String, CaseIterable, Codable {
         case .tinyLlama:
             return "Lightweight model, best for autocomplete and embeddings. Limited instruction-following quality."
         case .llamaThreeTwoOneB:
-            return "Meta's tiny model with latest architecture. Better than TinyLlama despite same size."
+            return "Meta's tiny model with latest architecture."
         case .qwenTwoFiveOneFiveB:
             return "Qwen's compact model. Good balance of speed and basic instruction-following capabilities."
         case .smolLMTwoOneSevenB:

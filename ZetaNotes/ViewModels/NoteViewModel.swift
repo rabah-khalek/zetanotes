@@ -90,9 +90,11 @@ class NoteViewModel: ObservableObject {
         loadNotes()
         setupSearchDebouncing()
 
-        // Load AI model asynchronously
+        // Load AI model asynchronously (only if a model is downloaded)
         Task {
-            await aiEngine.loadModel()
+            if aiEngine.isModelDownloaded(aiEngine.selectedModel) {
+                await aiEngine.loadModel()
+            }
         }
     }
 
@@ -192,6 +194,20 @@ class NoteViewModel: ObservableObject {
         } else {
             updateSelectedNote()
         }
+    }
+
+    func deleteAllNotes() {
+        // Delete all notes from repository
+        for note in noteCache.values {
+            repository.deleteNote(note)
+        }
+
+        // Clear all caches
+        noteCache.removeAll()
+        noteListItems.removeAll()
+        searchItemResults.removeAll()
+        selectedNoteID = nil
+        selectedNote = nil
     }
 
     func saveNote(_ note: Note) {

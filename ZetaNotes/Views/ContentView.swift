@@ -19,6 +19,7 @@ struct ContentView: View {
     @StateObject private var viewModel = NoteViewModel()
     @StateObject private var systemMonitor = SystemMonitor.shared
     @StateObject private var errorLogger = ErrorLogger.shared
+    @StateObject private var downloadState = ModelDownloadState.shared
     @EnvironmentObject var aiEngine: AIEngine
     @StateObject private var licenseManager = LicenseManager.shared
     @StateObject private var toolManager = ToolManager.shared
@@ -121,9 +122,11 @@ struct ContentView: View {
                 forName: NSApplication.willTerminateNotification,
                 object: nil,
                 queue: .main
-            ) { _ in
+            ) { [viewModel] _ in
                 print("💾 App terminating, flushing pending saves...")
-                viewModel.flushPendingSaves()
+                Task { @MainActor in
+                    viewModel.flushPendingSaves()
+                }
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .insertTextIntoNote)) { notification in
@@ -318,6 +321,7 @@ struct ContentView: View {
                 .keyboardShortcut("q", modifiers: .command)
                 .help("Toggle Autocomplete (⌘Q)")
                 .padding(.leading, 8)
+                .disabled(downloadState.isDownloading || !aiEngine.isModelLoaded)
                 .disabled(viewModel.selectedNote == nil)
 
             Rectangle()
@@ -339,7 +343,7 @@ struct ContentView: View {
             )
             .keyboardShortcut("f", modifiers: .command)
             .help("Find in note (⌘F)")
-            .disabled(viewModel.selectedNote == nil)
+            .disabled(viewModel.selectedNote == nil || downloadState.isDownloading || !aiEngine.isModelLoaded)
 
             // Patch
             AIToolButton(
@@ -358,7 +362,7 @@ struct ContentView: View {
             )
             .keyboardShortcut("p", modifiers: .command)
             .help("Patch grammar (⌘P)")
-            .disabled(viewModel.selectedNote == nil || viewModel.isAutoCorrecting)
+            .disabled(viewModel.selectedNote == nil || viewModel.isAutoCorrecting || downloadState.isDownloading || !aiEngine.isModelLoaded)
 
             // Reformulate
             AIToolButton(
@@ -377,7 +381,7 @@ struct ContentView: View {
             )
             .keyboardShortcut("r", modifiers: .command)
             .help("Reformulate text (⌘R)")
-            .disabled(viewModel.selectedNote == nil || viewModel.isReformulating)
+            .disabled(viewModel.selectedNote == nil || viewModel.isReformulating || downloadState.isDownloading || !aiEngine.isModelLoaded)
 
             // Summarize
             AIToolButton(
@@ -396,7 +400,7 @@ struct ContentView: View {
             )
             .keyboardShortcut("s", modifiers: .command)
             .help("Generate summary (⌘S)")
-            .disabled(viewModel.selectedNote == nil || viewModel.isGeneratingSummary)
+            .disabled(viewModel.selectedNote == nil || viewModel.isGeneratingSummary || downloadState.isDownloading || !aiEngine.isModelLoaded)
 
             // Translate
             AIToolButton(
@@ -415,7 +419,7 @@ struct ContentView: View {
             )
             .keyboardShortcut("t", modifiers: .command)
             .help("Translate text (⌘T)")
-            .disabled(viewModel.selectedNote == nil || viewModel.isTranslating)
+            .disabled(viewModel.selectedNote == nil || viewModel.isTranslating || downloadState.isDownloading || !aiEngine.isModelLoaded)
 
             // Divider before custom tools
             Rectangle()
@@ -441,7 +445,7 @@ struct ContentView: View {
                         view.keyboardShortcut(KeyEquivalent(Character(tool.keyboardShortcut)), modifiers: .command)
                     }
                     .help(tool.keyboardShortcut.isEmpty ? tool.name : "\(tool.name) (⌘\(tool.keyboardShortcut))")
-                    .disabled(viewModel.selectedNote == nil || viewModel.executingToolId == tool.id)
+                    .disabled(viewModel.selectedNote == nil || viewModel.executingToolId == tool.id || !aiEngine.isModelLoaded)
                 }
             }
 
@@ -480,6 +484,34 @@ struct ContentView: View {
         HStack {
             Spacer()
             HStack(alignment: .center, spacing: 8) {
+                // Model Download Progress (if downloading)
+                if downloadState.isDownloading, let modelName = downloadState.downloadingModelName {
+                    HStack(spacing: 6) {
+                        ProgressView()
+                            .scaleEffect(0.6)
+                            .frame(width: 12, height: 12)
+
+                        Text("Downloading \(modelName)")
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundColor(.primary)
+
+                        Text("\(Int(downloadState.downloadProgress * 100))%")
+                            .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                            .foregroundColor(.orange)
+                    }
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 4)
+                    .background(
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color.orange.opacity(0.08))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 4)
+                                    .strokeBorder(Color.orange.opacity(0.2), lineWidth: 0.5)
+                            )
+                    )
+                    .help("Downloading AI model: \(Int(downloadState.downloadProgress * 100))% complete")
+                }
+
                 // Word and Character count badge (blue)
                 HStack(spacing: 6) {
                     Image(systemName: "doc.text")
@@ -510,8 +542,8 @@ struct ContentView: View {
                 )
                 .help(String(format: "%d words, %d characters", currentWordCount, currentCharacterCount))
 
-                // Active AI Model
-                if !systemMonitor.activeModel.isEmpty {
+                // Active AI Model (only show when model is loaded)
+                if !systemMonitor.activeModel.isEmpty && aiEngine.isModelLoaded {
                     HStack(spacing: 4) {
                         Image(systemName: "brain.head.profile")
                             .font(.system(size: 9))
@@ -535,8 +567,9 @@ struct ContentView: View {
                     .help("Active AI Model: \(systemMonitor.activeModel)")
                 }
 
-                // System Monitor
-                HStack(spacing: 6) {
+                // System Monitor (only show when model is loaded)
+                if aiEngine.isModelLoaded {
+                    HStack(spacing: 6) {
                     // CPU indicator
                     HStack(spacing: 3) {
                         Image(systemName: "cpu.fill")
@@ -589,6 +622,7 @@ struct ContentView: View {
                 (\(String(format: "%.1f", systemMonitor.memoryUsagePercentage))% of \
                 \(Int(systemMonitor.totalSystemMemory / 1024))GB)
                 """)
+                }
             }
             Spacer()
         }
@@ -708,6 +742,36 @@ struct ContentView: View {
     @ViewBuilder
     private var toolbarRightItems: some View {
         HStack(spacing: 8) {
+            // Error log toggle (only show when there are errors)
+            if !errorLogger.errors.isEmpty {
+                Button(action: {
+                    withAnimation {
+                        showingErrorLog.toggle()
+                    }
+                }) {
+                    ZStack(alignment: .topTrailing) {
+                        Image(systemName: showingErrorLog ? "exclamationmark.triangle.fill" : "exclamationmark.triangle")
+                            .font(.system(size: AppTheme.Typography.toolbarIconSize))
+                            .foregroundColor(showingErrorLog ? .orange : .red)
+
+                        // Error count badge
+                        Text("\(min(errorLogger.errors.count, 99))")
+                            .font(.system(size: 8, weight: .bold))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 3)
+                            .padding(.vertical, 1)
+                            .background(
+                                Capsule()
+                                    .fill(Color.red)
+                            )
+                            .offset(x: 6, y: -6)
+                    }
+                }
+                .buttonStyle(.plain)
+                .help("Error Log (\(errorLogger.errors.count) error\(errorLogger.errors.count == 1 ? "" : "s"))")
+                .transition(.scale.combined(with: .opacity))
+            }
+
             // Chat toggle (symmetric to sidebar toggle)
             Button(action: {
                 if licenseManager.isPro {

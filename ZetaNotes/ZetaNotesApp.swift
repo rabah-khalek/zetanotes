@@ -28,6 +28,9 @@ struct ZetaNotesApp: App {
     // Appearance preference
     @AppStorage("preferredAppearance") private var preferredAppearance: String = "dark"
 
+    // First-run state
+    @AppStorage("hasCompletedFirstRun") private var hasCompletedFirstRun = false
+
     init() {
         // TODO: Uncomment when Sparkle package is added
         // Initialize Sparkle updater controller
@@ -56,11 +59,18 @@ struct ZetaNotesApp: App {
     var body: some Scene {
         WindowGroup {
             CustomWindowContainer {
-                ContentView()
-                    .environment(\.managedObjectContext, persistenceController.container.viewContext)
-                    .environmentObject(aiEngine)
-                    .frame(minWidth: 800, minHeight: 600)
-                    .preferredColorScheme(colorScheme)
+                if hasCompletedFirstRun {
+                    ContentView()
+                        .environment(\.managedObjectContext, persistenceController.container.viewContext)
+                        .environmentObject(aiEngine)
+                        .frame(minWidth: 800, minHeight: 600)
+                        .preferredColorScheme(colorScheme)
+                } else {
+                    FirstRunModelSetupView()
+                        .environmentObject(aiEngine)
+                        .frame(minWidth: 800, minHeight: 600)
+                        .preferredColorScheme(colorScheme)
+                }
             }
         }
         .commands {

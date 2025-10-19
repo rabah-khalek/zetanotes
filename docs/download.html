@@ -282,59 +282,63 @@
             font-weight: 600;
         }
 
-        .pricing-inline {
-            display: flex;
-            justify-content: center;
-            gap: 16px;
-            margin: 32px 0;
-            flex-wrap: wrap;
+        /* Pricing styles */
+        .pricing-section {
+            background: #1e1e1e;
+            padding: 32px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 700px;
+            margin: 0 auto;
         }
 
-        .pricing-box {
+        .pricing-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .pricing-header h3 {
+            margin: 0 0 16px 0;
+            font-size: 24px;
+            color: #ffffff;
+        }
+
+        .pricing-header p {
+            margin: 0;
+            color: #a1a1aa;
+            font-size: 15px;
+        }
+
+        .pricing-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+
+        .pricing-option {
+            background: #1a1a1a;
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 10px;
             padding: 20px 16px;
             text-align: center;
-            flex: 0 1 180px;
-            max-width: 180px;
-            background: #1e1e1e;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s ease;
         }
 
-        .pricing-box:hover {
+        .pricing-option:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(56, 189, 248, 0.15);
             border-color: rgba(56, 189, 248, 0.3);
         }
 
-        .pricing-box.featured {
-            border: 2px solid rgba(56, 189, 248, 0.5);
-            position: relative;
-        }
-
-        .pricing-box.featured::before {
-            content: "BEST VALUE";
-            position: absolute;
-            top: -12px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(56, 189, 248, 0.9);
-            color: white;
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 10px;
-            font-weight: 600;
-            letter-spacing: 0.05em;
-        }
-
-        .pricing-box h3 {
-            margin: 0 0 12px 0;
+        .pricing-option h4 {
+            margin: 0 0 8px 0;
             font-size: 16px;
             font-weight: 600;
             color: #ffffff;
         }
 
-        .pricing-box .price {
+        .pricing-option .price {
             font-size: 32px;
             font-weight: 650;
             color: #ffffff;
@@ -342,28 +346,63 @@
             letter-spacing: -0.02em;
         }
 
-        .pricing-box .period {
+        .pricing-option .period {
             color: #a1a1aa;
-            margin-bottom: 16px;
             font-size: 13px;
+            margin-bottom: 12px;
         }
 
-        .pricing-box .btn {
-            padding: 10px 20px;
-            font-size: 14px;
+        .pricing-option .savings {
+            display: inline-block;
+            background: rgba(56, 189, 248, 0.15);
+            color: #38bdf8;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-top: 8px;
+        }
+
+        .pricing-features {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 24px;
+        }
+
+        .pricing-features h4 {
+            margin: 0 0 16px 0;
+            font-size: 16px;
+            color: #ffffff;
+            text-align: center;
+        }
+
+        .pricing-features ul {
+            list-style: none;
+            padding: 0;
             margin: 0;
-            width: 100%;
         }
 
-        .pricing-box.featured .btn {
-            background: rgba(56, 189, 248, 0.2);
-            border-color: rgba(56, 189, 248, 0.6);
+        .pricing-features li {
+            padding: 8px 0;
+            border: none;
+            font-size: 14px;
+            color: #a1a1aa;
         }
 
-        .pricing-box.featured .btn:hover {
-            background: rgba(56, 189, 248, 0.3);
-            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.4);
-            border-color: rgba(56, 189, 248, 0.8);
+        .pricing-features li::before {
+            content: "✓";
+            color: #34C759;
+            margin-right: 8px;
+            font-weight: bold;
+        }
+
+        .pricing-cta {
+            text-align: center;
+            margin-top: 24px;
+        }
+
+        .pricing-cta .btn {
+            padding: 12px 32px;
+            font-size: 15px;
         }
     </style>
 </head>
@@ -429,46 +468,51 @@
         <!-- Upgrade to Pro -->
         <div class="steps">
             <h2>Upgrade to Pro</h2>
-            <p>Want access to open-source features? Choose your plan:</p>
 
-            <div class="pricing-inline">
-                <div class="pricing-box">
-                    <h3>Monthly</h3>
-                    <div class="price">$1</div>
-                    <div class="period">/month</div>
-                    <a href="https://zetanotes.lemonsqueezy.com/checkout" class="btn">
-                        Subscribe
-                    </a>
+            <div class="pricing-section">
+                <div class="pricing-header">
+                    <h3>Choose Your Plan</h3>
+                    <p>All plans unlock the same Pro features</p>
                 </div>
 
-                <div class="pricing-box featured">
-                    <h3>Annual</h3>
-                    <div class="price">$10</div>
-                    <div class="period">/year</div>
-                    <a href="https://zetanotes.lemonsqueezy.com/checkout" class="btn">
-                        Subscribe
-                    </a>
+                <div class="pricing-options">
+                    <div class="pricing-option">
+                        <h4>Monthly</h4>
+                        <div class="price">$1</div>
+                        <div class="period">per month</div>
+                    </div>
+
+                    <div class="pricing-option">
+                        <h4>Annual</h4>
+                        <div class="price">$6</div>
+                        <div class="period">per year</div>
+                        <div class="savings">50% off</div>
+                    </div>
+
+                    <div class="pricing-option">
+                        <h4>Lifetime</h4>
+                        <div class="price">$20</div>
+                        <div class="period">one-time</div>
+                    </div>
                 </div>
 
-                <div class="pricing-box">
-                    <h3>Lifetime</h3>
-                    <div class="price">$30</div>
-                    <div class="period">one-time</div>
+                <div class="pricing-features">
+                    <h4>All Pro plans include:</h4>
+                    <ul>
+                        <li>8 open-source AI models (Phi-3, Qwen 2.5, Llama 3.2, Gemma 2 & more)</li>
+                        <li>AI Chat Assistant with customizable parameters</li>
+                        <li>Create custom AI tools</li>
+                        <li>Customize all prompts and settings</li>
+                        <li>Priority support</li>
+                    </ul>
+                </div>
+
+                <div class="pricing-cta">
                     <a href="https://zetanotes.lemonsqueezy.com/checkout" class="btn">
-                        Buy Once
+                        Get Pro Access
                     </a>
                 </div>
             </div>
-
-            <h3>All plans include:</h3>
-            <ul>
-                <li>8 open-source AI models (Phi-3, Qwen 2.5, Llama 3.2, Gemma 2 & more)</li>
-                <li>AI Chat Assistant with customizable parameters</li>
-                <li>Create custom AI tools</li>
-                <li>Customize all prompts and settings</li>
-                <li>Priority support</li>
-            </ul>
-            <div style="text-align: center; margin-top: 30px;"></div>
 
             <div class="info" style="margin-top: 30px;">
                 <strong>ℹ️ How License Activation Works</strong>

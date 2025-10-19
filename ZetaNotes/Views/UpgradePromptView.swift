@@ -137,12 +137,12 @@ struct UpgradePromptView: View {
                         action: { selectedTier = "monthly" }
                     )
 
-                    // Annual option - Best Value
+                    // Annual option
                     CompactPricingCard(
                         title: "Annual",
-                        price: "$10",
+                        price: "$6",
                         period: "/yr",
-                        badge: "BEST VALUE",
+                        badge: nil,
                         isSelected: selectedTier == "annual",
                         action: { selectedTier = "annual" }
                     )
@@ -150,7 +150,7 @@ struct UpgradePromptView: View {
                     // Lifetime option
                     CompactPricingCard(
                         title: "Lifetime",
-                        price: "$30",
+                        price: "$20",
                         period: "once",
                         badge: nil,
                         isSelected: selectedTier == "lifetime",

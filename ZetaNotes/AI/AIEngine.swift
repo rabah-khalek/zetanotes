@@ -229,6 +229,43 @@ class AIEngine: ObservableObject {
     func isModelDownloaded(_ modelType: AIModel) -> Bool {
         return llmService.isModelDownloaded(modelType)
     }
+
+    /// Checks if any model is downloaded
+    func hasAnyModelDownloaded() -> Bool {
+        return AIModel.allCases.contains { isModelDownloaded($0) }
+    }
+
+    /// Deletes a downloaded model from disk
+    /// - Parameter modelType: The model to delete
+    /// - Returns: True if deletion was successful, false otherwise
+    func deleteModel(_ modelType: AIModel) -> Bool {
+        // If deleting the currently loaded model, unload it first
+        if isModelLoaded && selectedModel == modelType {
+            print("⚠️ Unloading currently active model before deletion: \(modelType.displayName)")
+            unloadModel()
+        }
+
+        guard let modelsDir = llmService.getModelsDirectory() else {
+            print("❌ Failed to get models directory")
+            return false
+        }
+
+        let modelPath = modelsDir.appendingPathComponent(modelType.fileName)
+
+        guard FileManager.default.fileExists(atPath: modelPath.path) else {
+            print("⚠️ Model file doesn't exist: \(modelPath.path)")
+            return false
+        }
+
+        do {
+            try FileManager.default.removeItem(at: modelPath)
+            print("✅ Deleted model: \(modelType.displayName)")
+            return true
+        } catch {
+            print("❌ Failed to delete model: \(error)")
+            return false
+        }
+    }
 }
 
 // MARK: - Memory Pressure Handling

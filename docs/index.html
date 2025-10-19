@@ -568,135 +568,165 @@
                 background: #0a0a0a;
             }
 
-            .pricing-cards {
-                display: flex;
-                justify-content: center;
-                align-items: stretch;
-                gap: 16px;
-                max-width: 960px;
-                margin: 0 auto;
-                flex-wrap: wrap;
+            .pricing-intro {
+                text-align: center;
+                max-width: 600px;
+                margin: 0 auto 48px;
             }
 
-            .pricing-card {
-                background: #1a1a1a;
-                border-radius: 12px;
-                padding: 32px 20px;
-                text-align: center;
-                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                position: relative;
-                transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            .pricing-intro p {
+                font-size: 18px;
+                color: #a1a1aa;
+                margin-top: 16px;
+            }
+
+            .pricing-grid {
+                display: grid;
+                grid-template-columns: 1fr 2fr;
+                gap: 24px;
+                max-width: 900px;
+                margin: 0 auto;
+            }
+
+            .pricing-options-compact {
                 display: flex;
                 flex-direction: column;
-                flex: 0 1 220px;
-                max-width: 220px;
-                animation: fadeInUp 0.6s ease-out backwards;
+                gap: 12px;
+                background: #1a1a1a;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 12px;
+                padding: 24px 24px 12px 24px;
             }
 
-            .pricing-card:nth-child(1) {
-                animation-delay: 0.1s;
+            .pricing-option-compact {
+                background: #111111;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 8px;
+                padding: 16px;
+                transition: all 0.2s ease;
             }
 
-            .pricing-card:nth-child(2) {
-                animation-delay: 0.2s;
-            }
-
-            .pricing-card:nth-child(3) {
-                animation-delay: 0.3s;
-            }
-
-            .pricing-card:nth-child(4) {
-                animation-delay: 0.4s;
-            }
-
-            .pricing-card:hover {
-                transform: translateY(-4px);
-                box-shadow: 0 8px 24px rgba(56, 189, 248, 0.15);
+            .pricing-option-compact:hover {
                 border-color: rgba(56, 189, 248, 0.3);
-                background: #1e1e1e;
+                background: #141414;
             }
 
-            .pricing-card.featured {
-                border: 1px solid rgba(56, 189, 248, 0.5);
-                background: #1e1e1e;
+            .pricing-option-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: baseline;
+                margin-bottom: 8px;
             }
 
-            .pricing-card.featured:hover {
-                transform: translateY(-4px);
-                box-shadow: 0 8px 24px rgba(56, 189, 248, 0.25);
-                border-color: rgba(56, 189, 248, 0.7);
-            }
-
-            .plan-name {
+            .pricing-option-name {
                 font-size: 16px;
                 font-weight: 600;
-                margin-bottom: 12px;
                 color: #ffffff;
-                letter-spacing: -0.01em;
             }
 
-            .plan-price {
-                font-size: 36px;
+            .pricing-option-price {
+                font-size: 24px;
                 font-weight: 650;
                 color: #ffffff;
-                margin-bottom: 10px;
                 letter-spacing: -0.02em;
             }
 
-            .plan-price span {
+            .pricing-option-period {
                 font-size: 13px;
                 color: #a1a1aa;
-                font-weight: 400;
             }
 
-            .plan-features {
-                list-style: none;
-                margin: 20px 0;
-                text-align: left;
-                flex: 1;
-                font-size: 13px;
+            .pricing-option-savings {
+                display: inline-block;
+                background: rgba(56, 189, 248, 0.15);
+                color: #38bdf8;
+                padding: 2px 8px;
+                border-radius: 4px;
+                font-size: 11px;
+                font-weight: 500;
+                margin-left: 8px;
             }
 
-            .plan-features li {
-                padding: 8px 0;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            .pricing-features-panel {
+                background: #1a1a1a;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 12px;
+                padding: 32px 32px 24px 32px;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 32px;
+            }
+
+            .pricing-features-panel h3 {
+                margin: 0 0 24px 0;
+                font-size: 18px;
+                color: #ffffff;
+            }
+
+            .features-column {
                 display: flex;
-                align-items: center;
-                gap: 8px;
-                color: #a1a1aa;
+                flex-direction: column;
             }
 
-            .plan-features li:last-child {
+            .features-column:first-child {
+                border-right: 1px solid rgba(255, 255, 255, 0.1);
+                padding-right: 32px;
+            }
+
+            .features-column:last-child {
+                padding-left: 0;
+            }
+
+            .pricing-features-list {
+                list-style: none;
+                margin: 0;
+                padding: 0;
+            }
+
+            .pricing-features-list li {
+                padding: 12px 0;
+                padding-left: 32px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+                position: relative;
+                color: #a1a1aa;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+
+            .pricing-features-list li:last-child {
                 border-bottom: none;
             }
 
-            .check-icon {
+            .pricing-features-list li::before {
+                content: "✓";
+                position: absolute;
+                left: 8px;
                 color: #34C759;
                 font-weight: bold;
-                font-size: 12px;
-                flex-shrink: 0;
+                font-size: 14px;
             }
 
-            .cross-icon {
-                color: #52525b;
-                font-size: 12px;
-                flex-shrink: 0;
+            .pricing-cta {
+                margin-top: 32px;
+                text-align: center;
             }
 
-            .badge {
-                position: absolute;
-                top: -12px;
-                left: 50%;
-                transform: translateX(-50%);
-                background: rgba(56, 189, 248, 0.9);
-                color: white;
-                padding: 4px 12px;
-                border-radius: 6px;
-                font-size: 10px;
-                font-weight: 600;
-                letter-spacing: 0.05em;
-                text-transform: uppercase;
+            @media (max-width: 768px) {
+                .pricing-grid {
+                    grid-template-columns: 1fr;
+                }
+
+                .pricing-features-panel {
+                    grid-template-columns: 1fr;
+                    gap: 24px;
+                }
+
+                .features-column:first-child {
+                    border-right: none;
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                    padding-right: 0;
+                    padding-bottom: 24px;
+                }
             }
 
             /* Download Section */
@@ -939,68 +969,82 @@
     <section id="pricing" class="pricing">
         <div class="container">
             <h2 class="section-title">Pricing</h2>
-            <div class="pricing-cards">
-                <!-- Free Plan -->
-                <div class="pricing-card">
-                    <div class="plan-name">Free</div>
-                    <div class="plan-price">$0</div>
-                    <ul class="plan-features">
-                        <li><span class="check-icon">✓</span> Llama 3.2 1B AI</li>
-                        <li><span class="check-icon">✓</span> Autocomplete</li>
-                        <li><span class="check-icon">✓</span> Patch</li>
-                        <li><span class="check-icon">✓</span> Rephrase</li>
-                        <li><span class="check-icon">✓</span> Summarize</li>
-                        <li><span class="check-icon">✓</span> Translate</li>
-                        <li><span class="check-icon">✓</span> Semantic search</li>
-                        <li><span class="check-icon">✓</span> Unlimited notes</li>
-                        <li><span class="cross-icon">✗</span> Chat</li>
-                        <li><span class="cross-icon">✗</span> Custom tools</li>
-                    </ul>
-                    <a href="#download" class="btn btn-primary">Download</a>
+            <div class="pricing-intro">
+                <p>Choose the plan that works best for you. All Pro plans unlock the same features.</p>
+            </div>
+
+            <div class="pricing-grid">
+                <!-- Pricing Options -->
+                <div class="pricing-options-compact">
+                    <div class="pricing-option-compact">
+                        <div class="pricing-option-header">
+                            <span class="pricing-option-name">Free</span>
+                            <span class="pricing-option-price">$0</span>
+                        </div>
+                        <div class="pricing-option-period">Forever free</div>
+                    </div>
+
+                    <div class="pricing-option-compact">
+                        <div class="pricing-option-header">
+                            <span class="pricing-option-name">Monthly</span>
+                            <span class="pricing-option-price">$1</span>
+                        </div>
+                        <div class="pricing-option-period">per month</div>
+                    </div>
+
+                    <div class="pricing-option-compact">
+                        <div class="pricing-option-header">
+                            <span class="pricing-option-name">Annual</span>
+                            <span class="pricing-option-price">$6</span>
+                        </div>
+                        <div class="pricing-option-period">
+                            per year
+                            <span class="pricing-option-savings">50% off</span>
+                        </div>
+                    </div>
+
+                    <div class="pricing-option-compact">
+                        <div class="pricing-option-header">
+                            <span class="pricing-option-name">Lifetime</span>
+                            <span class="pricing-option-price">$20</span>
+                        </div>
+                        <div class="pricing-option-period">one-time payment</div>
+                    </div>
                 </div>
 
-                <!-- Monthly Plan -->
-                <div class="pricing-card">
-                    <div class="plan-name">Monthly</div>
-                    <div class="plan-price">$1 <span>/mo</span></div>
-                    <ul class="plan-features">
-                        <li><span class="check-icon">✓</span> Everything in Free</li>
-                        <li><span class="check-icon">✓</span> AI Chat</li>
-                        <li><span class="check-icon">✓</span> 8 AI models</li>
-                        <li><span class="check-icon">✓</span> Custom tools</li>
-                        <li><span class="check-icon">✓</span> Edit prompts</li>
-                    </ul>
-                    <a href="https://zetanotes.lemonsqueezy.com/checkout" class="btn btn-primary">Subscribe</a>
-                </div>
+                <!-- Features Comparison -->
+                <div class="pricing-features-panel">
+                    <div class="features-column">
+                        <h3>Free Features</h3>
+                        <ul class="pricing-features-list">
+                            <li>Llama 3.2 1B AI model</li>
+                            <li>AI Autocomplete</li>
+                            <li>Text patch & correction</li>
+                            <li>Rephrase text</li>
+                            <li>Summarize notes</li>
+                            <li>Translate to 12+ languages</li>
+                            <li>Semantic search</li>
+                            <li>Unlimited notes</li>
+                        </ul>
+                    </div>
 
-                <!-- Annual Plan - Featured -->
-                <div class="pricing-card featured">
-                    <div class="plan-name">Annual</div>
-                    <div class="plan-price">$10 <span>/yr</span></div>
-                    <ul class="plan-features">
-                        <li><span class="check-icon">✓</span> Everything in Free</li>
-                        <li><span class="check-icon">✓</span> AI Chat</li>
-                        <li><span class="check-icon">✓</span> 8 AI models</li>
-                        <li><span class="check-icon">✓</span> Custom tools</li>
-                        <li><span class="check-icon">✓</span> Edit prompts</li>
-                        <li><span class="check-icon">✓</span> Save $2/year</li>
-                    </ul>
-                    <a href="https://zetanotes.lemonsqueezy.com/checkout" class="btn btn-primary">Subscribe</a>
-                </div>
+                    <div class="features-column">
+                        <h3>Pro Features <span style="font-size: 14px; color: #a1a1aa; font-weight: 400;">(all paid
+                                plans)</span></h3>
+                        <ul class="pricing-features-list">
+                            <li>Everything in Free</li>
+                            <li>AI Chat Assistant</li>
+                            <li>8 AI models (Phi-3, Qwen 2.5, Llama 3.2, Gemma 2 & more)</li>
+                            <li>Create custom AI tools</li>
+                            <li>Edit all prompts & settings</li>
+                            <li>Priority support</li>
+                        </ul>
 
-                <!-- Lifetime Plan -->
-                <div class="pricing-card">
-                    <div class="plan-name">Lifetime</div>
-                    <div class="plan-price">$30 <span>once</span></div>
-                    <ul class="plan-features">
-                        <li><span class="check-icon">✓</span> Everything in Free</li>
-                        <li><span class="check-icon">✓</span> AI Chat</li>
-                        <li><span class="check-icon">✓</span> 8 AI models</li>
-                        <li><span class="check-icon">✓</span> Custom tools</li>
-                        <li><span class="check-icon">✓</span> Edit prompts</li>
-                        <li><span class="check-icon">✓</span> One-time payment</li>
-                    </ul>
-                    <a href="https://zetanotes.lemonsqueezy.com/checkout" class="btn btn-primary">Buy Once</a>
+                        <div class="pricing-cta">
+                            <a href="https://zetanotes.lemonsqueezy.com/checkout" class="btn btn-primary">Get Pro
+                                Access</a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

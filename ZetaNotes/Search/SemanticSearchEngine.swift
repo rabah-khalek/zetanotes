@@ -310,7 +310,7 @@ class SemanticSearchEngine {
         let context = persistenceController.newBackgroundContext()
 
         // Get the note in the background context
-        guard let noteId = note.objectID as? NSManagedObjectID else { return }
+        let noteId = note.objectID
 
         await context.perform {
             do {

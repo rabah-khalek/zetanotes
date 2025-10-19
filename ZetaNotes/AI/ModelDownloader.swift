@@ -8,7 +8,10 @@
 import Foundation
 
 /// Service for downloading AI model files
+/// Singleton to ensure downloads continue in background even when views are dismissed
 class ModelDownloader: NSObject, ObservableObject {
+    static let shared = ModelDownloader()
+
     @Published var downloadProgress: Double = 0.0
     @Published var isDownloading = false
     @Published var downloadError: String?
@@ -16,22 +19,45 @@ class ModelDownloader: NSObject, ObservableObject {
 
     private var downloadTask: URLSessionDownloadTask?
     private var observation: NSKeyValueObservation?
+    private var completionHandlers: [(Result<URL, Error>) -> Void] = []
+
+    // Shared state for UI updates
+    private let sharedState = ModelDownloadState.shared
+
+    private override init() {
+        super.init()
+    }
 
     // MARK: - Download
 
     /// Downloads a model from Hugging Face to Application Support
     /// - Parameters:
     ///   - modelType: The model to download
-    ///   - completion: Called when download completes or fails
-    func downloadModel(_ modelType: AIModel, completion: @escaping (Result<URL, Error>) -> Void) {
-        guard !isDownloading else {
-            completion(.failure(DownloadError.downloadInProgress))
+    ///   - completion: Called when download completes or fails (optional)
+    func downloadModel(_ modelType: AIModel, completion: ((Result<URL, Error>) -> Void)? = nil) {
+        // If already downloading this model, just add the completion handler
+        if isDownloading && downloadingModel == modelType {
+            if let completion = completion {
+                completionHandlers.append(completion)
+            }
             return
+        }
+
+        // If downloading a different model, fail
+        guard !isDownloading else {
+            completion?(.failure(DownloadError.downloadInProgress))
+            return
+        }
+
+        // Clear previous completion handlers and add new one
+        completionHandlers.removeAll()
+        if let completion = completion {
+            completionHandlers.append(completion)
         }
 
         // Get destination directory
         guard let modelsDir = getModelsDirectory() else {
-            completion(.failure(DownloadError.failedToCreateDirectory))
+            notifyCompletion(.failure(DownloadError.failedToCreateDirectory))
             return
         }
 
@@ -39,7 +65,7 @@ class ModelDownloader: NSObject, ObservableObject {
         do {
             try FileManager.default.createDirectory(at: modelsDir, withIntermediateDirectories: true)
         } catch {
-            completion(.failure(error))
+            notifyCompletion(.failure(error))
             return
         }
 
@@ -48,13 +74,13 @@ class ModelDownloader: NSObject, ObservableObject {
         // Check if already exists
         if FileManager.default.fileExists(atPath: destinationURL.path) {
             print("✅ Model already exists at: \(destinationURL.path)")
-            completion(.success(destinationURL))
+            notifyCompletion(.success(destinationURL))
             return
         }
 
         // Start download
         guard let url = URL(string: modelType.huggingFaceURL) else {
-            completion(.failure(DownloadError.invalidURL))
+            notifyCompletion(.failure(DownloadError.invalidURL))
             return
         }
 
@@ -83,12 +109,12 @@ class ModelDownloader: NSObject, ObservableObject {
                 DispatchQueue.main.async {
                     self.downloadError = error.localizedDescription
                 }
-                completion(.failure(error))
+                self.notifyCompletion(.failure(error))
                 return
             }
 
             guard let tempURL = tempURL else {
-                completion(.failure(DownloadError.noDataReceived))
+                self.notifyCompletion(.failure(DownloadError.noDataReceived))
                 return
             }
 
@@ -101,10 +127,10 @@ class ModelDownloader: NSObject, ObservableObject {
 
                 try FileManager.default.moveItem(at: tempURL, to: destinationURL)
                 print("✅ Model downloaded successfully to: \(destinationURL.path)")
-                completion(.success(destinationURL))
+                self.notifyCompletion(.success(destinationURL))
             } catch {
                 print("❌ Failed to move downloaded file: \(error)")
-                completion(.failure(error))
+                self.notifyCompletion(.failure(error))
             }
         }
 
@@ -112,6 +138,7 @@ class ModelDownloader: NSObject, ObservableObject {
         observation = downloadTask?.progress.observe(\.fractionCompleted) { [weak self] progress, _ in
             DispatchQueue.main.async {
                 self?.downloadProgress = progress.fractionCompleted
+                self?.sharedState.updateProgress(progress.fractionCompleted)
             }
         }
 
@@ -135,6 +162,15 @@ class ModelDownloader: NSObject, ObservableObject {
     }
 
     // MARK: - Helpers
+
+    private func notifyCompletion(_ result: Result<URL, Error>) {
+        let handlers = completionHandlers
+        completionHandlers.removeAll()
+
+        for handler in handlers {
+            handler(result)
+        }
+    }
 
     private func getModelsDirectory() -> URL? {
         guard let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first

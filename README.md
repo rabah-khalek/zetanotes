@@ -29,7 +29,7 @@ ZetaNotes is a native macOS note-taking app that runs AI models completely offli
 - 📥 **Download Any Model** - Switch between models anytime
 - ✏️ **Custom Tools** - Create custom AI tools tailored to your workflow
 - ⚙️ **Customize Everything** - Fine-tune prompts and parameters
-- 💎 **Flexible Plans** - Monthly ($1), Annual ($10), or Lifetime ($30)
+- 💎 **Flexible Plans** - Monthly ($1), Annual ($6), or Lifetime ($20)
 
 ---
 

@@ -31,9 +31,8 @@ ARCHIVE_PATH="$HOME/Desktop/ZetaNotes.xcarchive"
 APP_NAME="ZetaNotes"
 DMG_NAME="${APP_NAME}-v${VERSION}.dmg"
 
-# Llama 3.2 1B model
-MODEL_URL="https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-Q4_K_M.gguf"
-MODEL_FILE="Llama-3.2-1B-Instruct-Q4_K_M.gguf"
+# Note: AI models are no longer bundled in the app
+# Users download their preferred model on first launch
 
 echo -e "${BLUE}╔═══════════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║   ZetaNotes Release Packaging Script v1.0     ║${NC}"
@@ -151,21 +150,12 @@ rm -rf "$BUILD_DIR/${APP_NAME}.app/Contents/Resources/"*.db 2>/dev/null || true
 
 print_success "App exported and cleaned: $BUILD_DIR/${APP_NAME}.app"
 
-# Bundle Llama 3.2 1B model
-print_step "Step 4: Bundling Llama 3.2 1B model"
-MODELS_DIR="$BUILD_DIR/${APP_NAME}.app/Contents/Resources/Models"
-mkdir -p "$MODELS_DIR"
-
-echo "Downloading Llama 3.2 1B (~700MB)..."
-if curl -L --progress-bar "$MODEL_URL" -o "$MODELS_DIR/$MODEL_FILE"; then
-    MODEL_SIZE=$(du -h "$MODELS_DIR/$MODEL_FILE" | cut -f1)
-    print_success "Model downloaded: $MODEL_SIZE"
-else
-    print_error "Failed to download model"
-fi
+# Note: AI models are no longer bundled - users download on first run
+print_step "Step 4: Skipping model bundling (downloaded on first run)"
+print_success "AI models will be downloaded by users on first app launch"
 
 # Sign the app
-print_step "Step 5: Code signing app"
+print_step "Step 4: Code signing app"
 codesign --deep --force --verify --verbose \
     --sign "$CERT_NAME" \
     --options runtime \
@@ -177,7 +167,7 @@ codesign --verify --deep --strict --verbose=2 "$BUILD_DIR/${APP_NAME}.app" || pr
 print_success "App signed and verified"
 
 # Create DMG
-print_step "Step 6: Creating DMG"
+print_step "Step 5: Creating DMG"
 cd "$BUILD_DIR"
 
 if [ "$USE_CREATE_DMG" = true ]; then
@@ -235,13 +225,13 @@ DMG_SIZE=$(du -h "$DMG_NAME" | cut -f1)
 print_success "DMG created: $DMG_SIZE"
 
 # Sign DMG
-print_step "Step 7: Signing DMG"
+print_step "Step 6: Signing DMG"
 codesign --sign "$CERT_NAME" --timestamp "$DMG_NAME" || print_error "DMG signing failed"
 codesign --verify --deep --strict --verbose=2 "$DMG_NAME" || print_error "DMG signature verification failed"
 print_success "DMG signed and verified"
 
 # Notarize
-print_step "Step 8: Notarizing with Apple"
+print_step "Step 7: Notarizing with Apple"
 echo "This may take 5-15 minutes..."
 echo "Submitting to Apple..."
 
@@ -257,19 +247,19 @@ else
 fi
 
 # Staple the notarization ticket
-print_step "Step 9: Stapling notarization ticket"
+print_step "Step 8: Stapling notarization ticket"
 xcrun stapler staple "$DMG_NAME" || print_error "Stapling failed"
 xcrun stapler validate "$DMG_NAME" || print_error "Staple validation failed"
 print_success "Notarization ticket stapled"
 
 # Generate checksum
-print_step "Step 10: Generating SHA256 checksum"
+print_step "Step 9: Generating SHA256 checksum"
 CHECKSUM=$(shasum -a 256 "$DMG_NAME" | cut -d' ' -f1)
 echo "$CHECKSUM" > "${DMG_NAME}.sha256"
 print_success "Checksum: $CHECKSUM"
 
 # Final verification
-print_step "Step 11: Final verification"
+print_step "Step 10: Final verification"
 echo "Testing Gatekeeper assessment..."
 spctl --assess --verbose --type install "$DMG_NAME" || print_warning "Gatekeeper assessment failed (may be normal)"
 

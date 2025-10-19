@@ -297,9 +297,9 @@ struct NoteEditorView: View {
                 }
                 .buttonStyle(.plain)
                 .keyboardShortcut("g", modifiers: .command)
-                .disabled(content.count < 20 || viewModel.isGeneratingTitle)
+                .disabled(content.count < 20 || viewModel.isGeneratingTitle || !aiEngine.isModelLoaded)
                 .help("Generate title from content (⌘G)")
-                .opacity((content.count < 20 || viewModel.isGeneratingTitle) ? 0.3 : 1.0)
+                .opacity((content.count < 20 || viewModel.isGeneratingTitle || !aiEngine.isModelLoaded) ? 0.3 : 1.0)
 
                 TextField("Title", text: $title)
                     .font(.system(size: 22, weight: .semibold))

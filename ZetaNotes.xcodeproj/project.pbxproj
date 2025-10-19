@@ -20,6 +20,7 @@
 		81111F612E9F37FB00D7317B /* DefaultPrompts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F602E9F37FB00D7317B /* DefaultPrompts.swift */; };
 		81111F642EA0891A00D7317B /* InlineAutocompleteTextEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F622EA0891A00D7317B /* InlineAutocompleteTextEditor.swift */; };
 		81111F652EA0891A00D7317B /* UpgradePromptView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F632EA0891A00D7317B /* UpgradePromptView.swift */; };
+		81FIRST002E9B3C2400692788 /* FirstRunModelSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81FIRST012E9B3C2400692788 /* FirstRunModelSetupView.swift */; };
 		81DE21652E9B3C2400692788 /* ModelDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE21642E9B3C2400692788 /* ModelDownloader.swift */; };
 		81DE4F6B2EA1A524006293FC /* MarkdownRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F6A2EA1A524006293FC /* MarkdownRenderer.swift */; };
 		81DE4F6E2EA1CE1A006293FC /* AITool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F6C2EA1CE1A006293FC /* AITool.swift */; };
@@ -35,6 +36,7 @@
 		81DE4F892EA2DCE9006293FC /* ChatManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F862EA2DCE9006293FC /* ChatManager.swift */; };
 		81DE4F8A2EA2DCE9006293FC /* AnalyticsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F852EA2DCE9006293FC /* AnalyticsManager.swift */; };
 		81DE4F8B2EA2DCE9006293FC /* LicenseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F872EA2DCE9006293FC /* LicenseManager.swift */; };
+		81MDLST002E9B3C2400692788 /* ModelDownloadState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81MDLST012E9B3C2400692788 /* ModelDownloadState.swift */; };
 		81DE4F8D2EA2DCF9006293FC /* ChatService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F8C2EA2DCF9006293FC /* ChatService.swift */; };
 		81DE4F8F2EA2DD06006293FC /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F8E2EA2DD06006293FC /* ChatView.swift */; };
 		81DE4F912EA2E0AB006293FC /* ChatSidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F902EA2E0AB006293FC /* ChatSidebarView.swift */; };
@@ -112,6 +114,7 @@
 		81111F602E9F37FB00D7317B /* DefaultPrompts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefaultPrompts.swift; sourceTree = "<group>"; };
 		81111F622EA0891A00D7317B /* InlineAutocompleteTextEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineAutocompleteTextEditor.swift; sourceTree = "<group>"; };
 		81111F632EA0891A00D7317B /* UpgradePromptView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpgradePromptView.swift; sourceTree = "<group>"; };
+		81FIRST012E9B3C2400692788 /* FirstRunModelSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstRunModelSetupView.swift; sourceTree = "<group>"; };
 		81DE21642E9B3C2400692788 /* ModelDownloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelDownloader.swift; sourceTree = "<group>"; };
 		81DE4F652EA18C90006293FC /* NotesDataModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = NotesDataModel.xcdatamodel; sourceTree = "<group>"; };
 		81DE4F6A2EA1A524006293FC /* MarkdownRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownRenderer.swift; sourceTree = "<group>"; };
@@ -128,6 +131,7 @@
 		81DE4F852EA2DCE9006293FC /* AnalyticsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsManager.swift; sourceTree = "<group>"; };
 		81DE4F862EA2DCE9006293FC /* ChatManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatManager.swift; sourceTree = "<group>"; };
 		81DE4F872EA2DCE9006293FC /* LicenseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseManager.swift; sourceTree = "<group>"; };
+		81MDLST012E9B3C2400692788 /* ModelDownloadState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelDownloadState.swift; sourceTree = "<group>"; };
 		81DE4F8C2EA2DCF9006293FC /* ChatService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatService.swift; sourceTree = "<group>"; };
 		81DE4F8E2EA2DD06006293FC /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 		81DE4F902EA2E0AB006293FC /* ChatSidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatSidebarView.swift; sourceTree = "<group>"; };
@@ -205,6 +209,7 @@
 				81DE4F852EA2DCE9006293FC /* AnalyticsManager.swift */,
 				81DE4F862EA2DCE9006293FC /* ChatManager.swift */,
 				81DE4F872EA2DCE9006293FC /* LicenseManager.swift */,
+				81MDLST012E9B3C2400692788 /* ModelDownloadState.swift */,
 			);
 			path = Managers;
 			sourceTree = "<group>";
@@ -272,6 +277,7 @@
 				81DE4F6A2EA1A524006293FC /* MarkdownRenderer.swift */,
 				81111F622EA0891A00D7317B /* InlineAutocompleteTextEditor.swift */,
 				81111F632EA0891A00D7317B /* UpgradePromptView.swift */,
+				81FIRST012E9B3C2400692788 /* FirstRunModelSetupView.swift */,
 				A1000004000000000000001 /* ContentView.swift */,
 				A1000012000000000000001 /* NoteListView.swift */,
 				A1000014000000000000001 /* NoteEditorView.swift */,
@@ -477,6 +483,7 @@
 				A1000031000000000000001 /* Note+Extensions.swift in Sources */,
 				81111F642EA0891A00D7317B /* InlineAutocompleteTextEditor.swift in Sources */,
 				81111F652EA0891A00D7317B /* UpgradePromptView.swift in Sources */,
+				81FIRST002E9B3C2400692788 /* FirstRunModelSetupView.swift in Sources */,
 				81DE4F712EA1CE2D006293FC /* ToolEditorView.swift in Sources */,
 				A1000033000000000000001 /* NoteViewModel.swift in Sources */,
 				A1000060000000000000001 /* AISettingsView.swift in Sources */,
@@ -493,6 +500,7 @@
 				81DE4F892EA2DCE9006293FC /* ChatManager.swift in Sources */,
 				81DE4F8A2EA2DCE9006293FC /* AnalyticsManager.swift in Sources */,
 				81DE4F8B2EA2DCE9006293FC /* LicenseManager.swift in Sources */,
+				81MDLST002E9B3C2400692788 /* ModelDownloadState.swift in Sources */,
 				81DE4F7C2EA25B10006293FC /* ToolButton.swift in Sources */,
 				A1000072000000000000001 /* SystemMonitorView.swift in Sources */,
 				81DE4F982EA33ED6006293FC /* CustomToolbar.swift in Sources */,
