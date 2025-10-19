@@ -5,15 +5,36 @@
 
 set -e
 
-echo "Cleaning project..."
+echo "🧹 Cleaning project..."
 xcodebuild -project ZetaNotes.xcodeproj -scheme ZetaNotes clean
 
-echo "Building project..."
+echo "🔨 Building project..."
 xcodebuild -project ZetaNotes.xcodeproj -scheme ZetaNotes build
 
-echo "Running ZetaNotes..."
-cd /Users/projects/Library/Developer/Xcode/DerivedData/ZetaNotes-*/Build/Products/Debug
-./ZetaNotes.app/Contents/MacOS/ZetaNotes 2>&1
+echo "🚀 Running ZetaNotes..."
 
-# Return to project root
-cd /Users/projects/Documents/zetanotes
+# Use the simpler approach: just open the app by name
+# Since we just built it, it should be available to launch
+open -a ZetaNotes 2>/dev/null || {
+    echo "❌ Failed to launch ZetaNotes directly. Trying alternative method..."
+    
+    # Try to find the app in typical build locations
+    for BUILD_PATH in \
+        "build/Debug/ZetaNotes.app" \
+        "build/Release/ZetaNotes.app" \
+        "$HOME/Library/Developer/Xcode/DerivedData/ZetaNotes-*/Build/Products/Debug/ZetaNotes.app" \
+        "$HOME/Library/Developer/Xcode/DerivedData/ZetaNotes-*/Build/Products/Release/ZetaNotes.app"
+    do
+        if [ -d "$BUILD_PATH" ]; then
+            echo "✅ Found app at: $BUILD_PATH"
+            open "$BUILD_PATH"
+            exit 0
+        fi
+    done
+    
+    echo "❌ Could not find built app in any expected location."
+    echo "💡 Try running from Xcode or use VS Code task: 'Run NoteTaker'"
+    exit 1
+}
+
+echo "✅ ZetaNotes launched successfully!"

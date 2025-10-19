@@ -2,10 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- App Sandbox disabled for easier distribution without code signing -->
-	<!-- In production with code signing, enable sandbox and add specific entitlements -->
+	<!-- App Sandbox enabled for better security and App Store compliance -->
+	<!-- All user data stored in sandboxed Application Support directory -->
 	<key>com.apple.security.app-sandbox</key>
-	<false/>
+	<true/>
 
 	<!-- Network access for downloading AI models only -->
 	<key>com.apple.security.network.client</key>

@@ -353,7 +353,7 @@ A: 100%. Everything runs locally on your Mac. Notes never leave your device. We 
 ### Refund Policy
 
 - 30-day money-back guarantee
-- Contact: <support@zetanotes.com>
+- Contact: <rabah.khalek@gmail.com>
 - Processed within 3-5 business days
 
 ---

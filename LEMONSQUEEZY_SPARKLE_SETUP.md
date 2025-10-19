@@ -1,36 +1,25 @@
-# LemonSqueezy & Sparkle Setup Guide
+# Paddle & Sparkle Setup Guide
 
-This guide will walk you through setting up LemonSqueezy for payments and Sparkle for auto-updates in ZetaNotes.
+This guide will walk you through setting up Paddle for payments and Sparkle for auto-updates in ZetaNotes.
 
-## 🍋 LemonSqueezy Setup (Payment Processing)
+## 🚣 Paddle Setup (Payment Processing)
 
-### 1. Create LemonSqueezy Account
+### 1. Create Paddle Account
 
-1. **Sign Up**: Go to [lemonsqueezy.com](https://lemonsqueezy.com) and create an account
+1. **Sign Up**: Go to [paddle.com](https://paddle.com) and create an account
 2. **Verify Email**: Complete email verification
 3. **Business Information**: Fill out your business details
    - Business name: "ZetaNotes" or your company name
    - Business type: Individual/LLC/Corporation
-   - Tax information (required for payouts)
+   - Tax information (Paddle handles tax compliance automatically)
+   - Bank account details for payouts
 
-### 2. Create Your Store
+### 2. Create Your Products
 
-1. **Dashboard** → **Stores** → **Create Store**
-2. **Store Details**:
-   - Store name: `ZetaNotes`
-   - Store slug: `zetanotes`
-   - Currency: `USD` (or your preferred currency)
-   - Store description: `Offline AI note-taking for macOS`
-
-### 3. Set Up Products
-
-#### Create the Pro License Product
-
-1. **Products** → **New Product**
+1. **Catalog** → **Products** → **Create Product**
 2. **Product Information**:
    - **Name**: `ZetaNotes Pro`
    - **Description**:
-
      ```
      Unlock all Pro features in ZetaNotes:
      - 8 open-source AI models (Phi-3, Qwen 2.5, Llama 3.2, Gemma 2 & more)
@@ -39,62 +28,192 @@ This guide will walk you through setting up LemonSqueezy for payments and Sparkl
      - Customize all prompts and settings
      - Priority support
      ```
+   - **Type**: Software/SaaS
+   - **Tax category**: Software
 
-   - **Category**: Software
-   - **Product type**: Digital product
+### 3. Create Pricing Plans
 
-#### Create Variants (Pricing Plans)
+#### Monthly Plan
+1. **Catalog** → **Prices** → **Create Price**
+2. **Price Details**:
+   - **Product**: ZetaNotes Pro
+   - **Name**: `Monthly Plan`
+   - **Billing cycle**: Monthly
+   - **Price**: $1.00 USD
+   - **Trial period**: 7 days (optional)
 
-1. **Add Variant**: Monthly Plan
-   - **Name**: `Monthly`
-   - **Price**: `$1.00`
-   - **Billing**: `Recurring monthly`
-   - **Trial**: 7 days (optional)
+#### Annual Plan
+1. **Create Price** (repeat process)
+2. **Price Details**:
+   - **Product**: ZetaNotes Pro
+   - **Name**: `Annual Plan`
+   - **Billing cycle**: Yearly
+   - **Price**: $6.00 USD (50% discount vs monthly)
 
-2. **Add Variant**: Annual Plan
-   - **Name**: `Annual`
-   - **Price**: `$6.00`
-   - **Billing**: `Recurring yearly`
-   - **Discount tag**: `50% off`
+#### Lifetime Plan
+1. **Create Price** (repeat process)
+2. **Price Details**:
+   - **Product**: ZetaNotes Pro
+   - **Name**: `Lifetime License`
+   - **Billing cycle**: One-time
+   - **Price**: $20.00 USD
 
-3. **Add Variant**: Lifetime Plan
-   - **Name**: `Lifetime`
-   - **Price**: `$20.00`
-   - **Billing**: `One-time`
+### 4. Set Up Webhooks
 
-### 4. Configure Checkout Settings
+1. **Developer Tools** → **Notifications** → **Destination**
+2. **Add Destination**:
+   - **Endpoint URL**: `https://your-server.com/webhooks/paddle`
+   - **Description**: ZetaNotes License Management
+3. **Select Events**:
+   - ✅ `transaction.completed`
+   - ✅ `subscription.created`
+   - ✅ `subscription.updated`
+   - ✅ `subscription.canceled`
 
-1. **Product Settings** → **Checkout**:
-   - **Collect customer name**: ✅ Required
-   - **Collect customer email**: ✅ Required
-   - **Custom fields**: Add "License Email" field
-   - **Thank you page**: Custom message with license activation instructions
+### 5. Get API Keys
 
-### 5. Set Up Webhooks (Important!)
+1. **Developer Tools** → **Authentication**
+2. **Create API Key**:
+   - **Name**: `ZetaNotes Backend`
+   - **Scopes**:
+     - ✅ Read transactions
+     - ✅ Read subscriptions
+     - ✅ Read customers
+3. **Save both keys**:
+   - **Client-side key**: For Paddle.js (public)
+   - **Server-side key**: For API calls (secret)
 
-1. **Settings** → **Webhooks** → **Add Endpoint**
-2. **Webhook URL**: `https://your-server.com/webhooks/lemonsqueezy`
-3. **Events to listen for**:
-   - ✅ `order_created`
-   - ✅ `subscription_created`
-   - ✅ `subscription_updated`
-   - ✅ `subscription_cancelled`
+### 6. Integrate Paddle Checkout
 
-### 6. Get API Credentials
+#### HTML/JavaScript Integration:
+```html
+<!-- Paddle.js -->
+<script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
 
-1. **Settings** → **API** → **Create API Key**
-2. **Name**: `ZetaNotes License Management`
-3. **Permissions**:
-   - ✅ Read orders
-   - ✅ Read subscriptions
-   - ✅ Read customers
-4. **Save the API key** - you'll need it for license validation
+<script>
+Paddle.Environment.set('production'); // or 'sandbox' for testing
+Paddle.Initialize({
+  token: 'YOUR_CLIENT_SIDE_TOKEN'
+});
 
-### 7. Test Mode vs Live Mode
+// Open checkout for monthly plan
+function buyMonthly() {
+  Paddle.Checkout.open({
+    items: [{ priceId: 'pri_monthly_price_id', quantity: 1 }],
+    customer: {
+      email: 'customer@example.com' // Optional pre-fill
+    },
+    customData: {
+      app: 'zetanotes',
+      version: '1.0'
+    }
+  });
+}
 
-- **Test Mode**: Use for development and testing
-- **Live Mode**: Switch when ready for real customers
-- Always test thoroughly in test mode first!
+// Open checkout for lifetime plan
+function buyLifetime() {
+  Paddle.Checkout.open({
+    items: [{ priceId: 'pri_lifetime_price_id', quantity: 1 }]
+  });
+}
+</script>
+```
+
+### 7. Webhook Handler Example
+
+```javascript
+// Webhook handler (Node.js/Vercel/Netlify)
+export default async function handler(req, res) {
+  const signature = req.headers['paddle-signature'];
+
+  // Verify webhook signature
+  if (!verifyPaddleSignature(req.body, signature)) {
+    return res.status(401).json({ error: 'Invalid signature' });
+  }
+
+  const event = req.body;
+
+  if (event.event_type === 'transaction.completed') {
+    const transaction = event.data;
+
+    // Generate license key
+    const licenseKey = generateLicense(transaction.customer_email);
+
+    // Store license
+    await saveLicense({
+      email: transaction.customer_email,
+      license: licenseKey,
+      paddleTransactionId: transaction.id,
+      product: transaction.items[0].product.name,
+      amount: transaction.details.totals.total,
+      createdAt: new Date()
+    });
+
+    // Send license email
+    await sendLicenseEmail(transaction.customer_email, licenseKey);
+  }
+
+  if (event.event_type === 'subscription.canceled') {
+    // Handle subscription cancellation
+    await deactivateLicense(event.data.customer_email);
+  }
+
+  res.json({ received: true });
+}
+
+function generateLicense(email) {
+  const uuid = crypto.randomUUID().replace(/-/g, '').toUpperCase();
+  return `ZETA-${uuid.slice(0,4)}-${uuid.slice(4,8)}-${uuid.slice(8,12)}`;
+}
+```
+
+### 8. License Validation
+
+```javascript
+// /api/validate endpoint
+export default async function handler(req, res) {
+  const { license, email } = req.body;
+
+  const record = await database.licenses.findFirst({
+    where: {
+      key: license,
+      email: email,
+      active: true
+    }
+  });
+
+  if (record) {
+    // Check if subscription is still active (for recurring plans)
+    let isActive = true;
+    if (record.paddleSubscriptionId) {
+      isActive = await checkPaddleSubscriptionStatus(record.paddleSubscriptionId);
+    }
+
+    res.json({
+      valid: isActive,
+      features: ['pro', 'chat', 'models', 'custom-tools'],
+      plan: record.product,
+      expiresAt: record.expiresAt
+    });
+  } else {
+    res.json({ valid: false });
+  }
+}
+```
+
+### 9. Testing
+
+#### Sandbox Mode:
+1. **Developer Tools** → **Environment** → Switch to **Sandbox**
+2. Use test card numbers:
+   - **Success**: `4000 0000 0000 0002`
+   - **Decline**: `4000 0000 0000 0341`
+3. Test webhook delivery in sandbox environment
+
+#### Go Live:
+1. **Complete verification** process with Paddle
+2. **Switch to Production** environment
+3. **Update client-side token** in your checkout code
 
 ---
 
@@ -230,11 +349,11 @@ Add the entire private key content (including `-----BEGIN PRIVATE KEY-----` and 
 
 ## 🧪 Testing the Complete Flow
 
-### 1. Test LemonSqueezy Integration
+### 1. Test Paddle Integration
 
-1. **Create test product** in LemonSqueezy test mode
-2. **Make test purchase** with test card: `4242 4242 4242 4242`
-3. **Verify webhook** receives order data
+1. **Create test product** in Paddle Sandbox mode
+2. **Make test purchase** with test card: `4000 0000 0000 0002`
+3. **Verify webhook** receives transaction data
 4. **Test license validation** in your app
 
 ### 2. Test Sparkle Updates
@@ -248,7 +367,7 @@ Add the entire private key content (including `-----BEGIN PRIVATE KEY-----` and 
 ### 3. End-to-End Test
 
 1. **Install app** from DMG
-2. **Purchase Pro license** (test mode)
+2. **Purchase Pro license** (sandbox mode)
 3. **Activate license** in app
 4. **Trigger update check**
 5. **Verify auto-update** works
@@ -257,12 +376,13 @@ Add the entire private key content (including `-----BEGIN PRIVATE KEY-----` and 
 
 ## 🚀 Going Live Checklist
 
-### LemonSqueezy
+### Paddle
 
-- [ ] Switch from test mode to live mode
+- [ ] Complete business verification with Paddle
+- [ ] Switch from Sandbox to Production environment
 - [ ] Set up real bank account for payouts
-- [ ] Configure tax settings for your jurisdiction
-- [ ] Test real payment flow
+- [ ] Configure tax settings (handled automatically by Paddle)
+- [ ] Test real payment flow with small amount
 - [ ] Set up customer support email
 
 ### Sparkle
@@ -283,11 +403,11 @@ Add the entire private key content (including `-----BEGIN PRIVATE KEY-----` and 
 
 ## 📞 Support Resources
 
-### LemonSqueezy
+### Paddle
 
-- **Documentation**: [docs.lemonsqueezy.com](https://docs.lemonsqueezy.com)
-- **Support**: [lemonsqueezy.com/help](https://lemonsqueezy.com/help)
-- **Community**: [Discord](https://discord.gg/lemonsqueezy)
+- **Documentation**: [developer.paddle.com](https://developer.paddle.com)
+- **Support**: [paddle.com/support](https://paddle.com/support)
+- **Community**: [Paddle Community](https://community.paddle.com)
 
 ### Sparkle
 
@@ -299,12 +419,13 @@ Add the entire private key content (including `-----BEGIN PRIVATE KEY-----` and 
 
 ## 🔒 Security Best Practices
 
-### LemonSqueezy
+### Paddle
 
-- **Never expose API keys** in client-side code
+- **Never expose server-side API keys** in client-side code
 - **Validate webhooks** with signature verification
 - **Use HTTPS** for all webhook endpoints
 - **Log and monitor** payment events
+- **Keep client-side tokens** separate from server-side keys
 
 ### Sparkle
 
@@ -319,6 +440,26 @@ Add the entire private key content (including `-----BEGIN PRIVATE KEY-----` and 
 - **Access control** - limit who has access to production secrets
 - **Audit logs** - track access to sensitive operations
 - **Incident response plan** - know what to do if keys are compromised
+
+---
+
+## 💰 Paddle vs Other Platforms
+
+### Paddle Advantages:
+
+- **Merchant of Record**: Handles all tax compliance (VAT, sales tax)
+- **Global Coverage**: 200+ countries supported
+- **Better Fees**: ~5% total (competitive with LemonSqueezy)
+- **Advanced Features**: Dunning management, revenue recovery
+- **Professional Platform**: Trusted by major software companies
+
+### Why Paddle for ZetaNotes:
+
+- **Tax Compliance**: Automatic handling of EU VAT, US sales tax
+- **International Sales**: Global customer support
+- **Recovery Tools**: Reduce churn with smart retry logic
+- **Reporting**: Detailed analytics and financial reporting
+- **Developer Experience**: Well-documented API and webhooks
 
 ---
 
