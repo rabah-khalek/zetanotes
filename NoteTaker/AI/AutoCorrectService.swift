@@ -70,14 +70,8 @@ class AutoCorrectService: AIService {
     // MARK: - Post-processing
 
     func postProcess(_ output: String) -> String {
-        var cleaned = output.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        // Remove model-specific artifacts
-        cleaned = cleaned.replacingOccurrences(of: "<|assistant|>", with: "")
-        cleaned = cleaned.replacingOccurrences(of: "</s>", with: "")
-        cleaned = cleaned.replacingOccurrences(of: "<|user|>", with: "")
-        cleaned = cleaned.replacingOccurrences(of: "<|system|>", with: "")
-        cleaned = cleaned.replacingOccurrences(of: "_id|>", with: "")
+        // First apply centralized artifact removal
+        var cleaned = LLMOutputCleaner.clean(output)
 
         // Remove everything before "Here is" if it contains explanation text
         if let range = cleaned.range(of: "Here is the corrected text:", options: .caseInsensitive) {
@@ -99,7 +93,8 @@ class AutoCorrectService: AIService {
             // If it's a sentence explaining changes, skip to next paragraph
             if prefix.contains("text is") || prefix.contains("found") || prefix.contains("corrected") {
                 if let doubleNewline = cleaned.range(of: "\n\n") {
-                    cleaned = String(cleaned[doubleNewline.upperBound...]).trimmingCharacters(in: .whitespacesAndNewlines)
+                    cleaned = String(cleaned[doubleNewline.upperBound...])
+                        .trimmingCharacters(in: .whitespacesAndNewlines)
                 }
             } else {
                 cleaned = String(cleaned.dropFirst(prefix.count))

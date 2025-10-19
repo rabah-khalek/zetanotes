@@ -122,14 +122,8 @@ class SummarizationService: AIService {
     // MARK: - Post-processing
 
     func postProcess(_ output: String) -> String {
-        var cleaned = output.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        // First apply default TinyLlama artifact removal
-        cleaned = cleaned.replacingOccurrences(of: "<|assistant|>", with: "")
-        cleaned = cleaned.replacingOccurrences(of: "</s>", with: "")
-        cleaned = cleaned.replacingOccurrences(of: "<|user|>", with: "")
-        cleaned = cleaned.replacingOccurrences(of: "<|system|>", with: "")
-        cleaned = cleaned.replacingOccurrences(of: "_id|>", with: "")
+        // First apply centralized artifact removal
+        var cleaned = LLMOutputCleaner.clean(output)
 
         // Remove common hallucination prefixes
         let hallucinationPrefixes = [

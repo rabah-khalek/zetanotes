@@ -125,9 +125,14 @@ struct ToolEditorView: View {
                             .foregroundColor(.secondary)
                     }
 
-                    Text("Instructions sent to the AI. Be specific about format and style.")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                    HStack(spacing: 4) {
+                        Image(systemName: "info.circle")
+                            .font(.caption)
+                            .foregroundColor(.blue)
+                        Text("Use {content} where you want the selected text to be inserted")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
 
                     if isReadOnly {
                         ScrollView {
@@ -148,8 +153,21 @@ struct ToolEditorView: View {
                             .cornerRadius(8)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 8)
-                                    .strokeBorder(Color.gray.opacity(0.3), lineWidth: 1)
+                                    .strokeBorder(
+                                        tool.prompt.contains("{content}") ? Color.gray.opacity(0.3) : Color.orange,
+                                        lineWidth: tool.prompt.contains("{content}") ? 1 : 2
+                                    )
                             )
+
+                        if !tool.prompt.isEmpty && !tool.prompt.contains("{content}") {
+                            HStack(spacing: 4) {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .font(.caption)
+                                Text("Prompt must include {content} placeholder")
+                                    .font(.caption)
+                            }
+                            .foregroundColor(.orange)
+                        }
                     }
                 }
                 .padding(.horizontal, 20)
@@ -537,6 +555,7 @@ struct ToolEditorView: View {
     private var isValid: Bool {
         !tool.name.isEmpty &&
             !tool.prompt.isEmpty &&
+            tool.prompt.contains("{content}") && // Must include placeholder
             shortcutError == nil &&
             nameError == nil
         // Note: keyboard shortcut is optional

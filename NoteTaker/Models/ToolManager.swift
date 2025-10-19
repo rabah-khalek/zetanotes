@@ -7,9 +7,9 @@
 //  - Custom tools: User-created, Pro-only feature
 //
 
+import Combine
 import Foundation
 import SwiftUI
-import Combine
 
 /// Manager for all AI tools (default and custom)
 class ToolManager: ObservableObject {

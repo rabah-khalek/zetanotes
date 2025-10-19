@@ -46,13 +46,14 @@ class ChatService {
             stopSequences: ["<|im_end|>", "</s>", "<|endoftext|>"]
         )
 
-        // For now, we'll call onToken once with the full response
-        // In a future enhancement, we could modify LLMInferenceService to support true token streaming
+        // Clean artifacts from the response
         if let response = response {
-            onToken(response)
+            let cleanedResponse = LLMOutputCleaner.clean(response)
+            onToken(cleanedResponse)
+            return cleanedResponse
         }
 
-        return response
+        return nil
     }
 
     /// Builds a chat prompt from conversation history

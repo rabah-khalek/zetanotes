@@ -808,7 +808,8 @@ class NoteViewModel: ObservableObject {
     // MARK: - Tool Post-processing
 
     private func cleanToolOutput(_ output: String) -> String {
-        var cleaned = output.trimmingCharacters(in: .whitespacesAndNewlines)
+        // First apply centralized artifact removal for all models
+        var cleaned = LLMOutputCleaner.clean(output)
 
         // Remove leading markdown quote character if present
         if cleaned.hasPrefix(">") {

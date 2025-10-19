@@ -106,15 +106,8 @@ class TitleGenerationService: AIService {
     // MARK: - Post-processing
 
     func postProcess(_ output: String) -> String {
-        // Start with trimmed output
-        var cleaned = output.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        // Remove TinyLlama chat template artifacts
-        cleaned = cleaned.replacingOccurrences(of: "<|assistant|>", with: "")
-        cleaned = cleaned.replacingOccurrences(of: "</s>", with: "")
-        cleaned = cleaned.replacingOccurrences(of: "<|user|>", with: "")
-        cleaned = cleaned.replacingOccurrences(of: "<|system|>", with: "")
-        cleaned = cleaned.replacingOccurrences(of: "_id|>", with: "")
+        // First apply centralized artifact removal
+        var cleaned = LLMOutputCleaner.clean(output)
 
         // Remove leading markdown quote character if present
         if cleaned.hasPrefix(">") {

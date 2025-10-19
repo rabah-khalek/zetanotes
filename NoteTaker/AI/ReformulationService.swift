@@ -70,14 +70,8 @@ class ReformulationService: AIService {
     // MARK: - Post-processing
 
     func postProcess(_ output: String) -> String {
-        var cleaned = output.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        // Remove model-specific artifacts
-        cleaned = cleaned.replacingOccurrences(of: "<|assistant|>", with: "")
-        cleaned = cleaned.replacingOccurrences(of: "</s>", with: "")
-        cleaned = cleaned.replacingOccurrences(of: "<|user|>", with: "")
-        cleaned = cleaned.replacingOccurrences(of: "<|system|>", with: "")
-        cleaned = cleaned.replacingOccurrences(of: "_id|>", with: "")
+        // First apply centralized artifact removal
+        var cleaned = LLMOutputCleaner.clean(output)
 
         // Remove everything before "Here is" if it contains explanation text
         if let range = cleaned.range(of: "Here is a rewritten version", options: .caseInsensitive),
