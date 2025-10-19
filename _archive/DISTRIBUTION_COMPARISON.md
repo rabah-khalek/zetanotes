@@ -336,7 +336,7 @@ xcrun stapler staple "$DMG_NAME"
 ### 5. Update Sparkle
 ```xml
 <!-- appcast.xml - auto-updates now work! -->
-<enclosure 
+<enclosure
   url="https://github.com/.../ZetaNotes-v1.0.0.dmg"
   sparkle:version="1.0.0"
   sparkle:shortVersionString="1.0.0"
@@ -390,14 +390,14 @@ While waiting for revenue to justify Apple Developer:
 cask "zetanotes" do
   version "1.0.0"
   sha256 "abc123..."
-  
+
   url "https://github.com/rabah-khalek/zetanotes/releases/download/v#{version}/ZetaNotes-v#{version}.dmg"
   name "ZetaNotes"
   desc "Privacy-first note-taking with offline AI"
   homepage "https://github.com/rabah-khalek/zetanotes"
-  
+
   app "ZetaNotes.app"
-  
+
   # Homebrew handles the quarantine flag!
   postflight do
     system_command "/usr/bin/xattr",

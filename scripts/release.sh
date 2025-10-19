@@ -257,7 +257,7 @@ find "$BUILD_DIR/${APP_NAME}.app/Contents" -type f \( -name "*.dylib" -o -name "
 # Sign the main app bundle with ad-hoc signature
 if codesign --force --deep --sign - "$BUILD_DIR/${APP_NAME}.app" 2>/dev/null; then
     print_success "Ad-hoc signature applied successfully"
-    
+
     # Verify the signature
     if codesign --verify --verbose "$BUILD_DIR/${APP_NAME}.app" 2>&1 | grep -q "adhoc"; then
         print_success "Signature verified (ad-hoc)"
@@ -408,10 +408,10 @@ EOF
     xattr -cr "$MOUNT_POINT/${APP_NAME}.app" 2>/dev/null || true
     xattr -d com.apple.quarantine "$MOUNT_POINT/${APP_NAME}.app" 2>/dev/null || true
     find "$MOUNT_POINT/${APP_NAME}.app" -exec xattr -c {} \; 2>/dev/null || true
-    
+
     # Fix permissions inside mount
     chmod +x "$MOUNT_POINT/${APP_NAME}.app/Contents/MacOS/"* 2>/dev/null || true
-    
+
     print_success "Quarantine removed from files in DMG"
 
     # Sync and wait a moment for filesystem operations to complete
@@ -472,7 +472,7 @@ if hdiutil attach "$DMG_NAME" -readonly -mountpoint "$TEST_MOUNT" -nobrowse 2>/d
     # Check if app is readable
     if [ -d "$TEST_MOUNT/${APP_NAME}.app" ]; then
         print_success "DMG verification passed - app is accessible"
-        
+
         # Check for quarantine in mounted app
         MOUNTED_XATTR=$(xattr "$TEST_MOUNT/${APP_NAME}.app" 2>/dev/null | wc -l | tr -d ' ')
         if [ "$MOUNTED_XATTR" -eq 0 ]; then
@@ -484,7 +484,7 @@ if hdiutil attach "$DMG_NAME" -readonly -mountpoint "$TEST_MOUNT" -nobrowse 2>/d
     else
         print_error "App not found in DMG!"
     fi
-    
+
     # Unmount test volume
     hdiutil detach "$TEST_MOUNT" -force 2>/dev/null || true
 else

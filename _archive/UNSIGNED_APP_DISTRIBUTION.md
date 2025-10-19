@@ -51,7 +51,7 @@ Using `create-dmg` to create a professional installer with:
 2. User opens DMG
 3. User drags app to Applications
 4. User clicks app → BLOCKED by Gatekeeper
-5. macOS shows: "ZetaNotes can't be opened because Apple cannot 
+5. macOS shows: "ZetaNotes can't be opened because Apple cannot
    verify that it is free of malware."
 6. User must: Right-click → Open → Confirm
 7. App launches normally

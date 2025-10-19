@@ -117,7 +117,7 @@ gh pr create --title "Update ZetaNotes to 1.0.1"
 ```
 1. Download DMG from GitHub
 2. Open DMG
-3. Drag to Applications  
+3. Drag to Applications
 4. Try to open → BLOCKED
 5. Right-click → Open
 6. Or run terminal command
@@ -157,7 +157,7 @@ Download the latest DMG from [GitHub Releases](https://github.com/rabah-khalek/z
 
 Popular unsigned apps on Homebrew:
 - **OBS Studio**: 2M+ installs
-- **Blender**: 500k+ installs  
+- **Blender**: 500k+ installs
 - **Audacity**: 1M+ installs
 - **GIMP**: 800k+ installs
 

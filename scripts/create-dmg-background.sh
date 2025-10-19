@@ -19,7 +19,7 @@ if command -v convert &> /dev/null; then
         -gravity North -annotate +0+110 "This bypasses the security warning (one time only)" \
         -gravity South -annotate +0+20 "Drag ZetaNotes to Applications →" \
         "$OUTPUT_FILE"
-    
+
     echo "DMG background created: $OUTPUT_FILE"
 else
     echo "ImageMagick not found. Install with: brew install imagemagick"

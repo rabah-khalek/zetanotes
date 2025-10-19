@@ -12,45 +12,45 @@ import SwiftUI
 struct FirstLaunchSecurityNoticeView: View {
     @Binding var isPresented: Bool
     @AppStorage("hasSeenSecurityNotice") private var hasSeenSecurityNotice = false
-    
+
     var body: some View {
         VStack(spacing: 20) {
             Image(systemName: "shield.checkered")
                 .font(.system(size: 60))
                 .foregroundColor(.blue)
-            
+
             Text("Security Notice")
                 .font(.title)
                 .bold()
-            
+
             VStack(alignment: .leading, spacing: 12) {
                 Text("ZetaNotes is not signed with an Apple Developer certificate.")
                     .foregroundColor(.secondary)
-                
+
                 Text("If you see a security warning:")
                     .bold()
-                
+
                 HStack(alignment: .top, spacing: 12) {
                     Text("1.")
                         .bold()
                     Text("Right-click (⌃-click) on ZetaNotes in Applications")
                 }
-                
+
                 HStack(alignment: .top, spacing: 12) {
                     Text("2.")
                         .bold()
                     Text("Select \"Open\" from the context menu")
                 }
-                
+
                 HStack(alignment: .top, spacing: 12) {
                     Text("3.")
                         .bold()
                     Text("Click \"Open\" in the security dialog")
                 }
-                
+
                 Divider()
                     .padding(.vertical, 4)
-                
+
                 HStack(spacing: 8) {
                     Image(systemName: "info.circle.fill")
                         .foregroundColor(.blue)
@@ -58,7 +58,7 @@ struct FirstLaunchSecurityNoticeView: View {
                         .font(.callout)
                         .foregroundColor(.secondary)
                 }
-                
+
                 HStack(spacing: 8) {
                     Image(systemName: "lock.shield.fill")
                         .foregroundColor(.green)
@@ -70,7 +70,7 @@ struct FirstLaunchSecurityNoticeView: View {
             .padding()
             .background(Color(NSColor.controlBackgroundColor))
             .cornerRadius(8)
-            
+
             Button(action: {
                 hasSeenSecurityNotice = true
                 isPresented = false
@@ -96,7 +96,7 @@ extension View {
 struct SecurityNoticeModifier: ViewModifier {
     @AppStorage("hasSeenSecurityNotice") private var hasSeenSecurityNotice = false
     @State private var showNotice = false
-    
+
     func body(content: Content) -> some View {
         content
             .onAppear {
