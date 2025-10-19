@@ -51,12 +51,38 @@ jobs:
             brew install create-dmg
           fi
 
-          # Install Sparkle's generate_appcast tool
-          if [ ! -f "$HOME/bin/generate_appcast" ]; then
-            mkdir -p $HOME/bin
-            curl -L https://github.com/sparkle-project/Sparkle/releases/latest/download/generate_appcast.tar.xz -o /tmp/generate_appcast.tar.xz
-            tar -xf /tmp/generate_appcast.tar.xz -C $HOME/bin
+          # Install Sparkle's generate_appcast tool (required for auto-updates)
+          mkdir -p $HOME/bin
+          
+          echo "Setting up generate_appcast tool..."
+          
+          # First try to use generate_appcast from our Sparkle framework
+          SPARKLE_TOOL="Frameworks/Sparkle.xcframework/macos-arm64_x86_64/Sparkle.framework/Versions/Current/Resources/generate_appcast"
+          if [ -f "$SPARKLE_TOOL" ]; then
+            cp "$SPARKLE_TOOL" $HOME/bin/generate_appcast
             chmod +x $HOME/bin/generate_appcast
+            echo "✅ Using generate_appcast from local Sparkle framework"
+          else
+            # Try to download it from GitHub releases
+            echo "📥 Downloading generate_appcast from Sparkle releases..."
+            if curl -L --fail --silent https://github.com/sparkle-project/Sparkle/releases/download/2.6.4/generate_appcast -o $HOME/bin/generate_appcast; then
+              chmod +x $HOME/bin/generate_appcast
+              echo "✅ Downloaded generate_appcast successfully"
+            else
+              echo "❌ Failed to download generate_appcast"
+              echo "This tool is required for generating Sparkle signatures for auto-updates."
+              echo "Please ensure the Sparkle framework is properly included or the download URL is correct."
+              touch $HOME/bin/generate_appcast_unavailable
+              exit 1
+            fi
+          fi
+          
+          # Verify the tool works
+          if $HOME/bin/generate_appcast --help >/dev/null 2>&1; then
+            echo "✅ generate_appcast is working correctly"
+          else
+            echo "❌ generate_appcast is not working properly"
+            exit 1
           fi
 
       - name: Build release
@@ -90,20 +116,50 @@ jobs:
         env:
           SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
         run: |
+          # Check if generate_appcast is available
+          if [ -f "$HOME/bin/generate_appcast_unavailable" ]; then
+            echo "❌ generate_appcast not available - cannot generate signature"
+            echo "This is required for auto-updates to work properly."
+            exit 1
+          fi
+
+          # Check if we have the private key
+          if [ -z "$SPARKLE_PRIVATE_KEY" ]; then
+            echo "❌ No Sparkle private key available (SPARKLE_PRIVATE_KEY secret not set)"
+            echo "This is required for auto-updates to work properly."
+            echo "Please set the SPARKLE_PRIVATE_KEY secret in GitHub repository settings."
+            exit 1
+          fi
+
           # Save private key to temp file
           echo "$SPARKLE_PRIVATE_KEY" > /tmp/sparkle_private_key
 
           # Generate signature
-          SIGNATURE=$($HOME/bin/generate_appcast \
+          echo "Generating Sparkle EdDSA signature..."
+          if SIGNATURE=$($HOME/bin/generate_appcast \
             --ed-key-file /tmp/sparkle_private_key \
             --download-url-prefix "https://github.com/${{ env.PUBLIC_REPO }}/releases/download/v${{ steps.version.outputs.VERSION }}/" \
-            "${{ steps.build.outputs.BUILD_DIR }}" | grep "sparkle:edSignature" | sed 's/.*sparkle:edSignature="\([^"]*\)".*/\1/')
+            "${{ steps.build.outputs.BUILD_DIR }}" 2>/dev/null | grep "sparkle:edSignature" | sed 's/.*sparkle:edSignature="\([^"]*\)".*/\1/'); then
+            
+            # Verify we got a non-empty signature
+            if [ -z "$SIGNATURE" ]; then
+              echo "❌ Failed to generate signature - got empty result"
+              echo "Check that the build directory and DMG file are valid."
+              rm -f /tmp/sparkle_private_key
+              exit 1
+            fi
+            
+            echo "✅ Generated signature: $SIGNATURE"
+            echo "SIGNATURE=$SIGNATURE" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Failed to generate signature"
+            echo "generate_appcast command failed. Check build output and private key."
+            rm -f /tmp/sparkle_private_key
+            exit 1
+          fi
 
           # Clean up private key
-          rm /tmp/sparkle_private_key
-
-          echo "SIGNATURE=$SIGNATURE" >> $GITHUB_OUTPUT
-          echo "Generated signature: $SIGNATURE"
+          rm -f /tmp/sparkle_private_key
 
       - name: Create release in public repo
         uses: softprops/action-gh-release@v1
