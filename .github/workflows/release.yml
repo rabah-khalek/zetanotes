@@ -210,17 +210,30 @@ jobs:
             cp "$DMG_PATH" "$TEMP_DIR/"
 
             echo "Running generate_appcast..."
+            cd "$TEMP_DIR"
+
             APPCAST_OUTPUT=$($HOME/bin/generate_appcast \
               --ed-key-file /tmp/sparkle_private_key \
               --download-url-prefix "https://github.com/${{ env.PUBLIC_REPO }}/releases/download/v${{ steps.version.outputs.VERSION }}/" \
-              "$TEMP_DIR" 2>&1)
+              . 2>&1)
 
             echo "Generate appcast output:"
             echo "$APPCAST_OUTPUT"
 
-            # Extract signature from output
-            SIGNATURE=$(echo "$APPCAST_OUTPUT" | grep "sparkle:edSignature" | sed 's/.*sparkle:edSignature="\([^"]*\)".*/\1/')
+            # The signature is in the generated appcast.xml file
+            if [ -f "appcast.xml" ]; then
+              echo "Generated appcast.xml:"
+              cat appcast.xml
 
+              # Extract signature from the appcast.xml
+              SIGNATURE=$(grep "sparkle:edSignature" appcast.xml | sed 's/.*sparkle:edSignature="\([^"]*\)".*/\1/')
+
+              echo "Extracted signature: $SIGNATURE"
+            else
+              echo "❌ appcast.xml not generated"
+            fi
+
+            cd - > /dev/null
             rm -rf "$TEMP_DIR"
           fi
 
