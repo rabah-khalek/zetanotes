@@ -126,7 +126,6 @@ class NoteViewModel: ObservableObject {
 
     private func setupSearchDebouncing() {
         $searchQuery
-            .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
             .removeDuplicates()
             .sink { [weak self] query in
                 Task {

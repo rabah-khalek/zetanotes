@@ -720,12 +720,26 @@ struct ContentView: View {
                     )
                 }
             }) {
-                Image(systemName: "bubble.left.and.bubble.right")
-                    .font(.system(size: AppTheme.Typography.toolbarIconSize))
-                    .foregroundColor(showingChat ? AppTheme.Colors.accentBlue : AppTheme.Colors.secondaryText)
+                ZStack(alignment: .topLeading) {
+                    Image(systemName: "bubble.left.and.bubble.right")
+                        .font(.system(size: AppTheme.Typography.toolbarIconSize))
+                        .foregroundColor(
+                            licenseManager.isPro
+                                ? (showingChat ? AppTheme.Colors.accentBlue : AppTheme.Colors.secondaryText)
+                                : .orange
+                        )
+
+                    // Lock icon for free users
+                    if !licenseManager.isPro {
+                        Image(systemName: "lock.fill")
+                            .font(.system(size: 9))
+                            .foregroundColor(.orange)
+                            .offset(x: -4, y: -4)
+                    }
+                }
             }
             .buttonStyle(.plain)
-            .help("Toggle Chat (⌘⇧C)")
+            .help(licenseManager.isPro ? "Toggle Chat (⌘⇧C)" : "Upgrade to Pro for AI Chat")
             .keyboardShortcut("c", modifiers: [.command, .shift])
         }
         .padding(.horizontal, 4)

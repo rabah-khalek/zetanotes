@@ -301,69 +301,80 @@ struct GeneralSettingsContent: View {
 
             Divider()
 
-            // Appearance Settings
-            VStack(alignment: .leading, spacing: 12) {
-                Label("Appearance", systemImage: "paintbrush")
-                    .font(.headline)
-                    .fontWeight(.semibold)
+            // Appearance and Reset Settings (side-by-side)
+            HStack(alignment: .top, spacing: 16) {
+                // Reset to Defaults Section (Left)
+                VStack(alignment: .leading, spacing: 10) {
+                    Label("Reset Settings", systemImage: "arrow.counterclockwise")
+                        .font(.headline)
+                        .fontWeight(.semibold)
 
-                Text("Choose how the app looks")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    Text("Restore all defaults")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
 
-                Picker("", selection: $preferredAppearance) {
-                    Label("Light", systemImage: "sun.max.fill")
-                        .tag("light")
-                    Label("Dark", systemImage: "moon.fill")
-                        .tag("dark")
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-            }
-            .padding()
-            .background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
-            .cornerRadius(8)
+                    Spacer()
 
-            Divider()
-
-            // Reset to Defaults Section
-            VStack(alignment: .leading, spacing: 12) {
-                Label("Reset Settings", systemImage: "arrow.counterclockwise")
-                    .font(.headline)
-                    .fontWeight(.semibold)
-
-                Text("Restore all settings to their default values")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-
-                Button(action: {
-                    showResetConfirmation = true
-                }) {
-                    HStack {
-                        Image(systemName: "arrow.counterclockwise.circle.fill")
-                        Text("Reset to Defaults")
+                    Button(action: {
+                        showResetConfirmation = true
+                    }) {
+                        HStack {
+                            Image(systemName: "arrow.counterclockwise.circle.fill")
+                            Text("Reset")
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 6)
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 8)
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(.orange)
-                .confirmationDialog(
-                    "Reset All Settings?",
-                    isPresented: $showResetConfirmation,
-                    titleVisibility: .visible
-                ) {
-                    Button("Reset to Defaults", role: .destructive) {
-                        viewModel.resetAllSettingsToDefaults()
+                    .buttonStyle(.borderedProminent)
+                    .tint(.orange)
+                    .confirmationDialog(
+                        "Reset All Settings?",
+                        isPresented: $showResetConfirmation,
+                        titleVisibility: .visible
+                    ) {
+                        Button("Reset to Defaults", role: .destructive) {
+                            viewModel.resetAllSettingsToDefaults()
+                        }
+                        Button("Cancel", role: .cancel) {}
+                    } message: {
+                        Text(
+                            "This will reset:\n• All prompts to defaults\n• All tools to defaults (removes custom tools)\n• Chat settings to defaults\n• AI model to TinyLlama\n• Appearance to Dark mode\n\nThis action cannot be undone."
+                        )
                     }
-                    Button("Cancel", role: .cancel) {}
-                } message: {
-                    Text("This will reset:\n• All prompts to defaults\n• All tools to defaults (removes custom tools)\n• Chat settings to defaults\n• AI model to TinyLlama\n• Appearance to Dark mode\n\nThis action cannot be undone.")
                 }
+                .padding()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
+                .cornerRadius(8)
+
+                // Appearance Settings (Right)
+                VStack(alignment: .leading, spacing: 10) {
+                    Label("Appearance", systemImage: "paintbrush")
+                        .font(.headline)
+                        .fontWeight(.semibold)
+
+                    Text("Theme")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    Spacer()
+
+                    Picker("", selection: $preferredAppearance) {
+                        Label("Light", systemImage: "sun.max.fill")
+                            .tag("light")
+                        Label("Dark", systemImage: "moon.fill")
+                            .tag("dark")
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                }
+                .padding()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
+                .cornerRadius(8)
             }
-            .padding()
-            .background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
-            .cornerRadius(8)
+            .frame(height: 140)
 
             Divider()
 
@@ -869,12 +880,6 @@ struct ProStatusSection: View {
                     }
 
                     Spacer()
-
-                    Button("Manage") {
-                        NotificationCenter.default.post(name: .showLicenseActivation, object: nil)
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
 
                     #if DEBUG
                     Button("Deactivate (Dev)") {
