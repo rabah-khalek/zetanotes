@@ -46,7 +46,13 @@ private enum TinyLlamaConfigs {
         switch toolType {
         case .autocomplete:
             return LLMConfig(
-                prompt: "Continue the following text naturally. Write only the next few words that would logically follow.",
+                prompt: """
+                Continue the following text naturally. Write only the next few words that would logically follow.
+
+                {content}
+
+                Continuation:
+                """,
                 temperature: 0.7,
                 maxTokens: 50,
                 stopSequences: ["\n", ".", "!", "?"]
@@ -160,6 +166,8 @@ private enum LlamaThreeTwoConfigs {
 
                 Continue the following text with just the next few words:
 
+                {content}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+
                 """,
                 temperature: 0.6,
                 maxTokens: 50,
@@ -270,6 +278,8 @@ private enum QwenTwoFiveConfigs {
                 <|im_start|>user
                 Continue the following text with just the next few words that would logically follow:
 
+                {content}<|im_end|>
+                <|im_start|>assistant
                 """,
                 temperature: 0.7,
                 maxTokens: 50,
@@ -380,6 +390,8 @@ private enum SmolLMTwoConfigs {
                 <|im_start|>user
                 Continue the following text with only the next few words:
 
+                {content}<|im_end|>
+                <|im_start|>assistant
                 """,
                 temperature: 0.5,
                 maxTokens: 50,
@@ -494,7 +506,7 @@ private enum Phi2Configs {
         switch toolType {
         case .autocomplete:
             return LLMConfig(
-                prompt: "Instruct: Continue the following text naturally. Write only the next few words.\nOutput:",
+                prompt: "Instruct: Continue the following text naturally. Write only the next few words.\n\n{content}\n\nOutput:",
                 temperature: 0.6,
                 maxTokens: 50,
                 stopSequences: ["\n", ".", "!", "?"] + stopSequences
@@ -560,6 +572,8 @@ private enum GemmaTwoConfigs {
                 <start_of_turn>user
                 You are a helpful writing assistant. Continue the following text with just the next few words that would naturally follow:
 
+                {content}<end_of_turn>
+                <start_of_turn>model
                 """,
                 temperature: 0.6,
                 maxTokens: 50,
@@ -668,6 +682,8 @@ private enum PhiThreeFiveConfigs {
                 <|user|>
                 Continue the following text with just the next few words:
 
+                {content}<|end|>
+                <|assistant|>
                 """,
                 temperature: 0.6,
                 maxTokens: 50,

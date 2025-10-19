@@ -20,7 +20,7 @@ class AIEngine: ObservableObject {
 
     private(set) lazy var embeddingService: EmbeddingService = .init(llmService: llmService)
 
-    private(set) lazy var autocompleteService: AutocompleteService = .init(llmService: llmService)
+    private(set) lazy var autocompleteService: AutocompleteService = .init(llmService: llmService, model: selectedModel)
 
     private(set) lazy var summarizationService: SummarizationService = .init(llmService: llmService)
 
@@ -136,6 +136,9 @@ class AIEngine: ObservableObject {
 
         print("🔄 Switching to \(modelType.displayName)...")
         await loadModel(modelType)
+
+        // Update autocomplete service with new model
+        autocompleteService.updateModel(modelType)
 
         // Clear loading state
         await MainActor.run {

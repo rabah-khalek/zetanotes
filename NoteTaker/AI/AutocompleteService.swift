@@ -15,6 +15,7 @@ class AutocompleteService: AIService {
     let llmService: LLMInferenceService
     let config: AIGenerationConfig
 
+    private var currentModel: AIModel
     private var debounceTimer: Timer?
     private let debounceDelay: TimeInterval = 0.2 // 200ms debounce
     private var lastContext: String = "" // Store context for post-processing
@@ -23,25 +24,31 @@ class AutocompleteService: AIService {
 
     private enum Config {
         static let minCharacters = 10 // Minimum characters before suggesting
-        static let maxTokens: Int = 100 // Maximum tokens to generate (allows full sentences)
         static let contextLength = 500 // Characters of context to use
     }
 
     // MARK: - Initialization
 
-    init(llmService: LLMInferenceService) {
+    init(llmService: LLMInferenceService, model: AIModel) {
         self.llmService = llmService
+        self.currentModel = model
+
+        // Get model-specific config from registry
+        let toolConfig = ModelToolConfigRegistry.getConfig(for: model, toolType: .autocomplete)
+
         config = AIGenerationConfig(
-            temperature: 0.5, // Moderate creativity for natural continuations
-            maxTokens: Config.maxTokens,
-            stopSequences: [
-                ". ", // Stop after completing a sentence
-                ".\n", // Stop after sentence with newline
-                "\n\n\n", // Stop at major paragraph breaks
-                "<|user|>", // Prevent fake user messages
-                "<|system|>" // Prevent fake system messages
-            ]
+            temperature: toolConfig.temperature,
+            maxTokens: toolConfig.maxTokens ?? 100,
+            stopSequences: toolConfig.stopSequences
         )
+    }
+
+    // Update model and config
+    func updateModel(_ model: AIModel) {
+        currentModel = model
+        let toolConfig = ModelToolConfigRegistry.getConfig(for: model, toolType: .autocomplete)
+        // Note: config is let, so we can't update it directly
+        // The config will be used from the registry in buildPrompt
     }
 
     // MARK: - AIService Protocol
@@ -55,20 +62,15 @@ class AutocompleteService: AIService {
         // Store context for post-processing
         lastContext = context
 
-        // Use same pattern as other services: instruction + text + label
-        return """
-        \(DefaultPrompts.autocomplete)
-
-        \(context)
-
-        Continuation:
-        """
+        // Get model-specific prompt from registry and replace {content} placeholder
+        let toolConfig = ModelToolConfigRegistry.getConfig(for: currentModel, toolType: .autocomplete)
+        return toolConfig.prompt.replacingOccurrences(of: "{content}", with: context)
     }
 
     // Post-process to clean the autocomplete output
     func postProcess(_ output: String) -> String {
-        // Don't trim yet - we need to detect if there's a period at the end
-        var cleaned = output
+        // First apply centralized LLM output cleaner
+        var cleaned = LLMOutputCleaner.clean(output)
 
         // Remove common prefixes that models add
         let prefixes = [
