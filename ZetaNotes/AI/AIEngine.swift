@@ -70,19 +70,28 @@ class AIEngine: ObservableObject {
     /// Loads a specific model
     /// - Parameter modelType: The AI model to load
     func loadModel(_ modelType: AIModel) async {
+        print("🔄 loadModel called for: \(modelType.displayName)")
+        print(
+            "🔍 Current state - isModelLoaded: \(isModelLoaded), currentModel: \(llmService.getCurrentModel().displayName)"
+        )
+
         // If already loaded with the same model, skip
         if isModelLoaded, llmService.getCurrentModel() == modelType {
+            print("⏭️ Model already loaded, skipping")
             return
         }
 
         await MainActor.run {
+            print("🔄 Setting isModelLoaded = false")
             self.isModelLoaded = false
         }
 
         do {
+            print("📥 Calling llmService.loadModel...")
             try await llmService.loadModel(modelType)
 
             await MainActor.run {
+                print("✅ Setting isModelLoaded = true for \(modelType.displayName)")
                 self.isModelLoaded = true
                 self.modelLoadingError = nil
                 self.selectedModel = modelType
@@ -94,8 +103,9 @@ class AIEngine: ObservableObject {
             // Update system monitor with the active model
             SystemMonitor.shared.setActiveModel(modelType.displayName)
 
-            print("✅ \(modelType.displayName) loaded successfully")
+            print("✅ \(modelType.displayName) loaded successfully. Final isModelLoaded: \(isModelLoaded)")
         } catch {
+            print("❌ Model load failed: \(error.localizedDescription)")
             await MainActor.run {
                 self.isModelLoaded = false
                 self.modelLoadingError = error.localizedDescription

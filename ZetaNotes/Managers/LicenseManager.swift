@@ -117,8 +117,8 @@ class LicenseManager: ObservableObject {
     private func validateWithLemonSqueezy(key: String, email: String) async -> Bool {
         // DEV_TODO: Replace with your actual LemonSqueezy store ID and product ID
         // Get these from: https://app.lemonsqueezy.com/settings/api
-        let _ = "DEV_STORE_ID" // DEV_TODO: CHANGE THIS
-        let _ = "DEV_PRODUCT_ID" // DEV_TODO: CHANGE THIS (optional, can validate without)
+        _ = "DEV_STORE_ID" // DEV_TODO: CHANGE THIS
+        _ = "DEV_PRODUCT_ID" // DEV_TODO: CHANGE THIS (optional, can validate without)
 
         // LemonSqueezy license activation endpoint
         let urlString = "https://api.lemonsqueezy.com/v1/licenses/activate"

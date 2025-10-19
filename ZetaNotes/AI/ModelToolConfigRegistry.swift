@@ -164,9 +164,9 @@ private enum TinyLlamaConfigs {
 /// - Training: Knowledge distillation from Llama 3.1 8B/70B + RLHF alignment
 private enum LlamaThreeTwoConfigs {
     static let stopSequences = [
-        "<|eot_id|>",         // Primary end-of-turn token (128009)
-        "<|end_of_text|>",    // End-of-sequence token (128001)
-        "_id|>"              // Catch incomplete header tokens
+        "<|eot_id|>", // Primary end-of-turn token (128009)
+        "<|end_of_text|>", // End-of-sequence token (128001)
+        "_id|>" // Catch incomplete header tokens
     ]
 
     static func config(for toolType: ToolType) -> LLMConfig {

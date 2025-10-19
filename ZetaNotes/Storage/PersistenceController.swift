@@ -34,7 +34,11 @@ class PersistenceController: ObservableObject {
             // Create directory if it doesn't exist
             if !FileManager.default.fileExists(atPath: zetaNotesDirectory.path) {
                 do {
-                    try FileManager.default.createDirectory(at: zetaNotesDirectory, withIntermediateDirectories: true, attributes: nil)
+                    try FileManager.default.createDirectory(
+                        at: zetaNotesDirectory,
+                        withIntermediateDirectories: true,
+                        attributes: nil
+                    )
                     print("✅ Created Core Data directory: \(zetaNotesDirectory.path)")
                 } catch {
                     print("❌ Failed to create Core Data directory: \(error)")

@@ -23,7 +23,13 @@ struct ToolEditorView: View {
     @State private var showAdvanced = false
     @State private var newStopSequence = ""
 
-    init(tool: AITool, isPresented: Binding<Bool>, isReadOnly: Bool = false, targetLanguage: Binding<String>? = nil, onSave: ((AITool) -> Void)? = nil) {
+    init(
+        tool: AITool,
+        isPresented: Binding<Bool>,
+        isReadOnly: Bool = false,
+        targetLanguage: Binding<String>? = nil,
+        onSave: ((AITool) -> Void)? = nil
+    ) {
         _tool = State(initialValue: tool)
         _isPresented = isPresented
         self.isReadOnly = isReadOnly
@@ -171,7 +177,7 @@ struct ToolEditorView: View {
                             .foregroundColor(.orange)
                         }
                     }
-                    
+
                     // Language Picker (Translation tool only)
                     if tool.name == "Translate", let languageBinding = targetLanguage {
                         VStack(alignment: .leading, spacing: 8) {
@@ -180,7 +186,7 @@ struct ToolEditorView: View {
                                     .font(.system(size: 13, weight: .medium))
                                 Spacer()
                             }
-                            
+
                             Picker("Target Language", selection: languageBinding) {
                                 Text("English").tag("English")
                                 Text("Spanish").tag("Spanish")
@@ -198,10 +204,12 @@ struct ToolEditorView: View {
                             .pickerStyle(.menu)
                             .frame(width: 200)
                             .disabled(isReadOnly)
-                            
-                            Text("The prompt uses {language} placeholder which will be replaced with this language at runtime.")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+
+                            Text(
+                                "The prompt uses {language} placeholder which will be replaced with this language at runtime."
+                            )
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                         }
                         .padding(.top, 8)
                     }

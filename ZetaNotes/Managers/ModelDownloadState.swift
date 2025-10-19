@@ -5,8 +5,8 @@
 //  Shared state for tracking model downloads across the app
 //
 
-import Foundation
 import Combine
+import Foundation
 
 /// Shared singleton for tracking active model downloads
 class ModelDownloadState: ObservableObject {

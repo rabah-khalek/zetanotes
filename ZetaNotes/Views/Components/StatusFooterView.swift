@@ -28,15 +28,17 @@ struct StatusFooterView: View {
                 }
 
                 systemMonitorBadge
-
-                if !errorLogger.errors.isEmpty {
-                    separator
-                    errorLogButton
-                }
             }
             .padding(.leading, 12)
             .padding(.trailing, 16)
             .padding(.vertical, 6)
+
+            // Error log button - only show when errors exist, positioned at far right
+            if !errorLogger.errors.isEmpty {
+                errorLogButton
+                    .padding(.trailing, 16)
+                    .transition(.move(edge: .trailing).combined(with: .opacity))
+            }
         }
         .frame(height: 28)
         .background(

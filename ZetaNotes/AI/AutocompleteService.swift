@@ -46,7 +46,7 @@ class AutocompleteService: AIService {
     // Update model and config
     func updateModel(_ model: AIModel) {
         currentModel = model
-        let _ = ModelToolConfigRegistry.getConfig(for: model, toolType: .autocomplete)
+        _ = ModelToolConfigRegistry.getConfig(for: model, toolType: .autocomplete)
         // Note: config is let, so we can't update it directly
         // The config will be used from the registry in buildPrompt
     }

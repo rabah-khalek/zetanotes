@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+
 // TODO: Uncomment when Sparkle package is added
 // import Sparkle
 
@@ -34,7 +35,8 @@ struct ZetaNotesApp: App {
     init() {
         // TODO: Uncomment when Sparkle package is added
         // Initialize Sparkle updater controller
-        // updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
+        // updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil,
+        // userDriverDelegate: nil)
 
         // Setup memory pressure monitoring
         setupMemoryPressureHandler()

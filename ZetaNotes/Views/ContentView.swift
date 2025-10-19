@@ -362,7 +362,8 @@ struct ContentView: View {
             )
             .keyboardShortcut("p", modifiers: .command)
             .help("Patch grammar (⌘P)")
-            .disabled(viewModel.selectedNote == nil || viewModel.isAutoCorrecting || downloadState.isDownloading || !aiEngine.isModelLoaded)
+            .disabled(viewModel.selectedNote == nil || viewModel.isAutoCorrecting || downloadState
+                .isDownloading || !aiEngine.isModelLoaded)
 
             // Reformulate
             AIToolButton(
@@ -381,7 +382,8 @@ struct ContentView: View {
             )
             .keyboardShortcut("r", modifiers: .command)
             .help("Reformulate text (⌘R)")
-            .disabled(viewModel.selectedNote == nil || viewModel.isReformulating || downloadState.isDownloading || !aiEngine.isModelLoaded)
+            .disabled(viewModel.selectedNote == nil || viewModel.isReformulating || downloadState
+                .isDownloading || !aiEngine.isModelLoaded)
 
             // Summarize
             AIToolButton(
@@ -400,7 +402,8 @@ struct ContentView: View {
             )
             .keyboardShortcut("s", modifiers: .command)
             .help("Generate summary (⌘S)")
-            .disabled(viewModel.selectedNote == nil || viewModel.isGeneratingSummary || downloadState.isDownloading || !aiEngine.isModelLoaded)
+            .disabled(viewModel.selectedNote == nil || viewModel.isGeneratingSummary || downloadState
+                .isDownloading || !aiEngine.isModelLoaded)
 
             // Translate
             AIToolButton(
@@ -419,7 +422,8 @@ struct ContentView: View {
             )
             .keyboardShortcut("t", modifiers: .command)
             .help("Translate text (⌘T)")
-            .disabled(viewModel.selectedNote == nil || viewModel.isTranslating || downloadState.isDownloading || !aiEngine.isModelLoaded)
+            .disabled(viewModel.selectedNote == nil || viewModel.isTranslating || downloadState
+                .isDownloading || !aiEngine.isModelLoaded)
 
             // Divider before custom tools
             Rectangle()
@@ -445,7 +449,8 @@ struct ContentView: View {
                         view.keyboardShortcut(KeyEquivalent(Character(tool.keyboardShortcut)), modifiers: .command)
                     }
                     .help(tool.keyboardShortcut.isEmpty ? tool.name : "\(tool.name) (⌘\(tool.keyboardShortcut))")
-                    .disabled(viewModel.selectedNote == nil || viewModel.executingToolId == tool.id || !aiEngine.isModelLoaded)
+                    .disabled(viewModel.selectedNote == nil || viewModel.executingToolId == tool.id || !aiEngine
+                        .isModelLoaded)
                 }
             }
 
@@ -570,58 +575,58 @@ struct ContentView: View {
                 // System Monitor (only show when model is loaded)
                 if aiEngine.isModelLoaded {
                     HStack(spacing: 6) {
-                    // CPU indicator
-                    HStack(spacing: 3) {
-                        Image(systemName: "cpu.fill")
-                            .font(.system(size: 9))
-                            .foregroundColor(cpuColor)
+                        // CPU indicator
+                        HStack(spacing: 3) {
+                            Image(systemName: "cpu.fill")
+                                .font(.system(size: 9))
+                                .foregroundColor(cpuColor)
 
-                        Text("CPU:")
-                            .font(.system(size: 9, weight: .medium))
-                            .foregroundColor(.secondary)
+                            Text("CPU:")
+                                .font(.system(size: 9, weight: .medium))
+                                .foregroundColor(.secondary)
 
-                        Text(String(format: "%3d", Int(systemMonitor.cpuUsage)) + "%")
-                            .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                            .foregroundColor(.primary)
-                            .frame(width: 32, alignment: .trailing)
+                            Text(String(format: "%3d", Int(systemMonitor.cpuUsage)) + "%")
+                                .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                                .foregroundColor(.primary)
+                                .frame(width: 32, alignment: .trailing)
+                        }
+
+                        Rectangle()
+                            .fill(Color.secondary.opacity(0.3))
+                            .frame(width: 1, height: 10)
+
+                        // Memory indicator
+                        HStack(spacing: 3) {
+                            Image(systemName: "memorychip.fill")
+                                .font(.system(size: 9))
+                                .foregroundColor(memoryColor)
+
+                            Text("MEM:")
+                                .font(.system(size: 9, weight: .medium))
+                                .foregroundColor(.secondary)
+
+                            Text(String(format: "%4d", Int(systemMonitor.memoryUsage)) + "M")
+                                .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                                .foregroundColor(.primary)
+                                .frame(width: 42, alignment: .trailing)
+                        }
                     }
-
-                    Rectangle()
-                        .fill(Color.secondary.opacity(0.3))
-                        .frame(width: 1, height: 10)
-
-                    // Memory indicator
-                    HStack(spacing: 3) {
-                        Image(systemName: "memorychip.fill")
-                            .font(.system(size: 9))
-                            .foregroundColor(memoryColor)
-
-                        Text("MEM:")
-                            .font(.system(size: 9, weight: .medium))
-                            .foregroundColor(.secondary)
-
-                        Text(String(format: "%4d", Int(systemMonitor.memoryUsage)) + "M")
-                            .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                            .foregroundColor(.primary)
-                            .frame(width: 42, alignment: .trailing)
-                    }
-                }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(Color.secondary.opacity(0.08))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 4)
-                                .strokeBorder(Color.secondary.opacity(0.2), lineWidth: 0.5)
-                        )
-                )
-                .help("""
-                CPU: \(Int(systemMonitor.cpuUsage))% of \(systemMonitor.cpuCoreCount) cores • \
-                Memory: \(Int(systemMonitor.memoryUsage))MB \
-                (\(String(format: "%.1f", systemMonitor.memoryUsagePercentage))% of \
-                \(Int(systemMonitor.totalSystemMemory / 1024))GB)
-                """)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color.secondary.opacity(0.08))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 4)
+                                    .strokeBorder(Color.secondary.opacity(0.2), lineWidth: 0.5)
+                            )
+                    )
+                    .help("""
+                    CPU: \(Int(systemMonitor.cpuUsage))% of \(systemMonitor.cpuCoreCount) cores • \
+                    Memory: \(Int(systemMonitor.memoryUsage))MB \
+                    (\(String(format: "%.1f", systemMonitor.memoryUsagePercentage))% of \
+                    \(Int(systemMonitor.totalSystemMemory / 1024))GB)
+                    """)
                 }
             }
             Spacer()
@@ -742,36 +747,6 @@ struct ContentView: View {
     @ViewBuilder
     private var toolbarRightItems: some View {
         HStack(spacing: 8) {
-            // Error log toggle (only show when there are errors)
-            if !errorLogger.errors.isEmpty {
-                Button(action: {
-                    withAnimation {
-                        showingErrorLog.toggle()
-                    }
-                }) {
-                    ZStack(alignment: .topTrailing) {
-                        Image(systemName: showingErrorLog ? "exclamationmark.triangle.fill" : "exclamationmark.triangle")
-                            .font(.system(size: AppTheme.Typography.toolbarIconSize))
-                            .foregroundColor(showingErrorLog ? .orange : .red)
-
-                        // Error count badge
-                        Text("\(min(errorLogger.errors.count, 99))")
-                            .font(.system(size: 8, weight: .bold))
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 3)
-                            .padding(.vertical, 1)
-                            .background(
-                                Capsule()
-                                    .fill(Color.red)
-                            )
-                            .offset(x: 6, y: -6)
-                    }
-                }
-                .buttonStyle(.plain)
-                .help("Error Log (\(errorLogger.errors.count) error\(errorLogger.errors.count == 1 ? "" : "s"))")
-                .transition(.scale.combined(with: .opacity))
-            }
-
             // Chat toggle (symmetric to sidebar toggle)
             Button(action: {
                 if licenseManager.isPro {

@@ -469,10 +469,16 @@ struct GeneralSettingsContent: View {
 
                             VStack(alignment: .leading, spacing: 6) {
                                 DangerZoneItemView(icon: "doc.text.fill", text: "All notes and their content")
-                                DangerZoneItemView(icon: "brain.head.profile", text: "All downloaded AI models (~1-2GB)")
+                                DangerZoneItemView(
+                                    icon: "brain.head.profile",
+                                    text: "All downloaded AI models (~1-2GB)"
+                                )
                                 DangerZoneItemView(icon: "wand.and.stars", text: "All custom prompts and tools")
                                 DangerZoneItemView(icon: "gearshape.fill", text: "All settings and preferences")
-                                DangerZoneItemView(icon: "bubble.left.and.bubble.right.fill", text: "Complete chat history")
+                                DangerZoneItemView(
+                                    icon: "bubble.left.and.bubble.right.fill",
+                                    text: "Complete chat history"
+                                )
                             }
                         }
                         .padding(12)
@@ -539,7 +545,9 @@ struct GeneralSettingsContent: View {
                 }
                 .disabled(confirmationText.uppercased() != "DELETE")
             } message: {
-                Text("⚠️ WARNING: This action cannot be undone!\n\nThis will permanently delete:\n• All your notes\n• All AI models (~1-2GB)\n• All custom prompts and tools\n• All settings\n• Chat history\n\nThe app will restart as if freshly installed.\n\nType DELETE to confirm.")
+                Text(
+                    "⚠️ WARNING: This action cannot be undone!\n\nThis will permanently delete:\n• All your notes\n• All AI models (~1-2GB)\n• All custom prompts and tools\n• All settings\n• Chat history\n\nThe app will restart as if freshly installed.\n\nType DELETE to confirm."
+                )
             }
 
             Divider()
@@ -675,13 +683,18 @@ struct ModelSettingsContent: View {
                                 switch result {
                                 case .success:
                                     print("✅ Model download completed")
+                                    // Automatically load the model after download
+                                    Task {
+                                        await aiEngine.loadModel(model)
+                                        print("✅ Model \(model.displayName) loaded and ready")
+                                    }
                                 case let .failure(error):
                                     print("❌ Download failed: \(error)")
                                 }
                             }
                         },
                         onDelete: {
-                            let _ = aiEngine.deleteModel(model)
+                            _ = aiEngine.deleteModel(model)
                         }
                     )
                 }
@@ -797,13 +810,18 @@ struct ModelSelectionSection: View {
                             switch result {
                             case .success:
                                 print("✅ Model download completed")
+                                // Automatically load the model after download
+                                Task {
+                                    await aiEngine.loadModel(model)
+                                    print("✅ Model \(model.displayName) loaded and ready")
+                                }
                             case let .failure(error):
                                 print("❌ Download failed: \(error)")
                             }
                         }
                     },
                     onDelete: {
-                        let _ = aiEngine.deleteModel(model)
+                        _ = aiEngine.deleteModel(model)
                     }
                 )
             }
@@ -988,9 +1006,13 @@ struct ModelCard: View {
             }
         } message: {
             if isSelected {
-                Text("Are you sure you want to delete \(model.displayName)? This is your currently active model. All AI features will be disabled until you download another model. This will free up \(model.fileSize) of storage.")
+                Text(
+                    "Are you sure you want to delete \(model.displayName)? This is your currently active model. All AI features will be disabled until you download another model. This will free up \(model.fileSize) of storage."
+                )
             } else {
-                Text("Are you sure you want to delete \(model.displayName)? This will free up \(model.fileSize) of storage. You can download it again later.")
+                Text(
+                    "Are you sure you want to delete \(model.displayName)? This will free up \(model.fileSize) of storage. You can download it again later."
+                )
             }
         }
     }

@@ -92,8 +92,18 @@ class NoteViewModel: ObservableObject {
 
         // Load AI model asynchronously (only if a model is downloaded)
         Task {
-            if aiEngine.isModelDownloaded(aiEngine.selectedModel) {
+            let selectedModel = aiEngine.selectedModel
+            let isDownloaded = aiEngine.isModelDownloaded(selectedModel)
+
+            print("🔍 NoteViewModel init - Selected model: \(selectedModel.displayName)")
+            print("🔍 Model downloaded: \(isDownloaded)")
+
+            if isDownloaded {
+                print("📥 Loading model \(selectedModel.displayName)...")
                 await aiEngine.loadModel()
+                print("✅ Model load complete. isModelLoaded: \(aiEngine.isModelLoaded)")
+            } else {
+                print("⚠️ Model \(selectedModel.displayName) not downloaded - tools will be disabled")
             }
         }
     }

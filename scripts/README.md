@@ -4,119 +4,90 @@ Automated scripts to package and release ZetaNotes with one command.
 
 ## 🚀 Quick Start
 
-### First Time Setup (5 minutes)
+### Create a Release
 
-1. **Run setup script:**
-   ```bash
-   cd /Users/projects/Documents/zetanotes
-   chmod +x scripts/*.sh
-   ./scripts/setup-signing.sh
-   ```
+```bash
+cd /Users/projects/Documents/zetanotes
+./scripts/release.sh 1.0.0
+```
 
-2. **Follow the prompts:**
-   - Select your Developer ID certificate
-   - Enter your Apple ID
-   - Enter app-specific password (from appleid.apple.com)
+That's it! The script will:
+- ✅ Build the app in Release mode
+- ✅ Create an unsigned DMG (for distribution)
+- ✅ Generate SHA256 checksum
+- ✅ Show installation instructions
 
-3. **Done!** The script configures everything automatically.
+**Time:** 5-10 minutes (Xcode build time)
 
-### Every Release (15-20 minutes automated)
+**Output:** `~/Desktop/ZetaNotes-v1.0.0.dmg`
 
-1. **Update version number:**
-   ```bash
-   # Edit scripts/package-release.sh line 19
-   VERSION="1.0.1"  # Change this
-   ```
+**Note:** Users download models via the welcome page on first run - no model bundling needed!
 
-2. **Run packaging script:**
-   ```bash
-   ./scripts/package-release.sh
-   ```
+### Get your DMG
 
-3. **Wait for completion:**
-   - Builds app (5-10 min)
-   - Downloads TinyLlama (2-5 min)
-   - Signs and creates DMG (2 min)
-   - Notarizes with Apple (5-15 min)
-   - Total: 15-20 minutes hands-off
-
-4. **Get your DMG:**
-   - Location: `~/Desktop/ZetaNotes-Release-YYYYMMDD-HHMMSS/`
-   - File: `ZetaNotes-v1.0.0.dmg`
-   - Checksum: `ZetaNotes-v1.0.0.dmg.sha256`
+After completion, find your release at:
+- Location: `~/Desktop/`
+- File: `ZetaNotes-v1.0.0.dmg`
+- Checksum: `ZetaNotes-v1.0.0.dmg.sha256`
 
 ## 📁 Scripts Included
 
-### `setup-signing.sh`
-**One-time setup for code signing and notarization**
+### `release.sh`
+**Unified release packaging script**
 
-- Finds your Developer ID certificate
-- Stores notarization credentials in Keychain
-- Updates configuration files automatically
+Creates unsigned DMG distributions for ZetaNotes.
 
-**When to run:** Once, before your first release
-
-### `package-release.sh`
-**Automated packaging script**
-
-Does everything:
-- ✅ Builds app in Xcode
-- ✅ Bundles TinyLlama model
-- ✅ Signs with Developer ID
-- ✅ Creates DMG installer
-- ✅ Signs DMG
-- ✅ Notarizes with Apple
-- ✅ Staples notarization ticket
-- ✅ Generates SHA256 checksum
-- ✅ Verifies everything works
+**Features:**
+- ✅ Production safety checks (DEV_TODO markers, DEBUG blocks, test credentials)
+- ✅ Clean Xcode build in Release configuration
+- ✅ Development data cleanup (models, notes, logs)
+- ✅ **No model bundling** - users download via welcome page
+- ✅ DMG creation (create-dmg or fallback hdiutil)
+- ✅ SHA256 checksum generation
+- ✅ Comprehensive installation guide
 
 **When to run:** Every time you want to create a release
 
-### `ExportOptions.plist`
-**Xcode export configuration**
-
-Automatically updated by `setup-signing.sh` with your Team ID.
-
-## 🔧 Configuration
-
-### Update Version Number
-
-Before each release, edit `scripts/package-release.sh`:
-
+**Usage:**
 ```bash
-# Line 19
-VERSION="1.0.1"  # Change this for each release
+./scripts/release.sh VERSION
 ```
 
-### Update Certificate (if expired)
-
+Example:
 ```bash
-# Edit line 16 in package-release.sh
-CERT_NAME="Developer ID Application: New Name (NEW_TEAM_ID)"
+./scripts/release.sh 1.0.0
 ```
 
-Or re-run `setup-signing.sh`.
+### Development Scripts
 
-## 📋 Prerequisites
+These scripts are for **development setup only**, not for releases:
 
-### Required (one-time)
+#### `build-llama.sh`
+**Xcode Run Script phase** - builds llama.cpp with Metal support during Xcode builds.
 
-1. **Apple Developer Account** ($99/year)
-   - Sign up at https://developer.apple.com
+**When it runs:** Automatically during Xcode builds (via Build Phases)
 
-2. **Developer ID Certificate**
-   - Xcode → Preferences → Accounts → Manage Certificates
-   - Create "Developer ID Application" certificate
+#### `configure-xcode.sh`
+**Interactive Xcode configuration helper** - sets up build settings for llama.cpp integration.
 
-3. **App-Specific Password**
-   - Go to https://appleid.apple.com
-   - Security → App-Specific Passwords → Generate
-   - Save it securely (used in setup-signing.sh)
+**When to run:** Once, during initial development setup
 
-4. **Xcode Command Line Tools**
+#### `setup-dev.sh`
+**One-time development environment setup** - clones llama.cpp, builds it, downloads TinyLlama test model.
+
+**When to run:** Once, when first setting up the development environment
+
+## � Prerequisites
+
+### Required
+
+1. **Xcode Command Line Tools**
    ```bash
    xcode-select --install
    ```
+
+2. **llama.cpp** (for development)
+   - Run `./scripts/setup-dev.sh` once to set up development environment
 
 ### Optional (for prettier DMG)
 
@@ -128,34 +99,31 @@ If not installed, the script uses a fallback method (works fine, just less prett
 
 ## 🎯 What Gets Created
 
-After running `package-release.sh`, you get a folder like:
+After running `release.sh`, you get:
 
 ```
-~/Desktop/ZetaNotes-Release-20241016-143022/
-├── ZetaNotes.app                          # Signed app (for testing)
-├── ZetaNotes-v1.0.0.dmg                   # Upload this to GitHub ✅
-└── ZetaNotes-v1.0.0.dmg.sha256            # Checksum (update website)
+~/Desktop/
+├── ZetaNotes-v1.0.0.dmg           # Upload to GitHub ✅
+└── ZetaNotes-v1.0.0.dmg.sha256    # Checksum (update website)
 ```
 
 ## 📤 Upload to GitHub
 
-1. **Create release:**
-   ```bash
-   # On GitHub: Releases → Draft a new release
-   # Tag: v1.0.0
-   # Title: ZetaNotes v1.0.0
-   ```
+1. **Create release on GitHub:**
+   - Go to Releases → Draft a new release
+   - Tag: `v1.0.0`
+   - Title: `ZetaNotes v1.0.0`
 
 2. **Upload DMG:**
    - Drag `ZetaNotes-v1.0.0.dmg` to release assets
 
-3. **Update website:**
+3. **Update website checksum:**
    ```bash
    # Copy checksum
-   cat ~/Desktop/ZetaNotes-Release-*/ZetaNotes-v1.0.0.dmg.sha256
+   cat ~/Desktop/ZetaNotes-v1.0.0.dmg.sha256
 
-   # Update docs/download.html line 29
-   SHA256: <span id="checksum">PASTE_CHECKSUM_HERE</span>
+   # Update docs/download.html
+   # Find the SHA256 section and paste the new checksum
 
    # Commit and push
    git add docs/
@@ -164,50 +132,6 @@ After running `package-release.sh`, you get a folder like:
    ```
 
 ## 🐛 Troubleshooting
-
-### "Certificate not found"
-
-**Problem:** Script can't find your Developer ID certificate
-
-**Solution:**
-```bash
-# List certificates
-security find-identity -v -p codesigning
-
-# Copy the exact name in quotes and update package-release.sh line 16
-CERT_NAME="Developer ID Application: Your Name (TEAM_ID)"
-```
-
-### "Notary profile not found"
-
-**Problem:** Notarization credentials not stored
-
-**Solution:**
-```bash
-# Re-run setup
-./scripts/setup-signing.sh
-
-# Or manually:
-xcrun notarytool store-credentials "notary-profile" \
-  --apple-id "your@email.com" \
-  --team-id "TEAM_ID" \
-  --password "xxxx-xxxx-xxxx-xxxx"
-```
-
-### "Notarization failed"
-
-**Problem:** Apple rejected the notarization
-
-**Solution:**
-```bash
-# View detailed error log
-xcrun notarytool log SUBMISSION_ID --keychain-profile "notary-profile"
-
-# Common issues:
-# - Hardened runtime not enabled → Script handles this
-# - Invalid signature → Re-run script
-# - Binary not properly signed → Check certificate
-```
 
 ### Build fails
 
@@ -218,9 +142,9 @@ xcrun notarytool log SUBMISSION_ID --keychain-profile "notary-profile"
 # Clean and rebuild manually first
 cd /Users/projects/Documents/zetanotes
 xcodebuild clean -project ZetaNotes.xcodeproj -scheme ZetaNotes
-xcodebuild build -project ZetaNotes.xcodeproj -scheme ZetaNotes
+xcodebuild build -project ZetaNotes.xcodeproj -scheme ZetaNotes -configuration Release
 
-# Fix any errors, then re-run package-release.sh
+# Fix any errors, then re-run release.sh
 ```
 
 ### DMG creation fails
@@ -232,65 +156,48 @@ xcodebuild build -project ZetaNotes.xcodeproj -scheme ZetaNotes
 # Install create-dmg (optional)
 brew install create-dmg
 
-# Or let script use fallback method (works fine)
+# Or let script use fallback hdiutil method (works fine)
+```
+
+### Script shows warnings about production readiness
+
+**Problem:** Script found DEV_TODO markers, DEBUG blocks, or test credentials
+
+**Solution:**
+```bash
+# Search for issues
+grep -r "DEV_TODO" ZetaNotes/
+grep -r "DEBUG_BLOCK_START" ZetaNotes/
+grep -r "test@example.com" ZetaNotes/
+
+# Fix the issues, then re-run
+./scripts/release.sh 1.0.0
 ```
 
 ## ⏱️ Time Breakdown
 
 | Step | Time | Notes |
 |------|------|-------|
-| Build in Xcode | 5-10 min | Depends on Mac speed |
-| Download TinyLlama | 2-5 min | Depends on internet |
-| Sign app | 30 sec | Quick |
-| Create DMG | 1 min | Quick |
-| Sign DMG | 10 sec | Quick |
-| Notarize | 5-15 min | Apple's servers |
-| Staple | 10 sec | Quick |
-| **Total** | **15-25 min** | Mostly automated waiting |
+| Safety checks | 10 sec | Quick scans |
+| Xcode build | 5-10 min | Depends on Mac speed |
+| Cleanup | 5 sec | Quick |
+| DMG creation | 1 min | Quick |
+| Checksum | 5 sec | Quick |
+| **Total** | **5-10 min** | Mostly Xcode build |
 
-## 🎨 Customization
+## 📖 Distribution Philosophy
 
-### Change DMG appearance
+**ZetaNotes uses a simple, user-friendly distribution model:**
 
-Edit `package-release.sh` around line 150:
+- ✅ **Unsigned DMG** - Easy distribution, no $99/year Apple Developer fee
+- ✅ **First-run model download** - Users choose and download AI models via welcome page
+- ✅ **No model bundling** - Keeps download size small (<10 MB vs >500 MB)
+- ✅ **User control** - Users select which models to download based on their needs
 
-```bash
-create-dmg \
-    --volname "My Custom Name" \
-    --background "path/to/background.png" \
-    --window-size 900 500 \
-    --icon-size 120 \
-    ...
-```
-
-### Skip notarization (testing only)
-
-Comment out lines 195-214 in `package-release.sh`. **Warning:** Users will get security warnings!
-
-### Add custom files to DMG
-
-Edit `package-release.sh` around line 175:
-
-```bash
-# After copying app
-cp README.txt "/Volumes/$APP_NAME/"
-cp LICENSE "/Volumes/$APP_NAME/"
-```
-
-## 📖 Manual Alternative
-
-If you prefer doing it manually, follow [DISTRIBUTION.md](../DISTRIBUTION.md).
+This approach prioritizes accessibility and user choice over Apple ecosystem integration.
 
 ## 🆘 Getting Help
 
 - **Script issues:** Open an issue on GitHub
-- **Apple Developer issues:** https://developer.apple.com/support/
-- **Notarization issues:** https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution
-
-## 📝 Changelog
-
-### v1.0 (2024-10-16)
-- Initial automated packaging script
-- One-time setup script
-- Automatic notarization
-- SHA256 checksum generation
+- **Build issues:** Check Xcode build logs
+- **llama.cpp issues:** See [llama.cpp documentation](https://github.com/ggerganov/llama.cpp)

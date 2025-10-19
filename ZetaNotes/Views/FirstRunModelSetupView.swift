@@ -253,12 +253,14 @@ struct FirstRunModelSetupView: View {
                         .font(.system(size: 17, weight: .semibold))
                 }
 
-                Text("To use these features, download a \(defaultModel.fileSize) AI model that runs locally on your device. Your data never leaves your Mac.")
-                    .font(.system(size: 14))
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.horizontal, 16)
+                Text(
+                    "To use these features, download a \(defaultModel.fileSize) AI model that runs locally on your device. Your data never leaves your Mac."
+                )
+                .font(.system(size: 14))
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 16)
 
                 // Model info card with enhanced design
                 HStack(spacing: 16) {
@@ -568,12 +570,14 @@ struct FirstRunModelSetupView: View {
                 Text("AI Features Disabled")
                     .font(.system(size: 24, weight: .bold))
 
-                Text("You can use ZetaNotes for note-taking, but AI features will be unavailable until you download a model.")
-                    .font(.system(size: 14))
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.horizontal, 40)
+                Text(
+                    "You can use ZetaNotes for note-taking, but AI features will be unavailable until you download a model."
+                )
+                .font(.system(size: 14))
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 40)
 
                 HStack(spacing: 6) {
                     Image(systemName: "gearshape.fill")
@@ -680,7 +684,7 @@ struct FirstRunModelSetupView: View {
                         }
                     }
 
-                case .failure(let error):
+                case let .failure(error):
                     downloadState.failDownload(error: error.localizedDescription)
                     viewState = .error
                     errorMessage = error.localizedDescription

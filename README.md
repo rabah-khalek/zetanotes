@@ -212,67 +212,59 @@ ZetaNotes/
 
 ### Without Apple Developer Account (Free - with Auto-Updates!)
 
-**Good news:** You can have auto-updates WITHOUT paying Apple!
+**Good news:** You can distribute without paying Apple!
 
-**Build unsigned version with Sparkle auto-updates:**
+**Build unsigned version:**
 ```bash
-./scripts/release_unsigned.sh 1.0.0
+./scripts/release.sh 1.0.0
 ```
 
 This creates a DMG with:
 
-- ✅ **Auto-update notifications** (via Sparkle)
-- ✅ **One-click downloads** for updates
-- ✅ **Cryptographic verification** (EdDSA signature)
+- ✅ **Simple distribution** - just upload to GitHub Releases
+- ✅ **Small download** - no bundled AI models (users download via welcome page)
 - ✅ **$0/year** - completely free
+- ✅ **User control** - users choose which AI models to download
 
 **User experience:**
 
-- First install: Right-click → Open (one-time bypass)
-- Updates: Automatic notifications + one-click install
-- Each update: Right-click → Open again (Gatekeeper)
+- First install: Right-click → Open (one-time bypass for "unidentified developer")
+- First run: Welcome page guides model download (Llama 3.2 1B, etc.)
+- Updates: Manual download from GitHub Releases
 
 **How it works:**
 
-1. Sparkle checks for updates (doesn't need Apple signing)
-2. User gets notification: "Update available"
-3. User clicks "Install"
-4. DMG downloads automatically
-5. User needs to right-click → Open the updated app
-6. Done!
+1. Build DMG with `release.sh`
+2. Upload to GitHub Releases
+3. Users download and install
+4. First run shows welcome page with model selection
+5. Users download AI models as needed (managed by app)
 
 **Pros:**
 
 - ✅ Free (no $99/year Apple Developer fee)
-- ✅ Auto-update notifications work!
-- ✅ One-click downloads
-- ✅ Secure (EdDSA signatures)
 - ✅ Full control over distribution
+- ✅ Small download size (<10 MB vs >500 MB with bundled model)
+- ✅ Users choose which models to download
+- ✅ Easy to update (just upload new DMG to GitHub)
 
 **Cons:**
 
-- ⚠️ Users need to right-click → Open on each update
+- ⚠️ Users need to right-click → Open on first install
 - ⚠️ Shows "unidentified developer" warning
-- ⚠️ Not as seamless as signed updates
+- ⚠️ No automatic update notifications
 
 ### With Apple Developer Account ($99/year)
 
 For professional distribution with signed & notarized builds:
 
-**Setup:**
-```bash
-# One-time setup
-./scripts/setup-signing.sh
+**Note:** Code signing and notarization are optional for this project. The unsigned distribution model works well for open source applications.
 
-# Build, sign, and notarize
-./scripts/package-release.sh
-```
-
-**Benefits:**
-- ✅ No security warnings for users
-- ✅ Professional user experience
-- ✅ Automatic updates (via Sparkle - optional)
-- ✅ Can distribute via Mac App Store (if desired)
+**If you need signed builds:**
+- Get Apple Developer account ($99/year)
+- Set up code signing certificate
+- Modify `release.sh` to add signing steps
+- See Apple documentation for notarization
 
 **Auto-updates (Sparkle):**
 

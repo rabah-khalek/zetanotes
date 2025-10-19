@@ -24,7 +24,7 @@ class ModelDownloader: NSObject, ObservableObject {
     // Shared state for UI updates
     private let sharedState = ModelDownloadState.shared
 
-    private override init() {
+    override private init() {
         super.init()
     }
 
@@ -36,7 +36,7 @@ class ModelDownloader: NSObject, ObservableObject {
     ///   - completion: Called when download completes or fails (optional)
     func downloadModel(_ modelType: AIModel, completion: ((Result<URL, Error>) -> Void)? = nil) {
         // If already downloading this model, just add the completion handler
-        if isDownloading && downloadingModel == modelType {
+        if isDownloading, downloadingModel == modelType {
             if let completion = completion {
                 completionHandlers.append(completion)
             }
