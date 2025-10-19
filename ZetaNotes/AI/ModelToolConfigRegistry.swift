@@ -112,18 +112,16 @@ private enum TinyLlamaConfigs {
         case .translate:
             return LLMConfig(
                 prompt: """
-                <|system|>
-                You are a translator. Return only the translation.</s>
-                <|user|>
-                Translate to {language}. Output only the translation:
+                <|begin_of_text|><|start_header_id|>system<|end_header_id|>
 
-                {content}</s>
-                <|assistant|>
+                You translate text to {targetLanguage}. Output ONLY the translated text with NO preamble, NO labels, NO phrases like "translation:", "here's the translation:", or "---". Begin IMMEDIATELY with the first word of the translated text.<|eot_id|><|start_header_id|>user<|end_header_id|>
+
+                {content}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
 
                 """,
-                temperature: 0.1,
-                maxTokens: nil,
-                stopSequences: stopSequences + ["\n\nOutput:"]
+                temperature: 0.05, // Optimized for accuracy
+                maxTokens: nil, // Dynamic based on input length
+                stopSequences: stopSequences
             )
 
         case .titleGeneration:
@@ -132,7 +130,7 @@ private enum TinyLlamaConfigs {
                 <|system|>
                 You are a helpful assistant that creates concise titles.</s>
                 <|user|>
-                Create a short title (5-8 words) that captures the main idea of the following text:
+                Create a short title (1-5 words) that captures the main idea of the following text:
 
                 {content}</s>
                 <|assistant|>
@@ -156,20 +154,19 @@ private enum TinyLlamaConfigs {
 
 // MARK: - Llama 3.2 1B/3B Configurations
 
-/// Llama 3.2 optimized configurations
-/// - Format: <|begin_of_text|><|start_header_id|>system<|end_header_id|>...<|eot_id|>
-/// - Best temp range: 0.1-0.6
-/// - Supports tool calling and code interpreter
+/// Llama 3.2 optimized configurations (September 2024 release)
+/// - Format: <|begin_of_text|><|start_header_id|>role<|end_header_id|>\n\ncontent<|eot_id|>
+/// - Optimized for: multilingual dialogue, agentic retrieval, summarization
+/// - Best temp range: 0.1-0.6 (1B model benefits from lower temps: 0.05-0.3)
+/// - Supports: tool calling, code interpreter, multilingual (8 languages)
+/// - Context: 128K tokens (8K for quantized versions)
 /// - Stop sequences: <|eot_id|> (token 128009, end of turn), <|end_of_text|> (token 128001, EOS)
+/// - Training: Knowledge distillation from Llama 3.1 8B/70B + RLHF alignment
 private enum LlamaThreeTwoConfigs {
     static let stopSequences = [
-        "<|eot_id|>",
-        "<|end_of_text|>",
-        "_id|>",
-        "\n\nHere is",
-        "\n\nHere's",
-        "\n\nThe text is",
-        "\n\n---"
+        "<|eot_id|>",         // Primary end-of-turn token (128009)
+        "<|end_of_text|>",    // End-of-sequence token (128001)
+        "_id|>"              // Catch incomplete header tokens
     ]
 
     static func config(for toolType: ToolType) -> LLMConfig {
@@ -179,16 +176,15 @@ private enum LlamaThreeTwoConfigs {
                 prompt: """
                 <|begin_of_text|><|start_header_id|>system<|end_header_id|>
 
-                You are a helpful writing assistant. Continue text naturally and concisely.<|eot_id|><|start_header_id|>user<|end_header_id|>
-
-                Continue the following text with just the next few words:
+                Continue writing. Do not add "user:", "assistant:", labels, or extra commentary. Just continue the text naturally.<|eot_id|><|start_header_id|>user<|end_header_id|>
 
                 {content}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
 
+                Continuation:
                 """,
-                temperature: 0.6,
-                maxTokens: 50,
-                stopSequences: ["<|eot_id|>", "\n\n"] // Allow single newlines for natural continuation
+                temperature: 0.4, // Reduced from 0.6 - 1B model needs lower temp for coherence
+                maxTokens: 40, // Reduced from 50 - smaller model works better with focused outputs
+                stopSequences: ["<|eot_id|>", "\n\n", "user:", "assistant:", "system:"] // Block chat-format artifacts
             )
 
         case .patch:
@@ -196,12 +192,11 @@ private enum LlamaThreeTwoConfigs {
                 prompt: """
                 <|begin_of_text|><|start_header_id|>system<|end_header_id|>
 
-                You are a grammar and spelling correction assistant. Fix errors while preserving meaning. Output ONLY the corrected text. Do not include any explanations, preambles, or commentary. Start your response directly with the corrected text.<|eot_id|><|start_header_id|>user<|end_header_id|>
-
-                Fix all spelling and grammar errors in the following text. Return only the corrected text:
+                Fix grammar and spelling. Output ONLY the corrected text. Do not add: explanations, offers to help, "Let me know", "Please", "I'm here", or any follow-up text.<|eot_id|><|start_header_id|>user<|end_header_id|>
 
                 {content}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
 
+                Fixed Text:
                 """,
                 temperature: 0.05,
                 maxTokens: nil,
@@ -213,14 +208,13 @@ private enum LlamaThreeTwoConfigs {
                 prompt: """
                 <|begin_of_text|><|start_header_id|>system<|end_header_id|>
 
-                You are a writing improvement assistant. Rewrite text for clarity and readability. Output ONLY the rewritten text. Do not include any explanations, preambles like "Here is", or commentary. Start your response directly with the rewritten text.<|eot_id|><|start_header_id|>user<|end_header_id|>
-
-                Rewrite the following text more clearly. Return only the rewritten text:
+                Rewrite this text for clarity. Output ONLY the rewritten text. Do not add: preambles, offers to help, follow-up questions, "Please", "Let me know", or any extra sentences.<|eot_id|><|start_header_id|>user<|end_header_id|>
 
                 {content}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
 
+                Rephrased Text:
                 """,
-                temperature: 0.3,
+                temperature: 0.2,
                 maxTokens: nil,
                 stopSequences: stopSequences
             )
@@ -230,15 +224,14 @@ private enum LlamaThreeTwoConfigs {
                 prompt: """
                 <|begin_of_text|><|start_header_id|>system<|end_header_id|>
 
-                You are a helpful assistant that creates concise summaries. Return ONLY the summary without any preamble or explanation.<|eot_id|><|start_header_id|>user<|end_header_id|>
-
-                Summarize the following text in 1-2 sentences. Return only the summary:
+                Write a 1-2 sentence summary. Output ONLY the summary. Do not add: commentary, offers to help, "You're", "Please", "Let me know", "I'm here", or follow-up questions.<|eot_id|><|start_header_id|>user<|end_header_id|>
 
                 {content}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
 
+                Summary:
                 """,
-                temperature: 0.2,
-                maxTokens: 150,
+                temperature: 0.1,
+                maxTokens: 80,
                 stopSequences: stopSequences
             )
 
@@ -247,14 +240,13 @@ private enum LlamaThreeTwoConfigs {
                 prompt: """
                 <|begin_of_text|><|start_header_id|>system<|end_header_id|>
 
-                You are an expert translator. Return ONLY the translation without any explanations or notes.<|eot_id|><|start_header_id|>user<|end_header_id|>
-
-                Translate the following text to {language}. Return only the translation:
+                Translate to {language}. Output ONLY the translation. Do not add: explanations, offers to help, "Please", "Let me know", or any text beyond the translation.<|eot_id|><|start_header_id|>user<|end_header_id|>
 
                 {content}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
 
+                Translation to {language}:
                 """,
-                temperature: 0.1,
+                temperature: 0.05,
                 maxTokens: nil,
                 stopSequences: stopSequences
             )
@@ -264,16 +256,18 @@ private enum LlamaThreeTwoConfigs {
                 prompt: """
                 <|begin_of_text|><|start_header_id|>system<|end_header_id|>
 
-                You generate concise titles. Output ONLY the title text, no labels or prefixes.<|eot_id|><|start_header_id|>user<|end_header_id|>
+                Generate a concise title (2-5 words). Output ONLY the title keywords. Do not add: sentences, questions, "Please", "Let me know", or any follow-up text.<|eot_id|><|start_header_id|>user<|end_header_id|>
 
-                {content}
+                {content}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
 
-                Title (5-8 words):<|eot_id|><|start_header_id|>assistant<|end_header_id|>
-
+                Title:
                 """,
-                temperature: 0.2,
-                maxTokens: 30,
-                stopSequences: ["<|eot_id|>"] // Only model end token, trim newlines in post-processing
+                temperature: 0.3, // Higher temp for more varied outputs
+                maxTokens: 12,
+                stopSequences: [
+                    "<|eot_id|>",
+                    "\n"
+                ]
             )
 
         case .custom:
@@ -284,7 +278,7 @@ private enum LlamaThreeTwoConfigs {
                 You are a helpful assistant.<|eot_id|><|start_header_id|>user<|end_header_id|>
 
                 """,
-                temperature: 0.6,
+                temperature: 0.3, // Reduced from 0.6 - 1B model benefits from lower default temp
                 maxTokens: nil,
                 stopSequences: stopSequences
             )
@@ -394,7 +388,7 @@ private enum QwenTwoFiveConfigs {
                 <|im_start|>system
                 You are a helpful assistant that creates concise titles.<|im_end|>
                 <|im_start|>user
-                Create a short title (5-8 words) that captures the main idea of the following text:
+                Create a short title (1-5 words) that captures the main idea of the following text:
 
                 {content}<|im_end|>
                 <|im_start|>assistant
@@ -520,9 +514,9 @@ private enum SmolLMTwoConfigs {
             return LLMConfig(
                 prompt: """
                 <|im_start|>system
-                You create concise titles for text. Output ONLY the title (5-8 words).<|im_end|>
+                You create concise titles for text. Output ONLY the title (1-5 words).<|im_end|>
                 <|im_start|>user
-                Create a short title (5-8 words) that captures the main idea of the following text:
+                Create a short title (1-5 words) that captures the main idea of the following text:
 
                 {content}<|im_end|>
                 <|im_start|>assistant
@@ -613,7 +607,7 @@ private enum Phi2Configs {
 
         case .titleGeneration:
             return LLMConfig(
-                prompt: "Instruct: Create a short title (5-8 words) that captures the main idea of the following text. Return only the title.\n\n{content}\n\nOutput:",
+                prompt: "Instruct: Create a short title (1-5 words) that captures the main idea of the following text. Return only the title.\n\n{content}\n\nOutput:",
                 temperature: 0.2,
                 maxTokens: 30,
                 stopSequences: stopSequences // Only model-specific end tokens, trim newlines in post-processing
@@ -727,9 +721,9 @@ private enum GemmaTwoConfigs {
             return LLMConfig(
                 prompt: """
                 <start_of_turn>user
-                You are a helpful assistant that creates concise titles. Output ONLY the title (5-8 words).
+                You are a helpful assistant that creates concise titles. Output ONLY the title (1-5 words).
 
-                Create a short title (5-8 words) that captures the main idea of the following text:
+                Create a short title (1-5 words) that captures the main idea of the following text:
 
                 {content}<end_of_turn>
                 <start_of_turn>model
@@ -854,9 +848,9 @@ private enum PhiThreeFiveConfigs {
             return LLMConfig(
                 prompt: """
                 <|system|>
-                You create concise titles for text. Output ONLY the title (5-8 words).<|end|>
+                You create concise titles for text. Output ONLY the title (1-5 words).<|end|>
                 <|user|>
-                Create a short title (5-8 words) that captures the main idea of the following text:
+                Create a short title (1-5 words) that captures the main idea of the following text:
 
                 {content}<|end|>
                 <|assistant|>

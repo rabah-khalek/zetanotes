@@ -139,6 +139,16 @@
 		</dict>
 	</array>
 
+	<!-- Sparkle Auto-Update Configuration -->
+	<key>SUFeedURL</key>
+	<string>https://YOUR_USERNAME.github.io/zetanotes/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>FDRYSVr/ynz9brNn3H9FX/GukNtKgnQbuXD90zWps7Y=</string>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
+	<key>SUScheduledCheckInterval</key>
+	<integer>86400</integer>
+
 	<!-- Accessibility -->
 	<key>NSSupportsAutomaticTermination</key>
 	<true/>

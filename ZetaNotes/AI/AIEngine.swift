@@ -37,7 +37,7 @@ class AIEngine: ObservableObject {
     @Published var isModelLoaded = false
     @Published var modelLoadingError: String?
     @Published var memoryUsage: Double = 0.0 // In MB
-    @Published var selectedModel: AIModel = .tinyLlama
+    @Published var selectedModel: AIModel = .llamaThreeTwoOneB
     @Published var isSwitchingModel = false
     @Published var switchingToModel: AIModel?
 
@@ -91,8 +91,8 @@ class AIEngine: ObservableObject {
             // Save preference
             UserDefaults.standard.set(modelType.rawValue, forKey: "selectedAIModel")
 
-            // Update system monitor (if available)
-            // SystemMonitor.shared.setActiveModel(modelType.displayName)
+            // Update system monitor with the active model
+            SystemMonitor.shared.setActiveModel(modelType.displayName)
 
             print("✅ \(modelType.displayName) loaded successfully")
         } catch {

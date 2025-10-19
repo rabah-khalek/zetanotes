@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <channel>
+        <title>ZetaNotes Updates</title>
+        <link>https://YOUR_USERNAME.github.io/zetanotes/appcast.xml</link>
+        <description>Most recent updates for ZetaNotes</description>
+        <language>en</language>
+
+        <!-- Version 1.0 - Initial Release -->
+        <item>
+            <title>Version 1.0</title>
+            <link>https://github.com/YOUR_USERNAME/zetanotes</link>
+            <sparkle:version>1.0</sparkle:version>
+            <sparkle:shortVersionString>1.0</sparkle:shortVersionString>
+            <description><![CDATA[
+                <h2>ZetaNotes 1.0 - Initial Release</h2>
+                <p>Privacy-first note-taking with offline AI.</p>
+                <ul>
+                    <li>🔒 100% offline AI processing</li>
+                    <li>✨ Smart autocomplete with TinyLlama</li>
+                    <li>📝 Instant summarization</li>
+                    <li>🌍 Translate to 12+ languages</li>
+                    <li>🔍 Semantic search</li>
+                </ul>
+            ]]></description>
+            <pubDate>Mon, 19 Oct 2025 00:00:00 +0000</pubDate>
+            <enclosure
+                url="https://github.com/YOUR_USERNAME/zetanotes/releases/download/v1.0/ZetaNotes-v1.0.dmg"
+                sparkle:version="1.0"
+                sparkle:shortVersionString="1.0"
+                length="750000000"
+                type="application/octet-stream"
+                sparkle:edSignature="WILL_BE_GENERATED" />
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+        </item>
+
+    </channel>
+</rss>

@@ -1,6 +1,6 @@
 # ZetaNotes Distribution Guide
 
-This guide covers signing, notarizing, and distributing ZetaNotes via GitHub Pages.
+This guide covers signing, notarizing, and distributing ZetaNotes via GitHub Pages with Sparkle auto-update support.
 
 ## Prerequisites
 
@@ -28,6 +28,25 @@ security find-identity -v -p codesigning
 
 # Should show something like:
 # 1) XXXXX "Developer ID Application: Your Name (TEAM_ID)"
+```
+
+### 5. Sparkle Auto-Update Setup
+
+ZetaNotes uses Sparkle 2.x for automatic updates. The EdDSA signing keys have already been generated and configured.
+
+**Key Details:**
+- Public Key: Already added to `Info.plist` (SUPublicEDKey)
+- Private Key: Stored in macOS Keychain (used by `sign_update` tool)
+- Appcast Feed: `docs/appcast.xml` (hosted on GitHub Pages)
+
+**Verify Sparkle Setup:**
+```bash
+# Check if Sparkle keys exist in keychain
+security find-generic-password -s "Sparkle" | grep "acct"
+
+# Verify Sparkle tools are available
+ls -la scripts/sparkle/bin/
+# Should show: generate_appcast, sign_update, generate_keys
 ```
 
 ---
@@ -378,7 +397,41 @@ Your site will be live at: `https://YOUR_USERNAME.github.io/zetanotes/`
 
 ---
 
-## Automation Script (Optional)
+## Quick Release (Recommended Method)
+
+**New: Automated Release with Sparkle**
+
+The easiest way to create a release is using the automated script:
+
+```bash
+# Update version in Xcode first (Project → General → Version)
+# Then run the release script:
+./scripts/release_with_sparkle.sh 1.0.0
+```
+
+This script automatically:
+1. Builds the app
+2. Downloads and bundles TinyLlama model
+3. Signs with Developer ID
+4. Creates and signs DMG
+5. Signs with Sparkle EdDSA
+6. Notarizes with Apple
+7. Updates `appcast.xml` with new version
+
+**After the script completes:**
+1. Upload the DMG to GitHub Releases
+2. Commit and push the updated `appcast.xml`
+3. Users will automatically be notified of the update
+
+---
+
+## Manual Release Process
+
+If you prefer to do it manually or need to troubleshoot:
+
+---
+
+## Automation Script (Optional - Legacy)
 
 Save this as `scripts/release.sh`:
 
@@ -439,6 +492,39 @@ chmod +x scripts/release.sh
 ---
 
 ## Troubleshooting
+
+### Sparkle Auto-Update Issues
+
+#### Updates Not Showing
+```bash
+# Check if appcast.xml is accessible
+curl https://YOUR_USERNAME.github.io/zetanotes/appcast.xml
+
+# Verify the SUFeedURL in Info.plist matches your GitHub Pages URL
+grep -A 1 SUFeedURL ZetaNotes/Info.plist
+
+# Check Sparkle logs in Console.app
+# Filter by: process:ZetaNotes AND sparkle
+```
+
+#### Invalid Signature Error
+```bash
+# Re-sign the DMG with Sparkle
+./scripts/sparkle/bin/sign_update ~/path/to/ZetaNotes-v1.0.0.dmg
+
+# Update the signature in appcast.xml with the output
+```
+
+#### Appcast XML Not Valid
+```bash
+# Validate XML syntax
+xmllint --noout docs/appcast.xml
+
+# Common issues:
+# - Missing CDATA tags around HTML in description
+# - Incorrect sparkle:edSignature value
+# - Wrong file size in length attribute
+```
 
 ### Notarization Failed
 ```bash

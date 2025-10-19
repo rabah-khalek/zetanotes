@@ -92,6 +92,7 @@ struct ContentView: View {
                     )
                 ),
                 isPresented: $showingToolEditor,
+                targetLanguage: $viewModel.targetLanguage,
                 onSave: { tool in
                     if editingTool != nil {
                         toolManager.updateTool(tool)

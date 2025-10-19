@@ -20,7 +20,6 @@
 		81111F612E9F37FB00D7317B /* DefaultPrompts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F602E9F37FB00D7317B /* DefaultPrompts.swift */; };
 		81111F642EA0891A00D7317B /* InlineAutocompleteTextEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F622EA0891A00D7317B /* InlineAutocompleteTextEditor.swift */; };
 		81111F652EA0891A00D7317B /* UpgradePromptView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F632EA0891A00D7317B /* UpgradePromptView.swift */; };
-
 		81DE21652E9B3C2400692788 /* ModelDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE21642E9B3C2400692788 /* ModelDownloader.swift */; };
 		81DE4F6B2EA1A524006293FC /* MarkdownRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F6A2EA1A524006293FC /* MarkdownRenderer.swift */; };
 		81DE4F6E2EA1CE1A006293FC /* AITool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F6C2EA1CE1A006293FC /* AITool.swift */; };
@@ -46,6 +45,8 @@
 		81DE4F9F2EA33EF3006293FC /* CustomToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F9B2EA33EF3006293FC /* CustomToolbarView.swift */; };
 		81DE4FA12EA34106006293FC /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4FA02EA34106006293FC /* AppTheme.swift */; };
 		81DE4FA32EA46176006293FC /* LLMOutputCleaner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4FA22EA46176006293FC /* LLMOutputCleaner.swift */; };
+		81DE4FA62EA492FA006293FC /* Sparkle.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 81DE4FA52EA492FA006293FC /* Sparkle.xcframework */; };
+		81DE4FA72EA492FA006293FC /* Sparkle.xcframework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 81DE4FA52EA492FA006293FC /* Sparkle.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		81EFBE2E2E9B05C700F7E48B /* libllama.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 81EFBE282E9B05C700F7E48B /* libllama.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		81EFBE2F2E9B05C700F7E48B /* libggml-base.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 81EFBE292E9B05C700F7E48B /* libggml-base.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		81EFBE302E9B05C700F7E48B /* libggml-metal.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 81EFBE2A2E9B05C700F7E48B /* libggml-metal.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -89,6 +90,7 @@
 				81EFBE2E2E9B05C700F7E48B /* libllama.dylib in CopyFiles */,
 				81EFBE2F2E9B05C700F7E48B /* libggml-base.dylib in CopyFiles */,
 				81EFBE302E9B05C700F7E48B /* libggml-metal.dylib in CopyFiles */,
+				81DE4FA72EA492FA006293FC /* Sparkle.xcframework in CopyFiles */,
 				81EFBE312E9B05C700F7E48B /* libggml-cpu.dylib in CopyFiles */,
 				81EFBE322E9B05C700F7E48B /* libggml.dylib in CopyFiles */,
 				81EFBE332E9B05C700F7E48B /* libggml-blas.dylib in CopyFiles */,
@@ -136,6 +138,7 @@
 		81DE4F9C2EA33EF3006293FC /* CustomWindowLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomWindowLayout.swift; sourceTree = "<group>"; };
 		81DE4FA02EA34106006293FC /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		81DE4FA22EA46176006293FC /* LLMOutputCleaner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMOutputCleaner.swift; sourceTree = "<group>"; };
+		81DE4FA52EA492FA006293FC /* Sparkle.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = Sparkle.xcframework; path = Frameworks/Sparkle.xcframework; sourceTree = "<group>"; };
 		81EFBE282E9B05C700F7E48B /* libllama.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libllama.dylib; path = llama.cpp/build/bin/libllama.dylib; sourceTree = "<group>"; };
 		81EFBE292E9B05C700F7E48B /* libggml-base.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libggml-base.dylib"; path = "llama.cpp/build/bin/libggml-base.dylib"; sourceTree = "<group>"; };
 		81EFBE2A2E9B05C700F7E48B /* libggml-metal.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libggml-metal.dylib"; path = "llama.cpp/build/bin/libggml-metal.dylib"; sourceTree = "<group>"; };
@@ -177,6 +180,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				81DE4FA62EA492FA006293FC /* Sparkle.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -205,6 +209,14 @@
 			path = Managers;
 			sourceTree = "<group>";
 		};
+		81DE4FA42EA492FA006293FC /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				81DE4FA52EA492FA006293FC /* Sparkle.xcframework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		A1000038000000000000001 = {
 			isa = PBXGroup;
 			children = (
@@ -215,6 +227,7 @@
 				81EFBE2A2E9B05C700F7E48B /* libggml-metal.dylib */,
 				81EFBE282E9B05C700F7E48B /* libllama.dylib */,
 				A1000039000000000000001 /* ZetaNotes */,
+				81DE4FA42EA492FA006293FC /* Frameworks */,
 				A1000040000000000000001 /* Products */,
 			);
 			sourceTree = "<group>";

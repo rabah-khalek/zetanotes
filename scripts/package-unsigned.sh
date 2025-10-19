@@ -21,9 +21,9 @@ BUILD_DIR="$HOME/Desktop/ZetaNotes-Release-$(date +%Y%m%d-%H%M%S)"
 APP_NAME="ZetaNotes"
 DMG_NAME="${APP_NAME}-v${VERSION}.dmg"
 
-# TinyLlama model
-MODEL_URL="https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"
-MODEL_FILE="tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"
+# Llama 3.2 1B model
+MODEL_URL="https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-Q4_K_M.gguf"
+MODEL_FILE="Llama-3.2-1B-Instruct-Q4_K_M.gguf"
 
 echo -e "${BLUE}╔═══════════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║  ZetaNotes Unsigned Build Script v1.0         ║${NC}"
@@ -187,12 +187,12 @@ echo ""
 
 print_success "App copied and cleaned: $BUILD_DIR/${APP_NAME}.app"
 
-# Bundle TinyLlama model
-print_step "Step 4: Bundling TinyLlama model"
+# Bundle Llama 3.2 1B model
+print_step "Step 4: Bundling Llama 3.2 1B model"
 MODELS_DIR="$BUILD_DIR/${APP_NAME}.app/Contents/Resources/Models"
 mkdir -p "$MODELS_DIR"
 
-echo "Downloading TinyLlama (~700MB)..."
+echo "Downloading Llama 3.2 1B (~700MB)..."
 if curl -L --progress-bar "$MODEL_URL" -o "$MODELS_DIR/$MODEL_FILE"; then
     MODEL_SIZE=$(du -h "$MODELS_DIR/$MODEL_FILE" | cut -f1)
     print_success "Model downloaded: $MODEL_SIZE"

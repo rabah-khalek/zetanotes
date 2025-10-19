@@ -625,8 +625,8 @@ class NoteViewModel: ObservableObject {
         // Reset autocomplete state
         isAutocompleteEnabled = true
 
-        // Reset AI model to TinyLlama
-        AIEngine.shared.selectedModel = .tinyLlama
+        // Reset AI model to Llama 3.2 1B (default model)
+        AIEngine.shared.selectedModel = .llamaThreeTwoOneB
 
         // Reset tools to defaults (removes custom tools, resets default tools)
         ToolManager.shared.resetToDefaults()

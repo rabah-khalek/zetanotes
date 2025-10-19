@@ -10,14 +10,12 @@ ZetaNotes is a native macOS note-taking app that runs AI models completely offli
 
 🔒 **100% Private** • ✨ **AI Autocomplete** • 📝 **Instant Summaries** • 🌍 **Translate to 12+ Languages** • 🔍 **Semantic Search**
 
-**[Download Latest Release](https://github.com/YOUR_USERNAME/zetanotes/releases/latest)** | **[Documentation](https://YOUR_USERNAME.github.io/zetanotes/)** | **[Upgrade to Pro (from $1/month)](https://zetanotes.lemonsqueezy.com/checkout)**
-
 ---
 
 ## ✨ Features
 
 ### Free Tier (Forever)
-- ✅ **AI Autocomplete** - Smart text completion powered by TinyLlama 1.1B
+- ✅ **AI Autocomplete** - Smart text completion powered by Llama 3.2 1B
 - ✅ **Summarization** - Get quick summaries of long notes
 - ✅ **Translation** - Translate to English, Spanish, French, German, Chinese, Japanese, Korean, and more
 - ✅ **Semantic Search** - Find notes by meaning, not just keywords
@@ -25,28 +23,13 @@ ZetaNotes is a native macOS note-taking app that runs AI models completely offli
 - ✅ **100% Offline** - All AI processing happens locally
 - ✅ **Privacy-First** - Zero telemetry, no cloud sync, no data collection
 
-### Pro Tier (starting at $1/month)
+### Pro Tier (Optional - from $1/month)
 - 🚀 **8 Open-Source AI Models** - Phi-3, Qwen 2.5, Llama 3.2, Gemma 2, SmolLM2 & more
-- 💬 **AI Chat Assistant** - Natural conversations with AI using selected model
+- 💬 **AI Chat Assistant** - Natural conversations with AI
 - 📥 **Download Any Model** - Switch between models anytime
 - ✏️ **Custom Tools** - Create custom AI tools tailored to your workflow
-- ⚙️ **Customize Everything** - Fine-tune prompts, chat parameters, and more
-- ⚡ **Better Quality** - Larger models = smarter, more accurate results
-- 🎁 **Future Updates** - New models and features added regularly
+- ⚙️ **Customize Everything** - Fine-tune prompts and parameters
 - 💎 **Flexible Plans** - Monthly ($1), Annual ($10), or Lifetime ($30)
-
----
-
-## 🎯 Why ZetaNotes?
-
-| Feature | ZetaNotes | Cloud-Based Apps |
-|---------|----------|------------------|
-| **Privacy** | 100% offline | ❌ Data sent to servers |
-| **AI Features** | ✅ Local models | ⚠️ Requires internet |
-| **Speed** | ⚡ Instant | 🐌 Network latency |
-| **Cost** | $0-$30 one-time or $1-10/month | 💸 $10-20/month |
-| **Data Security** | 🔒 Never leaves your Mac | ⚠️ Stored in cloud |
-| **Works Offline** | ✅ Always | ❌ Internet required |
 
 ---
 
@@ -54,27 +37,36 @@ ZetaNotes is a native macOS note-taking app that runs AI models completely offli
 
 ### Requirements
 - **macOS 13.0** (Ventura) or later
-- **Apple Silicon** (M1/M2/M3/M4) recommended
+- **Apple Silicon** (M1/M2/M3/M4) recommended for best performance
 - **4 GB RAM** minimum (8 GB+ recommended)
-- **1 GB disk space** (+ more for open-source models)
+- **1 GB disk space** (+ more for additional models)
 
-### Download
+### Quick Install
 
-1. Download the latest DMG from [Releases](https://github.com/YOUR_USERNAME/zetanotes/releases/latest)
-2. Open `ZetaNotes.dmg`
-3. Drag **ZetaNotes** to Applications folder
-4. Open ZetaNotes from Applications
+1. **Download** the latest release from [GitHub Releases](https://github.com/YOUR_USERNAME/zetanotes/releases)
+2. **Open** the DMG file
+3. **Drag** ZetaNotes.app to your Applications folder
+4. **Launch** from Applications
 
-### First Launch
+### First Launch (Important)
 
-On first launch, macOS may show a security warning. To open:
-1. Right-click ZetaNotes in Applications
-2. Select "Open" from the menu
-3. Click "Open" in the dialog
+Since this app is not signed with an Apple Developer certificate, macOS will show a security warning:
 
-Or: System Settings → Privacy & Security → "Open Anyway"
+**Method 1 - Right-click to open:**
+1. Locate ZetaNotes in Applications folder
+2. **Right-click** (or Control+click) on ZetaNotes
+3. Select **"Open"** from the menu
+4. Click **"Open"** in the security dialog
+5. App will now open normally
 
-**Full installation guide:** [docs/download.html](https://YOUR_USERNAME.github.io/zetanotes/download.html)
+**Method 2 - System Settings:**
+1. Try to open ZetaNotes normally (it will be blocked)
+2. Go to **System Settings** → **Privacy & Security**
+3. Scroll down to find **"ZetaNotes was blocked"**
+4. Click **"Open Anyway"**
+5. Confirm by clicking **"Open"**
+
+**You only need to do this once.** After the first launch, macOS will remember your choice.
 
 ---
 
@@ -86,10 +78,10 @@ Or: System Settings → Privacy & Security → "Open Anyway"
 2. **Start Typing** - AI autocomplete activates automatically
 3. **Accept Suggestions** - Press `Tab` to accept AI suggestions
 4. **Search Notes** - Use semantic search to find by meaning
-5. **AI Actions** - Right-click selected text for:
+5. **AI Actions** - Select text and use toolbar buttons:
    - Summarize
    - Translate
-   - Patch (grammar/spelling fix)
+   - Fix grammar/spelling
    - Reformulate (rewrite)
 
 ### Keyboard Shortcuts
@@ -98,119 +90,92 @@ Or: System Settings → Privacy & Security → "Open Anyway"
 |----------|--------|
 | `Cmd+N` | New note |
 | `Cmd+F` | Search notes |
-| `Cmd+,` | Settings |
+| `Cmd+K` | Semantic search |
 | `Tab` | Accept AI suggestion |
 | `Esc` | Dismiss suggestion |
-| `Cmd+K` | Semantic search |
+| `Cmd+,` | Settings |
 
 ---
 
 ## 🤖 AI Models
 
 ### Included (Free)
-- **TinyLlama 1.1B** - Lightweight, fast, perfect for autocomplete and embeddings
+- **Llama 3.2 1B** - Meta's latest compact model with improved instruction-following
+- Fast, lightweight, and perfect for everyday note-taking
 
-### Pro Models (from $1/month)
-
-**Choose your plan:**
-- **Monthly**: $1/month - Perfect for trying out Pro features
-- **Annual**: $10/year - Best value, save $2 per year
-- **Lifetime**: $30 one-time - Pay once, own forever
-
-**All plans include access to:**
+### Pro Models (Optional)
 
 | Model | Size | Speed | Quality | Best For |
 |-------|------|-------|---------|----------|
-| **Llama 3.2 1B** | 0.7 GB | Very Fast | Basic+ | Quick tasks |
+| **TinyLlama 1.1B** | 0.7 GB | Very Fast | Basic | Legacy option |
 | **Qwen 2.5 1.5B** | 0.9 GB | Very Fast | Good | Balanced performance |
 | **SmolLM2 1.7B** | 1.0 GB | Very Fast | Good | Instruction following |
-| **Phi-2 2.7B** | 1.6 GB | Very Fast | Good+ | Reasoning tasks |
+| **Phi-2 2.7B** | 1.6 GB | Very Fast | Good+ | Reasoning |
 | **Gemma 2 2B** | 1.4 GB | Very Fast | High | High quality |
 | **Qwen 2.5 3B** | 2.0 GB | Fast | High | Complex tasks |
 | **Llama 3.2 3B** | 2.0 GB | Fast | Very High | Multilingual |
 | **Phi-3.5 Mini** | 2.3 GB | Fast | Very High | Best quality |
 
-All models run with **Metal GPU acceleration** on Apple Silicon for maximum performance.
-
----
-
-## ⚙️ Configuration
-
-### AI Settings
-
-1. Open **Settings** → **AI Settings**
-2. **Change Model** (Pro only):
-   - Click "Download" next to any open-source model
-   - After download, click "Use This"
-3. **Customize Prompts** (Pro only):
-   - Edit prompts for autocomplete, summarization, translation, etc.
-   - Reset to defaults anytime
-
-### Storage Location
-
-- **Notes Database**: `~/Library/Application Support/ZetaNotes/notes.sqlite`
-- **Downloaded Models**: `~/Library/Application Support/ZetaNotes/Models/`
-- **Logs**: `~/Library/Logs/ZetaNotes/`
+All models run with **Metal GPU acceleration** on Apple Silicon.
 
 ---
 
 ## 💻 Technical Details
 
 ### Architecture
-
-- **UI Framework**: SwiftUI
-- **Database**: Core Data with SQLite
+- **UI**: SwiftUI (native macOS)
+- **Database**: Core Data + SQLite
 - **AI Engine**: llama.cpp with Metal GPU acceleration
 - **Vector Search**: Local embeddings with cosine similarity
-- **Model Format**: GGUF (quantized, optimized for inference)
+- **Model Format**: GGUF (quantized, optimized)
 
 ### Privacy & Security
+- ✅ **No internet required** (except optional model downloads)
+- ✅ **No analytics** or telemetry
+- ✅ **No crash reporting** to external services
+- ✅ **Local encryption** for license keys (macOS Keychain)
+- ✅ **All data stays on your Mac**
 
-- ✅ **No Network Requests** (except for optional model downloads)
-- ✅ **No Analytics** or telemetry
-- ✅ **No Crash Reporting** to external services
-- ✅ **Local Encryption** using macOS Keychain for license keys
-- ✅ **File Permissions** set to owner-only (0600)
+### Performance
+- 🚀 **Metal GPU acceleration** for AI inference
+- 🚀 **Vector caching** (90% memory reduction)
+- 🚀 **Optimized database** with Core Data indexes
+- 🚀 **Batch operations** for fast bulk updates
 
-### Performance Optimizations
-
-- 🚀 **N+1 Query Prevention** via relationship prefetching
-- 🚀 **Vector Caching** with NSCache (90% memory reduction)
-- 🚀 **Search Result Caching** (5-minute TTL)
-- 🚀 **Core Data Indexes** on frequently queried fields
-- 🚀 **Batch Operations** for bulk updates
-- 🚀 **Metal GPU Acceleration** for inference
+### Storage Locations
+- **Notes Database**: `~/Library/Application Support/ZetaNotes/notes.sqlite`
+- **AI Models**: `~/Library/Application Support/ZetaNotes/Models/`
+- **Settings**: `~/Library/Preferences/com.zetanotes.ZetaNotes.plist`
 
 ---
 
-## 🛠️ Development
+## 🛠️ Building from Source
 
-### Build Requirements
-
+### Prerequisites
 - **Xcode 15.0+**
 - **macOS 14.0+** (for development)
 - **Swift 5.9+**
 
-### Building from Source
+### Build Steps
 
 ```bash
-# Clone the repository
+# Clone repository
 git clone https://github.com/YOUR_USERNAME/zetanotes.git
 cd zetanotes
 
 # Initialize llama.cpp submodule
 git submodule update --init --recursive
 
-# Build llama.cpp
+# Build llama.cpp libraries
 cd llama.cpp
 cmake -B build -DGGML_METAL=ON
 cmake --build build --config Release
+cd ..
 
 # Open in Xcode
-cd ..
 open ZetaNotes.xcodeproj
 
-# Run in Xcode
+# Build and run
 # Product → Run (Cmd+R)
 ```
 
@@ -218,119 +183,181 @@ open ZetaNotes.xcodeproj
 
 ```
 ZetaNotes/
-├── AI/                    # AI engine & inference
+├── AI/                    # AI engine & services
 │   ├── AIEngine.swift
 │   ├── LLMInferenceService.swift
-│   └── AutocompleteService.swift
+│   ├── AutocompleteService.swift
+│   └── SummarizationService.swift
 ├── Models/                # Core Data models
 │   ├── Note.swift
 │   └── NotesDataModel.xcdatamodeld
 ├── Views/                 # SwiftUI views
 │   ├── ContentView.swift
-│   ├── AISettingsView.swift
-│   └── UpgradePromptView.swift
-├── Search/                # Semantic search
+│   ├── NoteListView.swift
+│   ├── NoteEditorView.swift
+│   └── AISettingsView.swift
+├── Search/                # Semantic search engine
 │   └── SemanticSearchEngine.swift
-├── Managers/              # Licensing, analytics
+├── Managers/              # App managers
 │   ├── LicenseManager.swift
+│   ├── ChatManager.swift
 │   └── AnalyticsManager.swift
-└── Utilities/             # Helpers
-    ├── Logger.swift
-    └── SystemMonitor.swift
+└── Storage/               # Data persistence
+    └── PersistenceController.swift
 ```
 
-### Running Tests
+---
 
+## 🚀 Distribution (For Developers)
+
+### Without Apple Developer Account (Free - with Auto-Updates!)
+
+**Good news:** You can have auto-updates WITHOUT paying Apple!
+
+**Build unsigned version with Sparkle auto-updates:**
 ```bash
-# Unit tests
-xcodebuild test -scheme ZetaNotes -destination 'platform=macOS'
-
-# Or in Xcode
-# Product → Test (Cmd+U)
+./scripts/release_unsigned.sh 1.0.0
 ```
 
+This creates a DMG with:
+
+- ✅ **Auto-update notifications** (via Sparkle)
+- ✅ **One-click downloads** for updates
+- ✅ **Cryptographic verification** (EdDSA signature)
+- ✅ **$0/year** - completely free
+
+**User experience:**
+
+- First install: Right-click → Open (one-time bypass)
+- Updates: Automatic notifications + one-click install
+- Each update: Right-click → Open again (Gatekeeper)
+
+**How it works:**
+
+1. Sparkle checks for updates (doesn't need Apple signing)
+2. User gets notification: "Update available"
+3. User clicks "Install"
+4. DMG downloads automatically
+5. User needs to right-click → Open the updated app
+6. Done!
+
+**Pros:**
+
+- ✅ Free (no $99/year Apple Developer fee)
+- ✅ Auto-update notifications work!
+- ✅ One-click downloads
+- ✅ Secure (EdDSA signatures)
+- ✅ Full control over distribution
+
+**Cons:**
+
+- ⚠️ Users need to right-click → Open on each update
+- ⚠️ Shows "unidentified developer" warning
+- ⚠️ Not as seamless as signed updates
+
+### With Apple Developer Account ($99/year)
+
+For professional distribution with signed & notarized builds:
+
+**Setup:**
+```bash
+# One-time setup
+./scripts/setup-signing.sh
+
+# Build, sign, and notarize
+./scripts/package-release.sh
+```
+
+**Benefits:**
+- ✅ No security warnings for users
+- ✅ Professional user experience
+- ✅ Automatic updates (via Sparkle - optional)
+- ✅ Can distribute via Mac App Store (if desired)
+
+**Auto-updates (Sparkle):**
+
+With signed builds, updates are completely seamless:
+
+- No right-click needed
+- No security warnings
+- Truly one-click updates
+- Professional user experience
+
 ---
 
-## 📈 Roadmap
+## 📝 License
 
-### v1.1 (Next Release)
-- [ ] iCloud sync (optional, end-to-end encrypted)
-- [ ] Export notes to Markdown/PDF
-- [ ] Note linking and backlinks
-- [ ] Tags and folders
+MIT License - See [LICENSE](LICENSE) for details.
 
-### v1.2
-- [ ] Voice notes with Whisper (local transcription)
-- [ ] Image OCR
-- [ ] Code syntax highlighting
-- [ ] Plugin system
+**You can:**
+- ✅ Use commercially
+- ✅ Modify
+- ✅ Distribute
+- ✅ Use privately
 
-### v2.0
-- [ ] iOS/iPadOS version
-- [ ] Collaborative editing
-- [ ] Advanced search filters
-- [ ] Custom themes
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Here's how you can help:
-
-### Ways to Contribute
-
-- 🐛 **Report bugs** via [GitHub Issues](https://github.com/YOUR_USERNAME/zetanotes/issues)
-- 💡 **Suggest features** in Discussions
-- 📝 **Improve documentation**
-- 🔧 **Submit pull requests**
-- 🌍 **Translate the app** to other languages
-
-### Development Guidelines
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
----
-
-## 📄 License
-
-ZetaNotes is open source under the MIT License. See [LICENSE](LICENSE) for details.
-
-**TL;DR:** You can use, modify, and distribute this software freely, including for commercial purposes.
+**You must:**
+- Include copyright notice
+- Include license text
 
 ---
 
 ## 🙏 Acknowledgments
 
-ZetaNotes is built with these amazing open-source projects:
+Built with these amazing open-source projects:
 
-- [llama.cpp](https://github.com/ggerganov/llama.cpp) - LLM inference in C/C++
-- [TinyLlama](https://github.com/jzhang38/TinyLlama) - Compact 1.1B parameter model
+- [llama.cpp](https://github.com/ggerganov/llama.cpp) - Fast LLM inference in C/C++
+- [TinyLlama](https://github.com/jzhang38/TinyLlama) - Compact 1.1B language model
 - [Qwen2.5](https://github.com/QwenLM/Qwen2.5) - High-quality small models
 - [Phi-3](https://huggingface.co/microsoft/phi-3-mini-128k-instruct) - Microsoft's reasoning model
-- [Llama 3.2](https://ai.meta.com/llama/) - Meta's latest small models
+- [Llama 3.2](https://ai.meta.com/llama/) - Meta's latest models
 
 ---
 
-## 📞 Support
+## 📞 Support & Contributing
 
-- **Website**: https://YOUR_USERNAME.github.io/zetanotes/
-- **Email**: support@zetanotes.app
-- **GitHub Issues**: https://github.com/YOUR_USERNAME/zetanotes/issues
+### Get Help
+- **Issues**: [GitHub Issues](https://github.com/YOUR_USERNAME/zetanotes/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/YOUR_USERNAME/zetanotes/discussions)
+
+### Contribute
+Contributions welcome!
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+**Ways to help:**
+- 🐛 Report bugs
+- 💡 Suggest features
+- 📝 Improve documentation
+- 🌍 Translate the app
+- 🔧 Submit pull requests
 
 ---
 
-## ⭐ Star History
+## 🎯 Roadmap
 
-If you find ZetaNotes useful, please consider starring the repository!
+### v1.1 (Next)
+- [ ] Export to Markdown/PDF
+- [ ] Note linking and backlinks
+- [ ] Tags and folders
+- [ ] Dark mode improvements
 
-[![Star History Chart](https://api.star-history.com/svg?repos=YOUR_USERNAME/zetanotes&type=Date)](https://star-history.com/#YOUR_USERNAME/zetanotes&Date)
+### v1.2
+- [ ] Voice notes with Whisper (local transcription)
+- [ ] Image OCR
+- [ ] Code syntax highlighting
+- [ ] Custom themes
+
+### Future
+- [ ] iOS/iPadOS version
+- [ ] End-to-end encrypted sync (optional)
+- [ ] Plugin system
 
 ---
 
 **Made with ❤️ for privacy-conscious note-takers**
 
-[Download](https://YOUR_USERNAME.github.io/zetanotes/) • [Website](https://YOUR_USERNAME.github.io/zetanotes/) • [Upgrade to Pro](https://zetanotes.lemonsqueezy.com/checkout)
+*No cloud. No tracking. Just your notes and AI, working together on your Mac.*

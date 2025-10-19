@@ -170,6 +170,7 @@ struct AISettingsView: View {
                         get: { toolEditorState != nil },
                         set: { if !$0 { toolEditorState = nil } }
                     ),
+                    targetLanguage: $viewModel.targetLanguage,
                     onSave: { tool in
                         toolManager.addTool(tool)
                         toolEditorState = nil
@@ -183,6 +184,7 @@ struct AISettingsView: View {
                         set: { if !$0 { toolEditorState = nil } }
                     ),
                     isReadOnly: tool.isDefault && !licenseManager.isPro,
+                    targetLanguage: $viewModel.targetLanguage,
                     onSave: { updatedTool in
                         toolManager.updateTool(updatedTool)
                         toolEditorState = nil
@@ -339,7 +341,7 @@ struct GeneralSettingsContent: View {
                         Button("Cancel", role: .cancel) {}
                     } message: {
                         Text(
-                            "This will reset:\n• All prompts to defaults\n• All tools to defaults (removes custom tools)\n• Chat settings to defaults\n• AI model to TinyLlama\n• Appearance to Dark mode\n\nThis action cannot be undone."
+                            "This will reset:\n• All prompts to defaults\n• All tools to defaults (removes custom tools)\n• Chat settings to defaults\n• AI model to Llama 3.2 1B\n• Appearance to Dark mode\n\nThis action cannot be undone."
                         )
                     }
                 }

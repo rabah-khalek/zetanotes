@@ -13,6 +13,7 @@ struct ToolEditorView: View {
     @Binding var isPresented: Bool
     let onSave: ((AITool) -> Void)?
     let isReadOnly: Bool
+    var targetLanguage: Binding<String>?
 
     @StateObject private var toolManager = ToolManager.shared
     @StateObject private var licenseManager = LicenseManager.shared
@@ -22,10 +23,11 @@ struct ToolEditorView: View {
     @State private var showAdvanced = false
     @State private var newStopSequence = ""
 
-    init(tool: AITool, isPresented: Binding<Bool>, isReadOnly: Bool = false, onSave: ((AITool) -> Void)? = nil) {
+    init(tool: AITool, isPresented: Binding<Bool>, isReadOnly: Bool = false, targetLanguage: Binding<String>? = nil, onSave: ((AITool) -> Void)? = nil) {
         _tool = State(initialValue: tool)
         _isPresented = isPresented
         self.isReadOnly = isReadOnly
+        self.targetLanguage = targetLanguage
         self.onSave = onSave
     }
 
@@ -168,6 +170,40 @@ struct ToolEditorView: View {
                             }
                             .foregroundColor(.orange)
                         }
+                    }
+                    
+                    // Language Picker (Translation tool only)
+                    if tool.name == "Translate", let languageBinding = targetLanguage {
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Label("Target Language", systemImage: "globe")
+                                    .font(.system(size: 13, weight: .medium))
+                                Spacer()
+                            }
+                            
+                            Picker("Target Language", selection: languageBinding) {
+                                Text("English").tag("English")
+                                Text("Spanish").tag("Spanish")
+                                Text("French").tag("French")
+                                Text("German").tag("German")
+                                Text("Portuguese").tag("Portuguese")
+                                Text("Italian").tag("Italian")
+                                Text("Dutch").tag("Dutch")
+                                Text("Chinese").tag("Chinese")
+                                Text("Japanese").tag("Japanese")
+                                Text("Korean").tag("Korean")
+                                Text("Russian").tag("Russian")
+                                Text("Arabic").tag("Arabic")
+                            }
+                            .pickerStyle(.menu)
+                            .frame(width: 200)
+                            .disabled(isReadOnly)
+                            
+                            Text("The prompt uses {language} placeholder which will be replaced with this language at runtime.")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.top, 8)
                     }
                 }
                 .padding(.horizontal, 20)
@@ -321,7 +357,7 @@ struct ToolEditorView: View {
                                     VStack(alignment: .leading, spacing: 6) {
                                         ForEach(Array(tool.stopSequences.enumerated()), id: \.offset) { index, seq in
                                             HStack(spacing: 8) {
-                                                Text(seq)
+                                                Text(escapeStopSequence(seq))
                                                     .font(.system(size: 11, design: .monospaced))
                                                     .padding(.horizontal, 10)
                                                     .padding(.vertical, 6)
@@ -607,5 +643,22 @@ struct ToolEditorView: View {
         tool.temperature = defaultConfig.temperature
         tool.maxTokens = defaultConfig.maxTokens
         tool.stopSequences = defaultConfig.stopSequences
+
+        // Save the changes immediately
+        var updatedTool = tool
+        updatedTool.touch()
+        onSave?(updatedTool)
+    }
+
+    // MARK: - Helper Functions
+
+    /// Escapes special characters in stop sequences for display
+    /// Converts actual newlines, tabs, etc. to their escaped representations
+    private func escapeStopSequence(_ sequence: String) -> String {
+        return sequence
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "\n", with: "\\n")
+            .replacingOccurrences(of: "\r", with: "\\r")
+            .replacingOccurrences(of: "\t", with: "\\t")
     }
 }
