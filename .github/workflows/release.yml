@@ -63,16 +63,37 @@ jobs:
             chmod +x $HOME/bin/generate_appcast
             echo "✅ Using generate_appcast from local Sparkle framework"
           else
-            # Try to download it from GitHub releases
-            echo "📥 Downloading generate_appcast from Sparkle releases..."
-            if curl -L --fail --silent https://github.com/sparkle-project/Sparkle/releases/download/2.6.4/generate_appcast -o $HOME/bin/generate_appcast; then
-              chmod +x $HOME/bin/generate_appcast
-              echo "✅ Downloaded generate_appcast successfully"
+            # Download the full Sparkle release and extract generate_appcast
+            echo "📥 Downloading Sparkle framework to extract generate_appcast..."
+            SPARKLE_VERSION="2.6.4"
+            SPARKLE_URL="https://github.com/sparkle-project/Sparkle/releases/download/${SPARKLE_VERSION}/Sparkle-${SPARKLE_VERSION}.tar.xz"
+            
+            if curl -L --fail --silent "$SPARKLE_URL" -o /tmp/sparkle.tar.xz; then
+              echo "✅ Downloaded Sparkle archive"
+              
+              # Extract and find generate_appcast
+              cd /tmp
+              tar -xf sparkle.tar.xz
+              
+              # Look for generate_appcast in the extracted files
+              TOOL_PATH=$(find /tmp -name "generate_appcast" -type f 2>/dev/null | head -1)
+              if [ -n "$TOOL_PATH" ]; then
+                cp "$TOOL_PATH" $HOME/bin/generate_appcast
+                chmod +x $HOME/bin/generate_appcast
+                echo "✅ Extracted generate_appcast successfully"
+              else
+                echo "❌ Could not find generate_appcast in Sparkle archive"
+                echo "Available files in archive:"
+                find /tmp -name "*generate*" -o -name "*appcast*" 2>/dev/null | head -10
+                rm -rf /tmp/sparkle.tar.xz /tmp/Sparkle*
+                exit 1
+              fi
+              
+              # Clean up
+              rm -rf /tmp/sparkle.tar.xz /tmp/Sparkle*
             else
-              echo "❌ Failed to download generate_appcast"
+              echo "❌ Failed to download Sparkle archive from $SPARKLE_URL"
               echo "This tool is required for generating Sparkle signatures for auto-updates."
-              echo "Please ensure the Sparkle framework is properly included or the download URL is correct."
-              touch $HOME/bin/generate_appcast_unavailable
               exit 1
             fi
           fi
@@ -82,6 +103,7 @@ jobs:
             echo "✅ generate_appcast is working correctly"
           else
             echo "❌ generate_appcast is not working properly"
+            $HOME/bin/generate_appcast --help || true
             exit 1
           fi
 
@@ -140,7 +162,7 @@ jobs:
             --ed-key-file /tmp/sparkle_private_key \
             --download-url-prefix "https://github.com/${{ env.PUBLIC_REPO }}/releases/download/v${{ steps.version.outputs.VERSION }}/" \
             "${{ steps.build.outputs.BUILD_DIR }}" 2>/dev/null | grep "sparkle:edSignature" | sed 's/.*sparkle:edSignature="\([^"]*\)".*/\1/'); then
-            
+
             # Verify we got a non-empty signature
             if [ -z "$SIGNATURE" ]; then
               echo "❌ Failed to generate signature - got empty result"
@@ -148,7 +170,7 @@ jobs:
               rm -f /tmp/sparkle_private_key
               exit 1
             fi
-            
+
             echo "✅ Generated signature: $SIGNATURE"
             echo "SIGNATURE=$SIGNATURE" >> $GITHUB_OUTPUT
           else
