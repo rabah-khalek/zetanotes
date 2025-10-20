@@ -176,17 +176,11 @@ private enum LlamaThreeTwoConfigs {
         case .autocomplete:
             return LLMConfig(
                 prompt: """
-                <|begin_of_text|><|start_header_id|>system<|end_header_id|>
-
-                Continue writing. Do not add "user:", "assistant:", labels, or extra commentary. Just continue the text naturally.<|eot_id|><|start_header_id|>user<|end_header_id|>
-
-                {content}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
-
-                Continuation:
+                <|begin_of_text|>{content}
                 """,
-                temperature: 0.4, // Reduced from 0.6 - 1B model needs lower temp for coherence
-                maxTokens: 40, // Reduced from 50 - smaller model works better with focused outputs
-                stopSequences: ["<|eot_id|>", "\n\n", "user:", "assistant:", "system:"] // Block chat-format artifacts
+                temperature: 0.2, // Significantly reduced - 1B models hallucinate less at very low temps
+                maxTokens: 25, // Reduced to force shorter, more focused completions
+                stopSequences: ["<|eot_id|>", "<|end_of_text|>", "\n\n", "\n", "<|start_header_id|>"] // Stop at paragraph breaks and chat tokens
             )
 
         case .patch:

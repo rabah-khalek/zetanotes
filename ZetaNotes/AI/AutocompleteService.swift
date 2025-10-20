@@ -127,10 +127,10 @@ class AutocompleteService: AIService {
         }
 
         // Handle sentence completion:
-        // If the output doesn't end with sentence-ending punctuation, add a period
+        // Truncate to last complete sentence if output was cut off mid-sentence
         if !cleaned.isEmpty {
             let lastChar = cleaned.last!
-            let hasSentenceEnd = lastChar == "." || lastChar == "!" || lastChar == "?"
+            let hasSentenceEnd = lastChar == "." || lastChar == "!" || lastChar == "?" || lastChar == ","
 
             if !hasSentenceEnd {
                 // Find the last complete sentence if output was truncated
@@ -153,10 +153,14 @@ class AutocompleteService: AIService {
                     if afterExclamation < cleaned.endIndex {
                         cleaned = String(cleaned[..<afterExclamation])
                     }
-                } else {
-                    // No sentence ending found - add a period to complete the sentence
-                    cleaned += "."
+                } else if let lastComma = cleaned.lastIndex(of: ",") {
+                    // Truncate to last comma for natural pause points
+                    let afterComma = cleaned.index(after: lastComma)
+                    if afterComma < cleaned.endIndex {
+                        cleaned = String(cleaned[..<afterComma])
+                    }
                 }
+                // Do NOT add a period - keep completions open-ended for natural flow
             }
         }
 
