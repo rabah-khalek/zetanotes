@@ -157,7 +157,7 @@ class NoteViewModel: ObservableObject {
         })
 
         noteListItems = fetchedNotes.compactMap { repository.makeListItem(from: $0) }
-            .sorted(by: { $0.createdAt > $1.createdAt })
+            .sorted(by: { $0.updatedAt > $1.updatedAt })
 
         if let existingID = selectedNoteID, noteCache[existingID] != nil {
             updateSelectedNote()
@@ -180,7 +180,7 @@ class NoteViewModel: ObservableObject {
 
         noteCache[newItem.id] = newNote
         noteListItems.insert(newItem, at: 0)
-        noteListItems.sort(by: { $0.createdAt > $1.createdAt })
+        noteListItems.sort(by: { $0.updatedAt > $1.updatedAt })
         selectedNoteID = newItem.id
         print("✅ Note created: \(newNote.id?.uuidString ?? "unknown")")
     }
@@ -234,8 +234,8 @@ class NoteViewModel: ObservableObject {
         // Cancel existing timer for this note
         saveDebounceTimers[noteID]?.invalidate()
 
-        // Create new timer
-        let timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { [weak self] _ in
+        // Create new timer with very short delay (200ms) to protect against force quit
+        let timer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: false) { [weak self] _ in
             // Use background save for non-critical operation
             Task { @MainActor in
                 guard let self = self else { return }
@@ -257,7 +257,7 @@ class NoteViewModel: ObservableObject {
     private func saveNoteImmediately(_ note: Note) {
         // Validate content before saving
         note.validateAndTruncate()
-        note.touch()
+        // Don't call touch() here - timestamp is already updated when content/title changes
         repository.saveContext()
 
         if note.title?.isEmpty ?? true {
@@ -302,7 +302,7 @@ class NoteViewModel: ObservableObject {
 
                 // Validate and save
                 bgNote.validateAndTruncate()
-                bgNote.touch()
+                // Don't call touch() here - timestamp is already updated when content/title changes
 
                 if bgNote.title?.isEmpty ?? true {
                     bgNote.generateTitleFromContent()
@@ -410,7 +410,7 @@ class NoteViewModel: ObservableObject {
 
         debounceTimer?.invalidate()
 
-        debounceTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { [weak self] _ in
+        debounceTimer = Timer.scheduledTimer(withTimeInterval: 0.15, repeats: false) { [weak self] _ in
             guard let self = self else { return }
 
             Task {
@@ -478,7 +478,7 @@ class NoteViewModel: ObservableObject {
             summary = await aiEngine.summarizationService.summarize(sections.baseContent)
         }
 
-        if let summary = summary {
+        if let summary = summary, !summary.isEmpty {
             await MainActor.run {
                 let timestamp = self.generateTimestamp()
                 let summaryBlock = "\n\n---\n`Summary • \(timestamp)`\n---\n\n" + summary
@@ -490,6 +490,14 @@ class NoteViewModel: ObservableObject {
                     reformulated: sections.reformulatedBlock,
                     customServices: sections.customServiceBlocks
                 )
+
+                // Cancel any pending debounced saves before AI-generated save
+                // This prevents stale user content from overwriting AI results
+                if let noteID = note.id {
+                    saveDebounceTimers[noteID]?.invalidate()
+                    saveDebounceTimers.removeValue(forKey: noteID)
+                }
+
                 self.saveNote(note)
                 self.isGeneratingSummary = false
             }
@@ -533,7 +541,7 @@ class NoteViewModel: ObservableObject {
             translation = await aiEngine.translationService.translate(sections.baseContent)
         }
 
-        if let translation = translation {
+        if let translation = translation, !translation.isEmpty {
             await MainActor.run {
                 let timestamp = self.generateTimestamp()
                 let translationBlock = "\n\n---\n`Translation to \(targetLanguage) • \(timestamp)`\n---\n\n" +
@@ -546,6 +554,14 @@ class NoteViewModel: ObservableObject {
                     reformulated: sections.reformulatedBlock,
                     customServices: sections.customServiceBlocks
                 )
+
+                // Cancel any pending debounced saves before AI-generated save
+                // This prevents stale user content from overwriting AI results
+                if let noteID = note.id {
+                    saveDebounceTimers[noteID]?.invalidate()
+                    saveDebounceTimers.removeValue(forKey: noteID)
+                }
+
                 self.saveNote(note)
                 self.isTranslating = false
             }
@@ -573,7 +589,7 @@ class NoteViewModel: ObservableObject {
             corrected = await aiEngine.autoCorrectService.correct(sections.baseContent)
         }
 
-        if let corrected = corrected {
+        if let corrected = corrected, !corrected.isEmpty {
             await MainActor.run {
                 let timestamp = self.generateTimestamp()
                 let correctedBlock = "\n\n---\n`Patched • \(timestamp)`\n---\n\n" + corrected
@@ -585,6 +601,14 @@ class NoteViewModel: ObservableObject {
                     reformulated: sections.reformulatedBlock,
                     customServices: sections.customServiceBlocks
                 )
+
+                // Cancel any pending debounced saves before AI-generated save
+                // This prevents stale user content from overwriting AI results
+                if let noteID = note.id {
+                    saveDebounceTimers[noteID]?.invalidate()
+                    saveDebounceTimers.removeValue(forKey: noteID)
+                }
+
                 self.saveNote(note)
                 self.isAutoCorrecting = false
             }
@@ -615,7 +639,7 @@ class NoteViewModel: ObservableObject {
             reformulated = await aiEngine.reformulationService.reformulate(sections.baseContent)
         }
 
-        if let reformulated = reformulated {
+        if let reformulated = reformulated, !reformulated.isEmpty {
             await MainActor.run {
                 let timestamp = self.generateTimestamp()
                 let reformulatedBlock = "\n\n---\n`Reformulated • \(timestamp)`\n---\n\n" + reformulated
@@ -627,6 +651,14 @@ class NoteViewModel: ObservableObject {
                     reformulated: reformulatedBlock,
                     customServices: sections.customServiceBlocks
                 )
+
+                // Cancel any pending debounced saves before AI-generated save
+                // This prevents stale user content from overwriting AI results
+                if let noteID = note.id {
+                    saveDebounceTimers[noteID]?.invalidate()
+                    saveDebounceTimers.removeValue(forKey: noteID)
+                }
+
                 self.saveNote(note)
                 self.isReformulating = false
             }
@@ -786,6 +818,14 @@ class NoteViewModel: ObservableObject {
 
         await MainActor.run {
             note.title = title
+
+            // Cancel any pending debounced saves before AI-generated save
+            // This prevents stale user content from overwriting AI results
+            if let noteID = note.id {
+                saveDebounceTimers[noteID]?.invalidate()
+                saveDebounceTimers.removeValue(forKey: noteID)
+            }
+
             self.saveNote(note)
             self.isGeneratingTitle = false
         }
@@ -806,9 +846,6 @@ class NoteViewModel: ObservableObject {
             self.executingToolId = tool.id
         }
 
-        // Format prompt: replace {content} placeholder with actual content
-        let prompt = tool.prompt.replacingOccurrences(of: "{content}", with: sections.baseContent)
-
         // Use tool-specific max tokens or calculate dynamically
         let maxTokens: Int
         if let fixedMaxTokens = tool.maxTokens {
@@ -819,14 +856,21 @@ class NoteViewModel: ObservableObject {
             maxTokens = min(max(estimatedInputTokens + 200, 300), 1024) // At least 300, at most 1024
         }
 
-        let result = await aiEngine.llmService.generate(
-            prompt: prompt,
+        print("🔧 Custom Tool '\(tool.name)': Processing \(sections.baseContent.count) chars")
+
+        // Use batched generation to handle large texts
+        let result = await aiEngine.llmService.generateBatched(
+            text: sections.baseContent,
+            instruction: tool.prompt,
             maxTokens: maxTokens,
             temperature: tool.temperature,
-            stopSequences: tool.stopSequences
+            stopSequences: tool.stopSequences,
+            separator: " "
         )
 
         if let result = result, !result.isEmpty {
+            print("✅ Custom Tool '\(tool.name)': Generated \(result.count) chars")
+
             // Post-process the result to remove common unwanted prefixes/suffixes
             let cleanedResult = cleanToolOutput(result)
 
@@ -848,17 +892,27 @@ class NoteViewModel: ObservableObject {
                         reformulated: sections.reformulatedBlock,
                         customServices: updatedCustomServices
                     )
+
+                    // Cancel any pending debounced saves before AI-generated save
+                    // This prevents stale user content from overwriting AI results
+                    if let noteID = note.id {
+                        saveDebounceTimers[noteID]?.invalidate()
+                        saveDebounceTimers.removeValue(forKey: noteID)
+                    }
+
                     self.saveNote(note)
                     self.isExecutingTool = false
                     self.executingToolId = nil
                 }
             } else {
+                print("⚠️ Custom Tool '\(tool.name)': Post-processing resulted in empty output")
                 await MainActor.run {
                     self.isExecutingTool = false
                     self.executingToolId = nil
                 }
             }
         } else {
+            print("❌ Custom Tool '\(tool.name)': Failed to generate output or output was empty")
             await MainActor.run {
                 self.isExecutingTool = false
                 self.executingToolId = nil
@@ -1002,7 +1056,7 @@ class NoteViewModel: ObservableObject {
         } else {
             noteListItems.append(item)
         }
-        noteListItems.sort(by: { $0.createdAt > $1.createdAt })
+        noteListItems.sort(by: { $0.updatedAt > $1.updatedAt })
     }
 
     private func updateSearchItemIfNeeded(_ item: NoteListItem) {

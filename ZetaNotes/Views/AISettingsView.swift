@@ -711,6 +711,10 @@ struct GeneralSettingsContent: View {
     }
 
     private func performFullReset() {
+        // Unload model from memory FIRST (critical - prevents using deleted model)
+        AIEngine.shared.unloadModel()
+        print("🔄 Unloaded model from memory")
+
         // Delete all Core Data (notes)
         viewModel.deleteAllNotes()
 
@@ -718,6 +722,7 @@ struct GeneralSettingsContent: View {
         if let modelsDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?
             .appendingPathComponent("ZetaNotes/Models") {
             try? FileManager.default.removeItem(at: modelsDir)
+            print("🗑️ Deleted Models directory from disk")
         }
 
         // Delete Core Data SQLite files (but keep the directory structure)

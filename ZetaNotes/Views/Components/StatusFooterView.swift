@@ -13,9 +13,23 @@ struct StatusFooterView: View {
     @Binding var showingErrorLog: Bool
     var wordCount: Int = 0
     var characterCount: Int = 0
+    var createdAt: Date?
+    var updatedAt: Date?
 
     var body: some View {
         HStack(spacing: 0) {
+            // Left side: timestamps
+            HStack(spacing: 8) {
+                if let createdAt = createdAt {
+                    timestampBadge(label: "Created", date: createdAt, color: .green)
+                }
+
+                if let updatedAt = updatedAt {
+                    timestampBadge(label: "Updated", date: updatedAt, color: .orange)
+                }
+            }
+            .padding(.leading, 16)
+
             Spacer()
 
             HStack(alignment: .center, spacing: 8) {
@@ -53,6 +67,33 @@ struct StatusFooterView: View {
     }
 
     // MARK: - Badge Components
+
+    private func timestampBadge(label: String, date: Date, color: Color) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: label == "Created" ? "calendar.badge.plus" : "calendar.badge.clock")
+                .font(.system(size: 9))
+                .foregroundColor(color)
+
+            Text(label + ":")
+                .font(.system(size: 9, weight: .medium))
+                .foregroundColor(.secondary)
+
+            Text(formatTimestamp(date))
+                .font(.system(size: 10, weight: .medium, design: .default))
+                .foregroundColor(.primary)
+        }
+        .padding(.horizontal, 7)
+        .padding(.vertical, 4)
+        .background(
+            RoundedRectangle(cornerRadius: 4)
+                .fill(color.opacity(0.08))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 4)
+                        .strokeBorder(color.opacity(0.2), lineWidth: 0.5)
+                )
+        )
+        .help("\(label): \(formatFullTimestamp(date))")
+    }
 
     private var separator: some View {
         Rectangle()
@@ -170,10 +211,10 @@ struct StatusFooterView: View {
                 .font(.system(size: 9, weight: .medium))
                 .foregroundColor(.secondary)
 
-            Text(String(format: "%4d", Int(systemMonitor.memoryUsage)) + "M")
+            Text(String(format: "%3d", Int(systemMonitor.memoryUsage)) + "M")
                 .font(.system(size: 10, weight: .semibold, design: .monospaced))
                 .foregroundColor(.primary)
-                .frame(width: 42, alignment: .trailing)
+                .frame(width: 32, alignment: .trailing)
         }
     }
 
@@ -205,6 +246,21 @@ struct StatusFooterView: View {
         }
         .buttonStyle(.plain)
         .help("Click to view \(errorLogger.errors.count) error\(errorLogger.errors.count == 1 ? "" : "s")")
+    }
+
+    // MARK: - Formatting Helpers
+
+    private func formatTimestamp(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d, h:mm a"
+        return formatter.string(from: date)
+    }
+
+    private func formatFullTimestamp(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .medium
+        return formatter.string(from: date)
     }
 
     // MARK: - Color Helpers

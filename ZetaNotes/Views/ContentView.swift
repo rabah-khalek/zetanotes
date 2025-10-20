@@ -486,9 +486,27 @@ struct ContentView: View {
 
     @ViewBuilder
     private var bottomStatusBar: some View {
-        HStack {
+        HStack(spacing: 0) {
             Spacer()
-            HStack(alignment: .center, spacing: 8) {
+
+            // All items centered
+            HStack(spacing: 8) {
+                if let selectedNote = viewModel.selectedNote, let createdAt = selectedNote.createdAt {
+                    timestampBadge(label: "Created", date: createdAt, color: .green)
+                }
+
+                wordCountBadge
+
+                // Active AI Model (only show when model is loaded)
+                if !systemMonitor.activeModel.isEmpty && aiEngine.isModelLoaded {
+                    activeModelBadge
+                }
+
+                // System usage (only show when model is loaded)
+                if aiEngine.isModelLoaded {
+                    systemUsageBadge
+                }
+
                 // Model Download Progress (if downloading)
                 if downloadState.isDownloading, let modelName = downloadState.downloadingModelName {
                     HStack(spacing: 6) {
@@ -516,123 +534,164 @@ struct ContentView: View {
                     )
                     .help("Downloading AI model: \(Int(downloadState.downloadProgress * 100))% complete")
                 }
-
-                // Word and Character count badge (blue)
-                HStack(spacing: 6) {
-                    Image(systemName: "doc.text")
-                        .font(.system(size: 9))
-                        .foregroundColor(.blue)
-
-                    Text(String(format: "%d words", currentWordCount))
-                        .font(.system(size: 10, weight: .medium, design: .monospaced))
-                        .foregroundColor(.primary)
-
-                    Text("•")
-                        .font(.system(size: 8))
-                        .foregroundColor(.secondary.opacity(0.5))
-
-                    Text(String(format: "%d characters", currentCharacterCount))
-                        .font(.system(size: 10, weight: .medium, design: .monospaced))
-                        .foregroundColor(.primary)
-                }
-                .padding(.horizontal, 7)
-                .padding(.vertical, 4)
-                .background(
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(Color.blue.opacity(0.08))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 4)
-                                .strokeBorder(Color.blue.opacity(0.2), lineWidth: 0.5)
-                        )
-                )
-                .help(String(format: "%d words, %d characters", currentWordCount, currentCharacterCount))
-
-                // Active AI Model (only show when model is loaded)
-                if !systemMonitor.activeModel.isEmpty && aiEngine.isModelLoaded {
-                    HStack(spacing: 4) {
-                        Image(systemName: "brain.head.profile")
-                            .font(.system(size: 9))
-                            .foregroundColor(.purple)
-
-                        Text(systemMonitor.activeModel)
-                            .font(.system(size: 10, weight: .medium))
-                            .foregroundColor(.primary)
-                            .lineLimit(1)
-                    }
-                    .padding(.horizontal, 7)
-                    .padding(.vertical, 4)
-                    .background(
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(Color.purple.opacity(0.08))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 4)
-                                    .strokeBorder(Color.purple.opacity(0.2), lineWidth: 0.5)
-                            )
-                    )
-                    .help("Active AI Model: \(systemMonitor.activeModel)")
-                }
-
-                // System Monitor (only show when model is loaded)
-                if aiEngine.isModelLoaded {
-                    HStack(spacing: 6) {
-                        // CPU indicator
-                        HStack(spacing: 3) {
-                            Image(systemName: "cpu.fill")
-                                .font(.system(size: 9))
-                                .foregroundColor(cpuColor)
-
-                            Text("CPU:")
-                                .font(.system(size: 9, weight: .medium))
-                                .foregroundColor(.secondary)
-
-                            Text(String(format: "%3d", Int(systemMonitor.cpuUsage)) + "%")
-                                .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                                .foregroundColor(.primary)
-                                .frame(width: 32, alignment: .trailing)
-                        }
-
-                        Rectangle()
-                            .fill(Color.secondary.opacity(0.3))
-                            .frame(width: 1, height: 10)
-
-                        // Memory indicator
-                        HStack(spacing: 3) {
-                            Image(systemName: "memorychip.fill")
-                                .font(.system(size: 9))
-                                .foregroundColor(memoryColor)
-
-                            Text("MEM:")
-                                .font(.system(size: 9, weight: .medium))
-                                .foregroundColor(.secondary)
-
-                            Text(String(format: "%4d", Int(systemMonitor.memoryUsage)) + "M")
-                                .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                                .foregroundColor(.primary)
-                                .frame(width: 42, alignment: .trailing)
-                        }
-                    }
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(Color.secondary.opacity(0.08))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 4)
-                                    .strokeBorder(Color.secondary.opacity(0.2), lineWidth: 0.5)
-                            )
-                    )
-                    .help("""
-                    CPU: \(Int(systemMonitor.cpuUsage))% of \(systemMonitor.cpuCoreCount) cores • \
-                    Memory: \(Int(systemMonitor.memoryUsage))MB \
-                    (\(String(format: "%.1f", systemMonitor.memoryUsagePercentage))% of \
-                    \(Int(systemMonitor.totalSystemMemory / 1024))GB)
-                    """)
-                }
             }
+            .padding(.vertical, 6)
+
             Spacer()
         }
         .padding(.vertical, AppTheme.Spacing.statusBarVerticalPadding)
         .frame(maxWidth: .infinity)
+    }
+
+    // MARK: - Badge Components
+
+    private var wordCountBadge: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "doc.text")
+                .font(.system(size: 9))
+                .foregroundColor(.blue)
+
+            Text("\(currentWordCount)w")
+                .font(.system(size: 10, weight: .medium, design: .monospaced))
+                .foregroundColor(.primary)
+
+            Text("•")
+                .font(.system(size: 8))
+                .foregroundColor(.secondary.opacity(0.5))
+
+            Text("\(currentCharacterCount)c")
+                .font(.system(size: 10, weight: .medium, design: .monospaced))
+                .foregroundColor(.primary)
+        }
+        .padding(.horizontal, 7)
+        .padding(.vertical, 4)
+        .background(
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color.blue.opacity(0.08))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 4)
+                        .strokeBorder(Color.blue.opacity(0.2), lineWidth: 0.5)
+                )
+        )
+        .help("\(currentWordCount) words, \(currentCharacterCount) characters")
+    }
+
+    private var activeModelBadge: some View {
+        HStack(spacing: 4) {
+            Image(systemName: "brain.head.profile")
+                .font(.system(size: 9))
+                .foregroundColor(.purple)
+
+            Text(systemMonitor.activeModel)
+                .font(.system(size: 10, weight: .medium))
+                .foregroundColor(.primary)
+                .lineLimit(1)
+        }
+        .padding(.horizontal, 7)
+        .padding(.vertical, 4)
+        .background(
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color.purple.opacity(0.08))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 4)
+                        .strokeBorder(Color.purple.opacity(0.2), lineWidth: 0.5)
+                )
+        )
+        .help("Active AI Model: \(systemMonitor.activeModel)")
+    }
+
+    private var systemUsageBadge: some View {
+        HStack(spacing: 6) {
+            // CPU indicator
+            HStack(spacing: 2) {
+                Image(systemName: "cpu.fill")
+                    .font(.system(size: 9))
+                    .foregroundColor(cpuColor)
+
+                Text("CPU:")
+                    .font(.system(size: 9, weight: .medium))
+                    .foregroundColor(.secondary)
+
+                Text(String(format: "%3d", Int(systemMonitor.cpuUsage)) + "%")
+                    .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                    .foregroundColor(.primary)
+            }
+
+            Rectangle()
+                .fill(Color.secondary.opacity(0.3))
+                .frame(width: 1, height: 10)
+
+            // Memory indicator
+            HStack(spacing: 2) {
+                Image(systemName: "memorychip.fill")
+                    .font(.system(size: 9))
+                    .foregroundColor(memoryColor)
+
+                Text("MEM:")
+                    .font(.system(size: 9, weight: .medium))
+                    .foregroundColor(.secondary)
+
+                Text(String(format: "%4d", Int(systemMonitor.memoryUsage)) + "M")
+                    .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                    .foregroundColor(.primary)
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color.secondary.opacity(0.08))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 4)
+                        .strokeBorder(Color.secondary.opacity(0.2), lineWidth: 0.5)
+                )
+        )
+        .help("""
+        CPU: \(Int(systemMonitor.cpuUsage))% of \(systemMonitor.cpuCoreCount) cores • \
+        Memory: \(Int(systemMonitor.memoryUsage))MB \
+        (\(String(format: "%.1f", systemMonitor.memoryUsagePercentage))% of \
+        \(Int(systemMonitor.totalSystemMemory / 1024))GB)
+        """)
+    }
+
+    private func timestampBadge(label: String, date: Date, color: Color) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: label == "Created" ? "calendar.badge.plus" : "calendar.badge.clock")
+                .font(.system(size: 9))
+                .foregroundColor(color)
+
+            Text(label + ":")
+                .font(.system(size: 9, weight: .medium))
+                .foregroundColor(.secondary)
+
+            Text(formatTimestamp(date))
+                .font(.system(size: 10, weight: .medium, design: .default))
+                .foregroundColor(.primary)
+        }
+        .padding(.horizontal, 7)
+        .padding(.vertical, 4)
+        .background(
+            RoundedRectangle(cornerRadius: 4)
+                .fill(color.opacity(0.08))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 4)
+                        .strokeBorder(color.opacity(0.2), lineWidth: 0.5)
+                )
+        )
+        .help("\(label): \(formatFullTimestamp(date))")
+    }
+
+    private func formatTimestamp(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d, h:mm a"
+        return formatter.string(from: date)
+    }
+
+    private func formatFullTimestamp(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .medium
+        return formatter.string(from: date)
     }
 
     // MARK: - Color Helpers

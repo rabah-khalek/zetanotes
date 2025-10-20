@@ -24,7 +24,7 @@ class AutocompleteService: AIService {
 
     private enum Config {
         static let minCharacters = 10 // Minimum characters before suggesting
-        static let contextLength = 500 // Characters of context to use
+        static let contextLength = 300 // Characters of context to use (reduced from 500 for better focus)
     }
 
     // MARK: - Initialization
@@ -79,7 +79,12 @@ class AutocompleteService: AIService {
             "Here is",
             "Here's",
             "The continuation is:",
-            "continuation:"
+            "continuation:",
+            "I can't help but notice", // Llama 3.2 meta-commentary
+            "I notice that", // Llama 3.2 meta-commentary
+            "I see that", // Meta-commentary
+            "This article is", // Meta-commentary
+            "This text is" // Meta-commentary
         ]
 
         for prefix in prefixes where cleaned.lowercased().hasPrefix(prefix.lowercased()) {

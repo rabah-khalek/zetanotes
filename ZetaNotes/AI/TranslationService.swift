@@ -28,7 +28,9 @@ class TranslationService: AIService {
                 "<|system|>", // Prevent fake system messages
                 "\n\nText:", // Stop if it tries to repeat the input prompt
                 "\n\nOutput:", // Stop if it hallucinates continuation
-                "\n---\n`" // Service delimiter start
+                "\n---\n`", // Service delimiter start
+                "<|end_header", // Llama 3.2 mangled chat template marker
+                "</|end_header" // Another mangled variant
             ]
         )
     }
@@ -106,35 +108,31 @@ class TranslationService: AIService {
     ///   - customPrompt: Optional custom prompt template (use {language} as placeholder)
     /// - Returns: Translated text, or nil on failure
     func translate(_ text: String, withPrompt customPrompt: String) async -> String? {
-        print("🌍 Starting translation")
+        print("🌍 Translate: Processing \(text.count) chars to \(targetLanguage)")
 
-        // Prepare prompt with placeholder replacement
-        let instruction = customPrompt.isEmpty
-            ? DefaultPrompts.translation
-            : customPrompt
-        let prompt = instruction
+        // Prepare instruction with language placeholder replacement
+        let instruction = (customPrompt.isEmpty ? DefaultPrompts.translation : customPrompt)
             .replacingOccurrences(of: "{language}", with: targetLanguage)
-            .replacingOccurrences(of: "{content}", with: text)
 
         // Calculate dynamic max tokens with 50% buffer
         let maxTokens = calculateMaxTokens(for: text, bufferPercent: 50, maxLimit: 512)
         print("📊 Estimated max tokens needed: \(maxTokens)")
 
-        guard let rawOutput = await llmService.generate(
-            prompt: prompt,
+        // Use batched processing to handle large texts
+        let result = await processBatched(
+            text,
+            instruction: instruction,
             maxTokens: maxTokens,
-            temperature: config.temperature,
-            stopSequences: config.stopSequences
-        ) else {
-            print("❌ Translation generation returned nil")
-            return nil
+            separator: " "
+        )
+
+        if let result = result {
+            print("✅ Translate: Generated \(result.count) chars")
+        } else {
+            print("❌ Translate: Failed to generate output")
         }
 
-        print("✅ Raw translation output (\(rawOutput.count) chars): \(rawOutput)")
-        let processed = postProcess(rawOutput)
-        print("✅ Post-processed translation (\(processed.count) chars): \(processed)")
-
-        return processed
+        return result
     }
 
     // MARK: - Post-processing

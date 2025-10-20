@@ -166,6 +166,56 @@ enum AIModel: String, CaseIterable, Codable {
         }
     }
 
+    /// Maximum context window size in tokens for each model
+    /// Note: Quantized models often have smaller practical context than full-precision versions
+    var maxContextSize: Int32 {
+        switch self {
+        case .tinyLlama:
+            return 2048
+        case .llamaThreeTwoOneB:
+            return 8192 // 8K (quantized version - full 128K requires too much RAM)
+        case .qwenTwoFiveOneFiveB:
+            return 32_768 // 32K
+        case .smolLMTwoOneSevenB:
+            return 8192 // 8K
+        case .phi2:
+            return 2048
+        case .gemmaTwoTwoB:
+            return 8192 // 8K
+        case .qwenTwoFiveThreeB:
+            return 32_768 // 32K
+        case .llamaThreeTwoThreeB:
+            return 32_768 // 32K (quantized version - full 128K requires too much RAM)
+        case .phiThreeFiveMini:
+            return 32_768 // 32K (quantized version - full 128K requires too much RAM)
+        }
+    }
+
+    /// Optimal batch size for processing (typically same as context for modern models)
+    /// For models with very large context, we cap at a reasonable limit for memory
+    var optimalBatchSize: Int32 {
+        switch self {
+        case .tinyLlama:
+            return 512 // Small model, keep conservative
+        case .llamaThreeTwoOneB:
+            return 2048 // 2K batch for 8K context (balanced for 1B model)
+        case .qwenTwoFiveOneFiveB:
+            return 4096 // Use 4K batch for 32K context
+        case .smolLMTwoOneSevenB:
+            return 2048 // Use 2K batch for 8K context
+        case .phi2:
+            return 512 // Small model, keep conservative
+        case .gemmaTwoTwoB:
+            return 2048 // Use 2K batch for 8K context
+        case .qwenTwoFiveThreeB:
+            return 4096 // Use 4K batch for 32K context
+        case .llamaThreeTwoThreeB:
+            return 4096 // 4K batch for 32K context (balanced for 3B model)
+        case .phiThreeFiveMini:
+            return 4096 // 4K batch for 32K context (balanced for 3.8B model)
+        }
+    }
+
     var huggingFaceURL: String {
         switch self {
         case .tinyLlama:
@@ -196,8 +246,6 @@ class LLMInferenceService: @unchecked Sendable {
     // MARK: - Configuration
 
     private enum ModelConfig {
-        static let contextSize: Int32 = 2048
-        static let batchSize: Int32 = 512
         static let threads: Int32 = 0 // 0 = auto-detect optimal threads
         static let gpuLayers: Int32 = 99 // Use GPU acceleration on Apple Silicon
     }
@@ -245,6 +293,19 @@ class LLMInferenceService: @unchecked Sendable {
 
                     print("📦 Loading \(modelType.displayName) from: \(modelPath)")
 
+                    // Log memory BEFORE loading
+                    var taskInfoBefore = mach_task_basic_info()
+                    var countBefore = mach_msg_type_number_t(MemoryLayout<mach_task_basic_info>.size) / 4
+                    let kerrBefore = withUnsafeMutablePointer(to: &taskInfoBefore) {
+                        $0.withMemoryRebound(to: integer_t.self, capacity: 1) {
+                            task_info(mach_task_self_, task_flavor_t(MACH_TASK_BASIC_INFO), $0, &countBefore)
+                        }
+                    }
+                    if kerrBefore == KERN_SUCCESS {
+                        let memoryBeforeMB = Double(taskInfoBefore.resident_size) / 1024 / 1024
+                        print("📊 Memory BEFORE model load: \(String(format: "%.1f", memoryBeforeMB)) MB")
+                    }
+
                     // Initialize llama.cpp backend
                     llama_backend_init()
                     llama_numa_init(GGML_NUMA_STRATEGY_DISABLED)
@@ -261,8 +322,8 @@ class LLMInferenceService: @unchecked Sendable {
 
                     // Create context parameters
                     var contextParams = llama_context_default_params()
-                    contextParams.n_ctx = UInt32(ModelConfig.contextSize)
-                    contextParams.n_batch = UInt32(ModelConfig.batchSize)
+                    contextParams.n_ctx = UInt32(modelType.maxContextSize)
+                    contextParams.n_batch = UInt32(modelType.optimalBatchSize)
                     contextParams.n_threads = ModelConfig.threads
                     contextParams.n_threads_batch = ModelConfig.threads
                     contextParams.embeddings = true // Enable embeddings extraction
@@ -303,6 +364,26 @@ class LLMInferenceService: @unchecked Sendable {
 
                     self.isLoaded = true
                     print("✅ Model loaded successfully with Metal GPU acceleration")
+                    print("📊 Model specs: Context=\(modelType.maxContextSize) tokens, Batch=\(modelType.optimalBatchSize) tokens")
+
+                    // Log memory AFTER loading
+                    var taskInfoAfter = mach_task_basic_info()
+                    var countAfter = mach_msg_type_number_t(MemoryLayout<mach_task_basic_info>.size) / 4
+                    let kerrAfter = withUnsafeMutablePointer(to: &taskInfoAfter) {
+                        $0.withMemoryRebound(to: integer_t.self, capacity: 1) {
+                            task_info(mach_task_self_, task_flavor_t(MACH_TASK_BASIC_INFO), $0, &countAfter)
+                        }
+                    }
+                    if kerrAfter == KERN_SUCCESS {
+                        let memoryAfterMB = Double(taskInfoAfter.resident_size) / 1024 / 1024
+                        print("📊 Memory AFTER model load: \(String(format: "%.1f", memoryAfterMB)) MB")
+                        if kerrBefore == KERN_SUCCESS {
+                            let memoryBeforeMB = Double(taskInfoBefore.resident_size) / 1024 / 1024
+                            let delta = memoryAfterMB - memoryBeforeMB
+                            print("📊 Memory delta: +\(String(format: "%.1f", delta)) MB")
+                        }
+                    }
+
                     continuation.resume()
 
                 } catch {
@@ -315,24 +396,55 @@ class LLMInferenceService: @unchecked Sendable {
     /// Unloads the model and frees memory
     func unloadModel() {
         inferenceQueue.sync {
-            if let smpl = sampler {
-                llama_sampler_free(smpl)
-                sampler = nil
+            // Wrap in autorelease pool to immediately release temporary objects
+            autoreleasepool {
+                if let smpl = sampler {
+                    llama_sampler_free(smpl)
+                    sampler = nil
+                }
+
+                if let ctx = context {
+                    // Clear KV cache before freeing to release buffers
+                    let mem = llama_get_memory(ctx)
+                    llama_memory_clear(mem, true)
+
+                    llama_free(ctx)
+                    context = nil
+                }
+
+                if let mdl = model {
+                    llama_model_free(mdl)
+                    model = nil
+                }
+
+                llama_backend_free()
+                isLoaded = false
+                print("🔄 Model unloaded and memory freed from process")
             }
 
-            if let ctx = context {
-                llama_free(ctx)
-                context = nil
-            }
+            // REALITY CHECK: We cannot force macOS to release system memory
+            // macOS will hold onto "free" memory for caching until another app needs it
+            // This is normal and expected behavior - not a memory leak
 
-            if let mdl = model {
-                llama_model_free(mdl)
-                model = nil
-            }
+            // Log memory status (will show resident memory, which macOS controls)
+            Task {
+                // Small delay to allow cleanup threads to complete
+                try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
 
-            llama_backend_free()
-            isLoaded = false
-            print("🔄 Model unloaded and memory freed")
+                var taskInfo = mach_task_basic_info()
+                var count = mach_msg_type_number_t(MemoryLayout<mach_task_basic_info>.size) / 4
+                let kerr: kern_return_t = withUnsafeMutablePointer(to: &taskInfo) {
+                    $0.withMemoryRebound(to: integer_t.self, capacity: 1) {
+                        task_info(mach_task_self_, task_flavor_t(MACH_TASK_BASIC_INFO), $0, &count)
+                    }
+                }
+
+                if kerr == KERN_SUCCESS {
+                    let usedMemoryMB = Double(taskInfo.resident_size) / 1024 / 1024
+                    print("📊 Resident memory: \(String(format: "%.1f", usedMemoryMB)) MB")
+                    print("ℹ️  Note: macOS may keep this cached until system needs memory")
+                }
+            }
         }
     }
 
@@ -358,28 +470,31 @@ class LLMInferenceService: @unchecked Sendable {
 
         return await withCheckedContinuation { continuation in
             inferenceQueue.async { [weak self] in
-                guard let self = self,
-                      let ctx = self.context,
-                      let mdl = self.model,
-                      let smpl = self.sampler
-                else {
-                    continuation.resume(returning: nil)
-                    return
-                }
+                // Wrap entire generation in autorelease pool to prevent memory buildup
+                autoreleasepool {
+                    guard let self = self,
+                          let ctx = self.context,
+                          let mdl = self.model,
+                          let smpl = self.sampler
+                    else {
+                        continuation.resume(returning: nil)
+                        return
+                    }
 
-                print("\n🚀 === Text Generation Started ===")
-                print("📝 Prompt: \(prompt.prefix(150))\(prompt.count > 150 ? "..." : "")")
-                print("📊 Prompt length: \(prompt.count) chars")
+                    print("\n🚀 === Text Generation Started ===")
+                    print("📝 Prompt: \(prompt.prefix(150))\(prompt.count > 150 ? "..." : "")")
+                    print("📊 Prompt length: \(prompt.count) chars")
 
-                // CRITICAL: Fully clear KV cache and reset sampler to prevent cross-contamination between requests
-                // This ensures each generation starts with a completely clean slate
-                let mem = llama_get_memory(ctx)
-                llama_memory_clear(mem, true) // Clear both metadata AND data buffer for complete reset
-                llama_sampler_reset(smpl) // Reset sampler state
-                print("🧹 Context fully reset (KV cache + data cleared, sampler reset)")
+                    // CRITICAL: Fully clear KV cache and reset sampler to prevent cross-contamination between requests
+                    // This ensures each generation starts with a completely clean slate
+                    let mem = llama_get_memory(ctx)
+                    llama_memory_clear(mem, true) // Clear both metadata AND data buffer for complete reset
+                    llama_sampler_reset(smpl) // Reset sampler state
+                    print("🧹 Context fully reset (KV cache + data cleared, sampler reset)")
 
-                // Determine max generation length
-                let contextSize = Int32(ModelConfig.contextSize)
+                // Determine max generation length using current model's context size
+                let contextSize = Int32(self.currentModel.maxContextSize)
+                let batchSize = Int32(self.currentModel.optimalBatchSize)
 
                 // Tokenize the prompt
                 let maxBufferSize = prompt.count + 2048 // Generous buffer
@@ -410,13 +525,27 @@ class LLMInferenceService: @unchecked Sendable {
 
                 print("✅ Tokenized: \(tokenCount) tokens (\(prompt.count) chars → \(tokenCount) tokens)")
 
-                // Keep only the valid tokens
-                var promptTokens = Array(tokens.prefix(Int(tokenCount)))
+                // Check if prompt exceeds batch size and truncate if necessary
+                let maxPromptTokens = batchSize
+                if tokenCount > maxPromptTokens {
+                    print("⚠️ Prompt token count (\(tokenCount)) exceeds batch size (\(maxPromptTokens)), truncating prompt")
+                    ErrorLogger.shared.logError(
+                        "Prompt exceeds batch size",
+                        severity: .warning,
+                        operation: "Text Generation",
+                        details: "Prompt: \(tokenCount) tokens, Batch size: \(maxPromptTokens) tokens. Truncating to fit."
+                    )
+                }
+
+                // Keep only the valid tokens, limited to batch size
+                let validTokenCount = min(Int(tokenCount), Int(maxPromptTokens))
+                var promptTokens = Array(tokens.prefix(validTokenCount))
                 let promptTokenCount = Int32(promptTokens.count)
+
+                print("🔄 Processing \(promptTokenCount) prompt tokens...")
 
                 // Create batch using the new API
                 // Important: tokens array must remain valid for the lifetime of the batch
-                print("🔄 Processing prompt tokens...")
                 let decodeResult = promptTokens.withUnsafeMutableBufferPointer { tokensPtr -> Int32 in
                     let batch = llama_batch_get_one(tokensPtr.baseAddress, promptTokenCount)
                     return llama_decode(ctx, batch)
@@ -518,8 +647,82 @@ class LLMInferenceService: @unchecked Sendable {
                 print("📄 Output preview: \(generatedText.prefix(200))\(generatedText.count > 200 ? "..." : "")")
                 print("=== Generation Complete ===\n")
                 continuation.resume(returning: generatedText)
+                } // End autoreleasepool
             }
         }
+    }
+
+    /// Generates text completion with automatic batching for large prompts
+    /// Chunks text by sentences and processes each chunk separately
+    /// - Parameters:
+    ///   - text: The input text to process
+    ///   - instruction: The instruction/prompt template (should contain {content} placeholder)
+    ///   - maxTokens: Maximum number of tokens to generate per chunk
+    ///   - temperature: Sampling temperature
+    ///   - stopSequences: Sequences that stop generation
+    ///   - separator: String to join processed chunks (default: single space)
+    /// - Returns: Combined generated text
+    func generateBatched(
+        text: String,
+        instruction: String,
+        maxTokens: Int? = nil,
+        temperature: Float = 0.7,
+        stopSequences: [String] = [],
+        separator: String = " "
+    ) async -> String? {
+        guard !text.isEmpty else { return nil }
+
+        // Get the current model's batch size and calculate chunk size
+        // Leave 30% buffer for the prompt template overhead
+        let modelBatchSize = Int(currentModel.optimalBatchSize)
+        let maxTokensPerChunk = Int(Double(modelBatchSize) * 0.7)
+
+        // Create chunker with model-aware token limit
+        let chunker = TextChunker(maxTokensPerChunk: maxTokensPerChunk)
+        let chunks = chunker.chunk(text)
+
+        // If only one chunk, process normally without batching
+        if chunks.count == 1 {
+            let prompt = instruction.replacingOccurrences(of: "{content}", with: text)
+            return await generate(
+                prompt: prompt,
+                maxTokens: maxTokens,
+                temperature: temperature,
+                stopSequences: stopSequences
+            )
+        }
+
+        // Process each chunk
+        print("📦 Batched generation: Processing large text in \(chunks.count) batches...")
+        var processedChunks: [String] = []
+
+        for (index, chunk) in chunks.enumerated() {
+            print("   Batch \(index + 1)/\(chunks.count): \(chunk.count) chars")
+
+            let prompt = instruction.replacingOccurrences(of: "{content}", with: chunk)
+
+            guard let output = await generate(
+                prompt: prompt,
+                maxTokens: maxTokens,
+                temperature: temperature,
+                stopSequences: stopSequences
+            ) else {
+                print("   ⚠️ Batch \(index + 1) failed, skipping")
+                continue
+            }
+
+            if !output.isEmpty {
+                processedChunks.append(output)
+            }
+        }
+
+        if processedChunks.isEmpty {
+            print("❌ All batches failed")
+            return nil
+        }
+
+        print("✅ Successfully processed \(processedChunks.count)/\(chunks.count) batches")
+        return processedChunks.joined(separator: separator)
     }
 
     /// Generates embedding vector for the given text
@@ -533,17 +736,19 @@ class LLMInferenceService: @unchecked Sendable {
 
         return await withCheckedContinuation { continuation in
             inferenceQueue.async { [weak self] in
-                guard let self = self,
-                      let ctx = self.context,
-                      let mdl = self.model
-                else {
-                    continuation.resume(returning: nil)
-                    return
-                }
+                // Wrap in autorelease pool to prevent memory buildup
+                autoreleasepool {
+                    guard let self = self,
+                          let ctx = self.context,
+                          let mdl = self.model
+                    else {
+                        continuation.resume(returning: nil)
+                        return
+                    }
 
-                // Clear KV cache before embedding generation
-                let mem = llama_get_memory(ctx)
-                llama_memory_clear(mem, false) // Clear metadata only
+                    // Clear KV cache before embedding generation
+                    let mem = llama_get_memory(ctx)
+                    llama_memory_clear(mem, false) // Clear metadata only
 
                 // Tokenize the text
                 var tokens = [llama_token](repeating: 0, count: text.count + 16)
@@ -566,12 +771,13 @@ class LLMInferenceService: @unchecked Sendable {
                 }
 
                 // Check if token count exceeds batch size
-                if tokenCount > ModelConfig.batchSize {
-                    print("⚠️ Token count (\(tokenCount)) exceeds batch size (\(ModelConfig.batchSize)), truncating")
+                let batchSize = self.currentModel.optimalBatchSize
+                if tokenCount > batchSize {
+                    print("⚠️ Token count (\(tokenCount)) exceeds batch size (\(batchSize)), truncating")
                 }
 
                 // Keep only the valid tokens, limited to batch size
-                let validTokenCount = min(Int(tokenCount), Int(ModelConfig.batchSize))
+                let validTokenCount = min(Int(tokenCount), Int(batchSize))
                 var embeddingTokens = Array(tokens.prefix(validTokenCount))
                 let embeddingTokenCount = Int32(embeddingTokens.count)
 
@@ -606,6 +812,7 @@ class LLMInferenceService: @unchecked Sendable {
 
                 print("✅ Generated embedding with \(embedding.count) dimensions (normalized)")
                 continuation.resume(returning: embedding)
+                } // End autoreleasepool
             }
         }
     }
@@ -655,14 +862,10 @@ class LLMInferenceService: @unchecked Sendable {
             }
         }
 
-        // Last resort: Check in the project source directory (for development)
-        let devPath = "/Users/projects/Documents/zetanotes/ZetaNotes/Resources/Models/" + modelFileName
-        if fileManager.fileExists(atPath: devPath) {
-            if verbose {
-                print("✅ Found model in development path: \(devPath)")
-            }
-            return devPath
-        }
+        // Development fallback removed - models should only load from:
+        // 1. App bundle (for bundled models)
+        // 2. Application Support (for user-downloaded models)
+        // This prevents tools working after reset in development builds
 
         if verbose {
             print("❌ Model not found in any location")

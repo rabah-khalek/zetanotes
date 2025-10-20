@@ -27,6 +27,20 @@ enum LLMOutputCleaner {
         cleaned = cleaned.replacingOccurrences(of: "<|end_header_id|>", with: "")
         cleaned = cleaned.replacingOccurrences(of: "<|begin_of_text|>", with: "")
 
+        // Llama 3.2 reserved special tokens (appear with large contexts)
+        // Format: <|reserved_special_token_XXX| where XXX is a number
+        // Use regex to catch all variants
+        if let regex = try? NSRegularExpression(pattern: "<\\|reserved_special_token_\\d+\\|?>", options: []) {
+            let range = NSRange(cleaned.startIndex..., in: cleaned)
+            cleaned = regex.stringByReplacingMatches(in: cleaned, options: [], range: range, withTemplate: "")
+        }
+
+        // Mangled/partial Llama 3.2 variants (appear when generation is cut off)
+        cleaned = cleaned.replacingOccurrences(of: "<|end_header", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "</|end_header", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "<|eot_", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "<|start_header", with: "")
+
         // Qwen 2.5, Phi-2
         cleaned = cleaned.replacingOccurrences(of: "<|endoftext|>", with: "")
 

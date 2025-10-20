@@ -51,8 +51,10 @@ class TitleGenerationService: AIService {
 
     // MARK: - AIService Override
 
-    /// Override process to use custom prompt properly
+    /// Override process to use custom prompt with batching support
     func process(_ text: String, customPrompt: String) async -> String? {
+        print("📋 Title: Processing \(text.count) chars")
+
         // Limit context to prevent token overflow while preserving enough for good titles
         let limitedText = String(text.prefix(Config.contextLimit))
 
@@ -64,19 +66,30 @@ class TitleGenerationService: AIService {
 
         // Use custom prompt if provided, otherwise use model-optimized prompt
         let instruction = customPrompt.isEmpty ? toolConfig.prompt : customPrompt
-        let prompt = instruction.replacingOccurrences(of: "{content}", with: limitedText)
 
-        guard let rawOutput = await llmService.generate(
-            prompt: prompt,
-            maxTokens: toolConfig.maxTokens ?? Config.maxTokens, // Use model-specific maxTokens
-            temperature: toolConfig.temperature,
-            stopSequences: toolConfig.stopSequences
-        ) else {
+        // Use batched processing (though titles rarely need it due to contextLimit)
+        let result = await processBatched(
+            limitedText,
+            instruction: instruction,
+            maxTokens: toolConfig.maxTokens ?? Config.maxTokens,
+            separator: " "
+        )
+
+        if let result = result {
+            let title = postProcess(result)
+            let finalTitle = title.isEmpty ? nil : title
+
+            if let finalTitle = finalTitle {
+                print("✅ Title: Generated '\(finalTitle)'")
+            } else {
+                print("❌ Title: Post-processing resulted in empty output")
+            }
+
+            return finalTitle
+        } else {
+            print("❌ Title: Failed to generate output")
             return nil
         }
-
-        let title = postProcess(rawOutput)
-        return title.isEmpty ? nil : title
     }
 
     // MARK: - Public API

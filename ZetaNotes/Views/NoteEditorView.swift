@@ -256,6 +256,8 @@ struct NoteEditorView: View {
     @State private var showMarkdownPreview: Bool = false
     @State private var currentCursorPosition: Int = 0
     @State private var desiredCursorPosition: Int?
+    @State private var lastContentLength: Int = 0
+    @State private var isLoading: Bool = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -305,8 +307,10 @@ struct NoteEditorView: View {
                     .font(.system(size: 22, weight: .semibold))
                     .textFieldStyle(.plain)
                     .onChange(of: title) { newValue in
+                        guard !isLoading else { return } // Don't save when loading note
                         note.title = newValue
-                        viewModel.saveNote(note)
+                        note.touch() // Update timestamp when title changes
+                        viewModel.saveNoteDebounced(note) // Use debounced save like content
                     }
 
                 // Markdown Preview Toggle - RIGHT SIDE
@@ -366,10 +370,24 @@ struct NoteEditorView: View {
                         // Clear desired cursor position once it's been applied
                         desiredCursorPosition = nil
 
-                        // Update both the state and note content
+                        // Detect large text changes (paste operations)
+                        let textLengthChange = abs(newValue.count - lastContentLength)
+                        let isPasteOperation = textLengthChange > 50 // More than 50 chars changed at once
+                        lastContentLength = newValue.count
+
+                        // Update both the state and note content IMMEDIATELY
                         content = newValue
                         note.content = newValue
-                        viewModel.saveNoteDebounced(note) // ✅ Use debounced save for typing
+                        note.touch() // Update timestamp immediately
+
+                        // Debounced save to disk (reduces I/O during typing)
+                        viewModel.saveNoteDebounced(note)
+
+                        // Disable autocomplete on paste to prevent crashes
+                        if isPasteOperation {
+                            viewModel.dismissAutocomplete()
+                            return
+                        }
 
                         // Check if cursor is in base content (not in AI-generated sections)
                         if isInBaseContent(content: newValue, cursorPosition: cursorPosition) {
@@ -432,19 +450,21 @@ struct NoteEditorView: View {
             }
         }
         .onDisappear {
-            // Final save when editor view disappears
-            note.content = content
-            note.title = title
-            viewModel.saveNote(note)
+            // Note: Saving is handled by NoteViewModel.selectedNote.willSet
+            // No need to save here - it would be redundant and cause double-saves
+            // The willSet already cancels timers and saves immediately when switching notes
         }
     }
 
     // MARK: - Helpers
 
     private func loadNoteContent() {
+        isLoading = true
         title = note.title ?? ""
         content = note.content ?? ""
+        lastContentLength = content.count
         viewModel.dismissAutocomplete()
+        isLoading = false
     }
 
     /// Check if cursor position is within base content (not in AI-generated sections)

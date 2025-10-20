@@ -176,7 +176,13 @@ private enum LlamaThreeTwoConfigs {
         case .autocomplete:
             return LLMConfig(
                 prompt: """
-                <|begin_of_text|>{content}
+                <|begin_of_text|><|start_header_id|>system<|end_header_id|>
+
+                Continue writing. Output ONLY the next few words. Do not add commentary, explanations, or meta-observations.<|eot_id|><|start_header_id|>user<|end_header_id|>
+
+                {content}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+
+
                 """,
                 temperature: 0.2, // Significantly reduced - 1B models hallucinate less at very low temps
                 maxTokens: 25, // Reduced to force shorter, more focused completions

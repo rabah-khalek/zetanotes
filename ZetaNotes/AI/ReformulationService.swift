@@ -25,7 +25,9 @@ class ReformulationService: AIService {
                 "<|user|>", // Prevent fake user messages
                 "<|system|>", // Prevent fake system messages
                 "\n\nText:", // Stop if it tries to repeat the input prompt
-                "\n---\n`" // Service delimiter start
+                "\n---\n`", // Service delimiter start
+                "<|end_header", // Llama 3.2 mangled chat template marker
+                "</|end_header" // Another mangled variant
             ]
         )
     }
@@ -38,26 +40,32 @@ class ReformulationService: AIService {
 
     // MARK: - AIService Override
 
-    /// Override process to use custom prompt and dynamic max tokens
+    /// Override process to use custom prompt and dynamic max tokens with batching support
     func process(_ text: String, customPrompt: String) async -> String? {
+        print("🔄 Reformulate: Processing \(text.count) chars")
+
         // Calculate dynamic max tokens with 30% buffer for expansion
         let maxTokens = calculateMaxTokens(for: text, bufferPercent: 30, maxLimit: 1024)
 
         // Use custom prompt as-is if provided (user controls the format)
         // Otherwise use default prompt with proper chat template
         let instruction = customPrompt.isEmpty ? DefaultPrompts.reformulate : customPrompt
-        let prompt = instruction.replacingOccurrences(of: "{content}", with: text)
 
-        guard let rawOutput = await llmService.generate(
-            prompt: prompt,
+        // Use batched processing to handle large texts
+        let result = await processBatched(
+            text,
+            instruction: instruction,
             maxTokens: maxTokens,
-            temperature: config.temperature,
-            stopSequences: config.stopSequences
-        ) else {
-            return nil
+            separator: " "
+        )
+
+        if let result = result {
+            print("✅ Reformulate: Generated \(result.count) chars")
+        } else {
+            print("❌ Reformulate: Failed to generate output")
         }
 
-        return postProcess(rawOutput)
+        return result
     } // MARK: - Public API
 
     /// Reformulates the given text to be clearer and more professional

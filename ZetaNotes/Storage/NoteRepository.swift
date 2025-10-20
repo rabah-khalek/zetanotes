@@ -13,6 +13,7 @@ struct NoteListItem: Identifiable, Hashable {
     let title: String
     let preview: String
     let createdAt: Date
+    let updatedAt: Date
 
     // Static cached formatters to avoid repeated allocation
     private static let timeFormatter: DateFormatter = {
@@ -40,14 +41,15 @@ struct NoteListItem: Identifiable, Hashable {
     }
 
     var formattedCreatedDate: String {
-        if Self.calendar.isDateInToday(createdAt) {
-            return "Today, \(Self.timeFormatter.string(from: createdAt))"
-        } else if Self.calendar.isDateInYesterday(createdAt) {
-            return "Yesterday, \(Self.timeFormatter.string(from: createdAt))"
-        } else if Self.calendar.isDate(createdAt, equalTo: Date(), toGranularity: .year) {
-            return Self.monthDayFormatter.string(from: createdAt)
+        // Display updatedAt instead of createdAt for more relevant sorting
+        if Self.calendar.isDateInToday(updatedAt) {
+            return "Today, \(Self.timeFormatter.string(from: updatedAt))"
+        } else if Self.calendar.isDateInYesterday(updatedAt) {
+            return "Yesterday, \(Self.timeFormatter.string(from: updatedAt))"
+        } else if Self.calendar.isDate(updatedAt, equalTo: Date(), toGranularity: .year) {
+            return Self.monthDayFormatter.string(from: updatedAt)
         } else {
-            return Self.fullDateFormatter.string(from: createdAt)
+            return Self.fullDateFormatter.string(from: updatedAt)
         }
     }
 }
@@ -64,7 +66,9 @@ final class NoteRepository {
     }
 
     func makeListItem(from note: Note) -> NoteListItem? {
-        guard let id = note.id, let createdAt = note.createdAt else { return nil }
+        guard let id = note.id,
+              let createdAt = note.createdAt,
+              let updatedAt = note.updatedAt else { return nil }
         let title = note.displayTitle
         let preview: String
         if let summary = note.summary, !summary.isEmpty {
@@ -72,7 +76,7 @@ final class NoteRepository {
         } else {
             preview = note.contentPreview
         }
-        return NoteListItem(id: id, title: title, preview: preview, createdAt: createdAt)
+        return NoteListItem(id: id, title: title, preview: preview, createdAt: createdAt, updatedAt: updatedAt)
     }
 
     @discardableResult

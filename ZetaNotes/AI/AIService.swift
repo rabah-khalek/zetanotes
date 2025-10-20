@@ -52,6 +52,85 @@ protocol AIService {
 
 /// Common utilities for all AI services
 extension AIService {
+    // MARK: - Batch Processing
+
+    /// Processes text in batches to handle content larger than model batch size
+    /// Chunks text by sentences and processes each chunk separately
+    /// - Parameters:
+    ///   - text: The text to process
+    ///   - instruction: The instruction/prompt template (should contain {content} placeholder)
+    ///   - maxTokens: Optional max tokens per generation
+    ///   - separator: String to join processed chunks (default: single space)
+    /// - Returns: Combined processed output, or nil on failure
+    func processBatched(
+        _ text: String,
+        instruction: String,
+        maxTokens: Int? = nil,
+        separator: String = " "
+    ) async -> String? {
+        guard !text.isEmpty else { return nil }
+
+        // Get the current model's batch size and calculate chunk size
+        // Leave 30% buffer for the prompt template overhead
+        let modelBatchSize = Int(llmService.getCurrentModel().optimalBatchSize)
+        let maxTokensPerChunk = Int(Double(modelBatchSize) * 0.7)
+
+        // Create chunker with model-aware token limit
+        let chunker = TextChunker(maxTokensPerChunk: maxTokensPerChunk)
+        let chunks = chunker.chunk(text)
+
+        // If only one chunk, process normally without batching
+        if chunks.count == 1 {
+            let prompt = instruction.replacingOccurrences(of: "{content}", with: text)
+            guard let rawOutput = await llmService.generate(
+                prompt: prompt,
+                maxTokens: maxTokens ?? config.maxTokens,
+                temperature: config.temperature,
+                stopSequences: config.stopSequences
+            ) else {
+                return nil
+            }
+            return postProcess(rawOutput)
+        }
+
+        // Process each chunk
+        print("📦 Processing large text in \(chunks.count) batches...")
+        var processedChunks: [String] = []
+
+        for (index, chunk) in chunks.enumerated() {
+            print("   Batch \(index + 1)/\(chunks.count): \(chunk.count) chars")
+
+            let prompt = instruction.replacingOccurrences(of: "{content}", with: chunk)
+
+            guard let rawOutput = await llmService.generate(
+                prompt: prompt,
+                maxTokens: maxTokens ?? config.maxTokens,
+                temperature: config.temperature,
+                stopSequences: config.stopSequences
+            ) else {
+                print("   ⚠️ Batch \(index + 1) failed, skipping")
+                continue
+            }
+
+            let processed = postProcess(rawOutput)
+            if !processed.isEmpty {
+                processedChunks.append(processed)
+            } else {
+                print("   ⚠️ Batch \(index + 1) produced empty output after post-processing")
+            }
+        }
+
+        if processedChunks.isEmpty {
+            print("❌ All batches failed")
+            return nil
+        }
+
+        print("✅ Successfully processed \(processedChunks.count)/\(chunks.count) batches")
+        let result = processedChunks.joined(separator: separator)
+        print("📊 Final output length: \(result.count) chars")
+        return result
+    }
+
     // MARK: - Token Estimation
 
     /// Estimates the number of tokens for a given text
@@ -264,21 +343,41 @@ extension AIService {
 /// Default implementation for AIService
 extension AIService {
     /// Default implementation of process() using buildPrompt and postProcess
+    /// Uses batching for large texts automatically
     func process(_ text: String) async -> String? {
         guard !text.isEmpty else { return nil }
 
         let prompt = buildPrompt(for: text)
 
-        guard let rawOutput = await llmService.generate(
-            prompt: prompt,
-            maxTokens: config.maxTokens,
-            temperature: config.temperature,
-            stopSequences: config.stopSequences
-        ) else {
-            return nil
+        // Use batched processing for consistency
+        // For small texts that fit in one batch, this adds minimal overhead
+        let instruction = prompt // The buildPrompt already includes the instruction
+
+        // Estimate if we need batching
+        let estimatedTokens = estimateTokens(for: prompt)
+        let modelBatchSize = Int(llmService.getCurrentModel().optimalBatchSize)
+
+        // If prompt fits in one batch, use direct generation for efficiency
+        if estimatedTokens < modelBatchSize {
+            guard let rawOutput = await llmService.generate(
+                prompt: prompt,
+                maxTokens: config.maxTokens,
+                temperature: config.temperature,
+                stopSequences: config.stopSequences
+            ) else {
+                return nil
+            }
+            return postProcess(rawOutput)
         }
 
-        return postProcess(rawOutput)
+        // For large texts, use batching
+        // This shouldn't happen often for autocomplete/title, but provides safety
+        return await processBatched(
+            text,
+            instruction: prompt,
+            maxTokens: config.maxTokens,
+            separator: " "
+        )
     }
 
     /// Process with custom prompt
@@ -343,5 +442,254 @@ extension AIService {
         }
 
         return cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+}
+import Foundation
+
+/// Utility for chunking text into manageable batches that fit within model constraints
+struct TextChunker {
+
+    // MARK: - Configuration
+
+    /// Maximum tokens per chunk (should be less than model batch size to leave room for prompt template)
+    private let maxTokensPerChunk: Int
+
+    /// Characters per token estimate (default: 2.5 chars ≈ 1 token)
+    private let charsPerToken: Double
+
+    init(maxTokensPerChunk: Int = 400, charsPerToken: Double = 2.5) {
+        self.maxTokensPerChunk = maxTokensPerChunk
+        self.charsPerToken = charsPerToken
+    }
+
+    // MARK: - Public API
+
+    /// Chunks text into sentence-based segments that fit within token limits
+    /// - Parameter text: The text to chunk
+    /// - Returns: Array of text chunks, each containing complete sentences
+    func chunk(_ text: String) -> [String] {
+        guard !text.isEmpty else { return [] }
+
+        // Split into sentences
+        let sentences = splitIntoSentences(text)
+
+        if sentences.isEmpty {
+            // Fallback: if no sentences detected, split by paragraphs or character limit
+            return chunkByParagraphs(text)
+        }
+
+        // Group sentences into chunks that fit within token limit
+        return groupSentencesIntoChunks(sentences)
+    }
+
+    // MARK: - Sentence Splitting
+
+    /// Splits text into sentences using natural language boundaries
+    /// - Parameter text: The text to split
+    /// - Returns: Array of sentences
+    private func splitIntoSentences(_ text: String) -> [String] {
+        var sentences: [String] = []
+
+        // Use NSLinguisticTagger for proper sentence detection
+        let tagger = NSLinguisticTagger(tagSchemes: [.tokenType], options: 0)
+        tagger.string = text
+
+        let range = NSRange(location: 0, length: text.utf16.count)
+        var sentenceRanges: [NSRange] = []
+
+        // Find sentence boundaries
+        tagger.enumerateTags(in: range, unit: .sentence, scheme: .tokenType, options: []) { _, tokenRange, _ in
+            sentenceRanges.append(tokenRange)
+        }
+
+        // Extract sentence strings
+        for sentenceRange in sentenceRanges {
+            if let range = Range(sentenceRange, in: text) {
+                let sentence = String(text[range]).trimmingCharacters(in: .whitespacesAndNewlines)
+                if !sentence.isEmpty {
+                    sentences.append(sentence)
+                }
+            }
+        }
+
+        // Fallback: if tagger didn't find sentences, use simple regex
+        if sentences.isEmpty {
+            return fallbackSentenceSplit(text)
+        }
+
+        return sentences
+    }
+
+    /// Fallback sentence splitting using simple regex patterns
+    private func fallbackSentenceSplit(_ text: String) -> [String] {
+        var sentences: [String] = []
+
+        // Split on common sentence terminators: . ! ? followed by space or newline
+        let pattern = "(?<=[.!?])\\s+"
+
+        if let regex = try? NSRegularExpression(pattern: pattern, options: []) {
+            let nsText = text as NSString
+            let matches = regex.matches(in: text, range: NSRange(location: 0, length: nsText.length))
+
+            var lastIndex = 0
+            for match in matches {
+                let range = match.range
+                let sentence = nsText.substring(with: NSRange(location: lastIndex, length: range.location - lastIndex))
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                if !sentence.isEmpty {
+                    sentences.append(sentence)
+                }
+                lastIndex = range.location + range.length
+            }
+
+            // Add remaining text
+            if lastIndex < nsText.length {
+                let remaining = nsText.substring(from: lastIndex).trimmingCharacters(in: .whitespacesAndNewlines)
+                if !remaining.isEmpty {
+                    sentences.append(remaining)
+                }
+            }
+        }
+
+        return sentences.isEmpty ? [text] : sentences
+    }
+
+    // MARK: - Chunk Grouping
+
+    /// Groups sentences into chunks that fit within token limits
+    private func groupSentencesIntoChunks(_ sentences: [String]) -> [String] {
+        var chunks: [String] = []
+        var currentChunk: [String] = []
+        var currentTokenCount = 0
+
+        for sentence in sentences {
+            let sentenceTokens = estimateTokens(for: sentence)
+
+            // If single sentence exceeds limit, add it as its own chunk and truncate if needed
+            if sentenceTokens > maxTokensPerChunk {
+                // Flush current chunk first
+                if !currentChunk.isEmpty {
+                    chunks.append(currentChunk.joined(separator: " "))
+                    currentChunk = []
+                    currentTokenCount = 0
+                }
+
+                // Truncate long sentence to fit
+                let truncated = truncateToTokenLimit(sentence, maxTokens: maxTokensPerChunk)
+                chunks.append(truncated)
+                continue
+            }
+
+            // Check if adding this sentence would exceed limit
+            if currentTokenCount + sentenceTokens > maxTokensPerChunk && !currentChunk.isEmpty {
+                // Flush current chunk
+                chunks.append(currentChunk.joined(separator: " "))
+                currentChunk = []
+                currentTokenCount = 0
+            }
+
+            // Add sentence to current chunk
+            currentChunk.append(sentence)
+            currentTokenCount += sentenceTokens
+        }
+
+        // Add final chunk
+        if !currentChunk.isEmpty {
+            chunks.append(currentChunk.joined(separator: " "))
+        }
+
+        return chunks
+    }
+
+    // MARK: - Paragraph Chunking (Fallback)
+
+    /// Chunks by paragraphs when sentence detection fails
+    private func chunkByParagraphs(_ text: String) -> [String] {
+        let paragraphs = text.components(separatedBy: "\n\n")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+
+        if paragraphs.isEmpty {
+            // Ultimate fallback: character-based chunking
+            return chunkByCharacters(text)
+        }
+
+        var chunks: [String] = []
+        var currentChunk: [String] = []
+        var currentTokenCount = 0
+
+        for paragraph in paragraphs {
+            let paragraphTokens = estimateTokens(for: paragraph)
+
+            if paragraphTokens > maxTokensPerChunk {
+                // Flush current chunk
+                if !currentChunk.isEmpty {
+                    chunks.append(currentChunk.joined(separator: "\n\n"))
+                    currentChunk = []
+                    currentTokenCount = 0
+                }
+
+                // Split paragraph into sentences
+                let sentences = splitIntoSentences(paragraph)
+                if !sentences.isEmpty {
+                    chunks.append(contentsOf: groupSentencesIntoChunks(sentences))
+                } else {
+                    // Truncate paragraph
+                    chunks.append(truncateToTokenLimit(paragraph, maxTokens: maxTokensPerChunk))
+                }
+                continue
+            }
+
+            if currentTokenCount + paragraphTokens > maxTokensPerChunk && !currentChunk.isEmpty {
+                chunks.append(currentChunk.joined(separator: "\n\n"))
+                currentChunk = []
+                currentTokenCount = 0
+            }
+
+            currentChunk.append(paragraph)
+            currentTokenCount += paragraphTokens
+        }
+
+        if !currentChunk.isEmpty {
+            chunks.append(currentChunk.joined(separator: "\n\n"))
+        }
+
+        return chunks
+    }
+
+    // MARK: - Character Chunking (Ultimate Fallback)
+
+    /// Ultimate fallback: chunk by character count
+    private func chunkByCharacters(_ text: String) -> [String] {
+        let maxCharsPerChunk = Int(Double(maxTokensPerChunk) * charsPerToken)
+        var chunks: [String] = []
+        var currentIndex = text.startIndex
+
+        while currentIndex < text.endIndex {
+            let endIndex = text.index(currentIndex, offsetBy: maxCharsPerChunk, limitedBy: text.endIndex) ?? text.endIndex
+            let chunk = String(text[currentIndex..<endIndex])
+            chunks.append(chunk)
+            currentIndex = endIndex
+        }
+
+        return chunks
+    }
+
+    // MARK: - Token Utilities
+
+    /// Estimates token count for text
+    private func estimateTokens(for text: String) -> Int {
+        return Int(Double(text.count) / charsPerToken)
+    }
+
+    /// Truncates text to fit within token limit
+    private func truncateToTokenLimit(_ text: String, maxTokens: Int) -> String {
+        let maxChars = Int(Double(maxTokens) * charsPerToken)
+        if text.count <= maxChars {
+            return text
+        }
+
+        let endIndex = text.index(text.startIndex, offsetBy: maxChars)
+        return String(text[..<endIndex]) + "..."
     }
 }

@@ -34,7 +34,9 @@ class SummarizationService: AIService {
                 "<|user|>", // Prevent fake user messages
                 "<|system|>", // Prevent fake system messages
                 "\n\nText:", // Stop if it tries to repeat the input prompt
-                "\n---\n`" // Service delimiter start
+                "\n---\n`", // Service delimiter start
+                "<|end_header", // Llama 3.2 mangled chat template marker
+                "</|end_header" // Another mangled variant
             ]
         )
     }
@@ -47,25 +49,29 @@ class SummarizationService: AIService {
 
     // MARK: - AIService Override
 
-    /// Override process to use custom prompt and respect maxTokens from config
+    /// Override process to use custom prompt with batching support
     func process(_ text: String, customPrompt: String) async -> String? {
-        // For very long text, truncate to first 2000 characters for performance
-        let textToProcess = text.count > 2000 ? String(text.prefix(2000)) : text
+        print("📝 Summarize: Processing \(text.count) chars")
 
         // Use custom prompt with placeholder replacement
         let instruction = customPrompt.isEmpty ? DefaultPrompts.summarization : customPrompt
-        let prompt = instruction.replacingOccurrences(of: "{content}", with: textToProcess)
 
-        guard let rawOutput = await llmService.generate(
-            prompt: prompt,
-            maxTokens: config.maxTokens, // Use fixed 100 tokens from config
-            temperature: config.temperature,
-            stopSequences: config.stopSequences
-        ) else {
-            return nil
+        // Use batched processing to handle large texts
+        // For summaries, join chunks with newlines to create structured output
+        let result = await processBatched(
+            text,
+            instruction: instruction,
+            maxTokens: config.maxTokens,
+            separator: "\n"
+        )
+
+        if let result = result {
+            print("✅ Summarize: Generated \(result.count) chars")
+        } else {
+            print("❌ Summarize: Failed to generate output")
         }
 
-        return postProcess(rawOutput)
+        return result
     }
 
     // MARK: - Summarization
@@ -76,47 +82,8 @@ class SummarizationService: AIService {
     ///   - maxLength: Maximum length of summary in characters
     /// - Returns: Summary text, or nil if summarization fails
     func summarize(_ text: String, maxLength: Int = Config.defaultSummaryLength) async -> String? {
-        print("📝 SummarizationService: Starting summarization, text length: \(text.count)")
-
-        // For short text, just return it trimmed
-        if text.count <= Config.minLengthForSummary {
-            print("ℹ️ Text too short (\(text.count) < \(Config.minLengthForSummary)), returning as-is")
-            return text.trimmingCharacters(in: .whitespacesAndNewlines)
-        }
-
-        // For very long text, truncate to first 2000 characters for performance
-        let textToSummarize: String
-        if text.count > 2000 {
-            textToSummarize = String(text.prefix(2000))
-            print("✂️ Text truncated to 2000 chars for performance")
-        } else {
-            textToSummarize = text
-        }
-
-        let prompt = buildPrompt(for: textToSummarize)
-        print("📤 Sending prompt to LLM, length: \(prompt.count)")
-
-        guard let summary = await llmService.generate(
-            prompt: prompt,
-            maxTokens: config.maxTokens,
-            temperature: config.temperature,
-            stopSequences: config.stopSequences
-        ) else {
-            print("⚠️ LLM returned nil, using extractive fallback")
-            // Fallback: use extractive summarization
-            return extractiveSummary(from: text, maxLength: maxLength)
-        }
-
-        print("📥 LLM returned: \(summary.prefix(100))...")
-        let cleaned = postProcess(summary)
-        print("🧹 Cleaned summary: \(cleaned)")
-
-        if cleaned.isEmpty {
-            print("⚠️ Cleaned summary is empty, using extractive fallback")
-            return extractiveSummary(from: text, maxLength: maxLength)
-        }
-
-        return cleaned
+        // Use the batched process method instead of truncating
+        return await process(text, customPrompt: "")
     }
 
     // MARK: - Post-processing

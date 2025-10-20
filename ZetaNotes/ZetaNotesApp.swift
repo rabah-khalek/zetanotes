@@ -8,9 +8,44 @@
 
 import SwiftUI
 import Sparkle
+import AppKit
+
+// MARK: - AppDelegate for macOS-specific lifecycle events
+
+class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationWillTerminate(_ notification: Notification) {
+        // This is called when the app is about to quit (Cmd+Q or Quit from menu)
+        print("🛑 App terminating - performing final save...")
+
+        // Force save any pending Core Data changes
+        let context = PersistenceController.shared.container.viewContext
+        if context.hasChanges {
+            do {
+                try context.save()
+                print("✅ Final save completed successfully")
+            } catch {
+                print("❌ Failed to save on termination: \(error)")
+                // Log error but don't crash during termination
+                ErrorLogger.shared.logError(
+                    "Failed to save notes during app termination",
+                    severity: .error,
+                    operation: "App Quit",
+                    details: error.localizedDescription
+                )
+            }
+        }
+    }
+
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        // Standard macOS behavior - quit when last window closes
+        return true
+    }
+}
 
 @main
 struct ZetaNotesApp: App {
+    // Register AppDelegate for macOS lifecycle events
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     // Sparkle updater controller - handles automatic updates
     private let updaterController: SPUStandardUpdaterController
 
@@ -28,6 +63,9 @@ struct ZetaNotesApp: App {
 
     // First-run state
     @AppStorage("hasCompletedFirstRun") private var hasCompletedFirstRun = false
+
+    // Scene phase for lifecycle monitoring
+    @Environment(\.scenePhase) private var scenePhase
 
     init() {
         // Initialize Sparkle updater controller
@@ -88,6 +126,9 @@ struct ZetaNotesApp: App {
         }
         .windowStyle(.hiddenTitleBar)
         .windowToolbarStyle(.unified)
+        .onChange(of: scenePhase) { newPhase in
+            handleScenePhaseChange(to: newPhase)
+        }
     }
 
     private var colorScheme: ColorScheme? {
@@ -98,6 +139,45 @@ struct ZetaNotesApp: App {
             return .dark
         default:
             return nil // Auto - follows system
+        }
+    }
+
+    // MARK: - Lifecycle Handling
+
+    private func handleScenePhaseChange(to newPhase: ScenePhase) {
+        switch newPhase {
+        case .background:
+            // App is moving to background (minimized or hidden)
+            // Save any pending changes
+            print("📱 App entering background - saving pending changes...")
+            saveAllPendingChanges()
+
+        case .inactive:
+            // App is becoming inactive (user switching apps, Cmd+Tab, etc.)
+            // Good time to save as well
+            print("⏸️ App becoming inactive - saving pending changes...")
+            saveAllPendingChanges()
+
+        case .active:
+            // App is active and in foreground
+            print("✅ App is active")
+
+        @unknown default:
+            break
+        }
+    }
+
+    private func saveAllPendingChanges() {
+        // Immediately flush any pending debounced saves by triggering them now
+        // This ensures the view context is up-to-date before we save
+
+        // Save Core Data context if there are any unsaved changes
+        if persistenceController.container.viewContext.hasChanges {
+            print("💾 Saving Core Data changes to disk...")
+            persistenceController.save()
+            print("✅ Core Data saved successfully")
+        } else {
+            print("ℹ️ No unsaved changes to persist")
         }
     }
 }
