@@ -2,20 +2,34 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- App Sandbox enabled for better security and App Store compliance -->
+	<!-- App Sandbox enabled for better security -->
 	<!-- All user data stored in sandboxed Application Support directory -->
 	<key>com.apple.security.app-sandbox</key>
 	<true/>
 
-	<!-- Network access for downloading AI models only -->
+	<!-- Network access for downloading AI models -->
 	<key>com.apple.security.network.client</key>
 	<true/>
 
-	<!-- Removed: com.apple.security.files.user-selected.read-write -->
-	<!-- Not needed - app only uses its own Application Support directory -->
+	<!-- Hardened Runtime Entitlements (required for notarization) -->
+	<key>com.apple.security.cs.allow-jit</key>
+	<true/>
 
-	<!-- Note: keychain-access-groups entitlement requires code signing -->
-	<!-- For unsigned development builds, the Keychain prompt is expected -->
-	<!-- Click "Always Allow" when prompted to grant permanent access -->
+	<key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+	<true/>
+
+	<key>com.apple.security.cs.allow-dyld-environment-variables</key>
+	<true/>
+
+	<key>com.apple.security.cs.disable-library-validation</key>
+	<true/>
+
+	<!-- File Access for user-selected files -->
+	<key>com.apple.security.files.user-selected.read-write</key>
+	<true/>
+
+	<!-- Enable access to user downloads folder (for model downloads) -->
+	<key>com.apple.security.files.downloads.read-write</key>
+	<true/>
 </dict>
 </plist>

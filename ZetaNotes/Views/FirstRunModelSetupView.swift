@@ -28,13 +28,9 @@ struct FirstRunModelSetupView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 0) {
-                Spacer()
-                    .frame(height: 40)
-
-                // App Icon with gradient background
-                ZStack {
+        VStack(spacing: 0) {
+            // App Icon with gradient background
+            ZStack {
                     // Gradient circle background
                     Circle()
                         .fill(
@@ -47,16 +43,16 @@ struct FirstRunModelSetupView: View {
                                 endPoint: .bottomTrailing
                             )
                         )
-                        .frame(width: 160, height: 160)
-                        .blur(radius: 20)
+                        .frame(width: 80, height: 80)
+                        .blur(radius: 10)
 
                     Image(nsImage: NSImage(named: "AppIcon") ?? NSImage())
                         .resizable()
-                        .frame(width: 120, height: 120)
-                        .cornerRadius(26)
-                        .shadow(color: Color.black.opacity(0.15), radius: 20, x: 0, y: 10)
+                        .frame(width: 70, height: 70)
+                        .cornerRadius(16)
+                        .shadow(color: Color.black.opacity(0.15), radius: 10, x: 0, y: 5)
                         .overlay(
-                            RoundedRectangle(cornerRadius: 26)
+                            RoundedRectangle(cornerRadius: 16)
                                 .strokeBorder(
                                     LinearGradient(
                                         gradient: Gradient(colors: [
@@ -70,12 +66,13 @@ struct FirstRunModelSetupView: View {
                                 )
                         )
                 }
+                .padding(.top, 12)
 
                 // Welcome Text
-                VStack(spacing: 8) {
+                VStack(spacing: 2) {
                     Text("Welcome to ZetaNotes")
-                        .font(.system(size: 36, weight: .bold))
-                        .padding(.top, 36)
+                        .font(.system(size: 28, weight: .bold))
+                        .padding(.top, 8)
                         .foregroundStyle(
                             LinearGradient(
                                 gradient: Gradient(colors: [.primary, .primary.opacity(0.8)]),
@@ -85,52 +82,23 @@ struct FirstRunModelSetupView: View {
                         )
 
                     Text("Privacy-first note-taking with offline AI")
-                        .font(.system(size: 17, weight: .medium))
+                        .font(.system(size: 15, weight: .medium))
                         .foregroundColor(.secondary)
 
                     HStack(spacing: 4) {
                         Image(systemName: "lock.shield.fill")
-                            .font(.system(size: 12))
+                            .font(.system(size: 11))
                             .foregroundColor(.green)
                         Text("All AI processing happens on your device")
-                            .font(.system(size: 14))
+                            .font(.system(size: 13))
                             .foregroundColor(.secondary.opacity(0.9))
                     }
-                    .padding(.top, 4)
-                    .padding(.bottom, 8)
+                    .padding(.top, 2)
+                    .padding(.bottom, 16)
                 }
-
-                // Decorative divider
-                HStack(spacing: 12) {
-                    Rectangle()
-                        .fill(
-                            LinearGradient(
-                                gradient: Gradient(colors: [.clear, .secondary.opacity(0.3), .clear]),
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                        .frame(height: 1)
-
-                    Image(systemName: "sparkles")
-                        .font(.system(size: 12))
-                        .foregroundColor(.purple.opacity(0.6))
-
-                    Rectangle()
-                        .fill(
-                            LinearGradient(
-                                gradient: Gradient(colors: [.clear, .secondary.opacity(0.3), .clear]),
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                        .frame(height: 1)
-                }
-                .padding(.vertical, 32)
-                .padding(.horizontal, 120)
 
                 // Setup Content
-                VStack(spacing: 24) {
+                VStack(spacing: 12) {
                     switch viewState {
                     case .initial:
                         initialView
@@ -147,35 +115,34 @@ struct FirstRunModelSetupView: View {
                 .frame(width: 600)
 
                 Spacer()
-                    .frame(height: 60)
+                    .frame(height: 12)
             }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(
-            ZStack {
-                Color(nsColor: .windowBackgroundColor)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(
+                ZStack {
+                    Color(nsColor: .windowBackgroundColor)
 
-                // Subtle gradient overlay
-                LinearGradient(
-                    gradient: Gradient(colors: [
-                        Color.purple.opacity(0.02),
-                        Color.clear,
-                        Color.blue.opacity(0.02)
-                    ]),
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            }
-        )
+                    // Subtle gradient overlay
+                    LinearGradient(
+                        gradient: Gradient(colors: [
+                            Color.purple.opacity(0.02),
+                            Color.clear,
+                            Color.blue.opacity(0.02)
+                        ]),
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                }
+            )
     }
 
     // MARK: - Initial View
 
     private var initialView: some View {
-        VStack(spacing: 28) {
+        VStack(spacing: 14) {
             // AI Capabilities Section with gradient card
-            VStack(alignment: .leading, spacing: 20) {
-                HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 10) {
                     ZStack {
                         Circle()
                             .fill(
@@ -185,49 +152,49 @@ struct FirstRunModelSetupView: View {
                                     endPoint: .bottomTrailing
                                 )
                             )
-                            .frame(width: 44, height: 44)
+                            .frame(width: 36, height: 36)
 
                         Image(systemName: "sparkles")
-                            .font(.system(size: 20, weight: .semibold))
+                            .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(.white)
                     }
 
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: 1) {
                         Text("AI-Powered Features")
-                            .font(.system(size: 18, weight: .bold))
+                            .font(.system(size: 16, weight: .bold))
                         Text("Intelligent assistance at your fingertips")
-                            .font(.system(size: 13))
+                            .font(.system(size: 12))
                             .foregroundColor(.secondary)
                     }
                 }
 
                 Text("ZetaNotes includes powerful AI features that run entirely offline on your Mac:")
-                    .font(.system(size: 14))
+                    .font(.system(size: 13))
                     .foregroundColor(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
 
                 // Features grid - 2 columns
-                VStack(spacing: 10) {
-                    HStack(spacing: 10) {
+                VStack(spacing: 7) {
+                    HStack(spacing: 7) {
                         FeatureCardView(icon: "wand.and.stars", title: "Smart Autocomplete", color: .blue)
                         FeatureCardView(icon: "doc.text.magnifyingglass", title: "Summarization", color: .green)
                     }
-                    HStack(spacing: 10) {
+                    HStack(spacing: 7) {
                         FeatureCardView(icon: "globe", title: "Translation", color: .orange)
                         FeatureCardView(icon: "checkmark.seal", title: "Grammar Check", color: .purple)
                     }
-                    HStack(spacing: 10) {
+                    HStack(spacing: 7) {
                         FeatureCardView(icon: "magnifyingglass", title: "Semantic Search", color: .pink)
                         FeatureCardView(icon: "text.alignleft", title: "Reformulation", color: .indigo)
                     }
                 }
             }
-            .padding(24)
+            .padding(14)
             .background(
-                RoundedRectangle(cornerRadius: 16)
+                RoundedRectangle(cornerRadius: 12)
                     .fill(Color(nsColor: .controlBackgroundColor))
                     .overlay(
-                        RoundedRectangle(cornerRadius: 16)
+                        RoundedRectangle(cornerRadius: 12)
                             .strokeBorder(
                                 LinearGradient(
                                     gradient: Gradient(colors: [
@@ -241,32 +208,32 @@ struct FirstRunModelSetupView: View {
                             )
                     )
             )
-            .shadow(color: Color.purple.opacity(0.1), radius: 10, x: 0, y: 4)
+            .shadow(color: Color.purple.opacity(0.1), radius: 8, x: 0, y: 3)
 
             // Model Download Section
-            VStack(spacing: 18) {
-                HStack(spacing: 10) {
+            VStack(spacing: 10) {
+                HStack(spacing: 8) {
                     Image(systemName: "arrow.down.circle.fill")
-                        .font(.system(size: 24))
+                        .font(.system(size: 20))
                         .foregroundColor(.blue)
                     Text("Download AI Model")
-                        .font(.system(size: 17, weight: .semibold))
+                        .font(.system(size: 16, weight: .semibold))
                 }
 
                 Text(
                     "To use these features, download a \(defaultModel.fileSize) AI model that runs locally on your device. Your data never leaves your Mac."
                 )
-                .font(.system(size: 14))
+                .font(.system(size: 13))
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, 16)
 
                 // Model info card with enhanced design
-                HStack(spacing: 16) {
+                HStack(spacing: 12) {
                     // Model icon
                     ZStack {
-                        RoundedRectangle(cornerRadius: 12)
+                        RoundedRectangle(cornerRadius: 10)
                             .fill(
                                 LinearGradient(
                                     gradient: Gradient(colors: [.blue.opacity(0.15), .blue.opacity(0.08)]),
@@ -274,47 +241,47 @@ struct FirstRunModelSetupView: View {
                                     endPoint: .bottomTrailing
                                 )
                             )
-                            .frame(width: 56, height: 56)
+                            .frame(width: 48, height: 48)
 
                         Image(systemName: "brain.head.profile")
-                            .font(.system(size: 26))
+                            .font(.system(size: 22))
                             .foregroundColor(.blue)
                     }
 
-                    VStack(alignment: .leading, spacing: 6) {
+                    VStack(alignment: .leading, spacing: 4) {
                         Text(defaultModel.displayName)
-                            .font(.system(size: 16, weight: .bold))
+                            .font(.system(size: 15, weight: .bold))
                             .foregroundColor(.primary)
 
-                        HStack(spacing: 14) {
-                            HStack(spacing: 4) {
+                        HStack(spacing: 12) {
+                            HStack(spacing: 3) {
                                 Image(systemName: "doc.fill")
-                                    .font(.system(size: 10))
+                                    .font(.system(size: 9))
                                 Text(defaultModel.fileSize)
                             }
-                            .font(.system(size: 12, weight: .medium))
+                            .font(.system(size: 11, weight: .medium))
                             .foregroundColor(.secondary)
 
-                            HStack(spacing: 4) {
+                            HStack(spacing: 3) {
                                 Image(systemName: "memorychip.fill")
-                                    .font(.system(size: 10))
+                                    .font(.system(size: 9))
                                 Text(defaultModel.memoryUsage)
                             }
-                            .font(.system(size: 12, weight: .medium))
+                            .font(.system(size: 11, weight: .medium))
                             .foregroundColor(.secondary)
                         }
 
                         Text(defaultModel.description)
-                            .font(.system(size: 12))
+                            .font(.system(size: 11))
                             .foregroundColor(.secondary)
                             .lineLimit(2)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     Spacer()
                 }
-                .padding(16)
+                .padding(12)
                 .background(
-                    RoundedRectangle(cornerRadius: 12)
+                    RoundedRectangle(cornerRadius: 10)
                         .fill(
                             LinearGradient(
                                 gradient: Gradient(colors: [
@@ -326,28 +293,28 @@ struct FirstRunModelSetupView: View {
                             )
                         )
                         .overlay(
-                            RoundedRectangle(cornerRadius: 12)
+                            RoundedRectangle(cornerRadius: 10)
                                 .strokeBorder(Color.blue.opacity(0.25), lineWidth: 1.5)
                         )
                 )
-                .shadow(color: Color.blue.opacity(0.08), radius: 6, x: 0, y: 2)
+                .shadow(color: Color.blue.opacity(0.08), radius: 4, x: 0, y: 2)
 
-                // Action Buttons
-                HStack(spacing: 12) {
+                // Action Buttons - match the width of the model card above
+                HStack(spacing: 10) {
                     // Skip button
                     Button(action: {
                         viewState = .skipped
                         hasCompletedFirstRun = true
                     }) {
                         Text("Skip for Now")
-                            .font(.system(size: 14, weight: .medium))
+                            .font(.system(size: 13, weight: .medium))
                             .foregroundColor(.secondary)
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
+                            .padding(.vertical, 11)
                             .background(Color(nsColor: .controlBackgroundColor))
-                            .cornerRadius(10)
+                            .cornerRadius(8)
                             .overlay(
-                                RoundedRectangle(cornerRadius: 10)
+                                RoundedRectangle(cornerRadius: 8)
                                     .strokeBorder(Color.secondary.opacity(0.3), lineWidth: 1)
                             )
                     }
@@ -357,15 +324,15 @@ struct FirstRunModelSetupView: View {
                     Button(action: {
                         startDownload()
                     }) {
-                        HStack(spacing: 8) {
+                        HStack(spacing: 6) {
                             Image(systemName: "arrow.down.circle.fill")
-                                .font(.system(size: 16, weight: .semibold))
+                                .font(.system(size: 14, weight: .semibold))
                             Text("Download Model")
-                                .font(.system(size: 15, weight: .semibold))
+                                .font(.system(size: 14, weight: .semibold))
                         }
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
+                        .padding(.vertical, 11)
                         .background(
                             LinearGradient(
                                 gradient: Gradient(colors: [.blue, .blue.opacity(0.8)]),
@@ -373,15 +340,14 @@ struct FirstRunModelSetupView: View {
                                 endPoint: .trailing
                             )
                         )
-                        .cornerRadius(10)
-                        .shadow(color: Color.blue.opacity(0.3), radius: 8, x: 0, y: 4)
+                        .cornerRadius(8)
+                        .shadow(color: Color.blue.opacity(0.3), radius: 6, x: 0, y: 3)
                     }
                     .buttonStyle(.plain)
                 }
-                .padding(.horizontal)
 
                 Text("You can download this later from Settings > AI Model")
-                    .font(.system(size: 11))
+                    .font(.system(size: 10))
                     .foregroundColor(.secondary.opacity(0.7))
             }
         }
@@ -390,8 +356,8 @@ struct FirstRunModelSetupView: View {
     // MARK: - Downloading View
 
     private var downloadingView: some View {
-        VStack(spacing: 32) {
-            VStack(spacing: 20) {
+        VStack(spacing: 20) {
+            VStack(spacing: 14) {
                 // Animated download icon
                 ZStack {
                     Circle()
@@ -402,19 +368,19 @@ struct FirstRunModelSetupView: View {
                                 endPoint: .bottomTrailing
                             )
                         )
-                        .frame(width: 100, height: 100)
+                        .frame(width: 80, height: 80)
 
                     Image(systemName: "arrow.down.circle.fill")
-                        .font(.system(size: 52))
+                        .font(.system(size: 44))
                         .foregroundColor(.blue)
                 }
 
-                VStack(spacing: 8) {
+                VStack(spacing: 6) {
                     Text("Downloading \(defaultModel.displayName)")
-                        .font(.system(size: 22, weight: .semibold))
+                        .font(.system(size: 18, weight: .semibold))
 
                     Text("This may take a few minutes depending on your internet connection")
-                        .font(.system(size: 14))
+                        .font(.system(size: 13))
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
@@ -423,42 +389,42 @@ struct FirstRunModelSetupView: View {
             }
 
             // Progress section with enhanced styling
-            VStack(spacing: 14) {
+            VStack(spacing: 12) {
                 ProgressView(value: downloadState.downloadProgress)
                     .progressViewStyle(.linear)
                     .frame(width: 420)
                     .tint(.blue)
 
                 HStack {
-                    HStack(spacing: 6) {
+                    HStack(spacing: 5) {
                         Text("\(Int(downloadState.downloadProgress * 100))%")
-                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                            .font(.system(size: 14, weight: .semibold, design: .rounded))
                             .foregroundColor(.blue)
 
                         Text("complete")
-                            .font(.system(size: 13, weight: .medium))
+                            .font(.system(size: 12, weight: .medium))
                             .foregroundColor(.secondary)
                     }
 
                     Spacer()
 
-                    HStack(spacing: 6) {
+                    HStack(spacing: 5) {
                         Image(systemName: "doc.fill")
-                            .font(.system(size: 11))
+                            .font(.system(size: 10))
                             .foregroundColor(.secondary)
                         Text(defaultModel.fileSize)
-                            .font(.system(size: 13, weight: .medium, design: .monospaced))
+                            .font(.system(size: 12, weight: .medium, design: .monospaced))
                             .foregroundColor(.secondary)
                     }
                 }
                 .frame(width: 420)
             }
-            .padding(20)
+            .padding(16)
             .background(
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: 10)
                     .fill(Color(nsColor: .controlBackgroundColor))
                     .overlay(
-                        RoundedRectangle(cornerRadius: 12)
+                        RoundedRectangle(cornerRadius: 10)
                             .strokeBorder(Color.blue.opacity(0.2), lineWidth: 1)
                     )
             )
@@ -469,17 +435,17 @@ struct FirstRunModelSetupView: View {
                 downloadState.cancelDownload()
                 viewState = .initial
             }) {
-                HStack(spacing: 6) {
+                HStack(spacing: 5) {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 13))
+                        .font(.system(size: 12))
                     Text("Cancel Download")
-                        .font(.system(size: 14, weight: .medium))
+                        .font(.system(size: 13, weight: .medium))
                 }
                 .foregroundColor(.red)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 7)
                 .background(Color.red.opacity(0.08))
-                .cornerRadius(8)
+                .cornerRadius(7)
             }
             .buttonStyle(.plain)
         }
@@ -489,7 +455,7 @@ struct FirstRunModelSetupView: View {
     // MARK: - Completed View
 
     private var completedView: some View {
-        VStack(spacing: 28) {
+        VStack(spacing: 20) {
             // Success icon with animation
             ZStack {
                 Circle()
@@ -500,19 +466,19 @@ struct FirstRunModelSetupView: View {
                             endPoint: .bottomTrailing
                         )
                     )
-                    .frame(width: 120, height: 120)
+                    .frame(width: 90, height: 90)
 
                 Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 72))
+                    .font(.system(size: 56))
                     .foregroundColor(.green)
             }
 
-            VStack(spacing: 10) {
+            VStack(spacing: 8) {
                 Text("Setup Complete!")
-                    .font(.system(size: 24, weight: .bold))
+                    .font(.system(size: 20, weight: .bold))
 
                 Text("\(defaultModel.displayName) has been downloaded and is ready to use")
-                    .font(.system(size: 15))
+                    .font(.system(size: 14))
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 40)
@@ -521,15 +487,15 @@ struct FirstRunModelSetupView: View {
             Button(action: {
                 completeSetup()
             }) {
-                HStack(spacing: 10) {
+                HStack(spacing: 8) {
                     Text("Get Started")
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(.system(size: 15, weight: .semibold))
                     Image(systemName: "arrow.right")
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.system(size: 13, weight: .semibold))
                 }
                 .foregroundColor(.white)
-                .frame(width: 220)
-                .padding(.vertical, 16)
+                .frame(width: 200)
+                .padding(.vertical, 13)
                 .background(
                     LinearGradient(
                         gradient: Gradient(colors: [.green, .green.opacity(0.8)]),
@@ -537,8 +503,8 @@ struct FirstRunModelSetupView: View {
                         endPoint: .trailing
                     )
                 )
-                .cornerRadius(12)
-                .shadow(color: Color.green.opacity(0.3), radius: 10, x: 0, y: 4)
+                .cornerRadius(10)
+                .shadow(color: Color.green.opacity(0.3), radius: 8, x: 0, y: 3)
             }
             .buttonStyle(.plain)
         }
@@ -548,7 +514,7 @@ struct FirstRunModelSetupView: View {
     // MARK: - Skipped View
 
     private var skippedView: some View {
-        VStack(spacing: 28) {
+        VStack(spacing: 20) {
             // Info icon
             ZStack {
                 Circle()
@@ -559,45 +525,45 @@ struct FirstRunModelSetupView: View {
                             endPoint: .bottomTrailing
                         )
                     )
-                    .frame(width: 120, height: 120)
+                    .frame(width: 90, height: 90)
 
                 Image(systemName: "info.circle.fill")
-                    .font(.system(size: 72))
+                    .font(.system(size: 56))
                     .foregroundColor(.blue)
             }
 
-            VStack(spacing: 12) {
+            VStack(spacing: 10) {
                 Text("AI Features Disabled")
-                    .font(.system(size: 24, weight: .bold))
+                    .font(.system(size: 20, weight: .bold))
 
                 Text(
                     "You can use ZetaNotes for note-taking, but AI features will be unavailable until you download a model."
                 )
-                .font(.system(size: 14))
+                .font(.system(size: 13))
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, 40)
 
-                HStack(spacing: 6) {
+                HStack(spacing: 5) {
                     Image(systemName: "gearshape.fill")
-                        .font(.system(size: 11))
+                        .font(.system(size: 10))
                         .foregroundColor(.blue.opacity(0.7))
                     Text("You can download the AI model anytime from Settings > AI Model")
-                        .font(.system(size: 12))
+                        .font(.system(size: 11))
                         .foregroundColor(.secondary.opacity(0.8))
                 }
-                .padding(.top, 4)
+                .padding(.top, 3)
             }
 
             Button(action: {
                 // Already set hasCompletedFirstRun in skip button
             }) {
                 Text("Continue to App")
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(.white)
-                    .frame(width: 220)
-                    .padding(.vertical, 16)
+                    .frame(width: 200)
+                    .padding(.vertical, 13)
                     .background(
                         LinearGradient(
                             gradient: Gradient(colors: [.blue, .blue.opacity(0.8)]),
@@ -605,8 +571,8 @@ struct FirstRunModelSetupView: View {
                             endPoint: .trailing
                         )
                     )
-                    .cornerRadius(12)
-                    .shadow(color: Color.blue.opacity(0.3), radius: 10, x: 0, y: 4)
+                    .cornerRadius(10)
+                    .shadow(color: Color.blue.opacity(0.3), radius: 8, x: 0, y: 3)
             }
             .buttonStyle(.plain)
         }
@@ -706,25 +672,25 @@ struct FeatureCardView: View {
     let color: Color
 
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 6) {
             Image(systemName: icon)
-                .font(.system(size: 14, weight: .semibold))
+                .font(.system(size: 12, weight: .semibold))
                 .foregroundColor(color)
-                .frame(width: 20)
+                .frame(width: 18)
 
             Text(title)
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(size: 11, weight: .medium))
                 .foregroundColor(.primary)
 
             Spacer()
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
         .background(
-            RoundedRectangle(cornerRadius: 8)
+            RoundedRectangle(cornerRadius: 7)
                 .fill(color.opacity(0.08))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 8)
+                    RoundedRectangle(cornerRadius: 7)
                         .strokeBorder(color.opacity(0.2), lineWidth: 1)
                 )
         )

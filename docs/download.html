@@ -419,12 +419,12 @@
         <div class="download-box">
             <h2 style="margin-top: 0;">Latest Version: <span class="highlight">v1.0.0</span></h2>
             <p style="margin-bottom: 30px;"><span class="highlight">macOS 13.0+</span> • <span class="highlight">Apple
-                    Silicon</span> Optimized</p>
-            <a href="https://github.com/YOUR_USERNAME/zetanotes/releases/latest/download/ZetaNotes.dmg" class="btn">
+                    Silicon</span> Optimized • <span class="highlight">✅ Signed & Notarized</span></p>
+            <a href="https://github.com/rabah-khalek/zetanotes/releases/latest/download/ZetaNotes.dmg" class="btn">
                 Download ZetaNotes.dmg
             </a>
             <div class="file-size" style="margin: 20px auto 0; width: fit-content;">
-                <span>Download size: <strong>~800 MB</strong> (includes TinyLlama model)</span>
+                <span>Download size: <strong>~80 MB</strong> (AI models downloaded on first run)</span>
             </div>
         </div>
 
@@ -432,9 +432,17 @@
         <div class="steps">
             <h2>Installation Instructions</h2>
 
+            <div class="info">
+                <strong>✅ Signed & Notarized by Apple</strong>
+                <p style="margin-top: 10px;">
+                    ZetaNotes is code signed with an Apple Developer ID and notarized by Apple.
+                    This means no security warnings or special steps - it installs like any professional Mac app!
+                </p>
+            </div>
+
             <div class="step" data-step="1">
-                <h3>Open the DMG file</h3>
-                <p>Double-click the downloaded <code>ZetaNotes.dmg</code> file to mount it.</p>
+                <h3>Download & Open DMG</h3>
+                <p>Download the DMG file above and double-click to open it.</p>
             </div>
 
             <div class="step" data-step="2">
@@ -443,25 +451,20 @@
             </div>
 
             <div class="step" data-step="3">
-                <h3>Open ZetaNotes</h3>
-                <p><strong>Right-click</strong> on ZetaNotes in Applications and select <strong>"Open"</strong>.</p>
-                <p style="margin-top: 10px;">After the first launch, you can open the app normally.</p>
+                <h3>Double-Click to Launch</h3>
+                <p>Open ZetaNotes from your Applications folder. No right-click needed!</p>
+                <p style="margin-top: 10px;">The app will launch normally without any security warnings.</p>
             </div>
 
             <div class="step" data-step="4">
-                <h3>Grant Permissions</h3>
-                <p>ZetaNotes may request permissions for:</p>
-                <ul>
-                    <li><strong>Network Access:</strong> Only used to download additional AI models (optional)</li>
-                    <li><strong>File Access:</strong> To save your notes locally</li>
-                </ul>
-                <p>All AI processing happens offline. No data is ever uploaded.</p>
+                <h3>Download AI Model</h3>
+                <p>On first launch, ZetaNotes will guide you through downloading the AI model (~700MB).</p>
+                <p style="margin-top: 10px;">This happens automatically within the app.</p>
             </div>
 
             <div class="step" data-step="5">
                 <h3>Start Taking Notes!</h3>
-                <p>You're all set! The free TinyLlama model is bundled with the app, so AI features work immediately.
-                </p>
+                <p>You're all set! AI features work immediately after model download.</p>
             </div>
         </div>
 
@@ -556,26 +559,38 @@
             <h3>App won't open or crashes on launch</h3>
             <ul>
                 <li>Make sure you're running macOS 13.0 or later</li>
-                <li>Try removing quarantine flag: <code>xattr -cr /Applications/ZetaNotes.app</code></li>
+                <li>Try restarting your Mac</li>
                 <li>Check Console.app for crash logs</li>
+                <li>Ensure you have enough disk space (1 GB+ free)</li>
             </ul>
 
             <h3>AI features not working</h3>
             <ul>
-                <li>Ensure TinyLlama model is present (bundled with app)</li>
+                <li>Ensure AI model download completed successfully</li>
                 <li>Check Settings → AI Settings to verify model is loaded</li>
                 <li>Try restarting the app</li>
+                <li>For Pro features, verify your license key is activated</li>
             </ul>
 
             <h3>Model downloads fail</h3>
             <ul>
                 <li>Check your internet connection</li>
-                <li>Ensure you have enough disk space</li>
-                <li>Models are 0.7-2.3 GB each and downloaded from HuggingFace</li>
+                <li>Ensure you have enough disk space (models are 0.7-2.3 GB each)</li>
+                <li>Try downloading again from Settings → AI Settings</li>
+                <li>Models are downloaded from HuggingFace</li>
+            </ul>
+
+            <h3>Gatekeeper/Security Issues</h3>
+            <p>If you see any security warnings (very rare with signed apps):</p>
+            <ul>
+                <li>Verify you downloaded from the official GitHub releases page</li>
+                <li>Check the SHA256 checksum matches</li>
+                <li>Try re-downloading the DMG (it may have been corrupted)</li>
             </ul>
 
             <h3>Need more help?</h3>
-            <p>Contact us at <a href="mailto:support@zetanotes.app">support@zetanotes.app</a></p>
+            <p>Contact us at <a href="mailto:support@zetanotes.app">support@zetanotes.app</a> or open an issue on <a
+                    href="https://github.com/rabah-khalek/zetanotes/issues">GitHub</a></p>
         </div>
 
         <!-- Privacy -->

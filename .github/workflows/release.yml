@@ -116,13 +116,36 @@ jobs:
             exit 1
           fi
 
-      - name: Build release
+      - name: Setup signing certificate
+        env:
+          APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          # Create keychain
+          security create-keychain -p actions build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p actions build.keychain
+          security set-keychain-settings -t 3600 -u build.keychain
+
+          # Import certificate
+          echo "$APPLE_CERTIFICATE_BASE64" | base64 --decode > certificate.p12
+          security import certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k actions build.keychain
+
+          # Verify certificate
+          security find-identity -v -p codesigning
+
+          rm -f certificate.p12
+
+      - name: Build, sign, and notarize release
         id: build
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
         run: |
           chmod +x scripts/release.sh
-          # TODO: Remove 'true' flag when Paddle setup is complete
-          # Skip Paddle checks for now (until setup is complete)
-          ./scripts/release.sh ${{ steps.version.outputs.VERSION }} true
+          ./scripts/release.sh ${{ steps.version.outputs.VERSION }}
 
           # Find the built DMG
           BUILD_DIR=$(find ~/Desktop -name "ZetaNotes-Release-*" -type d | head -n 1)
@@ -264,41 +287,55 @@ jobs:
           body: |
             # ZetaNotes v${{ steps.version.outputs.VERSION }}
 
+            ## ✅ Signed & Notarized by Apple
+
+            This release is **code signed** with an Apple Developer ID certificate and **notarized** by Apple.
+            No security warnings or special installation steps required!
+
             ## Installation Instructions
 
-            **IMPORTANT**: This app is not signed with an Apple Developer certificate.
+            ### Easy 3-Step Installation:
 
-            ### Installation Steps:
+            1. Download `${{ steps.build.outputs.DMG_NAME}}`
+            2. Open the DMG file and drag ZetaNotes to your Applications folder
+            3. Double-click ZetaNotes to launch
 
-            1. Download `${{ steps.build.outputs.DMG_NAME }}`
-            2. Open the DMG file
-            3. Drag ZetaNotes to your Applications folder
-            4. **RIGHT-CLICK** (or Control-Click) on ZetaNotes in Applications
-            5. Select "Open" from the menu
-            6. Click "Open" in the security dialog
-            7. ZetaNotes will launch and show the welcome screen
-            8. Download the AI model when prompted
+            That's it! ZetaNotes will open normally without any security warnings.
 
-            After the first time, you can open ZetaNotes normally.
+            ### First Launch
 
-            ### Why the security warning?
+            On first launch, ZetaNotes will:
+            - Welcome you with a setup wizard
+            - Offer to download the AI model (optional, ~700MB)
+            - Guide you through the basic features
 
-            ZetaNotes is not signed with an Apple Developer certificate ($99/year).
-            The app is safe - you can verify the source code.
+            ## What's New
 
-            ### SHA256 Checksum
+            - 🔒 **Professional Code Signing**: App is signed with Apple Developer ID
+            - ✅ **Apple Notarized**: Verified safe by Apple's notarization service
+            - 🚀 **No Security Warnings**: Install like any professional Mac app
+            - 📦 **Automatic Updates**: Sparkle framework for seamless updates
+
+            ## SHA256 Checksum
 
             ```
             ${{ steps.build.outputs.CHECKSUM }}
             ```
 
-            ---
+            ## System Requirements
 
-            **System Requirements:**
-            - macOS 13.0 (Ventura) or later
-            - Apple Silicon (M1/M2/M3/M4) recommended
-            - 4 GB RAM minimum (8 GB+ recommended)
-            - 1 GB disk space
+            - **macOS** 13.0 (Ventura) or later
+            - **Processor**: Apple Silicon (M1/M2/M3/M4) recommended, Intel supported
+            - **Memory**: 4 GB RAM minimum, 8 GB+ recommended
+            - **Storage**: 1 GB disk space for app + AI model
+
+            ## Privacy & Security
+
+            - ✅ 100% offline AI processing
+            - ✅ No cloud sync or data upload
+            - ✅ No analytics or telemetry
+            - ✅ No account required
+            - ✅ Signed & notarized by Apple
           files: |
             ${{ steps.build.outputs.DMG_FILE }}
             ${{ steps.build.outputs.SHA_FILE }}

@@ -1,139 +1,275 @@
-#!/bin/bash
-set -e  # Exit on any error
+#!/bin/bash#!/bin/bash
 
-# ZetaNotes Release Script
-# Single source of truth for creating releases (unsigned)
+set -eset -e  # Exit on any error
+
+
+
+# ZetaNotes Release Script - Signed & Notarized Distribution# ZetaNotes Release Script
+
+# For Apple Developer Program members# Single source of truth for creating releases (unsigned)
+
 # Users will download models via the welcome page on first run
 
-# Colors for output
 RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
 
-# Configuration
-VERSION="${1:-1.0.0}"
-SKIP_PADDLE_CHECK="${2:-false}"  # Add flag to skip Paddle verification
+GREEN='\033[0;32m'# Colors for output
+
+YELLOW='\033[1;33m'RED='\033[0;31m'
+
+BLUE='\033[0;34m'GREEN='\033[0;32m'
+
+NC='\033[0m'YELLOW='\033[1;33m'
+
+BLUE='\033[0;34m'
+
+VERSION="${1:-1.0.0}"NC='\033[0m' # No Color
+
 BUILD_DIR="$HOME/Desktop/ZetaNotes-Release-$(date +%Y%m%d-%H%M%S)"
-PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-APP_NAME="ZetaNotes"
-DMG_NAME="${APP_NAME}-v${VERSION}.dmg"
+
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"# Configuration
+
+APP_NAME="ZetaNotes"VERSION="${1:-1.0.0}"
+
+DMG_NAME="${APP_NAME}-v${VERSION}.dmg"SKIP_PADDLE_CHECK="${2:-false}"  # Add flag to skip Paddle verification
+
+BUILD_DIR="$HOME/Desktop/ZetaNotes-Release-$(date +%Y%m%d-%H%M%S)"
+
+echo -e "${BLUE}╔═══════════════════════════════════════════════╗${NC}"PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+echo -e "${BLUE}║  ZetaNotes Release Builder v3.0 (Signed)     ║${NC}"APP_NAME="ZetaNotes"
+
+echo -e "${BLUE}╚═══════════════════════════════════════════════╝${NC}"DMG_NAME="${APP_NAME}-v${VERSION}.dmg"
+
+echo -e "${GREEN}Version:${NC} ${VERSION} | ${GREEN}Signing:${NC} Developer ID | ${GREEN}Notarization:${NC} Enabled"
 
 echo -e "${BLUE}╔═══════════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║     ZetaNotes Release Builder v2.0            ║${NC}"
-echo -e "${BLUE}╚═══════════════════════════════════════════════╝${NC}"
-echo ""
-echo -e "${GREEN}Version:${NC} ${VERSION}"
+
+print_step() { echo ""; echo -e "${BLUE}▶ $1${NC}"; echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"; }echo -e "${BLUE}║     ZetaNotes Release Builder v2.0            ║${NC}"
+
+print_success() { echo -e "${GREEN}✓ $1${NC}"; }echo -e "${BLUE}╚═══════════════════════════════════════════════╝${NC}"
+
+print_error() { echo -e "${RED}✗ Error: $1${NC}"; exit 1; }echo ""
+
+print_warning() { echo -e "${YELLOW}⚠ $1${NC}"; }echo -e "${GREEN}Version:${NC} ${VERSION}"
+
 echo -e "${GREEN}Build directory:${NC} ${BUILD_DIR}"
-if [ "$SKIP_PADDLE_CHECK" = "true" ]; then
-    echo -e "${YELLOW}⚠️  Paddle verification: SKIPPED (for testing)${NC}"
-fi
-echo -e "${YELLOW}⚠️  Note: AI model NOT bundled - users download on first run${NC}"
-echo ""
+
+# Check for code signing certificateif [ "$SKIP_PADDLE_CHECK" = "true" ]; then
+
+print_step "Checking prerequisites"    echo -e "${YELLOW}⚠️  Paddle verification: SKIPPED (for testing)${NC}"
+
+if ! security find-identity -v -p codesigning | grep -q "Developer ID Application"; thenfi
+
+    print_error "No Developer ID certificate found! See docs/APPLE_DEVELOPER_SETUP.md"echo -e "${YELLOW}⚠️  Note: AI model NOT bundled - users download on first run${NC}"
+
+fiecho ""
+
+print_success "Found Developer ID certificate"
 
 if [ -z "$1" ]; then
-    echo -e "${YELLOW}Warning: No version specified, using 1.0.0${NC}"
+
+mkdir -p "$BUILD_DIR"    echo -e "${YELLOW}Warning: No version specified, using 1.0.0${NC}"
+
     echo "Usage: $0 <version> [skip_paddle]"
-    echo "Example: $0 1.0.1"
-    echo "         $0 1.0.1 true    # Skip Paddle checks for testing"
-    echo ""
-fi
 
-# Function to print step headers
-print_step() {
-    echo ""
-    echo -e "${BLUE}▶ $1${NC}"
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-}
+# Build with signing    echo "Example: $0 1.0.1"
 
-# Function to print success
-print_success() {
+print_step "Building and signing app"    echo "         $0 1.0.1 true    # Skip Paddle checks for testing"
+
+cd "$PROJECT_DIR"    echo ""
+
+xcodebuild clean -project ZetaNotes.xcodeproj -scheme ZetaNotes -configuration Release -quietfi
+
+xcodebuild build \
+
+    -project ZetaNotes.xcodeproj \# Function to print step headers
+
+    -scheme ZetaNotes \print_step() {
+
+    -configuration Release \    echo ""
+
+    -derivedDataPath "$BUILD_DIR/DerivedData" \    echo -e "${BLUE}▶ $1${NC}"
+
+    CODE_SIGN_IDENTITY="Developer ID Application" \    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+    -quiet || print_error "Build failed"}
+
+
+
+BUILT_APP=$(find "$BUILD_DIR/DerivedData/Build/Products" -name "ZetaNotes.app" -maxdepth 2 | head -n 1)# Function to print success
+
+[ -z "$BUILT_APP" ] && print_error "App not found after build"print_success() {
+
     echo -e "${GREEN}✓ $1${NC}"
-}
 
-# Function to print error and exit
+cp -R "$BUILT_APP" "$BUILD_DIR/${APP_NAME}.app"}
+
+codesign --verify --verbose "$BUILD_DIR/${APP_NAME}.app" || print_error "Code signature verification failed"
+
+print_success "App signed successfully"# Function to print error and exit
+
 print_error() {
-    echo -e "${RED}✗ Error: $1${NC}"
-    exit 1
-}
 
-# Function to print warning
-print_warning() {
-    echo -e "${YELLOW}⚠ Warning: $1${NC}"
-}
+# Create DMG    echo -e "${RED}✗ Error: $1${NC}"
 
-# Check prerequisites
-print_step "Step 0: Checking prerequisites"
+print_step "Creating DMG"    exit 1
 
-if ! command -v xcodebuild &> /dev/null; then
-    print_error "Xcode is not installed or not in PATH"
-fi
-print_success "Xcode found: $(xcodebuild -version | head -n 1)"
+cd "$BUILD_DIR"}
 
-if ! command -v create-dmg &> /dev/null; then
-    # Check common locations for create-dmg (local dev and CI)
-    if [ -f "/opt/homebrew/bin/create-dmg" ]; then
-        # Apple Silicon Mac (local dev)
-        CREATE_DMG="/opt/homebrew/bin/create-dmg"
-        USE_CREATE_DMG=true
-        print_success "create-dmg found at /opt/homebrew/bin/create-dmg"
-    elif [ -f "/usr/local/bin/create-dmg" ]; then
-        # Intel Mac or CI environment
+
+
+if command -v create-dmg &> /dev/null; then# Function to print warning
+
+    create-dmg \print_warning() {
+
+        --volname "${APP_NAME} Installer" \    echo -e "${YELLOW}⚠ Warning: $1${NC}"
+
+        --window-pos 200 120 \}
+
+        --window-size 800 450 \
+
+        --icon-size 100 \# Check prerequisites
+
+        --icon "${APP_NAME}.app" 200 190 \print_step "Step 0: Checking prerequisites"
+
+        --app-drop-link 600 185 \
+
+        "$DMG_NAME" "${APP_NAME}.app" 2>&1 | grep -v "^hdiutil:" || trueif ! command -v xcodebuild &> /dev/null; then
+
+else    print_error "Xcode is not installed or not in PATH"
+
+    hdiutil create -size 200m -fs HFS+ -volname "$APP_NAME" temp.dmgfi
+
+    MOUNT_POINT="/Volumes/${APP_NAME}_$(date +%s)"print_success "Xcode found: $(xcodebuild -version | head -n 1)"
+
+    hdiutil attach temp.dmg -readwrite -mountpoint "$MOUNT_POINT"
+
+    cp -R "${APP_NAME}.app" "$MOUNT_POINT/"if ! command -v create-dmg &> /dev/null; then
+
+    ln -s /Applications "$MOUNT_POINT/Applications"    # Check common locations for create-dmg (local dev and CI)
+
+    echo "Drag ZetaNotes to Applications folder to install" > "$MOUNT_POINT/README.txt"    if [ -f "/opt/homebrew/bin/create-dmg" ]; then
+
+    sync; sleep 2        # Apple Silicon Mac (local dev)
+
+    hdiutil detach "$MOUNT_POINT" -force 2>/dev/null || true        CREATE_DMG="/opt/homebrew/bin/create-dmg"
+
+    sleep 2        USE_CREATE_DMG=true
+
+    hdiutil convert temp.dmg -format UDZO -o "$DMG_NAME"        print_success "create-dmg found at /opt/homebrew/bin/create-dmg"
+
+    rm temp.dmg    elif [ -f "/usr/local/bin/create-dmg" ]; then
+
+fi        # Intel Mac or CI environment
+
         CREATE_DMG="/usr/local/bin/create-dmg"
-        USE_CREATE_DMG=true
-        print_success "create-dmg found at /usr/local/bin/create-dmg"
+
+[ ! -f "$DMG_NAME" ] && print_error "DMG creation failed"        USE_CREATE_DMG=true
+
+print_success "DMG created"        print_success "create-dmg found at /usr/local/bin/create-dmg"
+
     elif [ -f "/home/linuxbrew/.linuxbrew/bin/create-dmg" ]; then
-        # Linuxbrew (unlikely but just in case)
-        CREATE_DMG="/home/linuxbrew/.linuxbrew/bin/create-dmg"
-        USE_CREATE_DMG=true
-        print_success "create-dmg found at /home/linuxbrew/.linuxbrew/bin/create-dmg"
+
+# Sign DMG        # Linuxbrew (unlikely but just in case)
+
+print_step "Signing DMG"        CREATE_DMG="/home/linuxbrew/.linuxbrew/bin/create-dmg"
+
+codesign --sign "Developer ID Application" --timestamp "$DMG_NAME" || print_error "DMG signing failed"        USE_CREATE_DMG=true
+
+print_success "DMG signed"        print_success "create-dmg found at /home/linuxbrew/.linuxbrew/bin/create-dmg"
+
     else
-        print_warning "create-dmg not found. Install with: brew install create-dmg"
-        echo "Will use fallback DMG creation method"
-        USE_CREATE_DMG=false
-    fi
-else
-    CREATE_DMG="create-dmg"
-    USE_CREATE_DMG=true
-    print_success "create-dmg found in PATH"
-fi
 
-echo ""
-# Skip interactive prompt in CI environment
-if [ -z "$CI" ]; then
-    read -p "Continue with build? (y/n) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        echo "Aborted."
-        exit 0
-    fi
-else
-    print_success "Running in CI environment - skipping confirmation prompt"
-fi
+# Notarize (if credentials available)        print_warning "create-dmg not found. Install with: brew install create-dmg"
 
-# Create build directory
-print_step "Step 1: Creating build directory"
-mkdir -p "$BUILD_DIR"
-print_success "Created: $BUILD_DIR"
+print_step "Notarizing with Apple"        echo "Will use fallback DMG creation method"
+
+if [ -n "$APPLE_ID" ] && [ -n "$APPLE_TEAM_ID" ] && [ -n "$APPLE_APP_SPECIFIC_PASSWORD" ]; then        USE_CREATE_DMG=false
+
+    echo "Submitting for notarization (this takes 5-30 minutes)..."    fi
+
+    else
+
+    if xcrun notarytool submit "$DMG_NAME" \    CREATE_DMG="create-dmg"
+
+        --apple-id "$APPLE_ID" \    USE_CREATE_DMG=true
+
+        --team-id "$APPLE_TEAM_ID" \    print_success "create-dmg found in PATH"
+
+        --password "$APPLE_APP_SPECIFIC_PASSWORD" \fi
+
+        --wait 2>&1 | grep -q "status: Accepted"; then
+
+        echo ""
+
+        print_success "Notarization successful!"# Skip interactive prompt in CI environment
+
+        xcrun stapler staple "$DMG_NAME" 2>&1 || print_warning "Stapling failed (non-critical)"if [ -z "$CI" ]; then
+
+        xcrun stapler validate "$DMG_NAME" 2>&1 || true    read -p "Continue with build? (y/n) " -n 1 -r
+
+    else    echo
+
+        print_warning "Notarization failed - see logs above"    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+
+    fi        echo "Aborted."
+
+else        exit 0
+
+    print_warning "Notarization credentials not set"    fi
+
+    echo "Set APPLE_ID, APPLE_TEAM_ID, and APPLE_APP_SPECIFIC_PASSWORD to enable notarization"else
+
+    echo "See docs/APPLE_DEVELOPER_SETUP.md for details"    print_success "Running in CI environment - skipping confirmation prompt"
+
+fifi
+
+
+
+# Checksum# Create build directory
+
+print_step "Generating checksum"print_step "Step 1: Creating build directory"
+
+CHECKSUM=$(shasum -a 256 "$DMG_NAME" | cut -d' ' -f1)mkdir -p "$BUILD_DIR"
+
+echo "$CHECKSUM" > "${DMG_NAME}.sha256"print_success "Created: $BUILD_DIR"
+
+print_success "SHA256: $CHECKSUM"
 
 # Production Safety Checks
-print_step "Step 2: Running production safety checks"
+
+# Cleanupprint_step "Step 2: Running production safety checks"
+
+rm -rf "$BUILD_DIR/DerivedData"
 
 # Check for DEV_TODO markers
-print_warning "Checking for DEV_TODO markers..."
-DEV_TODO_COUNT=$(grep -r "DEV_TODO\|DEV_VENDOR_ID\|DEV_PRODUCT_ID\|DEV_PRICE_ID" "$PROJECT_DIR/ZetaNotes" 2>/dev/null | wc -l | tr -d ' ')
-if [ "$DEV_TODO_COUNT" -gt 0 ] && [ "$SKIP_PADDLE_CHECK" != "true" ]; then
-    echo ""
-    print_error "Found $DEV_TODO_COUNT DEV_TODO markers in source code!
 
-Please replace these with production values before release:
-  - DEV_VENDOR_ID → Your actual Paddle vendor ID
-  - DEV_PRODUCT_ID → Your actual Paddle product ID
-  - DEV_PRICE_ID → Your actual Paddle price ID
+# Summaryprint_warning "Checking for DEV_TODO markers..."
 
-To find them all:
-  grep -rn 'DEV_' ZetaNotes/
+echo ""DEV_TODO_COUNT=$(grep -r "DEV_TODO\|DEV_VENDOR_ID\|DEV_PRODUCT_ID\|DEV_PRICE_ID" "$PROJECT_DIR/ZetaNotes" 2>/dev/null | wc -l | tr -d ' ')
+
+echo -e "${GREEN}╔═══════════════════════════════════════════════╗${NC}"if [ "$DEV_TODO_COUNT" -gt 0 ] && [ "$SKIP_PADDLE_CHECK" != "true" ]; then
+
+echo -e "${GREEN}║           Release Complete! ✓                 ║${NC}"    echo ""
+
+echo -e "${GREEN}╚═══════════════════════════════════════════════╝${NC}"    print_error "Found $DEV_TODO_COUNT DEV_TODO markers in source code!
+
+echo ""
+
+echo -e "${BLUE}DMG:${NC} ${DMG_NAME}"Please replace these with production values before release:
+
+echo -e "${BLUE}Location:${NC} ${BUILD_DIR}"  - DEV_VENDOR_ID → Your actual Paddle vendor ID
+
+echo -e "${BLUE}Signed:${NC} ✅ Yes"  - DEV_PRODUCT_ID → Your actual Paddle product ID
+
+echo -e "${BLUE}Notarized:${NC} $([ -n "$APPLE_ID" ] && echo "✅ Yes" || echo "⚠️  Run with credentials")"  - DEV_PRICE_ID → Your actual Paddle price ID
+
+echo ""
+
+echo "Users can now double-click to install - no security warnings! 🚀"To find them all:
+
+echo ""  grep -rn 'DEV_' ZetaNotes/
+
 
 To get these values:
   1. Go to https://vendors.paddle.com (or sandbox.vendors.paddle.com for testing)

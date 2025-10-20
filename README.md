@@ -37,36 +37,25 @@ ZetaNotes is a native macOS note-taking app that runs AI models completely offli
 
 ### Requirements
 - **macOS 13.0 (Ventura) or later**
-- **Apple Silicon (M1/M2/M3/M4)** - optimized for Apple's chips
+- **Apple Silicon (M1/M2/M3/M4)** - optimized for Apple's chips, Intel supported
 - **4 GB RAM** minimum (8 GB+ recommended)
-- **2 GB disk space** (includes app + AI models)
+- **1 GB disk space** (for app + AI model)
 
 ### Quick Install
 
-1. **Download** the latest release from [GitHub Releases](https://github.com/YOUR_USERNAME/zetanotes/releases)
+1. **Download** the latest release from [GitHub Releases](https://github.com/rabah-khalek/zetanotes/releases)
 2. **Open** the DMG file
 3. **Drag** ZetaNotes.app to your Applications folder
-4. **Launch** from Applications
+4. **Double-click** to launch
 
-### First Launch (Important)
+That's it! ZetaNotes is **code signed** with an Apple Developer ID and **notarized** by Apple, so it installs like any professional Mac app - no security warnings!
 
-Since this app is not signed with an Apple Developer certificate, macOS will show a security warning:
+### First Launch
 
-**Method 1 - Right-click to open:**
-1. Locate ZetaNotes in Applications folder
-2. **Right-click** (or Control+click) on ZetaNotes
-3. Select **"Open"** from the menu
-4. Click **"Open"** in the security dialog
-5. App will now open normally
-
-**Method 2 - System Settings:**
-1. Try to open ZetaNotes normally (it will be blocked)
-2. Go to **System Settings** → **Privacy & Security**
-3. Scroll down to find **"ZetaNotes was blocked"**
-4. Click **"Open Anyway"**
-5. Confirm by clicking **"Open"**
-
-**You only need to do this once.** After the first launch, macOS will remember your choice.
+On first launch, ZetaNotes will:
+- Welcome you with a setup wizard
+- Offer to download the AI model (optional, ~700MB)
+- Guide you through the basic features
 
 ---
 
@@ -210,70 +199,48 @@ ZetaNotes/
 
 ## 🚀 Distribution (For Developers)
 
-### Without Apple Developer Account (Free - with Auto-Updates!)
+### Professional Distribution (Apple Developer Program)
 
-**Good news:** You can distribute without paying Apple!
+ZetaNotes is **code signed** with an Apple Developer ID and **notarized** by Apple for professional, secure distribution.
 
-**Build unsigned version:**
+**Build signed & notarized version:**
 ```bash
-./scripts/release.sh 1.0.0
+./scripts/release.sh 1.0.1
 ```
 
 This creates a DMG with:
 
-- ✅ **Simple distribution** - just upload to GitHub Releases
-- ✅ **Small download** - ~80 MB (no bundled AI models, users download via welcome page)
-- ✅ **$0/year** - completely free
-- ✅ **User control** - users choose which AI models to download
+- ✅ **Code Signed** - App signed with Developer ID certificate
+- ✅ **Notarized** - Verified safe by Apple's notarization service
+- ✅ **No Security Warnings** - Users can double-click to install
+- ✅ **Professional Experience** - Installs like any Mac app
+- ✅ **Automatic Updates** - Seamless updates via Sparkle
+- ✅ **Small Download** - ~80 MB (AI models downloaded on first run)
 
 **User experience:**
 
-- First install: Right-click → Open (one-time bypass for "unidentified developer")
-- First run: Welcome page guides model download (Llama 3.2 1B, etc.)
-- Updates: Manual download from GitHub Releases
+- Install: Double-click DMG, drag to Applications, launch normally
+- First run: Welcome wizard guides AI model download
+- Updates: Automatic via Sparkle (no user action needed)
+- Trust: App is verified by Apple
 
-**How it works:**
+**Setup Requirements:**
 
-1. Build DMG with `release.sh`
-2. Upload to GitHub Releases
-3. Users download and install
-4. First run shows welcome page with model selection
-5. Users download AI models as needed (managed by app)
+1. Apple Developer Program membership ($99/year)
+2. Developer ID Application certificate
+3. App-Specific Password for notarization
 
-**Pros:**
+See **[docs/APPLE_DEVELOPER_SETUP.md](docs/APPLE_DEVELOPER_SETUP.md)** for complete setup instructions.
 
-- ✅ Free (no $99/year Apple Developer fee)
-- ✅ Full control over distribution
-- ✅ Small download size (~80 MB app + models downloaded separately)
-- ✅ Users choose which models to download
-- ✅ Easy to update (just upload new DMG to GitHub)
+**Benefits:**
 
-**Cons:**
+- ✅ No security warnings or workarounds needed
+- ✅ Professional presentation and user trust
+- ✅ Seamless automatic updates
+- ✅ Easy distribution via GitHub Releases
+- ✅ Full App Store-quality user experience (without App Store requirements)
 
-- ⚠️ Users need to right-click → Open on first install
-- ⚠️ Shows "unidentified developer" warning
-- ⚠️ No automatic update notifications
-
-### With Apple Developer Account ($99/year)
-
-For professional distribution with signed & notarized builds:
-
-**Note:** Code signing and notarization are optional for this project. The unsigned distribution model works well for open source applications.
-
-**If you need signed builds:**
-- Get Apple Developer account ($99/year)
-- Set up code signing certificate
-- Modify `release.sh` to add signing steps
-- See Apple documentation for notarization
-
-**Auto-updates (Sparkle):**
-
-With signed builds, updates are completely seamless:
-
-- No right-click needed
-- No security warnings
-- Truly one-click updates
-- Professional user experience
+**CI/CD:** GitHub Actions automatically builds, signs, and notarizes releases when you push a version tag.
 
 ---
 
