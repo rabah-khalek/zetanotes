@@ -10,6 +10,14 @@ on:
         description: 'Version number (e.g., 1.0.0)'
         required: true
         type: string
+      release_notes:
+        description: 'Release notes (Markdown supported)'
+        required: false
+        type: string
+        default: |
+          ## What's New
+          
+          - Bug fixes and performance improvements
 
 env:
   APP_NAME: ZetaNotes
@@ -309,12 +317,7 @@ jobs:
             - Offer to download the AI model (optional, ~700MB)
             - Guide you through the basic features
 
-            ## What's New
-
-            - 🔒 **Professional Code Signing**: App is signed with Apple Developer ID
-            - ✅ **Apple Notarized**: Verified safe by Apple's notarization service
-            - 🚀 **No Security Warnings**: Install like any professional Mac app
-            - 📦 **Automatic Updates**: Sparkle framework for seamless updates
+            ${{ github.event.inputs.release_notes || '## What''s New\n\n- Bug fixes and performance improvements' }}
 
             ## SHA256 Checksum
 
@@ -354,9 +357,15 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+          # Prepare release notes for appcast (convert markdown to basic HTML)
+          RELEASE_NOTES='${{ github.event.inputs.release_notes }}'
+          if [ -z "$RELEASE_NOTES" ]; then
+            RELEASE_NOTES="Bug fixes and performance improvements"
+          fi
+
           # Generate appcast.xml in the root of the public repo
           # This will be served via GitHub Pages at: https://www.zetanotes.com/appcast.xml
-          cat > appcast.xml << 'EOF'
+          cat > appcast.xml << EOF
           <?xml version="1.0" encoding="utf-8"?>
           <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
               <channel>
@@ -373,14 +382,7 @@ jobs:
                       <sparkle:shortVersionString>${{ steps.version.outputs.VERSION }}</sparkle:shortVersionString>
                       <description><![CDATA[
                           <h2>ZetaNotes ${{ steps.version.outputs.VERSION }}</h2>
-                          <p>Privacy-first note-taking with offline AI.</p>
-                          <ul>
-                              <li>🔒 100% offline AI processing</li>
-                              <li>✨ Smart autocomplete with Llama 3.2</li>
-                              <li>📝 Instant summarization</li>
-                              <li>🌍 Translate to 12+ languages</li>
-                              <li>🔍 Semantic search</li>
-                          </ul>
+                          <p>${RELEASE_NOTES}</p>
                       ]]></description>
                       <pubDate>$(date -R)</pubDate>
                       <enclosure
