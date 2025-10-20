@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZetaNotes - Offline AI Note-Taking for Mac</title>
+    <meta name="description"
+        content="Offline AI note-taking application for macOS. All processing happens locally on your device.">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes gradientShift {
+
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        @keyframes bounce {
+
+            0%,
+            20%,
+            50%,
+            80%,
+            100% {
+                transform: translateY(0) scale(1);
+            }
+
+            40% {
+                transform: translateY(-20px) scale(1.02);
+            }
+
+            60% {
+                transform: translateY(-10px) scale(1.01);
+            }
+        }
+
+        @keyframes glow {
+
+            0%,
+            100% {
+                box-shadow: 0 8px 32px rgba(56, 189, 248, 0.3),
+                    0 0 40px rgba(56, 189, 248, 0.15);
+            }
+
+            50% {
+                box-shadow: 0 12px 40px rgba(56, 189, 248, 0.4),
+                    0 0 60px rgba(56, 189, 248, 0.25);
+            }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #e4e4e7;
+            background: #0a0a0a;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            scroll-behavior: smooth;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Header */
+        header {
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 16px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 20px;
+            font-weight: 600;
+            color: #ffffff;
+            letter-spacing: -0.02em;
+        }
+
+        .logo-image {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            object-fit: contain;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #a1a1aa;
+            font-weight: 500;
+            font-size: 15px;
+            transition: color 0.2s ease;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #ffffff;
+            transition: width 0.2s ease;
+        }
+
+        .nav-links a:hover {
+            color: #ffffff;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        /* Accent highlights */
+        .highlight {
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            background: transparent;
+            color: inherit;
+            font-weight: inherit;
+            white-space: nowrap;
+        }
+
+        .file-size {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 30px;
+            padding: 8px 16px;
+            background: rgba(56, 189, 248, 0.05);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            border-radius: 8px;
+            color: #a1a1aa;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .file-size:hover {
+            border-color: rgba(56, 189, 248, 0.4);
+            background: rgba(56, 189, 248, 0.08);
+        }
+
+        .file-size::before {
+            content: "📦";
+            font-size: 16px;
+        }
+
+        .file-size strong {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        /* Demo iframe container */
+        .demo-container {
+            max-width: 900px;
+            margin: 0 auto 32px;
+            padding: 0 20px;
+            animation: fadeInUp 0.8s ease-out 0.2s backwards;
+        }
+
+        .demo-frame {
+            width: 100%;
+            height: 450px;
+            border-radius: 12px;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            background: #1a1a1a;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(56, 189, 248, 0.1);
+        }
+
+        .demo-frame iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 100px 0 80px;
+            text-align: center;
+            background: #0a0a0a;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(circle at 20% 30%, rgba(56, 189, 248, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(14, 165, 233, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.08) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            right: -50%;
+            bottom: -50%;
+            background:
+                linear-gradient(90deg, transparent 0%, rgba(56, 189, 248, 0.03) 50%, transparent 100%),
+                linear-gradient(0deg, transparent 0%, rgba(14, 165, 233, 0.03) 50%, transparent 100%);
+            animation: gradientShift 15s ease infinite;
+            pointer-events: none;
+        }
+
+        .hero .container {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero h1 {
+            font-size: 64px;
+            font-weight: 650;
+            margin-bottom: 20px;
+            line-height: 1.1;
+            letter-spacing: -0.04em;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .hero .subtitle {
+            font-size: 20px;
+            margin-bottom: 32px;
+            opacity: 0.85;
+            font-weight: 400;
+            letter-spacing: -0.01em;
+            color: rgba(255, 255, 255, 0.9);
+            animation: fadeInUp 0.8s ease-out 0.1s backwards;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.8s ease-out 0.2s backwards;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            font-size: 15px;
+            font-weight: 500;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(56, 189, 248, 0.5);
+            cursor: pointer;
+            margin-top: auto;
+            background: rgba(56, 189, 248, 0.15);
+            color: #ffffff;
+        }
+
+        .btn-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            object-fit: contain;
+        }
+
+        /* App Icon Display */
+        .app-icon-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 24px auto 32px;
+            position: relative;
+        }
+
+        .app-icon-wrapper {
+            position: relative;
+            width: 96px;
+            height: 96px;
+            animation: bounce 2.5s ease-in-out infinite;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .app-icon-wrapper:hover {
+            animation: bounce 1s ease-in-out infinite;
+        }
+
+        .app-icon {
+            width: 96px;
+            height: 96px;
+            border-radius: 22px;
+            object-fit: contain;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+            padding: 2px;
+            animation: glow 3s ease-in-out infinite;
+            transition: transform 0.3s ease;
+        }
+
+        .app-icon-wrapper:hover .app-icon {
+            transform: scale(1.08);
+        }
+
+        .download-hint {
+            position: absolute;
+            bottom: -8px;
+            right: -8px;
+            width: 32px;
+            height: 32px;
+            background: #1a1a1a;
+            border: 2px solid rgba(56, 189, 248, 0.5);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-size: 14px;
+            pointer-events: none;
+            animation: pulse 2s ease-in-out infinite;
+            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+        }
+
+        .download-hint::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 16px;
+            height: 16px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 0.9;
+            }
+        }
+
+        .download-text {
+            text-align: center;
+            color: #a1a1aa;
+            font-size: 14px;
+            margin-top: 20px;
+            opacity: 0.8;
+        }
+
+        .download-text strong {
+            color: #ffffff;
+            font-weight: 500;
+        }
+
+        .app-icon-wrapper:hover .download-hint {
+            animation: pulse 0.8s ease-in-out infinite;
+            background: #1e1e1e;
+            border-color: rgba(56, 189, 248, 0.7);
+            box-shadow: 0 6px 16px rgba(56, 189, 248, 0.4);
+        }
+
+        body {
+
+            .btn-primary {
+                background: rgba(56, 189, 248, 0.15);
+                color: #ffffff;
+                border: 1px solid rgba(56, 189, 248, 0.5);
+            }
+
+            .btn-primary:hover {
+                transform: translateY(-1px);
+                background: rgba(56, 189, 248, 0.25);
+                border-color: rgba(56, 189, 248, 0.7);
+                box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+            }
+
+            .btn-secondary {
+                background: rgba(56, 189, 248, 0.15);
+                color: white;
+                border: 1px solid rgba(56, 189, 248, 0.5);
+            }
+
+            .btn-secondary:hover {
+                background: rgba(56, 189, 248, 0.25);
+                border-color: rgba(56, 189, 248, 0.7);
+                box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+            }
+
+            /* Features Section */
+            .features {
+                padding: 80px 0;
+                background: #111111;
+            }
+
+            .section-title {
+                text-align: center;
+                font-size: 48px;
+                font-weight: 650;
+                margin-bottom: 56px;
+                color: #ffffff;
+                letter-spacing: -0.03em;
+                animation: fadeInUp 0.8s ease-out;
+            }
+
+            .features-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+                gap: 24px;
+            }
+
+            .feature-card {
+                padding: 32px 28px;
+                border-radius: 12px;
+                background: #1a1a1a;
+                transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                animation: fadeInUp 0.6s ease-out backwards;
+            }
+
+            .feature-card:nth-child(1) {
+                animation-delay: 0.1s;
+            }
+
+            .feature-card:nth-child(2) {
+                animation-delay: 0.15s;
+            }
+
+            .feature-card:nth-child(3) {
+                animation-delay: 0.2s;
+            }
+
+            .feature-card:nth-child(4) {
+                animation-delay: 0.25s;
+            }
+
+            .feature-card:nth-child(5) {
+                animation-delay: 0.3s;
+            }
+
+            .feature-card:nth-child(6) {
+                animation-delay: 0.35s;
+            }
+
+            .feature-card:nth-child(7) {
+                animation-delay: 0.4s;
+            }
+
+            .feature-card:nth-child(8) {
+                animation-delay: 0.45s;
+            }
+
+            .feature-card:nth-child(9) {
+                animation-delay: 0.5s;
+            }
+
+            .feature-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 24px rgba(56, 189, 248, 0.12);
+                border-color: rgba(56, 189, 248, 0.3);
+                background: #1e1e1e;
+            }
+
+            .feature-icon {
+                font-size: 48px;
+                margin-bottom: 20px;
+            }
+
+            .feature-card h3 {
+                font-size: 18px;
+                margin-bottom: 12px;
+                color: #ffffff;
+                text-align: center;
+                font-weight: 600;
+                letter-spacing: -0.01em;
+            }
+
+            .feature-card p {
+                color: #a1a1aa;
+                line-height: 1.6;
+                font-size: 15px;
+            }
+
+            .feature-card strong {
+                color: #ffffff;
+                font-weight: 400;
+            }
+
+            /* Pricing Section */
+            .pricing {
+                padding: 80px 0;
+                background: #0a0a0a;
+            }
+
+            .pricing-intro {
+                text-align: center;
+                max-width: 600px;
+                margin: 0 auto 48px;
+            }
+
+            .pricing-intro p {
+                font-size: 18px;
+                color: #a1a1aa;
+                margin-top: 16px;
+            }
+
+            .pricing-grid {
+                display: grid;
+                grid-template-columns: 1fr 2fr;
+                gap: 24px;
+                max-width: 900px;
+                margin: 0 auto;
+            }
+
+            .pricing-options-compact {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                background: #1a1a1a;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 12px;
+                padding: 24px 24px 12px 24px;
+            }
+
+            .pricing-option-compact {
+                background: #111111;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 8px;
+                padding: 16px;
+                transition: all 0.2s ease;
+            }
+
+            .pricing-option-compact:hover {
+                border-color: rgba(56, 189, 248, 0.3);
+                background: #141414;
+            }
+
+            .pricing-option-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: baseline;
+                margin-bottom: 8px;
+            }
+
+            .pricing-option-name {
+                font-size: 16px;
+                font-weight: 600;
+                color: #ffffff;
+            }
+
+            .pricing-option-price {
+                font-size: 24px;
+                font-weight: 650;
+                color: #ffffff;
+                letter-spacing: -0.02em;
+            }
+
+            .pricing-option-period {
+                font-size: 13px;
+                color: #a1a1aa;
+            }
+
+            .pricing-option-savings {
+                display: inline-block;
+                background: rgba(56, 189, 248, 0.15);
+                color: #38bdf8;
+                padding: 2px 8px;
+                border-radius: 4px;
+                font-size: 11px;
+                font-weight: 500;
+                margin-left: 8px;
+            }
+
+            .pricing-features-panel {
+                background: #1a1a1a;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 12px;
+                padding: 32px 32px 24px 32px;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 32px;
+            }
+
+            .pricing-features-panel h3 {
+                margin: 0 0 24px 0;
+                font-size: 18px;
+                color: #ffffff;
+            }
+
+            .features-column {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .features-column:first-child {
+                border-right: 1px solid rgba(255, 255, 255, 0.1);
+                padding-right: 32px;
+            }
+
+            .features-column:last-child {
+                padding-left: 0;
+            }
+
+            .pricing-features-list {
+                list-style: none;
+                margin: 0;
+                padding: 0;
+            }
+
+            .pricing-features-list li {
+                padding: 12px 0;
+                padding-left: 32px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+                position: relative;
+                color: #a1a1aa;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+
+            .pricing-features-list li:last-child {
+                border-bottom: none;
+            }
+
+            .pricing-features-list li::before {
+                content: "✓";
+                position: absolute;
+                left: 8px;
+                color: #34C759;
+                font-weight: bold;
+                font-size: 14px;
+            }
+
+            .pricing-cta {
+                margin-top: 32px;
+                text-align: center;
+            }
+
+            @media (max-width: 768px) {
+                .pricing-grid {
+                    grid-template-columns: 1fr;
+                }
+
+                .pricing-features-panel {
+                    grid-template-columns: 1fr;
+                    gap: 24px;
+                }
+
+                .features-column:first-child {
+                    border-right: none;
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                    padding-right: 0;
+                    padding-bottom: 24px;
+                }
+            }
+
+            /* Download Section */
+            .download {
+                padding: 80px 0;
+                background: #111111;
+                text-align: center;
+            }
+
+            .download-info {
+                max-width: 700px;
+                margin: 0 auto 32px;
+                color: #a1a1aa;
+                font-size: 17px;
+                line-height: 1.6;
+            }
+
+            .system-requirements {
+                background: #1a1a1a;
+                padding: 36px;
+                border-radius: 12px;
+                max-width: 600px;
+                margin: 40px auto 0;
+                text-align: left;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                animation: fadeInUp 0.8s ease-out 0.3s backwards;
+            }
+
+            .system-requirements h3 {
+                margin-bottom: 20px;
+                color: #ffffff;
+                font-size: 18px;
+                font-weight: 600;
+                letter-spacing: -0.01em;
+            }
+
+            .system-requirements ul {
+                list-style: none;
+                color: #a1a1aa;
+            }
+
+            .system-requirements li {
+                padding: 12px 0;
+                padding-left: 32px;
+                position: relative;
+                font-size: 15px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            }
+
+            .system-requirements li:last-child {
+                border-bottom: none;
+            }
+
+            .system-requirements li::before {
+                content: "✓";
+                position: absolute;
+                left: 8px;
+                color: #34C759;
+                font-weight: bold;
+                font-size: 14px;
+            }
+
+            /* Footer */
+            footer {
+                background: #0a0a0a;
+                color: #a1a1aa;
+                padding: 40px 0;
+                text-align: center;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            footer a {
+                color: #71717a;
+                text-decoration: none;
+                transition: color 0.2s ease;
+            }
+
+            footer a:hover {
+                color: white;
+            }
+
+            footer p {
+                font-size: 14px;
+            }
+
+            /* Responsive */
+            @media (max-width: 768px) {
+                .hero {
+                    padding: 80px 0 60px;
+                }
+
+                .hero h1 {
+                    font-size: 42px;
+                }
+
+                .hero .subtitle {
+                    font-size: 18px;
+                }
+
+                .nav-links {
+                    gap: 20px;
+                }
+
+                .section-title {
+                    font-size: 36px;
+                }
+
+                .features {
+                    padding: 60px 0;
+                }
+
+                .pricing,
+                .download {
+                    padding: 60px 0;
+                }
+
+                .pricing-cards {
+                    flex-direction: column;
+                    align-items: center;
+                }
+
+                .pricing-card {
+                    max-width: 280px;
+                    flex: 0 1 280px;
+                }
+
+                .features-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="logo.png" alt="ZetaNotes Logo" class="logo-image">
+                    <span>ZetaNotes</span>
+                </div>
+                <nav>
+                    <ul class="nav-links">
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#pricing">Pricing</a></li>
+                        <li><a href="#download">Download</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>Offline AI Note-Taking for Mac</h1>
+            <p class="subtitle">AI that runs <span class="highlight">entirely offline</span>. Your notes never leave
+                your Mac.</p>
+
+            <!-- Demo/GIF Container -->
+            <div class="demo-container">
+                <div class="demo-frame">
+                    <!-- Replace src with your actual gif/video URL -->
+                    <iframe src="" title="ZetaNotes Demo" allowfullscreen></iframe>
+                    <!-- Alternative: For direct gif embed, uncomment below and remove iframe above -->
+                    <!-- <img src="your-demo.gif" alt="ZetaNotes Demo" style="width: 100%; height: 100%; object-fit: cover;"> -->
+                </div>
+            </div>
+
+            <div class="cta-buttons">
+                <a href="#download" class="btn btn-primary">Download Free</a>
+                <a href="#pricing" class="btn btn-primary">View Pricing</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="container">
+            <h2 class="section-title">Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h3>Completely Offline</h3>
+                    <p>All AI processing runs <span class="highlight">locally</span> on your Mac. No internet connection
+                        required.
+                        Your notes stay on your device.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Lightweight App</h3>
+                    <p>Native macOS application optimized for <span class="highlight">Apple Silicon</span>. Minimal
+                        resource usage
+                        with efficient memory management.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Fast Performance</h3>
+                    <p><span class="highlight">Metal GPU</span> acceleration provides quick AI responses. Instant search
+                        across all
+                        notes with semantic understanding.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Expandable</h3>
+                    <p>Create <span class="highlight">custom tools</span> with your own prompts. Configure temperature,
+                        tokens, and
+                        stop sequences for each tool.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Instant AI Support</h3>
+                    <p>Built-in <span class="highlight">autocomplete</span>, text correction, rephrasing, summarization,
+                        and
+                        translation available in every note.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Multiple Models</h3>
+                    <p>Choose from <span class="highlight">8 models</span>. Download models on first launch (~700MB
+                        each), larger
+                        models available for Pro users.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Chat Interface</h3>
+                    <p>Conversational AI assistant within the app. Ask questions, get help with writing, or brainstorm
+                        ideas with <span class="highlight">context-aware</span> responses.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Persistent Storage</h3>
+                    <p>Notes and <span class="highlight">AI conversations</span> are automatically saved. Access your
+                        entire history
+                        anytime with full-text and semantic search.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Markdown Support</h3>
+                    <p>Write using <span class="highlight">Markdown syntax</span> with live preview. Export notes to
+                        various formats
+                        while maintaining formatting.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="pricing">
+        <div class="container">
+            <h2 class="section-title">Pricing</h2>
+            <div class="pricing-intro">
+                <p>Choose the plan that works best for you. All Pro plans unlock the same features.</p>
+            </div>
+
+            <div class="pricing-grid">
+                <!-- Pricing Options -->
+                <div class="pricing-options-compact">
+                    <div class="pricing-option-compact">
+                        <div class="pricing-option-header">
+                            <span class="pricing-option-name">Free</span>
+                            <span class="pricing-option-price">$0</span>
+                        </div>
+                        <div class="pricing-option-period">Forever free</div>
+                    </div>
+
+                    <div class="pricing-option-compact">
+                        <div class="pricing-option-header">
+                            <span class="pricing-option-name">Monthly</span>
+                            <span class="pricing-option-price">$1</span>
+                        </div>
+                        <div class="pricing-option-period">per month</div>
+                    </div>
+
+                    <div class="pricing-option-compact">
+                        <div class="pricing-option-header">
+                            <span class="pricing-option-name">Annual</span>
+                            <span class="pricing-option-price">$6</span>
+                        </div>
+                        <div class="pricing-option-period">
+                            per year
+                            <span class="pricing-option-savings">50% off</span>
+                        </div>
+                    </div>
+
+                    <div class="pricing-option-compact">
+                        <div class="pricing-option-header">
+                            <span class="pricing-option-name">Lifetime</span>
+                            <span class="pricing-option-price">$20</span>
+                        </div>
+                        <div class="pricing-option-period">one-time payment</div>
+                    </div>
+                </div>
+
+                <!-- Features Comparison -->
+                <div class="pricing-features-panel">
+                    <div class="features-column">
+                        <h3>Free Features</h3>
+                        <ul class="pricing-features-list">
+                            <li>Llama 3.2 1B AI model</li>
+                            <li>AI Autocomplete</li>
+                            <li>Text patch & correction</li>
+                            <li>Rephrase text</li>
+                            <li>Summarize notes</li>
+                            <li>Translate to 12+ languages</li>
+                            <li>Semantic search</li>
+                            <li>Unlimited notes</li>
+                        </ul>
+                    </div>
+
+                    <div class="features-column">
+                        <h3>Pro Features <span style="font-size: 14px; color: #a1a1aa; font-weight: 400;">(all paid
+                                plans)</span></h3>
+                        <ul class="pricing-features-list">
+                            <li>Everything in Free</li>
+                            <li>AI Chat Assistant</li>
+                            <li>8 AI models (Phi-3, Qwen 2.5, Llama 3.2, Gemma 2 & more)</li>
+                            <li>Create custom AI tools</li>
+                            <li>Edit all prompts & settings</li>
+                            <li>Priority support</li>
+                        </ul>
+
+                        <div class="pricing-cta">
+                            <a href="https://zetanotes.lemonsqueezy.com/checkout" class="btn btn-primary">Get Pro
+                                Access</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Download Section -->
+    <section id="download" class="download">
+        <div class="container">
+            <h2 class="section-title">Download</h2>
+
+            <p class="download-info">
+                Native macOS application optimized for <span class="highlight">Apple Silicon</span>.
+            </p>
+
+            <!-- App Icon Display -->
+            <div class="app-icon-container">
+                <a href="https://github.com/rabah-khalek/zetanotes/releases/latest/download/ZetaNotes-v0.0.1.dmg"
+                    class="app-icon-wrapper" title="Click to download ZetaNotes" download>
+                    <img src="logo.png" alt="ZetaNotes App Icon" class="app-icon">
+                    <div class="download-hint"></div>
+                </a>
+            </div>
+
+            <div class="download-text">
+                <strong>Click to download</strong> ZetaNotes.dmg (~80 MB)
+            </div>
+
+            <div class="system-requirements">
+                <h3>Installation Steps</h3>
+                <ul>
+                    <li>Download and open the DMG file</li>
+                    <li><strong>EASY:</strong> Double-click "Install ZetaNotes.command" (automatic)</li>
+                    <li><strong>OR</strong> drag ZetaNotes to Applications manually</li>
+                    <li>If manual: RIGHT-CLICK → Open → Click "Open" in warning</li>
+                    <li>After first launch, you can open normally</li>
+                </ul>
+            </div>
+
+            <div class="system-requirements" style="margin-top: 20px;">
+                <h3>System Requirements</h3>
+                <ul>
+                    <li><span class="highlight">macOS 13.0</span> (Ventura) or later</li>
+                    <li><span class="highlight">Apple Silicon</span> (M1/M2/M3/M4) recommended</li>
+                    <li>4 GB RAM minimum (8 GB+ recommended)</li>
+                    <li>2 GB disk space (includes app + AI models)</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 ZetaNotes. All rights reserved.</p>
+            <p style="margin-top: 10px;">
+                <a href="#download">Download</a> •
+                <a href="pricing.html">Pricing</a> •
+                <a href="https://github.com/rabah-khalek/zetanotes/issues" target="_blank">Report Issues</a>
+            </p>
+            <p style="margin-top: 10px;">
+                <a href="terms.html">Terms of Service</a> •
+                <a href="privacy.html">Privacy Policy</a> •
+                <a href="refunds.html">Refund Policy</a>
+            </p>
+            <p style="margin-top: 20px; font-size: 14px; opacity: 0.7;">
+                <span class="highlight">100% Offline</span> •
+                <span class="highlight">No Data Collection</span> •
+                <span class="highlight">No Tracking</span>
+            </p>
+        </div>
+    </footer>
+</body>
+
+</html>
