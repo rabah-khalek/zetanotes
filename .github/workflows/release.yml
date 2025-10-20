@@ -16,7 +16,7 @@ on:
         type: string
         default: |
           ## What's New
-          
+
           - Bug fixes and performance improvements
 
 env:
@@ -293,52 +293,29 @@ jobs:
           tag_name: v${{ steps.version.outputs.VERSION }}
           name: ZetaNotes v${{ steps.version.outputs.VERSION }}
           body: |
-            # ZetaNotes v${{ steps.version.outputs.VERSION }}
-
-            ## ✅ Signed & Notarized by Apple
-
-            This release is **code signed** with an Apple Developer ID certificate and **notarized** by Apple.
-            No security warnings or special installation steps required!
-
-            ## Installation Instructions
-
-            ### Easy 3-Step Installation:
-
-            1. Download `${{ steps.build.outputs.DMG_NAME}}`
-            2. Open the DMG file and drag ZetaNotes to your Applications folder
-            3. Double-click ZetaNotes to launch
-
-            That's it! ZetaNotes will open normally without any security warnings.
-
-            ### First Launch
-
-            On first launch, ZetaNotes will:
-            - Welcome you with a setup wizard
-            - Offer to download the AI model (optional, ~700MB)
-            - Guide you through the basic features
-
             ${{ github.event.inputs.release_notes || '## What''s New\n\n- Bug fixes and performance improvements' }}
 
-            ## SHA256 Checksum
+            ---
 
-            ```
-            ${{ steps.build.outputs.CHECKSUM }}
-            ```
+            **Download the DMG, open it, and drag to Applications.**
 
-            ## System Requirements
-
-            - **macOS** 13.0 (Ventura) or later
-            - **Processor**: Apple Silicon (M1/M2/M3/M4) recommended, Intel supported
-            - **Memory**: 4 GB RAM minimum, 8 GB+ recommended
-            - **Storage**: 1 GB disk space for app + AI model
-
-            ## Privacy & Security
+            ### Privacy & Security
 
             - ✅ 100% offline AI processing
             - ✅ No cloud sync or data upload
             - ✅ No analytics or telemetry
             - ✅ No account required
-            - ✅ Signed & notarized by Apple
+
+            ### System Requirements
+
+            - macOS 13.0 (Ventura) or later
+            - Apple Silicon (M1/M2/M3/M4) recommended, Intel supported
+            - 4 GB RAM minimum, 8 GB+ recommended
+            - 1 GB disk space for app + AI model
+
+            ### Verification
+
+            **SHA256:** `${{ steps.build.outputs.CHECKSUM }}`
           files: |
             ${{ steps.build.outputs.DMG_FILE }}
             ${{ steps.build.outputs.SHA_FILE }}
@@ -404,6 +381,40 @@ jobs:
           git commit -m "Update appcast.xml for v${{ steps.version.outputs.VERSION }}" || echo "No changes to commit"
           git push
 
+      - name: Update website download link
+        env:
+          PUBLIC_REPO_TOKEN: ${{ secrets.PUBLIC_REPO_TOKEN }}
+        run: |
+          # Already in /tmp/public-repo from previous step
+          cd /tmp/public-repo
+
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          DMG_NAME="${{ steps.build.outputs.DMG_NAME }}"
+
+          echo "Updating website download link to version $VERSION"
+
+          # Update index.html download link to point to the new version
+          # This updates the href in the download button
+          sed -i "s|releases/latest/download/ZetaNotes-v[0-9.]*\.dmg|releases/latest/download/$DMG_NAME|g" docs/index.html
+
+          # Update version in Umami event tracking attribute
+          sed -i "s|data-umami-event-version=\"[0-9.]*\"|data-umami-event-version=\"$VERSION\"|g" docs/index.html
+
+          # Check if changes were made
+          if git diff --quiet docs/index.html; then
+            echo "No changes needed to docs/index.html"
+          else
+            echo "Changes made to docs/index.html:"
+            git diff docs/index.html
+
+            # Commit and push website update
+            git add docs/index.html
+            git commit -m "Update download link to v$VERSION"
+            git push
+
+            echo "✅ Website updated with download link for v$VERSION"
+          fi
+
       - name: Summary
         run: |
           echo "## ✅ Release Build Complete!" >> $GITHUB_STEP_SUMMARY
@@ -415,6 +426,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 🚀 Next Steps:" >> $GITHUB_STEP_SUMMARY
           echo "- Release published to: https://github.com/${{ env.PUBLIC_REPO }}/releases/tag/v${{ steps.version.outputs.VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Website download link auto-updated to v${{ steps.version.outputs.VERSION }}" >> $GITHUB_STEP_SUMMARY
           echo "- GitHub Pages will auto-deploy in a few minutes" >> $GITHUB_STEP_SUMMARY
           echo "- Download page: https://www.zetanotes.com/" >> $GITHUB_STEP_SUMMARY
           echo "- Appcast URL: https://www.zetanotes.com/appcast.xml" >> $GITHUB_STEP_SUMMARY
