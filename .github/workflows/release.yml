@@ -13,7 +13,7 @@ on:
 
 env:
   APP_NAME: ZetaNotes
-  PUBLIC_REPO: rabah-khalek/zetanotes
+  PUBLIC_REPO: rabah-khalek/zetanotes-dev
 
 jobs:
   build-and-release:
@@ -355,13 +355,13 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           # Generate appcast.xml in the root of the public repo
-          # This will be served via GitHub Pages at: https://rabah-khalek.github.io/zetanotes/appcast.xml
+          # This will be served via GitHub Pages at: https://www.zetanotes.com/appcast.xml
           cat > appcast.xml << 'EOF'
           <?xml version="1.0" encoding="utf-8"?>
           <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
               <channel>
                   <title>ZetaNotes Updates</title>
-                  <link>https://rabah-khalek.github.io/zetanotes/appcast.xml</link>
+                  <link>https://www.zetanotes.com/appcast.xml</link>
                   <description>Most recent updates for ZetaNotes</description>
                   <language>en</language>
 
@@ -414,5 +414,5 @@ jobs:
           echo "### 🚀 Next Steps:" >> $GITHUB_STEP_SUMMARY
           echo "- Release published to: https://github.com/${{ env.PUBLIC_REPO }}/releases/tag/v${{ steps.version.outputs.VERSION }}" >> $GITHUB_STEP_SUMMARY
           echo "- GitHub Pages will auto-deploy in a few minutes" >> $GITHUB_STEP_SUMMARY
-          echo "- Download page: https://rabah-khalek.github.io/zetanotes/" >> $GITHUB_STEP_SUMMARY
-          echo "- Appcast URL: https://rabah-khalek.github.io/zetanotes/appcast.xml" >> $GITHUB_STEP_SUMMARY
+          echo "- Download page: https://www.zetanotes.com/" >> $GITHUB_STEP_SUMMARY
+          echo "- Appcast URL: https://www.zetanotes.com/appcast.xml" >> $GITHUB_STEP_SUMMARY

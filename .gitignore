@@ -9,7 +9,8 @@ ZetaNotes/Resources/Models/
 
 # Backup files
 *.backup
-
+.env
+scripts/release.sh.corrupted
 # Xcode
 #
 # gitignore contributors: remember to update Global/Xcode.gitignore, Objective-C.gitignore & Swift.gitignore
