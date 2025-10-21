@@ -549,27 +549,19 @@ struct LicenseActivationView: View {
         errorMessage = nil
 
         Task {
-            do {
-                let success = await licenseManager.validateLicense(key: trimmedKey, email: trimmedEmail)
+            let success = await licenseManager.validateLicense(key: trimmedKey, email: trimmedEmail)
 
-                await MainActor.run {
-                    isValidating = false
+            await MainActor.run {
+                isValidating = false
 
-                    if success {
-                        showSuccess = true
-                        // Auto-dismiss after 2 seconds
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                            isPresented = false
-                        }
-                    } else {
-                        errorMessage = "Invalid license key or email. Please double-check your purchase email and license key, then try again."
+                if success {
+                    showSuccess = true
+                    // Auto-dismiss after 2 seconds
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                        isPresented = false
                     }
-                }
-            } catch {
-                await MainActor.run {
-                    isValidating = false
-                    errorMessage = "An error occurred while validating your license. Please try again. Error: \(error.localizedDescription)"
-                    print("❌ License validation error: \(error)")
+                } else {
+                    errorMessage = "Invalid license key or email. Please double-check your purchase email and license key, then try again."
                 }
             }
         }

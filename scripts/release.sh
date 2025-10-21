@@ -4,6 +4,18 @@ set -e  # Exit on any error
 
 # ZetaNotes Release Script - Signed & Notarized Distribution
 # For Apple Developer Program members
+#
+# Usage:
+#   ./release.sh <version> [rebuild]
+#
+# Examples:
+#   ./release.sh 1.0.0              # Normal release with existing llama.cpp build
+#   ./release.sh 1.0.0 rebuild      # Rebuild llama.cpp from scratch before release
+#
+# Environment variables required for notarization:
+#   APPLE_ID - Your Apple ID email
+#   APPLE_TEAM_ID - Your Team ID (e.g., HDA4C6CU89)
+#   APPLE_APP_SPECIFIC_PASSWORD - App-specific password from appleid.apple.com
 
 # Colors for output
 RED='\033[0;31m'
@@ -14,10 +26,12 @@ NC='\033[0m'
 
 # Configuration
 VERSION="${1:-1.0.0}"
+REBUILD_LLAMA="${2:-no}"  # Pass "rebuild" as second argument to force llama.cpp rebuild
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BUILD_DIR="$PROJECT_DIR/releases/ZetaNotes-Release-$(date +%Y%m%d-%H%M%S)"
 APP_NAME="ZetaNotes"
 DMG_NAME="${APP_NAME}-v${VERSION}.dmg"
+VERIFY_SCRIPT="$PROJECT_DIR/scripts/verify-signatures.sh"
 
 # Detect certificate name based on environment
 if [ -n "$GITHUB_ACTIONS" ]; then
@@ -27,12 +41,13 @@ else
 fi
 
 echo -e "${BLUE}╔═══════════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║  ZetaNotes Release Builder v3.0 (Signed)     ║${NC}"
+echo -e "${BLUE}║  ZetaNotes Release Builder v4.0 (Signed)     ║${NC}"
 echo -e "${BLUE}╚═══════════════════════════════════════════════╝${NC}"
 echo ""
 echo -e "${GREEN}Version:${NC} ${VERSION}"
 echo -e "${GREEN}Signing Identity:${NC} ${SIGNING_IDENTITY}"
 echo -e "${GREEN}Build directory:${NC} ${BUILD_DIR}"
+echo -e "${GREEN}Rebuild llama.cpp:${NC} ${REBUILD_LLAMA}"
 echo ""
 
 # Helper functions
@@ -65,6 +80,24 @@ print_success "Found Developer ID certificate"
 
 mkdir -p "$BUILD_DIR"
 
+# Optionally rebuild llama.cpp
+if [ "$REBUILD_LLAMA" = "rebuild" ]; then
+    print_step "Rebuilding llama.cpp from scratch"
+
+    # Remove existing build
+    if [ -d "$PROJECT_DIR/llama.cpp/build" ]; then
+        echo "Removing old llama.cpp build..."
+        rm -rf "$PROJECT_DIR/llama.cpp/build"
+    fi
+
+    # Build llama.cpp
+    echo "Building llama.cpp with Metal support..."
+    cd "$PROJECT_DIR"
+    bash scripts/build-llama.sh || print_error "llama.cpp build failed"
+
+    print_success "llama.cpp rebuilt successfully"
+fi
+
 # Build
 print_step "Building and signing app"
 cd "$PROJECT_DIR"
@@ -87,7 +120,77 @@ BUILT_APP=$(find "$BUILD_DIR/DerivedData/Build/Products" -name "ZetaNotes.app" -
 
 cp -R "$BUILT_APP" "$BUILD_DIR/${APP_NAME}.app"
 
+# CRITICAL: Sign Sparkle XPC services and Updater.app with Developer ID
+# These components are often signed ad-hoc by Xcode, which causes notarization rejection
+print_step "Re-signing Sparkle components with Developer ID"
+
+SPARKLE_FRAMEWORK="$BUILD_DIR/${APP_NAME}.app/Contents/Frameworks/Sparkle.framework"
+
+if [ -d "$SPARKLE_FRAMEWORK" ]; then
+    # Sign XPC Services
+    for xpc in "$SPARKLE_FRAMEWORK"/Versions/B/XPCServices/*.xpc; do
+        if [ -d "$xpc" ]; then
+            echo "  Signing: $(basename "$xpc")"
+            codesign --force --sign "$SIGNING_IDENTITY" \
+                --options runtime \
+                --timestamp \
+                --deep \
+                "$xpc" || print_error "Failed to sign $(basename "$xpc")"
+        fi
+    done
+
+    # Sign Updater.app
+    UPDATER_APP="$SPARKLE_FRAMEWORK/Versions/B/Updater.app"
+    if [ -d "$UPDATER_APP" ]; then
+        echo "  Signing: Updater.app"
+        codesign --force --sign "$SIGNING_IDENTITY" \
+            --options runtime \
+            --timestamp \
+            --deep \
+            "$UPDATER_APP" || print_error "Failed to sign Updater.app"
+    fi
+
+    # Re-sign the Sparkle framework itself
+    echo "  Re-signing: Sparkle.framework"
+    codesign --force --sign "$SIGNING_IDENTITY" \
+        --options runtime \
+        --timestamp \
+        "$SPARKLE_FRAMEWORK" || print_error "Failed to sign Sparkle.framework"
+
+    print_success "Sparkle components re-signed with Developer ID"
+else
+    print_warning "Sparkle framework not found - skipping Sparkle signing"
+fi
+
+# Re-sign all llama.cpp dylibs with Developer ID (in case they were signed ad-hoc)
+echo ""
+echo "Re-signing llama.cpp libraries..."
+for dylib in "$BUILD_DIR/${APP_NAME}.app/Contents/Frameworks/"*.dylib; do
+    if [ -f "$dylib" ]; then
+        echo "  Signing: $(basename "$dylib")"
+        codesign --force --sign "$SIGNING_IDENTITY" \
+            --options runtime \
+            --timestamp \
+            "$dylib" || print_error "Failed to sign $(basename "$dylib")"
+    fi
+done
+
+# CRITICAL: Re-sign the main app bundle AFTER modifying nested components
+# When you modify any nested code (frameworks, dylibs, XPC services), you MUST re-sign the parent
+print_step "Re-signing main app bundle (required after modifying nested components)"
+
+codesign --force --sign "$SIGNING_IDENTITY" \
+    --entitlements "$PROJECT_DIR/ZetaNotes/ZetaNotes.entitlements" \
+    --options runtime \
+    --timestamp \
+    --deep \
+    "$BUILD_DIR/${APP_NAME}.app" || print_error "Failed to re-sign main app bundle"
+
+print_success "Main app bundle re-signed"
+
 # Verify app bundle signature
+echo ""
+echo "Verifying final app signature..."
 codesign --verify --verbose --deep --strict "$BUILD_DIR/${APP_NAME}.app" || print_error "Code signature verification failed"
 
 # Verify all embedded frameworks are signed with hardened runtime
@@ -101,6 +204,23 @@ for framework in "$BUILD_DIR/${APP_NAME}.app/Contents/Frameworks/"*; do
 done
 
 print_success "App and frameworks signed successfully"
+
+# Verify all signatures before proceeding
+print_step "Verifying all signatures"
+
+if [ ! -f "$VERIFY_SCRIPT" ]; then
+    print_error "Signature verification script not found at: $VERIFY_SCRIPT"
+fi
+
+# Make sure verification script is executable
+chmod +x "$VERIFY_SCRIPT"
+
+# Run verification script
+if bash "$VERIFY_SCRIPT" "$BUILD_DIR/${APP_NAME}.app"; then
+    print_success "All signatures verified successfully"
+else
+    print_error "Signature verification failed! Fix errors before submitting for notarization."
+fi
 
 # Create DMG
 print_step "Creating DMG"

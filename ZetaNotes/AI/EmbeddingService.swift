@@ -11,7 +11,7 @@ import Foundation
 
 /// Service for generating text embeddings using the LLM
 /// Embeddings enable semantic search across notes
-class EmbeddingService {
+final class EmbeddingService: @unchecked Sendable {
     private let llmService: LLMInferenceService
     private let embeddingCache = NSCache<NSString, NSData>()
 
@@ -77,17 +77,25 @@ class EmbeddingService {
         }
 
         // Store in Core Data
+        let noteObjectID = note.objectID
+        let embeddingToSave = embedding
+
         await context.perform {
+            guard let noteInContext = try? context.existingObject(with: noteObjectID) as? Note else {
+                print("❌ Failed to get note in context")
+                return
+            }
+
             let noteEmbedding: NoteEmbedding
-            if let existing = note.embedding {
+            if let existing = noteInContext.embedding {
                 noteEmbedding = existing
             } else {
                 noteEmbedding = NoteEmbedding(context: context)
                 noteEmbedding.id = UUID()
-                noteEmbedding.note = note
+                noteEmbedding.note = noteInContext
             }
 
-            noteEmbedding.setVector(embedding)
+            noteEmbedding.setVector(embeddingToSave)
             noteEmbedding.version = 1
 
             do {

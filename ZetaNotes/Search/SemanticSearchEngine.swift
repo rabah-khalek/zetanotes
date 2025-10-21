@@ -92,10 +92,12 @@ class SemanticSearchEngine {
         // Generate embeddings lazily for notes that are missing them (up to 5 at a time)
         if !notesNeedingEmbeddings.isEmpty {
             print("⚠️ Found \(notesNeedingEmbeddings.count) notes without embeddings during search")
+            let embeddingService = embeddingService
+            let persistenceController = persistenceController
             Task.detached(priority: .utility) {
-                let context = self.persistenceController.newBackgroundContext()
+                let context = persistenceController.newBackgroundContext()
                 let limitedNotes = Array(notesNeedingEmbeddings.prefix(5))
-                await self.embeddingService.batchGenerateEmbeddings(for: limitedNotes, in: context)
+                await embeddingService.batchGenerateEmbeddings(for: limitedNotes, in: context)
             }
         }
 
@@ -251,6 +253,7 @@ class SemanticSearchEngine {
     /// - Parameter maxNotes: Maximum notes to index at once (default: 10)
     func indexAllNotes(maxNotes: Int = 10) async {
         let context = persistenceController.newBackgroundContext()
+        let embeddingService = embeddingService
 
         await context.perform {
             let fetchRequest: NSFetchRequest<Note> = Note.fetchRequest()
@@ -266,7 +269,6 @@ class SemanticSearchEngine {
 
                 if !notesWithoutEmbeddings.isEmpty {
                     print("🔄 Lazy indexing \(notesWithoutEmbeddings.count) recent notes (max: \(maxNotes))...")
-                    let embeddingService = self.embeddingService
                     Task {
                         await embeddingService.batchGenerateEmbeddings(for: notesWithoutEmbeddings, in: context)
                     }
@@ -283,6 +285,7 @@ class SemanticSearchEngine {
     /// Should only be called manually by the user, not automatically
     func indexAllNotesComplete() async {
         let context = persistenceController.newBackgroundContext()
+        let embeddingService = embeddingService
 
         await context.perform {
             let fetchRequest: NSFetchRequest<Note> = Note.fetchRequest()
@@ -293,7 +296,6 @@ class SemanticSearchEngine {
 
                 if !notesWithoutEmbeddings.isEmpty {
                     print("🔄 Full indexing \(notesWithoutEmbeddings.count) notes (this may take a while)...")
-                    let embeddingService = self.embeddingService
                     Task {
                         await embeddingService.batchGenerateEmbeddings(for: notesWithoutEmbeddings, in: context)
                     }
@@ -311,6 +313,7 @@ class SemanticSearchEngine {
         invalidateCache()
 
         let context = persistenceController.newBackgroundContext()
+        let embeddingService = embeddingService
 
         // Get the note in the background context
         let noteId = note.objectID
@@ -319,7 +322,6 @@ class SemanticSearchEngine {
             do {
                 let bgNote = try context.existingObject(with: noteId) as? Note
                 if let bgNote = bgNote {
-                    let embeddingService = self.embeddingService
                     Task {
                         await embeddingService.generateAndStoreEmbedding(for: bgNote, in: context)
                     }
@@ -353,9 +355,10 @@ class SemanticSearchEngine {
     }
 
     private func performKeywordSearch(query: String) async -> [Note] {
+        let persistenceController = self.persistenceController
+
         return await withCheckedContinuation { continuation in
             let context = persistenceController.container.viewContext
-            let persistenceController = self.persistenceController
 
             context.perform {
                 let notes = persistenceController.searchNotes(query: query)

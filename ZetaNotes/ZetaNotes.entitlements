@@ -2,10 +2,11 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- App Sandbox enabled for better security -->
-	<!-- All user data stored in sandboxed Application Support directory -->
-	<key>com.apple.security.app-sandbox</key>
-	<true/>
+	<!-- NOTE: App Sandbox disabled for direct distribution outside Mac App Store -->
+	<!-- App Sandbox conflicts with llama.cpp's memory requirements and causes issues -->
+	<!-- If distributing via Mac App Store in the future, re-enable sandbox and test thoroughly -->
+	<!-- <key>com.apple.security.app-sandbox</key> -->
+	<!-- <true/> -->
 
 	<!-- Network access for downloading AI models -->
 	<key>com.apple.security.network.client</key>

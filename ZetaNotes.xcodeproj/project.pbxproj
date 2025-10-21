@@ -673,8 +673,6 @@
 				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/llama.cpp/build/bin";
 				MARKETING_VERSION = 1.0;
 				OTHER_LDFLAGS = (
-					"-Wl,-rpath,@executable_path/../Frameworks",
-					"-Wl,-rpath,$(SRCROOT)/llama.cpp/build/bin",
 					"-lllama",
 					"-lggml",
 					"-lc++",
@@ -717,8 +715,6 @@
 				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/llama.cpp/build/bin";
 				MARKETING_VERSION = 1.0;
 				OTHER_LDFLAGS = (
-					"-Wl,-rpath,@executable_path/../Frameworks",
-					"-Wl,-rpath,$(SRCROOT)/llama.cpp/build/bin",
 					"-lllama",
 					"-lggml",
 					"-lc++",

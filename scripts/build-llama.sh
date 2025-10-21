@@ -18,12 +18,12 @@ if [ ! -d "$LLAMA_DIR" ]; then
     echo "📥 Cloning llama.cpp..."
     cd "${SRCROOT}"
     git clone --depth 1 https://github.com/ggerganov/llama.cpp.git
-fi
-
-# Check if library already built
-if [ -f "$LIB_PATH" ]; then
-    echo "✅ llama.cpp already built at: $LIB_PATH"
-    exit 0
+else
+    # Check if library already built
+    if [ -f "$LIB_PATH" ]; then
+        echo "✅ llama.cpp already built at: $LIB_PATH"
+        exit 0
+    fi
 fi
 
 echo "🔨 Building llama.cpp with Metal support..."
@@ -39,7 +39,8 @@ cmake .. \
     -DGGML_METAL=ON \
     -DLLAMA_BUILD_EXAMPLES=OFF \
     -DLLAMA_BUILD_TESTS=OFF \
-    -DLLAMA_BUILD_SERVER=OFF
+    -DLLAMA_BUILD_SERVER=OFF \
+    -DCMAKE_OSX_DEPLOYMENT_TARGET=13.0
 
 # Build library
 cmake --build . --config Release -j 8
@@ -59,15 +60,18 @@ if [ -f "$LIB_PATH" ]; then
     echo ""
     echo "🔐 Code signing libraries with hardened runtime..."
 
-    # Determine signing identity based on environment
+    # Determine signing identity - ALWAYS use Developer ID for notarization
     if [ -n "$GITHUB_ACTIONS" ]; then
         SIGNING_IDENTITY="Developer ID Application"
     elif security find-identity -v -p codesigning | grep -q "Developer ID Application"; then
-        # Use Developer ID for distribution builds
-        SIGNING_IDENTITY=$(security find-identity -v -p codesigning | grep "Developer ID Application" | head -1 | awk '{print $2}')
+        # Use Developer ID Application certificate (required for notarization)
+        SIGNING_IDENTITY="Developer ID Application: Rabah Abdul Khalek (HDA4C6CU89)"
     else
-        # Fall back to Apple Development for local builds
-        SIGNING_IDENTITY="Apple Development"
+        echo "❌ ERROR: Developer ID Application certificate not found!"
+        echo "   Notarization requires a Developer ID Application certificate."
+        echo "   Available certificates:"
+        security find-identity -v -p codesigning
+        exit 1
     fi
 
     echo "Using signing identity: $SIGNING_IDENTITY"
@@ -79,14 +83,14 @@ if [ -f "$LIB_PATH" ]; then
                 --options runtime \
                 --timestamp \
                 "$dylib" || {
-                echo "⚠️  Warning: Failed to sign $(basename "$dylib")"
-                echo "  Continuing with ad-hoc signature..."
-                codesign --force --sign - "$dylib"
+                echo "❌ ERROR: Failed to sign $(basename "$dylib")"
+                echo "   All libraries must be properly signed for notarization."
+                exit 1
             }
         fi
     done
 
-    echo "✅ All libraries signed"
+    echo "✅ All libraries signed with Developer ID"
 else
     echo "❌ Build failed: libllama.dylib not found"
     echo "Expected location: $LIB_PATH"

@@ -6,12 +6,12 @@
 //  Optimized for low-latency operations on Apple Silicon
 //
 
-import CoreData
+@preconcurrency import CoreData
 import Foundation
 
 /// Manages the Core Data stack for storing notes, embeddings, and tags
 /// Singleton pattern ensures single source of truth for data
-class PersistenceController: ObservableObject {
+final class PersistenceController: ObservableObject, @unchecked Sendable {
     static let shared = PersistenceController()
 
     let container: NSPersistentContainer
@@ -201,7 +201,7 @@ class PersistenceController: ObservableObject {
 
     /// Creates a background context for heavy operations (like embedding generation)
     /// - Returns: A new background context
-    func newBackgroundContext() -> NSManagedObjectContext {
+    nonisolated func newBackgroundContext() -> NSManagedObjectContext {
         let context = container.newBackgroundContext()
         context.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
         return context
@@ -221,13 +221,14 @@ class PersistenceController: ObservableObject {
         deleteRequest.resultType = .resultTypeObjectIDs
 
         let context = newBackgroundContext()
+        let viewContext = container.viewContext
 
         try await context.perform {
             let result = try context.execute(deleteRequest) as? NSBatchDeleteResult
             guard let objectIDs = result?.result as? [NSManagedObjectID] else { return }
 
             let changes = [NSDeletedObjectsKey: objectIDs]
-            NSManagedObjectContext.mergeChanges(fromRemoteContextSave: changes, into: [self.container.viewContext])
+            NSManagedObjectContext.mergeChanges(fromRemoteContextSave: changes, into: [viewContext])
         }
     }
 

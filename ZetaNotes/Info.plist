@@ -69,7 +69,8 @@
 			<string>ZetaNotes</string>
 			<key>NSSendTypes</key>
 			<array>
-				<string>NSStringPboardType</string>
+				<string>public.utf8-plain-text</string>
+				<string>public.plain-text</string>
 			</array>
 		</dict>
 	</array>
@@ -144,6 +145,13 @@
 	<true/>
 	<key>SUScheduledCheckInterval</key>
 	<integer>86400</integer>
+
+	<!-- Privacy - Usage Descriptions -->
+	<!-- These are defensive - included for future-proofing even if not currently needed -->
+	<key>NSNetworkUsageDescription</key>
+	<string>ZetaNotes downloads AI models from Hugging Face to provide offline AI features.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>ZetaNotes may access your local network for future collaboration features.</string>
 
 	<!-- Accessibility -->
 	<key>NSSupportsAutomaticTermination</key>

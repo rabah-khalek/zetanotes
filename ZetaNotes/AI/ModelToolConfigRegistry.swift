@@ -137,7 +137,7 @@ private enum LlamaThreeTwoConfigs {
 
         case .translate:
             return LLMConfig(
-                prompt: "Translate to {language}. Return only the translation with no preamble.",
+                prompt: "Translate to {language}. Return only the translation to {language} with no preamble.",
                 temperature: 0.3,
                 maxTokens: nil
             )
