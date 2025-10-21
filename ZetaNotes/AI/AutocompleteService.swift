@@ -38,8 +38,7 @@ class AutocompleteService: AIService {
 
         config = AIGenerationConfig(
             temperature: toolConfig.temperature,
-            maxTokens: toolConfig.maxTokens ?? 100,
-            stopSequences: toolConfig.stopSequences
+            maxTokens: toolConfig.maxTokens ?? 100
         )
     }
 

@@ -40,8 +40,6 @@ enum ModelToolConfigRegistry {
 /// - Best temp range: 0.2-0.7
 /// - Stop sequences: <|im_end|> (primary ChatML end token, token ID 32002)
 private enum TinyLlamaConfigs {
-    static let stopSequences = ["<|im_end|>", "</s>", "_id|>"]
-
     static func config(for toolType: ToolType) -> LLMConfig {
         switch toolType {
         case .autocomplete:
@@ -54,8 +52,7 @@ private enum TinyLlamaConfigs {
                 Continuation:
                 """,
                 temperature: 0.3,
-                maxTokens: 20,
-                stopSequences: ["\n\n", "\n\n\n", "</s>", "<|im_end|>"]
+                maxTokens: 20
             )
 
         case .patch:
@@ -71,8 +68,7 @@ private enum TinyLlamaConfigs {
 
                 """,
                 temperature: 0.05,
-                maxTokens: nil,
-                stopSequences: stopSequences
+                maxTokens: nil
             )
 
         case .rephrase:
@@ -88,8 +84,7 @@ private enum TinyLlamaConfigs {
 
                 """,
                 temperature: 0.2,
-                maxTokens: nil,
-                stopSequences: stopSequences
+                maxTokens: nil
             )
 
         case .summarize:
@@ -105,8 +100,7 @@ private enum TinyLlamaConfigs {
 
                 """,
                 temperature: 0.2,
-                maxTokens: 150,
-                stopSequences: stopSequences
+                maxTokens: 150
             )
 
         case .translate:
@@ -123,7 +117,6 @@ private enum TinyLlamaConfigs {
                 """,
                 temperature: 0.05, // Optimized for accuracy
                 maxTokens: nil, // Dynamic based on input length
-                stopSequences: stopSequences
             )
 
         case .titleGeneration:
@@ -139,16 +132,14 @@ private enum TinyLlamaConfigs {
 
                 """,
                 temperature: 0.2,
-                maxTokens: 30,
-                stopSequences: stopSequences // Only model-specific end tokens, no \n\n
+                maxTokens: 30
             )
 
         case .custom:
             return LLMConfig(
                 prompt: "",
                 temperature: 0.7,
-                maxTokens: nil,
-                stopSequences: stopSequences
+                maxTokens: nil
             )
         }
     }
@@ -165,112 +156,48 @@ private enum TinyLlamaConfigs {
 /// - Stop sequences: <|eot_id|> (token 128009, end of turn), <|end_of_text|> (token 128001, EOS)
 /// - Training: Knowledge distillation from Llama 3.1 8B/70B + RLHF alignment
 private enum LlamaThreeTwoConfigs {
-    static let stopSequences = [
-        "<|eot_id|>", // Primary end-of-turn token (128009)
-        "<|end_of_text|>", // End-of-sequence token (128001)
-        "_id|>" // Catch incomplete header tokens
-    ]
-
     static func config(for toolType: ToolType) -> LLMConfig {
         switch toolType {
         case .autocomplete:
             return LLMConfig(
-                prompt: """
-                <|begin_of_text|><|start_header_id|>system<|end_header_id|>
-
-                Continue writing. Output ONLY the next few words. Do not add commentary, explanations, or meta-observations.<|eot_id|><|start_header_id|>user<|end_header_id|>
-
-                {content}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
-
-
-                """,
-                temperature: 0.2, // Significantly reduced - 1B models hallucinate less at very low temps
-                maxTokens: 25, // Reduced to force shorter, more focused completions
-                stopSequences: ["<|eot_id|>", "<|end_of_text|>", "\n\n", "\n", "<|start_header_id|>"] // Stop at paragraph breaks and chat tokens
+                prompt: "Continue writing. Return only the next 3-8 words that naturally follow.",
+                temperature: 0.4,
+                maxTokens: 30
             )
 
         case .patch:
             return LLMConfig(
-                prompt: """
-                <|begin_of_text|><|start_header_id|>system<|end_header_id|>
-
-                Fix grammar and spelling. Output ONLY the corrected text. Do not add: explanations, offers to help,
-                "Let me know", "Please", "I'm here", or any follow-up text.<|eot_id|><|start_header_id|>user<|end_header_id|>
-
-                {content}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
-
-                Fixed Text:
-                """,
-                temperature: 0.05,
-                maxTokens: nil,
-                stopSequences: stopSequences
+                prompt: "Fix all spelling and grammar errors. Return only the corrected text with no other commentary.",
+                temperature: 0.2,
+                maxTokens: nil
             )
 
         case .rephrase:
             return LLMConfig(
-                prompt: """
-                <|begin_of_text|><|start_header_id|>system<|end_header_id|>
-
-                Rewrite this text for clarity. Output ONLY the rewritten text. Do not add: preambles, offers to help, follow-up questions, "Please", "Let me know", or any extra sentences.<|eot_id|><|start_header_id|>user<|end_header_id|>
-
-                {content}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
-
-                Rephrased Text:
-                """,
-                temperature: 0.2,
-                maxTokens: nil,
-                stopSequences: stopSequences
+                prompt: "Rewrite this text more clearly. Return only the rewritten version with no explanation.",
+                temperature: 0.25,
+                maxTokens: nil
             )
 
         case .summarize:
             return LLMConfig(
-                prompt: """
-                <|begin_of_text|><|start_header_id|>system<|end_header_id|>
-
-                Write a 1-2 sentence summary. Output ONLY the summary. Do not add: commentary, offers to help, "You're", "Please", "Let me know", "I'm here", or follow-up questions.<|eot_id|><|start_header_id|>user<|end_header_id|>
-
-                {content}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
-
-                Summary:
-                """,
-                temperature: 0.1,
-                maxTokens: 80,
-                stopSequences: stopSequences
+                prompt: "Write a 1-2 sentence summary. Return only the summary with no preamble.",
+                temperature: 0.2,
+                maxTokens: 60
             )
 
         case .translate:
             return LLMConfig(
-                prompt: """
-                <|begin_of_text|><|start_header_id|>system<|end_header_id|>
-
-                Translate to {language}. Output ONLY the translation. Do not add: explanations, offers to help, "Please", "Let me know", or any text beyond the translation.<|eot_id|><|start_header_id|>user<|end_header_id|>
-
-                {content}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
-
-                Translation to {language}:
-                """,
-                temperature: 0.05,
-                maxTokens: nil,
-                stopSequences: stopSequences
+                prompt: "Translate to {language}. Return only the {language} translation with no English words or explanations.",
+                temperature: 0.3,
+                maxTokens: nil
             )
 
         case .titleGeneration:
             return LLMConfig(
-                prompt: """
-                <|begin_of_text|><|start_header_id|>system<|end_header_id|>
-
-                Generate a concise title (2-5 words). Output ONLY the title keywords. Do not add: sentences, questions, "Please", "Let me know", or any follow-up text.<|eot_id|><|start_header_id|>user<|end_header_id|>
-
-                {content}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
-
-                Title:
-                """,
-                temperature: 0.3, // Higher temp for more varied outputs
-                maxTokens: 12,
-                stopSequences: [
-                    "<|eot_id|>",
-                    "\n"
-                ]
+                prompt: "Generate a 2-5 word title. Return only the title with no punctuation or explanation.",
+                temperature: 0.3,
+                maxTokens: 12
             )
 
         case .custom:
@@ -282,8 +209,7 @@ private enum LlamaThreeTwoConfigs {
 
                 """,
                 temperature: 0.3, // Reduced from 0.6 - 1B model benefits from lower default temp
-                maxTokens: nil,
-                stopSequences: stopSequences
+                maxTokens: nil
             )
         }
     }
@@ -297,8 +223,6 @@ private enum LlamaThreeTwoConfigs {
 /// - Excellent at structured output and long context
 /// - Stop sequences: <|im_end|> (token 151645, turn end), <|endoftext|> (token 151643, EOS)
 private enum QwenTwoFiveConfigs {
-    static let stopSequences = ["<|im_end|>", "<|endoftext|>", "_id|>"]
-
     static func config(for toolType: ToolType) -> LLMConfig {
         switch toolType {
         case .autocomplete:
@@ -313,8 +237,7 @@ private enum QwenTwoFiveConfigs {
                 <|im_start|>assistant
                 """,
                 temperature: 0.7,
-                maxTokens: 50,
-                stopSequences: ["<|im_end|>", "\n\n"]
+                maxTokens: 50
             )
 
         case .patch:
@@ -330,8 +253,7 @@ private enum QwenTwoFiveConfigs {
 
                 """,
                 temperature: 0.05,
-                maxTokens: nil,
-                stopSequences: stopSequences
+                maxTokens: nil
             )
 
         case .rephrase:
@@ -347,8 +269,7 @@ private enum QwenTwoFiveConfigs {
 
                 """,
                 temperature: 0.3,
-                maxTokens: nil,
-                stopSequences: stopSequences
+                maxTokens: nil
             )
 
         case .summarize:
@@ -364,8 +285,7 @@ private enum QwenTwoFiveConfigs {
 
                 """,
                 temperature: 0.2,
-                maxTokens: 150,
-                stopSequences: stopSequences
+                maxTokens: 150
             )
 
         case .translate:
@@ -381,8 +301,7 @@ private enum QwenTwoFiveConfigs {
 
                 """,
                 temperature: 0.1,
-                maxTokens: nil,
-                stopSequences: stopSequences
+                maxTokens: nil
             )
 
         case .titleGeneration:
@@ -397,8 +316,7 @@ private enum QwenTwoFiveConfigs {
                 <|im_start|>assistant
                 """,
                 temperature: 0.2,
-                maxTokens: 30,
-                stopSequences: ["<|im_end|>"] // Only model end token, trim newlines in post-processing
+                maxTokens: 30
             )
 
         case .custom:
@@ -410,8 +328,7 @@ private enum QwenTwoFiveConfigs {
 
                 """,
                 temperature: 0.7,
-                maxTokens: nil,
-                stopSequences: stopSequences
+                maxTokens: nil
             )
         }
     }
@@ -425,8 +342,6 @@ private enum QwenTwoFiveConfigs {
 /// - Optimized for on-device applications
 /// - Stop sequences: <|im_end|> (primary ChatML end token), </s> (EOS)
 private enum SmolLMTwoConfigs {
-    static let stopSequences = ["<|im_end|>", "</s>", "_id|>"]
-
     static func config(for toolType: ToolType) -> LLMConfig {
         switch toolType {
         case .autocomplete:
@@ -441,8 +356,7 @@ private enum SmolLMTwoConfigs {
                 <|im_start|>assistant
                 """,
                 temperature: 0.5,
-                maxTokens: 50,
-                stopSequences: ["<|im_end|>", "\n\n"]
+                maxTokens: 50
             )
 
         case .patch:
@@ -458,8 +372,7 @@ private enum SmolLMTwoConfigs {
 
                 """,
                 temperature: 0.05,
-                maxTokens: nil,
-                stopSequences: stopSequences
+                maxTokens: nil
             )
 
         case .rephrase:
@@ -475,8 +388,7 @@ private enum SmolLMTwoConfigs {
 
                 """,
                 temperature: 0.2,
-                maxTokens: nil,
-                stopSequences: stopSequences
+                maxTokens: nil
             )
 
         case .summarize:
@@ -492,8 +404,7 @@ private enum SmolLMTwoConfigs {
 
                 """,
                 temperature: 0.2,
-                maxTokens: 150,
-                stopSequences: stopSequences
+                maxTokens: 150
             )
 
         case .translate:
@@ -509,8 +420,7 @@ private enum SmolLMTwoConfigs {
 
                 """,
                 temperature: 0.1,
-                maxTokens: nil,
-                stopSequences: stopSequences
+                maxTokens: nil
             )
 
         case .titleGeneration:
@@ -526,8 +436,7 @@ private enum SmolLMTwoConfigs {
 
                 """,
                 temperature: 0.2,
-                maxTokens: 30,
-                stopSequences: ["<|im_end|>"] // Only model end token, trim newlines in post-processing
+                maxTokens: 30
             )
 
         case .custom:
@@ -539,8 +448,7 @@ private enum SmolLMTwoConfigs {
 
                 """,
                 temperature: 0.5,
-                maxTokens: nil,
-                stopSequences: stopSequences
+                maxTokens: nil
             )
         }
     }
@@ -554,74 +462,55 @@ private enum SmolLMTwoConfigs {
 /// - Best for QA, chat, and code
 /// - Stop sequences: <|endoftext|> (EOS token), </s>, common format markers
 private enum Phi2Configs {
-    static let stopSequences = [
-        "<|endoftext|>",
-        "</s>",
-        "_id|>",
-        "\n\nInstruct:",
-        "\n\nOutput:",
-        "\n\nHuman:",
-        "\n\nText:",
-        "\n\nNote:",
-        "\n\nExplanation:"
-    ]
-
     static func config(for toolType: ToolType) -> LLMConfig {
         switch toolType {
         case .autocomplete:
             return LLMConfig(
                 prompt: "Instruct: Continue the following text naturally. Write only the next few words.\n\n{content}\n\nOutput:",
                 temperature: 0.6,
-                maxTokens: 50,
-                stopSequences: ["\n\n"] + stopSequences
+                maxTokens: 50
             )
 
         case .patch:
             return LLMConfig(
                 prompt: "Instruct: Fix all spelling and grammar errors in the following text. Preserve the original meaning. Return only the corrected text.\n\n{content}\n\nOutput:",
                 temperature: 0.05,
-                maxTokens: nil,
-                stopSequences: stopSequences
+                maxTokens: nil
             )
 
         case .rephrase:
             return LLMConfig(
                 prompt: "Instruct: Rewrite the following text more clearly and concisely. Return only the rewritten text.\n\n{content}\n\nOutput:",
                 temperature: 0.3,
-                maxTokens: nil,
-                stopSequences: stopSequences
+                maxTokens: nil
             )
 
         case .summarize:
             return LLMConfig(
                 prompt: "Instruct: Read the following text and create a concise summary in 1-2 sentences. Return only the summary.\n\n{content}\n\nOutput:",
                 temperature: 0.2,
-                maxTokens: 150,
-                stopSequences: stopSequences
+                maxTokens: 150
             )
 
         case .translate:
             return LLMConfig(
                 prompt: "Instruct: Translate the following text to {language}. Provide only the translation.\n\n{content}\n\nOutput:",
                 temperature: 0.1,
-                maxTokens: nil,
-                stopSequences: stopSequences
+                maxTokens: nil
             )
 
         case .titleGeneration:
             return LLMConfig(
                 prompt: "Instruct: Create a short title (1-5 words) that captures the main idea of the following text. Return only the title.\n\n{content}\n\nOutput:",
                 temperature: 0.2,
-                maxTokens: 30,
-                stopSequences: stopSequences // Only model-specific end tokens, trim newlines in post-processing
+                maxTokens: 30
             )
 
         case .custom:
             return LLMConfig(
                 prompt: "Instruct: ",
                 temperature: 0.6,
-                maxTokens: nil,
-                stopSequences: stopSequences
+                maxTokens: nil
             )
         }
     }
@@ -634,8 +523,6 @@ private enum Phi2Configs {
 /// - System instructions go in user prompt (no separate system role)
 /// - Stop sequences: <end_of_turn> (turn marker), <eos> (end of stream, token ID 1)
 private enum GemmaTwoConfigs {
-    static let stopSequences = ["<end_of_turn>", "<eos>", "_id|>"]
-
     static func config(for toolType: ToolType) -> LLMConfig {
         switch toolType {
         case .autocomplete:
@@ -648,8 +535,7 @@ private enum GemmaTwoConfigs {
                 <start_of_turn>model
                 """,
                 temperature: 0.6,
-                maxTokens: 50,
-                stopSequences: ["<end_of_turn>", "\n\n"]
+                maxTokens: 50
             )
 
         case .patch:
@@ -665,8 +551,7 @@ private enum GemmaTwoConfigs {
 
                 """,
                 temperature: 0.05,
-                maxTokens: nil,
-                stopSequences: stopSequences
+                maxTokens: nil
             )
 
         case .rephrase:
@@ -682,8 +567,7 @@ private enum GemmaTwoConfigs {
 
                 """,
                 temperature: 0.3,
-                maxTokens: nil,
-                stopSequences: stopSequences
+                maxTokens: nil
             )
 
         case .summarize:
@@ -699,8 +583,7 @@ private enum GemmaTwoConfigs {
 
                 """,
                 temperature: 0.2,
-                maxTokens: 150,
-                stopSequences: stopSequences
+                maxTokens: 150
             )
 
         case .translate:
@@ -716,8 +599,7 @@ private enum GemmaTwoConfigs {
 
                 """,
                 temperature: 0.1,
-                maxTokens: nil,
-                stopSequences: stopSequences
+                maxTokens: nil
             )
 
         case .titleGeneration:
@@ -733,8 +615,7 @@ private enum GemmaTwoConfigs {
 
                 """,
                 temperature: 0.2,
-                maxTokens: 30,
-                stopSequences: ["<end_of_turn>"] // Only model end token, trim newlines in post-processing
+                maxTokens: 30
             )
 
         case .custom:
@@ -745,8 +626,7 @@ private enum GemmaTwoConfigs {
 
                 """,
                 temperature: 0.6,
-                maxTokens: nil,
-                stopSequences: stopSequences
+                maxTokens: nil
             )
         }
     }
@@ -759,8 +639,6 @@ private enum GemmaTwoConfigs {
 /// - 128K context, trained on Python/common packages
 /// - Stop tokens: <|end|> (32007), <|endoftext|> (32000), <|assistant|> (32001)
 private enum PhiThreeFiveConfigs {
-    static let stopSequences = ["<|end|>", "<|endoftext|>", "<|assistant|>", "_id|>"]
-
     static func config(for toolType: ToolType) -> LLMConfig {
         switch toolType {
         case .autocomplete:
@@ -775,8 +653,7 @@ private enum PhiThreeFiveConfigs {
                 <|assistant|>
                 """,
                 temperature: 0.6,
-                maxTokens: 50,
-                stopSequences: ["<|end|>", "\n\n"]
+                maxTokens: 50
             )
 
         case .patch:
@@ -792,8 +669,7 @@ private enum PhiThreeFiveConfigs {
 
                 """,
                 temperature: 0.05,
-                maxTokens: nil,
-                stopSequences: stopSequences
+                maxTokens: nil
             )
 
         case .rephrase:
@@ -809,8 +685,7 @@ private enum PhiThreeFiveConfigs {
 
                 """,
                 temperature: 0.3,
-                maxTokens: nil,
-                stopSequences: stopSequences
+                maxTokens: nil
             )
 
         case .summarize:
@@ -826,8 +701,7 @@ private enum PhiThreeFiveConfigs {
 
                 """,
                 temperature: 0.2,
-                maxTokens: 150,
-                stopSequences: stopSequences
+                maxTokens: 150
             )
 
         case .translate:
@@ -843,8 +717,7 @@ private enum PhiThreeFiveConfigs {
 
                 """,
                 temperature: 0.1,
-                maxTokens: nil,
-                stopSequences: stopSequences
+                maxTokens: nil
             )
 
         case .titleGeneration:
@@ -860,8 +733,7 @@ private enum PhiThreeFiveConfigs {
 
                 """,
                 temperature: 0.2,
-                maxTokens: 30,
-                stopSequences: ["<|end|>"] // Only model end token, trim newlines in post-processing
+                maxTokens: 30
             )
 
         case .custom:
@@ -873,8 +745,7 @@ private enum PhiThreeFiveConfigs {
 
                 """,
                 temperature: 0.6,
-                maxTokens: nil,
-                stopSequences: stopSequences
+                maxTokens: nil
             )
         }
     }

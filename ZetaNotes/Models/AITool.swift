@@ -109,12 +109,6 @@ struct AITool: Identifiable, Codable, Equatable {
         set { llmConfig.maxTokens = newValue }
     }
 
-    /// Convenience accessor for stopSequences
-    var stopSequences: [String] {
-        get { llmConfig.stopSequences }
-        set { llmConfig.stopSequences = newValue }
-    }
-
     mutating func touch() {
         modifiedAt = Date()
     }

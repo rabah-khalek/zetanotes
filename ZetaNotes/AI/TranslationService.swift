@@ -19,19 +19,14 @@ class TranslationService: AIService {
 
     init(llmService: LLMInferenceService) {
         self.llmService = llmService
+        // Get model-specific optimized config from registry
+        let toolConfig = ModelToolConfigRegistry.getConfig(
+            for: AIEngine.shared.selectedModel,
+            toolType: .translate
+        )
         config = AIGenerationConfig(
-            temperature: 0.1, // REDUCED from 0.3 - translation needs high accuracy, low creativity
-            maxTokens: 512, // Will be overridden dynamically per request
-            stopSequences: [
-                // Note: </s> is handled natively by llama.cpp (llama_vocab_is_eog)
-                "<|user|>", // Prevent fake user messages
-                "<|system|>", // Prevent fake system messages
-                "\n\nText:", // Stop if it tries to repeat the input prompt
-                "\n\nOutput:", // Stop if it hallucinates continuation
-                "\n---\n`", // Service delimiter start
-                "<|end_header", // Llama 3.2 mangled chat template marker
-                "</|end_header" // Another mangled variant
-            ]
+            temperature: toolConfig.temperature,
+            maxTokens: toolConfig.maxTokens
         )
     }
 

@@ -9,7 +9,7 @@
 import Foundation
 
 /// Configuration for LLM text generation
-/// Contains prompt, temperature, token limits, and stop sequences
+/// Contains prompt, temperature, and token limits
 struct LLMConfig: Codable, Equatable {
     /// The prompt template to use for generation
     var prompt: String
@@ -24,18 +24,13 @@ struct LLMConfig: Codable, Equatable {
     /// Maximum number of tokens to generate (nil = dynamic based on input)
     var maxTokens: Int?
 
-    /// Sequences that trigger generation to stop
-    var stopSequences: [String]
-
     init(
         prompt: String,
         temperature: Float,
-        maxTokens: Int? = nil,
-        stopSequences: [String] = []
+        maxTokens: Int? = nil
     ) {
         self.prompt = prompt
         self.temperature = temperature
         self.maxTokens = maxTokens
-        self.stopSequences = stopSequences
     }
 }

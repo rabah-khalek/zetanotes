@@ -31,109 +31,109 @@ struct FirstRunModelSetupView: View {
         VStack(spacing: 0) {
             // App Icon with gradient background
             ZStack {
-                    // Gradient circle background
-                    Circle()
-                        .fill(
-                            LinearGradient(
-                                gradient: Gradient(colors: [
-                                    Color.blue.opacity(0.1),
-                                    Color.purple.opacity(0.1)
-                                ]),
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
+                // Gradient circle background
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            gradient: Gradient(colors: [
+                                Color.blue.opacity(0.1),
+                                Color.purple.opacity(0.1)
+                            ]),
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
                         )
-                        .frame(width: 80, height: 80)
-                        .blur(radius: 10)
-
-                    Image(nsImage: NSImage(named: "AppIcon") ?? NSImage())
-                        .resizable()
-                        .frame(width: 70, height: 70)
-                        .cornerRadius(16)
-                        .shadow(color: Color.black.opacity(0.15), radius: 10, x: 0, y: 5)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 16)
-                                .strokeBorder(
-                                    LinearGradient(
-                                        gradient: Gradient(colors: [
-                                            Color.white.opacity(0.5),
-                                            Color.white.opacity(0.1)
-                                        ]),
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    ),
-                                    lineWidth: 1
-                                )
-                        )
-                }
-                .padding(.top, 12)
-
-                // Welcome Text
-                VStack(spacing: 2) {
-                    Text("Welcome to ZetaNotes")
-                        .font(.system(size: 28, weight: .bold))
-                        .padding(.top, 8)
-                        .foregroundStyle(
-                            LinearGradient(
-                                gradient: Gradient(colors: [.primary, .primary.opacity(0.8)]),
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-
-                    Text("Privacy-first note-taking with offline AI")
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundColor(.secondary)
-
-                    HStack(spacing: 4) {
-                        Image(systemName: "lock.shield.fill")
-                            .font(.system(size: 11))
-                            .foregroundColor(.green)
-                        Text("All AI processing happens on your device")
-                            .font(.system(size: 13))
-                            .foregroundColor(.secondary.opacity(0.9))
-                    }
-                    .padding(.top, 2)
-                    .padding(.bottom, 16)
-                }
-
-                // Setup Content
-                VStack(spacing: 12) {
-                    switch viewState {
-                    case .initial:
-                        initialView
-                    case .downloading:
-                        downloadingView
-                    case .completed:
-                        completedView
-                    case .error:
-                        errorView
-                    case .skipped:
-                        skippedView
-                    }
-                }
-                .frame(width: 600)
-
-                Spacer()
-                    .frame(height: 12)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(
-                ZStack {
-                    Color(nsColor: .windowBackgroundColor)
-
-                    // Subtle gradient overlay
-                    LinearGradient(
-                        gradient: Gradient(colors: [
-                            Color.purple.opacity(0.02),
-                            Color.clear,
-                            Color.blue.opacity(0.02)
-                        ]),
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
                     )
+                    .frame(width: 80, height: 80)
+                    .blur(radius: 10)
+
+                Image(nsImage: NSImage(named: "AppIcon") ?? NSImage())
+                    .resizable()
+                    .frame(width: 70, height: 70)
+                    .cornerRadius(16)
+                    .shadow(color: Color.black.opacity(0.15), radius: 10, x: 0, y: 5)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .strokeBorder(
+                                LinearGradient(
+                                    gradient: Gradient(colors: [
+                                        Color.white.opacity(0.5),
+                                        Color.white.opacity(0.1)
+                                    ]),
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 1
+                            )
+                    )
+            }
+            .padding(.top, 12)
+
+            // Welcome Text
+            VStack(spacing: 2) {
+                Text("Welcome to ZetaNotes")
+                    .font(.system(size: 28, weight: .bold))
+                    .padding(.top, 8)
+                    .foregroundStyle(
+                        LinearGradient(
+                            gradient: Gradient(colors: [.primary, .primary.opacity(0.8)]),
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+
+                Text("Privacy-first note-taking with offline AI")
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundColor(.secondary)
+
+                HStack(spacing: 4) {
+                    Image(systemName: "lock.shield.fill")
+                        .font(.system(size: 11))
+                        .foregroundColor(.green)
+                    Text("All AI processing happens on your device")
+                        .font(.system(size: 13))
+                        .foregroundColor(.secondary.opacity(0.9))
                 }
-            )
+                .padding(.top, 2)
+                .padding(.bottom, 16)
+            }
+
+            // Setup Content
+            VStack(spacing: 12) {
+                switch viewState {
+                case .initial:
+                    initialView
+                case .downloading:
+                    downloadingView
+                case .completed:
+                    completedView
+                case .error:
+                    errorView
+                case .skipped:
+                    skippedView
+                }
+            }
+            .frame(width: 600)
+
+            Spacer()
+                .frame(height: 12)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(
+            ZStack {
+                Color(nsColor: .windowBackgroundColor)
+
+                // Subtle gradient overlay
+                LinearGradient(
+                    gradient: Gradient(colors: [
+                        Color.purple.opacity(0.02),
+                        Color.clear,
+                        Color.blue.opacity(0.02)
+                    ]),
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            }
+        )
     }
 
     // MARK: - Initial View

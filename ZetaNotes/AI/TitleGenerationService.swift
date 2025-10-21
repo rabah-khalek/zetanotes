@@ -24,14 +24,14 @@ class TitleGenerationService: AIService {
 
     init(llmService: LLMInferenceService) {
         self.llmService = llmService
+        // Get model-specific optimized config from registry
+        let toolConfig = ModelToolConfigRegistry.getConfig(
+            for: AIEngine.shared.selectedModel,
+            toolType: .titleGeneration
+        )
         config = AIGenerationConfig(
-            temperature: 0.2, // REDUCED from 0.3 for more focused titles
-            maxTokens: Config.maxTokens,
-            stopSequences: [
-                "\n", // Stop at first newline for single-line titles
-                "<|user|>", // Prevent fake user messages
-                "<|system|>" // Prevent fake system messages
-            ]
+            temperature: toolConfig.temperature,
+            maxTokens: toolConfig.maxTokens ?? Config.maxTokens
         )
     }
 

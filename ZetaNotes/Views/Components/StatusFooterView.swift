@@ -41,6 +41,12 @@ struct StatusFooterView: View {
                     separator
                 }
 
+                // Performance metrics (tokens/sec)
+                if systemMonitor.tokensPerSecond > 0 {
+                    performanceBadge
+                    separator
+                }
+
                 systemMonitorBadge
             }
             .padding(.leading, 12)
@@ -153,7 +159,35 @@ struct StatusFooterView: View {
                         .strokeBorder(Color.purple.opacity(0.2), lineWidth: 0.5)
                 )
         )
-        .help("Active AI Model: \(systemMonitor.activeModel)")
+        .help(systemMonitor.modelMetadataTooltip
+            .isEmpty ? "Active AI Model: \(systemMonitor.activeModel)" : systemMonitor.modelMetadataTooltip)
+    }
+
+    private var performanceBadge: some View {
+        HStack(spacing: 4) {
+            Image(systemName: "speedometer")
+                .font(.system(size: 9))
+                .foregroundColor(.green)
+
+            Text(String(format: "%.1f", systemMonitor.tokensPerSecond))
+                .font(.system(size: 10, weight: .medium, design: .monospaced))
+                .foregroundColor(.primary)
+
+            Text("t/s")
+                .font(.system(size: 8, weight: .medium))
+                .foregroundColor(.secondary)
+        }
+        .padding(.horizontal, 7)
+        .padding(.vertical, 4)
+        .background(
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color.green.opacity(0.08))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 4)
+                        .strokeBorder(Color.green.opacity(0.2), lineWidth: 0.5)
+                )
+        )
+        .help("Generation speed: \(String(format: "%.1f", systemMonitor.tokensPerSecond)) tokens per second")
     }
 
     private var systemMonitorBadge: some View {

@@ -173,6 +173,18 @@ jobs:
           CHECKSUM=$(cat "$SHA_FILE")
           echo "CHECKSUM=$CHECKSUM" >> $GITHUB_OUTPUT
 
+          # Extract notarization submission ID from log
+          NOTARIZATION_LOG="$BUILD_DIR/notarization.log"
+          if [ -f "$NOTARIZATION_LOG" ]; then
+            SUBMISSION_ID=$(grep -o "id: [a-f0-9-]*" "$NOTARIZATION_LOG" | head -1 | awk '{print $2}')
+            if [ -n "$SUBMISSION_ID" ]; then
+              echo "SUBMISSION_ID=$SUBMISSION_ID" >> $GITHUB_OUTPUT
+              echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+              echo "📋 Notarization Submission ID: $SUBMISSION_ID"
+              echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            fi
+          fi
+
       - name: Generate Sparkle EdDSA signature
         id: signature
         env:

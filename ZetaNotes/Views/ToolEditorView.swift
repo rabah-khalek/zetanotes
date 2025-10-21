@@ -21,7 +21,6 @@ struct ToolEditorView: View {
     @State private var shortcutError: String?
     @State private var nameError: String?
     @State private var showAdvanced = false
-    @State private var newStopSequence = ""
 
     init(
         tool: AITool,
@@ -303,102 +302,6 @@ struct ToolEditorView: View {
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
-
-                            // Stop Sequences
-                            VStack(alignment: .leading, spacing: 8) {
-                                HStack {
-                                    Text("Stop Sequences")
-                                        .font(.system(size: 13, weight: .medium))
-
-                                    Spacer()
-
-                                    if !isReadOnly {
-                                        Button(action: {
-                                            if !newStopSequence.isEmpty {
-                                                tool.stopSequences.append(newStopSequence)
-                                                newStopSequence = ""
-                                            }
-                                        }) {
-                                            Image(systemName: "plus.circle.fill")
-                                                .font(.system(size: 14))
-                                                .foregroundColor(.blue)
-                                        }
-                                        .buttonStyle(.plain)
-                                        .help("Add stop sequence")
-                                        .disabled(newStopSequence.isEmpty)
-                                    }
-                                }
-
-                                Text("Generation stops when these patterns are encountered")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-
-                                // Add new stop sequence field
-                                if !isReadOnly {
-                                    HStack(spacing: 8) {
-                                        TextField("e.g., \"\\n\\n\" or \"</s>\"", text: $newStopSequence)
-                                            .textFieldStyle(.roundedBorder)
-                                            .font(.system(size: 12, design: .monospaced))
-
-                                        Button(action: {
-                                            if !newStopSequence.isEmpty {
-                                                tool.stopSequences.append(newStopSequence)
-                                                newStopSequence = ""
-                                            }
-                                        }) {
-                                            Text("Add")
-                                                .font(.system(size: 12, weight: .medium))
-                                                .padding(.horizontal, 12)
-                                                .padding(.vertical, 4)
-                                                .background(newStopSequence.isEmpty ? Color.secondary
-                                                    .opacity(0.2) : Color.blue)
-                                                .foregroundColor(newStopSequence.isEmpty ? .secondary : .white)
-                                                .cornerRadius(6)
-                                        }
-                                        .buttonStyle(.plain)
-                                        .disabled(newStopSequence.isEmpty)
-                                    }
-                                }
-
-                                // Existing sequences
-                                if !tool.stopSequences.isEmpty {
-                                    VStack(alignment: .leading, spacing: 6) {
-                                        ForEach(Array(tool.stopSequences.enumerated()), id: \.offset) { index, seq in
-                                            HStack(spacing: 8) {
-                                                Text(escapeStopSequence(seq))
-                                                    .font(.system(size: 11, design: .monospaced))
-                                                    .padding(.horizontal, 10)
-                                                    .padding(.vertical, 6)
-                                                    .background(Color.blue.opacity(0.1))
-                                                    .foregroundColor(.blue)
-                                                    .cornerRadius(6)
-                                                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                                                if !isReadOnly {
-                                                    Button(action: {
-                                                        tool.stopSequences.remove(at: index)
-                                                    }) {
-                                                        Image(systemName: "xmark.circle.fill")
-                                                            .font(.system(size: 14))
-                                                            .foregroundColor(.secondary)
-                                                    }
-                                                    .buttonStyle(.plain)
-                                                    .help("Remove")
-                                                }
-                                            }
-                                        }
-                                    }
-                                    .padding(8)
-                                    .background(Color(nsColor: .controlBackgroundColor).opacity(0.3))
-                                    .cornerRadius(6)
-                                } else {
-                                    Text("No stop sequences defined")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                        .italic()
-                                        .padding(.vertical, 8)
-                                }
-                            }
                         }
                         .padding(16)
                         .background(
@@ -650,7 +553,6 @@ struct ToolEditorView: View {
         tool.prompt = defaultConfig.prompt
         tool.temperature = defaultConfig.temperature
         tool.maxTokens = defaultConfig.maxTokens
-        tool.stopSequences = defaultConfig.stopSequences
 
         // Save the changes immediately
         var updatedTool = tool
@@ -659,14 +561,4 @@ struct ToolEditorView: View {
     }
 
     // MARK: - Helper Functions
-
-    /// Escapes special characters in stop sequences for display
-    /// Converts actual newlines, tabs, etc. to their escaped representations
-    private func escapeStopSequence(_ sequence: String) -> String {
-        return sequence
-            .replacingOccurrences(of: "\\", with: "\\\\")
-            .replacingOccurrences(of: "\n", with: "\\n")
-            .replacingOccurrences(of: "\r", with: "\\r")
-            .replacingOccurrences(of: "\t", with: "\\t")
-    }
 }

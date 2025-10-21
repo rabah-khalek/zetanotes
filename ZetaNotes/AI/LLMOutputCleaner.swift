@@ -14,6 +14,33 @@ enum LLMOutputCleaner {
     static func clean(_ output: String) -> String {
         var cleaned = output.trimmingCharacters(in: .whitespacesAndNewlines)
 
+        // EDGE CASE FIX: Remove partial/broken prompt fragments (e.g., "ize the text" from "Summarize the text")
+        // This happens when the model partially generates its instruction
+        let partialPromptFragments = [
+            "ize the text", "ixed Text", "ephrased Text", "ranslation to",
+            "ummary:", "itle:", "utput ONLY"
+        ]
+        for fragment in partialPromptFragments {
+            if let range = cleaned.range(of: fragment, options: [.caseInsensitive]) {
+                // Remove everything up to and including the fragment
+                cleaned = String(cleaned[range.upperBound...]).trimmingCharacters(in: .whitespacesAndNewlines)
+                break
+            }
+        }
+
+        // EDGE CASE FIX: Remove single letter prefixes (e.g., "T " from "T I decided")
+        // This happens when the model starts generating but gets confused
+        if cleaned.count > 2 {
+            let firstTwoChars = cleaned.prefix(2)
+            if firstTwoChars.count == 2 {
+                let firstChar = firstTwoChars.first!
+                let secondChar = firstTwoChars.dropFirst().first!
+                if firstChar.isUppercase && secondChar == " " {
+                    cleaned = String(cleaned.dropFirst(2)).trimmingCharacters(in: .whitespacesAndNewlines)
+                }
+            }
+        }
+
         // TinyLlama, Qwen 2.5, SmolLM2 (ChatML format)
         cleaned = cleaned.replacingOccurrences(of: "<|im_end|>", with: "")
         cleaned = cleaned.replacingOccurrences(of: "|im_end|>", with: "") // Mangled version
@@ -58,6 +85,14 @@ enum LLMOutputCleaner {
         cleaned = cleaned.replacingOccurrences(of: "<|system|>", with: "")
         cleaned = cleaned.replacingOccurrences(of: "_id|>", with: "")
         cleaned = cleaned.replacingOccurrences(of: "|>", with: "") // Partial artifact
+
+        // Remove trailing incomplete tokens (e.g., "App Notarization<" where < is start of <|eot_id|>)
+        let trailingIncompleteTokens = ["<", "<|", "<|e", "<|eo", "<|eot", "|>", ">"]
+        for token in trailingIncompleteTokens {
+            if cleaned.hasSuffix(token) {
+                cleaned = String(cleaned.dropLast(token.count))
+            }
+        }
 
         return cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
     }

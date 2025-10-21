@@ -26,18 +26,14 @@ class SummarizationService: AIService {
 
     init(llmService: LLMInferenceService) {
         self.llmService = llmService
+        // Get model-specific optimized config from registry
+        let toolConfig = ModelToolConfigRegistry.getConfig(
+            for: AIEngine.shared.selectedModel,
+            toolType: .summarize
+        )
         config = AIGenerationConfig(
-            temperature: 0.2, // REDUCED from 0.3 - lower temp for more focused summaries
-            maxTokens: Config.maxTokens,
-            stopSequences: [
-                // Note: </s> is handled natively by llama.cpp (llama_vocab_is_eog)
-                "<|user|>", // Prevent fake user messages
-                "<|system|>", // Prevent fake system messages
-                "\n\nText:", // Stop if it tries to repeat the input prompt
-                "\n---\n`", // Service delimiter start
-                "<|end_header", // Llama 3.2 mangled chat template marker
-                "</|end_header" // Another mangled variant
-            ]
+            temperature: toolConfig.temperature,
+            maxTokens: toolConfig.maxTokens ?? Config.maxTokens
         )
     }
 

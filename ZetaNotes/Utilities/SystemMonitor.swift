@@ -21,6 +21,8 @@ class SystemMonitor: ObservableObject {
     @Published var memoryPressure: MemoryPressure = .normal
     @Published var inferenceTime: Double = 0.0 // Last AI inference time in ms
     @Published var activeModel: String = "" // Currently loaded model name
+    @Published var tokensPerSecond: Double = 0.0 // Tokens/sec from last generation
+    @Published var modelMetadataTooltip: String = "" // Model metadata for tooltip
 
     // System capabilities
     var totalSystemMemory: Double = 0.0 // Total RAM in MB
@@ -246,10 +248,24 @@ class SystemMonitor: ObservableObject {
         }
     }
 
+    /// Updates model metadata for tooltip display
+    func setModelMetadata(_ metadata: String) {
+        DispatchQueue.main.async {
+            self.modelMetadataTooltip = metadata
+        }
+    }
+
     /// Records an AI inference time
     func recordInference(duration: Double) {
         DispatchQueue.main.async {
             self.inferenceTime = duration
+        }
+    }
+
+    /// Records tokens per second from last generation
+    func recordTokensPerSecond(_ tps: Double) {
+        DispatchQueue.main.async {
+            self.tokensPerSecond = tps
         }
     }
 

@@ -6,9 +6,9 @@
 //  Optimized for Apple Silicon (M1/M2/M3)
 //
 
-import SwiftUI
-import Sparkle
 import AppKit
+import Sparkle
+import SwiftUI
 
 // MARK: - AppDelegate for macOS-specific lifecycle events
 
@@ -69,7 +69,11 @@ struct ZetaNotesApp: App {
 
     init() {
         // Initialize Sparkle updater controller
-        updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
+        updaterController = SPUStandardUpdaterController(
+            startingUpdater: true,
+            updaterDelegate: nil,
+            userDriverDelegate: nil
+        )
 
         // Setup memory pressure monitoring
         setupMemoryPressureHandler()

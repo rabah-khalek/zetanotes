@@ -5,15 +5,15 @@
 //  Sparkle update checking UI
 //
 
-import SwiftUI
 import Sparkle
+import SwiftUI
 
 /// View for manually checking for updates
 struct CheckForUpdatesView: View {
     @ObservedObject private var updaterViewModel: UpdaterViewModel
 
     init(updater: SPUUpdater) {
-        self.updaterViewModel = UpdaterViewModel(updater: updater)
+        updaterViewModel = UpdaterViewModel(updater: updater)
     }
 
     var body: some View {

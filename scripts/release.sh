@@ -121,16 +121,65 @@ print_step "Notarizing with Apple"
 if [ -n "$APPLE_ID" ] && [ -n "$APPLE_TEAM_ID" ] && [ -n "$APPLE_APP_SPECIFIC_PASSWORD" ]; then
     echo "Submitting for notarization..."
 
-    if xcrun notarytool submit "$DMG_NAME" \
+    # Verify DMG exists before submitting
+    if [ ! -f "$DMG_NAME" ]; then
+        print_error "DMG file not found: $DMG_NAME"
+    fi
+
+    echo "File to notarize: $(pwd)/$DMG_NAME"
+
+    # Submit and capture output with verbose logging
+    NOTARIZATION_OUTPUT=$(xcrun notarytool submit "$DMG_NAME" \
+        --verbose \
         --apple-id "$APPLE_ID" \
         --team-id "$APPLE_TEAM_ID" \
         --password "$APPLE_APP_SPECIFIC_PASSWORD" \
-        --wait 2>&1 | grep -q "status: Accepted"; then
+        --wait 2>&1 | tee notarization.log)
 
+    # Extract and display submission ID prominently
+    SUBMISSION_ID=$(echo "$NOTARIZATION_OUTPUT" | grep -o "id: [a-f0-9-]*" | head -1 | awk '{print $2}')
+    if [ -n "$SUBMISSION_ID" ]; then
+        echo ""
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "Submission ID: $SUBMISSION_ID"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo ""
+    fi
+
+    echo "$NOTARIZATION_OUTPUT"
+
+    if echo "$NOTARIZATION_OUTPUT" | grep -q "status: Accepted"; then
         print_success "Notarization successful!"
         xcrun stapler staple "$DMG_NAME" 2>&1 || print_warning "Stapling failed"
     else
+        # Extract submission ID for detailed error log
+        SUBMISSION_ID=$(echo "$NOTARIZATION_OUTPUT" | grep -o "id: [a-f0-9-]*" | head -1 | awk '{print $2}')
+
         print_error "Notarization failed"
+
+        if [ -n "$SUBMISSION_ID" ]; then
+            echo ""
+            echo "Fetching detailed failure log from Apple..."
+            xcrun notarytool log "$SUBMISSION_ID" \
+                --apple-id "$APPLE_ID" \
+                --team-id "$APPLE_TEAM_ID" \
+                --password "$APPLE_APP_SPECIFIC_PASSWORD" \
+                notarization-failure.json 2>/dev/null
+
+            if [ -f "notarization-failure.json" ]; then
+                echo ""
+                echo "Failure details saved to: notarization-failure.json"
+
+                # Try to show key issues if jq is available
+                if command -v jq &> /dev/null; then
+                    echo ""
+                    echo "Issues found:"
+                    jq -r '.issues[]? | "  • [\(.severity)] \(.message)"' notarization-failure.json 2>/dev/null || true
+                fi
+            fi
+        fi
+
+        exit 1
     fi
 else
     print_warning "Skipping notarization (credentials not set)"

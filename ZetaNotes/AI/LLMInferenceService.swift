@@ -259,6 +259,37 @@ class LLMInferenceService: @unchecked Sendable {
     private var currentModel: AIModel = .tinyLlama
     private let inferenceQueue = DispatchQueue(label: "com.zetanotes.inference", qos: .userInitiated)
 
+    // MARK: - Performance Metrics
+
+    /// Performance metrics from last generation
+    struct PerformanceMetrics {
+        let promptTokens: Int
+        let generatedTokens: Int
+        let promptTime: Double // ms
+        let generationTime: Double // ms
+        let tokensPerSecond: Double
+
+        var totalTime: Double {
+            promptTime + generationTime
+        }
+    }
+
+    @Published private(set) var lastPerformanceMetrics: PerformanceMetrics?
+
+    // MARK: - Model Metadata
+
+    /// Model metadata from GGUF file
+    struct ModelMetadata {
+        let parameterCount: UInt64
+        let description: String
+        let contextSize: Int32
+        let embeddingSize: Int32
+        let layerCount: Int32
+        let headCount: Int32
+    }
+
+    private(set) var modelMetadata: ModelMetadata?
+
     // MARK: - Model Loading
 
     /// Loads the specified GGUF model from the app bundle or Application Support
@@ -363,8 +394,14 @@ class LLMInferenceService: @unchecked Sendable {
                     self.sampler = samplerChain
 
                     self.isLoaded = true
+
+                    // Extract model metadata
+                    self.extractModelMetadata()
+
                     print("✅ Model loaded successfully with Metal GPU acceleration")
-                    print("📊 Model specs: Context=\(modelType.maxContextSize) tokens, Batch=\(modelType.optimalBatchSize) tokens")
+                    print(
+                        "📊 Model specs: Context=\(modelType.maxContextSize) tokens, Batch=\(modelType.optimalBatchSize) tokens"
+                    )
 
                     // Log memory AFTER loading
                     var taskInfoAfter = mach_task_basic_info()
@@ -450,18 +487,106 @@ class LLMInferenceService: @unchecked Sendable {
 
     // MARK: - Inference
 
+    /// Generates text using proper chat template formatting
+    /// This is the RECOMMENDED way to generate text - uses model's built-in chat template
+    /// - Parameters:
+    ///   - systemMessage: The system instruction
+    ///   - userMessage: The user's input text
+    ///   - maxTokens: Maximum number of tokens to generate
+    ///   - temperature: Sampling temperature (0.0 = deterministic, 1.0 = creative)
+    ///   - grammar: Optional GBNF grammar string to constrain output format
+    /// - Returns: Generated text
+    func generateWithChatTemplate(
+        systemMessage: String,
+        userMessage: String,
+        maxTokens: Int? = nil,
+        temperature: Float = 0.7,
+        grammar: String? = nil
+    ) async -> String? {
+        guard isLoaded else {
+            print("⚠️ Model not loaded")
+            return nil
+        }
+
+        return await withCheckedContinuation { continuation in
+            inferenceQueue.async { [weak self] in
+                autoreleasepool {
+                    guard let self = self,
+                          let mdl = self.model
+                    else {
+                        continuation.resume(returning: nil)
+                        return
+                    }
+
+                    // Get model's chat template
+                    guard let tmpl = llama_model_chat_template(mdl, nil) else {
+                        print("❌ Model has no chat template")
+                        continuation.resume(returning: nil)
+                        return
+                    }
+
+                    // Build messages array
+                    let systemMsg = systemMessage.withCString { strdup($0) }
+                    let userMsg = userMessage.withCString { strdup($0) }
+
+                    var messages: [llama_chat_message] = [
+                        llama_chat_message(role: "system", content: systemMsg),
+                        llama_chat_message(role: "user", content: userMsg)
+                    ]
+
+                    // Calculate required buffer size
+                    let requiredSize = llama_chat_apply_template(tmpl, &messages, 2, true, nil, 0)
+                    guard requiredSize > 0 else {
+                        free(systemMsg)
+                        free(userMsg)
+                        print("❌ Failed to calculate chat template size")
+                        continuation.resume(returning: nil)
+                        return
+                    }
+
+                    // Allocate buffer and apply template
+                    var buffer = [CChar](repeating: 0, count: Int(requiredSize) + 1)
+                    let actualSize = llama_chat_apply_template(tmpl, &messages, 2, true, &buffer, Int32(buffer.count))
+
+                    free(systemMsg)
+                    free(userMsg)
+
+                    guard actualSize > 0 else {
+                        print("❌ Failed to apply chat template")
+                        continuation.resume(returning: nil)
+                        return
+                    }
+
+                    let prompt = String(cString: buffer)
+                    print("📝 Chat template applied, prompt length: \(prompt.count) chars")
+
+                    // Now call the regular generate function with the formatted prompt
+                    Task {
+                        let result = await self.generate(
+                            prompt: prompt,
+                            maxTokens: maxTokens,
+                            temperature: temperature,
+                            grammar: grammar
+                        )
+                        continuation.resume(returning: result)
+                    }
+                }
+            }
+        }
+    }
+
     /// Generates text completion for the given prompt
     /// - Parameters:
     ///   - prompt: The input text prompt
     ///   - maxTokens: Maximum number of tokens to generate (nil = use model's max context)
     ///   - temperature: Sampling temperature (0.0 = deterministic, 1.0 = creative)
-    ///   - stopSequences: Sequences that stop generation when encountered
+    ///   - grammar: Optional GBNF grammar string to constrain output format (e.g., JSON schema)
     /// - Returns: Generated text
     func generate(
         prompt: String,
         maxTokens: Int? = nil,
         temperature: Float = 0.7,
-        stopSequences: [String] = []
+        grammar: String? = nil
     ) async -> String? {
         guard isLoaded else {
             print("⚠️ Model not loaded")
@@ -489,164 +614,275 @@ class LLMInferenceService: @unchecked Sendable {
                     // This ensures each generation starts with a completely clean slate
                     let mem = llama_get_memory(ctx)
                     llama_memory_clear(mem, true) // Clear both metadata AND data buffer for complete reset
-                    llama_sampler_reset(smpl) // Reset sampler state
-                    print("🧹 Context fully reset (KV cache + data cleared, sampler reset)")
 
-                // Determine max generation length using current model's context size
-                let contextSize = Int32(self.currentModel.maxContextSize)
-                let batchSize = Int32(self.currentModel.optimalBatchSize)
+                    // Free old sampler and create new one with current temperature
+                    llama_sampler_free(smpl)
 
-                // Tokenize the prompt
-                let maxBufferSize = prompt.count + 2048 // Generous buffer
-                var tokens = [llama_token](repeating: 0, count: maxBufferSize)
-                let tokenCount = prompt.withCString { promptCStr in
-                    llama_tokenize(
-                        llama_model_get_vocab(mdl),
-                        promptCStr,
-                        Int32(prompt.count),
-                        &tokens,
-                        Int32(tokens.count),
-                        true, // add_special
-                        false // parse_special
-                    )
-                }
-
-                guard tokenCount > 0 else {
-                    print("❌ Failed to tokenize prompt")
-                    ErrorLogger.shared.logError(
-                        "Failed to tokenize prompt",
-                        severity: .error,
-                        operation: "Text Generation",
-                        details: "Token count was 0 or negative"
-                    )
-                    continuation.resume(returning: nil)
-                    return
-                }
-
-                print("✅ Tokenized: \(tokenCount) tokens (\(prompt.count) chars → \(tokenCount) tokens)")
-
-                // Check if prompt exceeds batch size and truncate if necessary
-                let maxPromptTokens = batchSize
-                if tokenCount > maxPromptTokens {
-                    print("⚠️ Prompt token count (\(tokenCount)) exceeds batch size (\(maxPromptTokens)), truncating prompt")
-                    ErrorLogger.shared.logError(
-                        "Prompt exceeds batch size",
-                        severity: .warning,
-                        operation: "Text Generation",
-                        details: "Prompt: \(tokenCount) tokens, Batch size: \(maxPromptTokens) tokens. Truncating to fit."
-                    )
-                }
-
-                // Keep only the valid tokens, limited to batch size
-                let validTokenCount = min(Int(tokenCount), Int(maxPromptTokens))
-                var promptTokens = Array(tokens.prefix(validTokenCount))
-                let promptTokenCount = Int32(promptTokens.count)
-
-                print("🔄 Processing \(promptTokenCount) prompt tokens...")
-
-                // Create batch using the new API
-                // Important: tokens array must remain valid for the lifetime of the batch
-                let decodeResult = promptTokens.withUnsafeMutableBufferPointer { tokensPtr -> Int32 in
-                    let batch = llama_batch_get_one(tokensPtr.baseAddress, promptTokenCount)
-                    return llama_decode(ctx, batch)
-                }
-
-                if decodeResult != 0 {
-                    print("❌ Failed to decode prompt (error code: \(decodeResult))")
-                    ErrorLogger.shared.logError(
-                        "Failed to decode prompt",
-                        severity: .error,
-                        operation: "Text Generation",
-                        details: "Decode result code: \(decodeResult)"
-                    )
-                    continuation.resume(returning: nil)
-                    return
-                }
-
-                print("✅ Prompt processed successfully")
-
-                // Generate tokens
-                var generatedText = ""
-                var nCur = tokenCount
-
-                // If maxTokens is nil, use remaining context size; otherwise use specified limit
-                let maxGenTokens = maxTokens ?? Int(contextSize - tokenCount)
-                let nLen = nCur + Int32(maxGenTokens)
-
-                print("🎯 Generating up to \(maxGenTokens) new tokens (temp: \(String(format: "%.1f", temperature)))...")
-
-                var lastProgressPrint = Date()
-                let progressInterval: TimeInterval = 2.0 // Print progress every 2 seconds
-
-                while nCur < nLen {
-                    // Sample the next token using the sampler chain
-                    let newTokenId = llama_sampler_sample(smpl, ctx, -1)
-
-                    // Accept the token
-                    llama_sampler_accept(smpl, newTokenId)
-
-                    // Check for end of sequence
-                    let vocab = llama_model_get_vocab(mdl)
-                    if llama_vocab_is_eog(vocab, newTokenId) {
-                        print("🏁 End-of-generation token detected")
-                        break
+                    // Create new sampler chain with request-specific temperature
+                    var samplerParams = llama_sampler_chain_default_params()
+                    samplerParams.no_perf = false
+                    guard let newSamplerChain = llama_sampler_chain_init(samplerParams) else {
+                        print("❌ Failed to create sampler chain")
+                        continuation.resume(returning: nil)
+                        return
                     }
 
-                    // Detokenize to text
-                    var buf = [CChar](repeating: 0, count: 32)
-                    let pieceSize = llama_token_to_piece(vocab, newTokenId, &buf, Int32(buf.count), 0, false)
+                    // Add samplers with request-specific temperature
+                    if let topK = llama_sampler_init_top_k(50) {
+                        llama_sampler_chain_add(newSamplerChain, topK)
+                    }
+                    if let topP = llama_sampler_init_top_p(0.95, 1) {
+                        llama_sampler_chain_add(newSamplerChain, topP)
+                    }
 
-                    if pieceSize > 0 {
-                        let piece = String(cString: buf)
-                        generatedText += piece
+                    // Add repetition penalties to improve output quality
+                    // penalty_last_n: Consider last 64 tokens for repetition
+                    // penalty_repeat: 1.1 = slight penalty for repeating tokens
+                    // penalty_freq: 0.0 = disabled (frequency penalty)
+                    // penalty_present: 0.0 = disabled (presence penalty)
+                    if let penalties = llama_sampler_init_penalties(64, 1.1, 0.0, 0.0) {
+                        llama_sampler_chain_add(newSamplerChain, penalties)
+                    }
 
-                        // Print periodic progress updates instead of every token
-                        let now = Date()
-                        let tokensGenerated = Int(nCur - tokenCount)
-                        if now.timeIntervalSince(lastProgressPrint) >= progressInterval {
-                            let progress = Double(tokensGenerated) / Double(maxGenTokens) * 100
-                            print(
-                                "⏳ Progress: \(tokensGenerated)/\(maxGenTokens) tokens (\(String(format: "%.1f", progress))%) - \(generatedText.count) chars"
-                            )
-                            lastProgressPrint = now
-                        }
+                    if let temp = llama_sampler_init_temp(temperature) { // Use request-specific temperature
+                        llama_sampler_chain_add(newSamplerChain, temp)
+                    }
 
-                        // Check for stop sequences
-                        if !stopSequences.isEmpty {
-                            for stopSeq in stopSequences where generatedText.contains(stopSeq) {
-                                if let range = generatedText.range(of: stopSeq) {
-                                    generatedText = String(generatedText[..<range.lowerBound])
-                                }
-                                print("🛑 Stop sequence '\(stopSeq)' detected")
-                                print("✅ Generated \(tokensGenerated) tokens → \(generatedText.count) chars")
-                                print("=== Generation Complete ===\n")
-                                continuation.resume(returning: generatedText)
-                                return
-                            }
+                    // Add grammar sampler if grammar is provided
+                    if let grammarStr = grammar {
+                        let vocab = llama_model_get_vocab(mdl)
+                        if let grammarSampler = llama_sampler_init_grammar(vocab, grammarStr, "root") {
+                            llama_sampler_chain_add(newSamplerChain, grammarSampler)
+                            print("📐 Grammar sampler enabled")
+                        } else {
+                            print("⚠️ Failed to initialize grammar sampler")
                         }
                     }
 
-                    // Create new batch with the new token
-                    nCur += 1
+                    if let dist = llama_sampler_init_dist(LLAMA_DEFAULT_SEED) {
+                        llama_sampler_chain_add(newSamplerChain, dist)
+                    }
 
-                    // Decode the new token - keep token alive during decode
-                    var newToken = newTokenId
-                    let decodeResult = withUnsafeMutablePointer(to: &newToken) { tokenPtr -> Int32 in
-                        let batch = llama_batch_get_one(tokenPtr, 1)
+                    self.sampler = newSamplerChain
+                    let grammarStatus = grammar != nil ? ", grammar enabled" : ""
+                    print(
+                        "🧹 Context fully reset (KV cache + data cleared, sampler recreated with temp=\(temperature), penalties enabled\(grammarStatus))"
+                    )
+
+                    // Determine max generation length using current model's context size
+                    let contextSize = Int32(self.currentModel.maxContextSize)
+                    let batchSize = Int32(self.currentModel.optimalBatchSize)
+
+                    // Tokenize the prompt
+                    let maxBufferSize = prompt.count + 2048 // Generous buffer
+                    var tokens = [llama_token](repeating: 0, count: maxBufferSize)
+                    let tokenCount = prompt.withCString { promptCStr in
+                        llama_tokenize(
+                            llama_model_get_vocab(mdl),
+                            promptCStr,
+                            Int32(prompt.count),
+                            &tokens,
+                            Int32(tokens.count),
+                            true, // add_special
+                            false // parse_special
+                        )
+                    }
+
+                    guard tokenCount > 0 else {
+                        print("❌ Failed to tokenize prompt")
+                        ErrorLogger.shared.logError(
+                            "Failed to tokenize prompt",
+                            severity: .error,
+                            operation: "Text Generation",
+                            details: "Token count was 0 or negative"
+                        )
+                        continuation.resume(returning: nil)
+                        return
+                    }
+
+                    print("✅ Tokenized: \(tokenCount) tokens (\(prompt.count) chars → \(tokenCount) tokens)")
+
+                    // Check if prompt exceeds batch size and truncate if necessary
+                    let maxPromptTokens = batchSize
+                    if tokenCount > maxPromptTokens {
+                        print(
+                            "⚠️ Prompt token count (\(tokenCount)) exceeds batch size (\(maxPromptTokens)), truncating prompt"
+                        )
+                        ErrorLogger.shared.logError(
+                            "Prompt exceeds batch size",
+                            severity: .warning,
+                            operation: "Text Generation",
+                            details: "Prompt: \(tokenCount) tokens, Batch size: \(maxPromptTokens) tokens. Truncating to fit."
+                        )
+                    }
+
+                    // Keep only the valid tokens, limited to batch size
+                    let validTokenCount = min(Int(tokenCount), Int(maxPromptTokens))
+                    var promptTokens = Array(tokens.prefix(validTokenCount))
+                    let promptTokenCount = Int32(promptTokens.count)
+
+                    print("🔄 Processing \(promptTokenCount) prompt tokens...")
+
+                    // Create batch using the new API
+                    // Important: tokens array must remain valid for the lifetime of the batch
+                    let decodeResult = promptTokens.withUnsafeMutableBufferPointer { tokensPtr -> Int32 in
+                        let batch = llama_batch_get_one(tokensPtr.baseAddress, promptTokenCount)
                         return llama_decode(ctx, batch)
                     }
 
                     if decodeResult != 0 {
-                        print("❌ Failed to decode token at position \(nCur) (error: \(decodeResult))")
-                        break
+                        print("❌ Failed to decode prompt (error code: \(decodeResult))")
+                        ErrorLogger.shared.logError(
+                            "Failed to decode prompt",
+                            severity: .error,
+                            operation: "Text Generation",
+                            details: "Decode result code: \(decodeResult)"
+                        )
+                        continuation.resume(returning: nil)
+                        return
                     }
-                }
 
-                let tokensGenerated = Int(nCur - tokenCount)
-                print("✅ Generation complete: \(tokensGenerated) tokens → \(generatedText.count) chars")
-                print("📄 Output preview: \(generatedText.prefix(200))\(generatedText.count > 200 ? "..." : "")")
-                print("=== Generation Complete ===\n")
-                continuation.resume(returning: generatedText)
+                    print("✅ Prompt processed successfully")
+
+                    // Generate tokens
+                    var generatedTokens: [llama_token] = []
+                    var nCur = tokenCount
+
+                    // If maxTokens is nil, use remaining context size; otherwise use specified limit
+                    let maxGenTokens = maxTokens ?? Int(contextSize - tokenCount)
+                    let nLen = nCur + Int32(maxGenTokens)
+
+                    print(
+                        "🎯 Generating up to \(maxGenTokens) new tokens (temp: \(String(format: "%.1f", temperature)))..."
+                    )
+
+                    var lastProgressPrint = Date()
+                    let progressInterval: TimeInterval = 2.0 // Print progress every 2 seconds
+
+                    let vocab = llama_model_get_vocab(mdl)
+
+                    while nCur < nLen {
+                        // Sample the next token using the sampler chain
+                        let newTokenId = llama_sampler_sample(newSamplerChain, ctx, -1)
+
+                        // Accept the token
+                        llama_sampler_accept(newSamplerChain, newTokenId)
+
+                        // Check for end of sequence
+                        if llama_vocab_is_eog(vocab, newTokenId) {
+                            print("🏁 End-of-generation token detected")
+                            break
+                        }
+
+                        // Store the generated token
+                        generatedTokens.append(newTokenId)
+
+                        // Print periodic progress updates
+                        let now = Date()
+                        let tokensGenerated = generatedTokens.count
+                        if now.timeIntervalSince(lastProgressPrint) >= progressInterval {
+                            let progress = Double(tokensGenerated) / Double(maxGenTokens) * 100
+                            print(
+                                "⏳ Progress: \(tokensGenerated)/\(maxGenTokens) tokens (\(String(format: "%.1f", progress))%)"
+                            )
+                            lastProgressPrint = now
+                        }
+
+                        // Create new batch with the new token
+                        nCur += 1
+
+                        // Decode the new token - keep token alive during decode
+                        var newToken = newTokenId
+                        let decodeResult = withUnsafeMutablePointer(to: &newToken) { tokenPtr -> Int32 in
+                            let batch = llama_batch_get_one(tokenPtr, 1)
+                            return llama_decode(ctx, batch)
+                        }
+
+                        if decodeResult != 0 {
+                            print("❌ Failed to decode token at position \(nCur) (error: \(decodeResult))")
+                            break
+                        }
+                    }
+
+                    // Detokenize all generated tokens at once using llama_detokenize
+                    var generatedText = ""
+                    if !generatedTokens.isEmpty {
+                        // Calculate required buffer size
+                        let estimatedSize = generatedTokens.count * 16 // Estimate ~16 bytes per token
+                        var textBuffer = [CChar](repeating: 0, count: estimatedSize)
+
+                        let resultSize = generatedTokens.withUnsafeBufferPointer { tokensPtr in
+                            llama_detokenize(
+                                vocab,
+                                tokensPtr.baseAddress,
+                                Int32(generatedTokens.count),
+                                &textBuffer,
+                                Int32(textBuffer.count),
+                                false, // remove_special
+                                false // unparse_special
+                            )
+                        }
+
+                        if resultSize > 0 {
+                            if resultSize < textBuffer.count {
+                                // Success - buffer was large enough
+                                generatedText = String(cString: textBuffer)
+                            } else {
+                                // Buffer was too small, reallocate with exact size
+                                var largerBuffer = [CChar](repeating: 0, count: Int(resultSize) + 1)
+                                let finalSize = generatedTokens.withUnsafeBufferPointer { tokensPtr in
+                                    llama_detokenize(
+                                        vocab,
+                                        tokensPtr.baseAddress,
+                                        Int32(generatedTokens.count),
+                                        &largerBuffer,
+                                        Int32(largerBuffer.count),
+                                        false,
+                                        false
+                                    )
+                                }
+                                if finalSize > 0 {
+                                    generatedText = String(cString: largerBuffer)
+                                }
+                            }
+                        }
+                    }
+
+                    let tokensGenerated = Int(nCur - tokenCount)
+
+                    // Collect performance metrics from llama.cpp
+                    let perfData = llama_perf_context(ctx)
+                    let perfMetrics = PerformanceMetrics(
+                        promptTokens: Int(perfData.n_p_eval),
+                        generatedTokens: Int(perfData.n_eval),
+                        promptTime: perfData.t_p_eval_ms,
+                        generationTime: perfData.t_eval_ms,
+                        tokensPerSecond: perfData.n_eval > 0 ? (
+                            Double(perfData.n_eval) / (perfData.t_eval_ms / 1000.0)
+                        ) : 0
+                    )
+
+                    // Update published metrics on main thread
+                    DispatchQueue.main.async {
+                        self.lastPerformanceMetrics = perfMetrics
+                    }
+
+                    // Update SystemMonitor with performance data
+                    Task { @MainActor in
+                        SystemMonitor.shared.recordTokensPerSecond(perfMetrics.tokensPerSecond)
+                        SystemMonitor.shared.recordInference(duration: perfMetrics.totalTime)
+                    }
+
+                    // Reset performance counters for next generation
+                    llama_perf_context_reset(ctx)
+
+                    print("✅ Generation complete: \(tokensGenerated) tokens → \(generatedText.count) chars")
+                    print(
+                        "⚡ Performance: \(String(format: "%.1f", perfMetrics.tokensPerSecond)) t/s, prompt: \(String(format: "%.0f", perfMetrics.promptTime))ms, gen: \(String(format: "%.0f", perfMetrics.generationTime))ms"
+                    )
+                    print("📄 Output preview: \(generatedText.prefix(200))\(generatedText.count > 200 ? "..." : "")")
+                    print("=== Generation Complete ===\n")
+                    continuation.resume(returning: generatedText)
                 } // End autoreleasepool
             }
         }
@@ -659,7 +895,6 @@ class LLMInferenceService: @unchecked Sendable {
     ///   - instruction: The instruction/prompt template (should contain {content} placeholder)
     ///   - maxTokens: Maximum number of tokens to generate per chunk
     ///   - temperature: Sampling temperature
-    ///   - stopSequences: Sequences that stop generation
     ///   - separator: String to join processed chunks (default: single space)
     /// - Returns: Combined generated text
     func generateBatched(
@@ -667,7 +902,6 @@ class LLMInferenceService: @unchecked Sendable {
         instruction: String,
         maxTokens: Int? = nil,
         temperature: Float = 0.7,
-        stopSequences: [String] = [],
         separator: String = " "
     ) async -> String? {
         guard !text.isEmpty else { return nil }
@@ -687,8 +921,7 @@ class LLMInferenceService: @unchecked Sendable {
             return await generate(
                 prompt: prompt,
                 maxTokens: maxTokens,
-                temperature: temperature,
-                stopSequences: stopSequences
+                temperature: temperature
             )
         }
 
@@ -704,8 +937,7 @@ class LLMInferenceService: @unchecked Sendable {
             guard let output = await generate(
                 prompt: prompt,
                 maxTokens: maxTokens,
-                temperature: temperature,
-                stopSequences: stopSequences
+                temperature: temperature
             ) else {
                 print("   ⚠️ Batch \(index + 1) failed, skipping")
                 continue
@@ -750,71 +982,146 @@ class LLMInferenceService: @unchecked Sendable {
                     let mem = llama_get_memory(ctx)
                     llama_memory_clear(mem, false) // Clear metadata only
 
-                // Tokenize the text
-                var tokens = [llama_token](repeating: 0, count: text.count + 16)
-                let tokenCount = text.withCString { textCStr in
-                    llama_tokenize(
-                        llama_model_get_vocab(mdl),
-                        textCStr,
-                        Int32(text.count),
-                        &tokens,
-                        Int32(tokens.count),
-                        true,
-                        false
-                    )
-                }
+                    // Tokenize the text
+                    var tokens = [llama_token](repeating: 0, count: text.count + 16)
+                    let tokenCount = text.withCString { textCStr in
+                        llama_tokenize(
+                            llama_model_get_vocab(mdl),
+                            textCStr,
+                            Int32(text.count),
+                            &tokens,
+                            Int32(tokens.count),
+                            true,
+                            false
+                        )
+                    }
 
-                guard tokenCount > 0 else {
-                    print("❌ Failed to tokenize text for embedding")
-                    continuation.resume(returning: nil)
-                    return
-                }
+                    guard tokenCount > 0 else {
+                        print("❌ Failed to tokenize text for embedding")
+                        continuation.resume(returning: nil)
+                        return
+                    }
 
-                // Check if token count exceeds batch size
-                let batchSize = self.currentModel.optimalBatchSize
-                if tokenCount > batchSize {
-                    print("⚠️ Token count (\(tokenCount)) exceeds batch size (\(batchSize)), truncating")
-                }
+                    // Check if token count exceeds batch size
+                    let batchSize = self.currentModel.optimalBatchSize
+                    if tokenCount > batchSize {
+                        print("⚠️ Token count (\(tokenCount)) exceeds batch size (\(batchSize)), truncating")
+                    }
 
-                // Keep only the valid tokens, limited to batch size
-                let validTokenCount = min(Int(tokenCount), Int(batchSize))
-                var embeddingTokens = Array(tokens.prefix(validTokenCount))
-                let embeddingTokenCount = Int32(embeddingTokens.count)
+                    // Keep only the valid tokens, limited to batch size
+                    let validTokenCount = min(Int(tokenCount), Int(batchSize))
+                    var embeddingTokens = Array(tokens.prefix(validTokenCount))
+                    let embeddingTokenCount = Int32(embeddingTokens.count)
 
-                // Create batch and decode - keep tokens alive during decode
-                let decodeResult = embeddingTokens.withUnsafeMutableBufferPointer { tokensPtr -> Int32 in
-                    let batch = llama_batch_get_one(tokensPtr.baseAddress, embeddingTokenCount)
-                    return llama_decode(ctx, batch)
-                }
+                    // Create batch and decode - keep tokens alive during decode
+                    let decodeResult = embeddingTokens.withUnsafeMutableBufferPointer { tokensPtr -> Int32 in
+                        let batch = llama_batch_get_one(tokensPtr.baseAddress, embeddingTokenCount)
+                        return llama_decode(ctx, batch)
+                    }
 
-                if decodeResult != 0 {
-                    print("❌ Failed to decode for embeddings")
-                    continuation.resume(returning: nil)
-                    return
-                }
+                    if decodeResult != 0 {
+                        print("❌ Failed to decode for embeddings")
+                        continuation.resume(returning: nil)
+                        return
+                    }
 
-                // Get embeddings using sequence-level extraction (works with mean pooling)
-                let embeddingSize = llama_model_n_embd(mdl)
-                guard let embeddingsPtr = llama_get_embeddings_seq(ctx, 0) else {
-                    print("❌ Failed to get embeddings")
-                    continuation.resume(returning: nil)
-                    return
-                }
+                    // Get embeddings using sequence-level extraction (works with mean pooling)
+                    let embeddingSize = llama_model_n_embd(mdl)
+                    guard let embeddingsPtr = llama_get_embeddings_seq(ctx, 0) else {
+                        print("❌ Failed to get embeddings")
+                        continuation.resume(returning: nil)
+                        return
+                    }
 
-                // Convert to Swift array
-                var embedding = Array(UnsafeBufferPointer(start: embeddingsPtr, count: Int(embeddingSize)))
+                    // Convert to Swift array
+                    var embedding = Array(UnsafeBufferPointer(start: embeddingsPtr, count: Int(embeddingSize)))
 
-                // Normalize embeddings (L2 normalization)
-                let magnitude = sqrt(embedding.map { $0 * $0 }.reduce(0, +))
-                if magnitude > 0 {
-                    embedding = embedding.map { $0 / magnitude }
-                }
+                    // Normalize embeddings (L2 normalization)
+                    let magnitude = sqrt(embedding.map { $0 * $0 }.reduce(0, +))
+                    if magnitude > 0 {
+                        embedding = embedding.map { $0 / magnitude }
+                    }
 
-                print("✅ Generated embedding with \(embedding.count) dimensions (normalized)")
-                continuation.resume(returning: embedding)
+                    print("✅ Generated embedding with \(embedding.count) dimensions (normalized)")
+                    continuation.resume(returning: embedding)
                 } // End autoreleasepool
             }
         }
+    }
+
+    // MARK: - Model Metadata Extraction
+
+    /// Extracts metadata from the loaded GGUF model
+    private func extractModelMetadata() {
+        guard let mdl = model else { return }
+
+        let paramCount = llama_model_n_params(mdl)
+        let ctxTrain = llama_model_n_ctx_train(mdl)
+        let embdSize = llama_model_n_embd(mdl)
+        let layers = llama_model_n_layer(mdl)
+        let heads = llama_model_n_head(mdl)
+
+        // Get model description
+        var descBuffer = [CChar](repeating: 0, count: 256)
+        let descLen = llama_model_desc(mdl, &descBuffer, descBuffer.count)
+        let modelDesc = descLen > 0 ? String(cString: descBuffer) : currentModel.displayName
+
+        modelMetadata = ModelMetadata(
+            parameterCount: paramCount,
+            description: modelDesc,
+            contextSize: ctxTrain,
+            embeddingSize: embdSize,
+            layerCount: layers,
+            headCount: heads
+        )
+
+        // Build tooltip for SystemMonitor
+        let tooltip = """
+        \(currentModel.displayName)
+        Parameters: \(formatParameterCount(paramCount))
+        Architecture: \(modelDesc)
+        Context: \(ctxTrain) tokens
+        Embedding: \(embdSize)
+        Layers: \(layers) • Heads: \(heads)
+        """
+
+        print(
+            "📊 Model metadata: \(formatParameterCount(paramCount)) params, \(ctxTrain) ctx, \(embdSize) embd, \(layers) layers"
+        )
+        print("💡 Setting SystemMonitor metadata tooltip: \(tooltip)")
+
+        Task { @MainActor in
+            SystemMonitor.shared.setModelMetadata(tooltip)
+            print("✅ SystemMonitor metadata updated on main thread")
+        }
+    }
+
+    /// Formats parameter count in human-readable format (e.g., "1.1B", "3.8B")
+    private func formatParameterCount(_ count: UInt64) -> String {
+        let billions = Double(count) / 1_000_000_000
+        if billions >= 1.0 {
+            return String(format: "%.1fB", billions)
+        }
+        let millions = Double(count) / 1_000_000
+        return String(format: "%.0fM", millions)
+    }
+
+    // MARK: - Thread Control
+
+    /// Sets the number of threads for generation and batch processing
+    /// - Parameters:
+    ///   - threads: Number of threads for single-token generation (0 = auto)
+    ///   - batchThreads: Number of threads for batch processing (0 = auto)
+    func setThreadCount(threads: Int32, batchThreads: Int32? = nil) {
+        guard let ctx = context else { return }
+        llama_set_n_threads(ctx, threads, batchThreads ?? threads)
+        print("🔧 Thread count updated: generation=\(threads), batch=\(batchThreads ?? threads)")
+    }
+
+    /// Returns current thread configuration
+    func getThreadCount() -> (generation: Int32, batch: Int32)? {
+        guard let ctx = context else { return nil }
+        return (llama_n_threads(ctx), llama_n_threads_batch(ctx))
     }
 
     // MARK: - Helpers

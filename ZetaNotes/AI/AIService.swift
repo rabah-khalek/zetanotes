@@ -12,16 +12,13 @@ import Foundation
 struct AIGenerationConfig {
     let temperature: Float
     let maxTokens: Int?
-    let stopSequences: [String]
 
     init(
         temperature: Float = 0.7,
-        maxTokens: Int? = nil,
-        stopSequences: [String] = []
+        maxTokens: Int? = nil
     ) {
         self.temperature = temperature
         self.maxTokens = maxTokens
-        self.stopSequences = stopSequences
     }
 }
 
@@ -81,12 +78,12 @@ extension AIService {
 
         // If only one chunk, process normally without batching
         if chunks.count == 1 {
-            let prompt = instruction.replacingOccurrences(of: "{content}", with: text)
-            guard let rawOutput = await llmService.generate(
-                prompt: prompt,
+            // Use chat template for proper formatting
+            guard let rawOutput = await llmService.generateWithChatTemplate(
+                systemMessage: instruction,
+                userMessage: text,
                 maxTokens: maxTokens ?? config.maxTokens,
-                temperature: config.temperature,
-                stopSequences: config.stopSequences
+                temperature: config.temperature
             ) else {
                 return nil
             }
@@ -100,13 +97,12 @@ extension AIService {
         for (index, chunk) in chunks.enumerated() {
             print("   Batch \(index + 1)/\(chunks.count): \(chunk.count) chars")
 
-            let prompt = instruction.replacingOccurrences(of: "{content}", with: chunk)
-
-            guard let rawOutput = await llmService.generate(
-                prompt: prompt,
+            // Use chat template for proper formatting
+            guard let rawOutput = await llmService.generateWithChatTemplate(
+                systemMessage: instruction,
+                userMessage: chunk,
                 maxTokens: maxTokens ?? config.maxTokens,
-                temperature: config.temperature,
-                stopSequences: config.stopSequences
+                temperature: config.temperature
             ) else {
                 print("   ⚠️ Batch \(index + 1) failed, skipping")
                 continue
@@ -362,8 +358,7 @@ extension AIService {
             guard let rawOutput = await llmService.generate(
                 prompt: prompt,
                 maxTokens: config.maxTokens,
-                temperature: config.temperature,
-                stopSequences: config.stopSequences
+                temperature: config.temperature
             ) else {
                 return nil
             }
@@ -407,8 +402,7 @@ extension AIService {
         guard let rawOutput = await llmService.generate(
             prompt: prompt,
             maxTokens: maxTokens ?? config.maxTokens,
-            temperature: config.temperature,
-            stopSequences: config.stopSequences
+            temperature: config.temperature
         ) else {
             return nil
         }
@@ -444,11 +438,8 @@ extension AIService {
         return cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
-import Foundation
 
-/// Utility for chunking text into manageable batches that fit within model constraints
 struct TextChunker {
-
     // MARK: - Configuration
 
     /// Maximum tokens per chunk (should be less than model batch size to leave room for prompt template)
@@ -581,7 +572,7 @@ struct TextChunker {
             }
 
             // Check if adding this sentence would exceed limit
-            if currentTokenCount + sentenceTokens > maxTokensPerChunk && !currentChunk.isEmpty {
+            if currentTokenCount + sentenceTokens > maxTokensPerChunk, !currentChunk.isEmpty {
                 // Flush current chunk
                 chunks.append(currentChunk.joined(separator: " "))
                 currentChunk = []
@@ -640,7 +631,7 @@ struct TextChunker {
                 continue
             }
 
-            if currentTokenCount + paragraphTokens > maxTokensPerChunk && !currentChunk.isEmpty {
+            if currentTokenCount + paragraphTokens > maxTokensPerChunk, !currentChunk.isEmpty {
                 chunks.append(currentChunk.joined(separator: "\n\n"))
                 currentChunk = []
                 currentTokenCount = 0
@@ -666,8 +657,9 @@ struct TextChunker {
         var currentIndex = text.startIndex
 
         while currentIndex < text.endIndex {
-            let endIndex = text.index(currentIndex, offsetBy: maxCharsPerChunk, limitedBy: text.endIndex) ?? text.endIndex
-            let chunk = String(text[currentIndex..<endIndex])
+            let endIndex = text.index(currentIndex, offsetBy: maxCharsPerChunk, limitedBy: text.endIndex) ?? text
+                .endIndex
+            let chunk = String(text[currentIndex ..< endIndex])
             chunks.append(chunk)
             currentIndex = endIndex
         }

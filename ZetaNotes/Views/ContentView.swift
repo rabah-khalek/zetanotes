@@ -88,8 +88,7 @@ struct ContentView: View {
                     llmConfig: LLMConfig(
                         prompt: "",
                         temperature: 0.7,
-                        maxTokens: nil,
-                        stopSequences: []
+                        maxTokens: nil
                     )
                 ),
                 isPresented: $showingToolEditor,

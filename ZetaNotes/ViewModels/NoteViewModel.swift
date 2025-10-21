@@ -864,7 +864,6 @@ class NoteViewModel: ObservableObject {
             instruction: tool.prompt,
             maxTokens: maxTokens,
             temperature: tool.temperature,
-            stopSequences: tool.stopSequences,
             separator: " "
         )
 
