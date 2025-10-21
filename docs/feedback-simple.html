@@ -264,15 +264,14 @@
             <form action="https://github.com/rabah-khalek/zetanotes/issues/new" method="get" target="_blank">
                 <div class="form-group">
                     <label for="title">Issue Title <span class="required">*</span></label>
-                    <input type="text" id="title" name="title" required 
-                           placeholder="Brief description of the issue">
+                    <input type="text" id="title" name="title" required placeholder="Brief description of the issue">
                     <div class="helper-text">Keep it short and descriptive</div>
                 </div>
 
                 <div class="form-group">
                     <label for="body">Description <span class="required">*</span></label>
-                    <textarea id="body" name="body" required 
-                              placeholder="Describe the issue in detail. Include steps to reproduce if it's a bug."></textarea>
+                    <textarea id="body" name="body" required
+                        placeholder="Describe the issue in detail. Include steps to reproduce if it's a bug."></textarea>
                     <div class="helper-text">Be as detailed as possible</div>
                 </div>
 
@@ -296,12 +295,12 @@
 
             <div class="info-box">
                 <p>
-                    <strong>Note:</strong> This will redirect you to GitHub to create the issue. 
-                    You'll need a GitHub account to submit. If you don't have one, you can 
+                    <strong>Note:</strong> This will redirect you to GitHub to create the issue.
+                    You'll need a GitHub account to submit. If you don't have one, you can
                     <a href="https://github.com/signup" target="_blank">create a free account</a> in less than a minute.
                 </p>
                 <p style="margin-top: 12px;">
-                    <strong>Alternative:</strong> Send feedback directly to 
+                    <strong>Alternative:</strong> Send feedback directly to
                     <a href="mailto:feedback@zetanotes.dev?subject=ZetaNotes%20Feedback">feedback@zetanotes.dev</a>
                 </p>
             </div>
@@ -328,7 +327,7 @@
                 'question': '❓ ',
                 'feedback': '💬 '
             };
-            
+
             // Only add emoji if title doesn't already have one
             if (!titleInput.value.match(/^[🐛✨❓💬]/)) {
                 titleInput.value = emojiMap[typeSelect.value] + titleInput.value;
