@@ -44,100 +44,49 @@ private enum TinyLlamaConfigs {
         switch toolType {
         case .autocomplete:
             return LLMConfig(
-                prompt: """
-                Continue the following text naturally. Write only the next few words that would logically follow.
-
-                {content}
-
-                Continuation:
-                """,
+                prompt: "Continue the following text naturally. Write only the next few words that would logically follow.",
                 temperature: 0.3,
                 maxTokens: 20
             )
 
         case .patch:
             return LLMConfig(
-                prompt: """
-                <|system|>
-                You are a helpful assistant. Return only the corrected text.</s>
-                <|user|>
-                Fix spelling and grammar. Output only the corrected text:
-
-                {content}</s>
-                <|assistant|>
-
-                """,
+                prompt: "Fix all spelling and grammar errors. Return ONLY the corrected text with no additional commentary.",
                 temperature: 0.05,
                 maxTokens: nil
             )
 
         case .rephrase:
             return LLMConfig(
-                prompt: """
-                <|system|>
-                You are a helpful assistant. Return only the rewritten text.</s>
-                <|user|>
-                Rewrite more clearly. Output only the rewritten text:
-
-                {content}</s>
-                <|assistant|>
-
-                """,
+                prompt: "Rewrite the following text to be clearer and more professional. Return ONLY the rewritten text with no additional commentary.",
                 temperature: 0.2,
                 maxTokens: nil
             )
 
         case .summarize:
             return LLMConfig(
-                prompt: """
-                <|system|>
-                You are a helpful assistant. Return only the summary.</s>
-                <|user|>
-                Summarize in 1-2 sentences. Output only the summary:
-
-                {content}</s>
-                <|assistant|>
-
-                """,
+                prompt: "Summarize the following text in 1-2 sentences. Return ONLY the summary with no additional commentary.",
                 temperature: 0.2,
                 maxTokens: 150
             )
 
         case .translate:
             return LLMConfig(
-                prompt: """
-                <|begin_of_text|><|start_header_id|>system<|end_header_id|>
-
-                You translate text to {targetLanguage}. Output ONLY the translated text with NO preamble, NO labels,
-                NO phrases like "translation:", "here's the translation:", or "---". Begin IMMEDIATELY with the first
-                word of the translated text.<|eot_id|><|start_header_id|>user<|end_header_id|>
-
-                {content}<|eot_id|><|start_header_id|>assistant<|end_header_id|>
-
-                """,
-                temperature: 0.05, // Optimized for accuracy
-                maxTokens: nil, // Dynamic based on input length
+                prompt: "Translate the following text to {targetLanguage}. Return ONLY the translated text with no additional commentary or labels.",
+                temperature: 0.05,
+                maxTokens: nil
             )
 
         case .titleGeneration:
             return LLMConfig(
-                prompt: """
-                <|system|>
-                You are a helpful assistant that creates concise titles.</s>
-                <|user|>
-                Create a short title (1-5 words) that captures the main idea of the following text:
-
-                {content}</s>
-                <|assistant|>
-
-                """,
+                prompt: "Create a short, concise title (1-5 words) that captures the main idea. Return ONLY the title with no additional commentary.",
                 temperature: 0.2,
                 maxTokens: 30
             )
 
         case .custom:
             return LLMConfig(
-                prompt: "",
+                prompt: "You are a helpful assistant.",
                 temperature: 0.7,
                 maxTokens: nil
             )
@@ -202,13 +151,8 @@ private enum LlamaThreeTwoConfigs {
 
         case .custom:
             return LLMConfig(
-                prompt: """
-                <|begin_of_text|><|start_header_id|>system<|end_header_id|>
-
-                You are a helpful assistant.<|eot_id|><|start_header_id|>user<|end_header_id|>
-
-                """,
-                temperature: 0.3, // Reduced from 0.6 - 1B model benefits from lower default temp
+                prompt: "You are a helpful assistant.",
+                temperature: 0.3,
                 maxTokens: nil
             )
         }
@@ -227,109 +171,46 @@ private enum QwenTwoFiveConfigs {
         switch toolType {
         case .autocomplete:
             return LLMConfig(
-                prompt: """
-                <|im_start|>system
-                You are Qwen, created by Alibaba Cloud. You are a helpful assistant that continues text naturally.<|im_end|>
-                <|im_start|>user
-                Continue the following text with just the next few words that would logically follow:
-
-                {content}<|im_end|>
-                <|im_start|>assistant
-                """,
-                temperature: 0.7,
-                maxTokens: 50
+                prompt: "Continue the following text naturally. Write only the next few words that would logically follow.",
+                temperature: 0.7, maxTokens: 50
             )
 
         case .patch:
             return LLMConfig(
-                prompt: """
-                <|im_start|>system
-                You are Qwen, created by Alibaba Cloud. You fix spelling and grammar errors while preserving the original meaning. Output ONLY the corrected text without explanations.<|im_end|>
-                <|im_start|>user
-                Fix all spelling and grammar errors. Return only the corrected text:
-
-                {content}<|im_end|>
-                <|im_start|>assistant
-
-                """,
-                temperature: 0.05,
-                maxTokens: nil
+                prompt: "Fix all spelling and grammar errors while preserving the original meaning. Return ONLY the corrected text with no additional commentary.",
+                temperature: 0.05, maxTokens: nil
             )
 
         case .rephrase:
             return LLMConfig(
-                prompt: """
-                <|im_start|>system
-                You are Qwen, created by Alibaba Cloud. You rewrite text for improved clarity and readability. Output ONLY the rewritten text without explanations.<|im_end|>
-                <|im_start|>user
-                Rewrite the following text more clearly. Return only the rewritten text:
-
-                {content}<|im_end|>
-                <|im_start|>assistant
-
-                """,
-                temperature: 0.3,
-                maxTokens: nil
+                prompt: "Rewrite the following text to be clearer and more readable. Return ONLY the rewritten text with no additional commentary.",
+                temperature: 0.3, maxTokens: nil
             )
 
         case .summarize:
             return LLMConfig(
-                prompt: """
-                <|im_start|>system
-                You are Qwen, created by Alibaba Cloud. You create clear, concise summaries. Output ONLY the summary without preamble.<|im_end|>
-                <|im_start|>user
-                Summarize the following text in 1-2 sentences. Return only the summary:
-
-                {content}<|im_end|>
-                <|im_start|>assistant
-
-                """,
-                temperature: 0.2,
-                maxTokens: 150
+                prompt: "Summarize the following text in 1-2 sentences. Return ONLY the summary with no additional commentary.",
+                temperature: 0.2, maxTokens: 150
             )
 
         case .translate:
             return LLMConfig(
-                prompt: """
-                <|im_start|>system
-                You are Qwen, created by Alibaba Cloud. You are an expert translator. Output ONLY the translation without notes or explanations.<|im_end|>
-                <|im_start|>user
-                Translate the following text to {language}. Return only the translation:
-
-                {content}<|im_end|>
-                <|im_start|>assistant
-
-                """,
-                temperature: 0.1,
-                maxTokens: nil
+                prompt: "Translate the following text to {language}. Return ONLY the translation with no additional commentary.",
+                temperature: 0.1, maxTokens: nil
             )
 
         case .titleGeneration:
             return LLMConfig(
-                prompt: """
-                <|im_start|>system
-                You are a helpful assistant that creates concise titles.<|im_end|>
-                <|im_start|>user
-                Create a short title (1-5 words) that captures the main idea of the following text:
-
-                {content}<|im_end|>
-                <|im_start|>assistant
-                """,
-                temperature: 0.2,
-                maxTokens: 30
+                prompt: "Create a short title (1-5 words) that captures the main idea. Return ONLY the title with no additional commentary.",
+                temperature: 0.2, maxTokens: 30
             )
 
         case .custom:
             return LLMConfig(
-                prompt: """
-                <|im_start|>system
-                You are Qwen, created by Alibaba Cloud. You are a helpful assistant.<|im_end|>
-                <|im_start|>user
-
-                """,
-                temperature: 0.7,
-                maxTokens: nil
+                prompt: "You are a helpful assistant.",
+                temperature: 0.7, maxTokens: nil
             )
+
         }
     }
 }
@@ -346,110 +227,46 @@ private enum SmolLMTwoConfigs {
         switch toolType {
         case .autocomplete:
             return LLMConfig(
-                prompt: """
-                <|im_start|>system
-                You are a helpful assistant that continues text naturally and concisely.<|im_end|>
-                <|im_start|>user
-                Continue the following text with only the next few words:
-
-                {content}<|im_end|>
-                <|im_start|>assistant
-                """,
-                temperature: 0.5,
-                maxTokens: 50
+                prompt: "Continue the following text naturally. Write only the next few words that would logically follow.",
+                temperature: 0.5, maxTokens: 50
             )
 
         case .patch:
             return LLMConfig(
-                prompt: """
-                <|im_start|>system
-                You fix spelling and grammar errors while keeping the original meaning intact. Output ONLY the corrected text.<|im_end|>
-                <|im_start|>user
-                Fix spelling and grammar errors. Return only the corrected text:
-
-                {content}<|im_end|>
-                <|im_start|>assistant
-
-                """,
-                temperature: 0.05,
-                maxTokens: nil
+                prompt: "Fix all spelling and grammar errors while preserving the original meaning. Return ONLY the corrected text with no additional commentary.",
+                temperature: 0.05, maxTokens: nil
             )
 
         case .rephrase:
             return LLMConfig(
-                prompt: """
-                <|im_start|>system
-                You rewrite text to improve clarity and readability. Output ONLY the rewritten text.<|im_end|>
-                <|im_start|>user
-                Rewrite the following text more clearly. Return only the rewritten text:
-
-                {content}<|im_end|>
-                <|im_start|>assistant
-
-                """,
-                temperature: 0.2,
-                maxTokens: nil
+                prompt: "Rewrite the following text to be clearer and more readable. Return ONLY the rewritten text with no additional commentary.",
+                temperature: 0.2, maxTokens: nil
             )
 
         case .summarize:
             return LLMConfig(
-                prompt: """
-                <|im_start|>system
-                Provide a concise, objective summary in up to two sentences. Output ONLY the summary.<|im_end|>
-                <|im_start|>user
-                Summarize the following text. Return only the summary:
-
-                {content}<|im_end|>
-                <|im_start|>assistant
-
-                """,
-                temperature: 0.2,
-                maxTokens: 150
+                prompt: "Summarize the following text in 1-2 sentences. Return ONLY the summary with no additional commentary.",
+                temperature: 0.2, maxTokens: 150
             )
 
         case .translate:
             return LLMConfig(
-                prompt: """
-                <|im_start|>system
-                You are an expert translator. Output ONLY the translation.<|im_end|>
-                <|im_start|>user
-                Translate the following text to {language}. Return only the translation:
-
-                {content}<|im_end|>
-                <|im_start|>assistant
-
-                """,
-                temperature: 0.1,
-                maxTokens: nil
+                prompt: "Translate the following text to {language}. Return ONLY the translation with no additional commentary.",
+                temperature: 0.1, maxTokens: nil
             )
 
         case .titleGeneration:
             return LLMConfig(
-                prompt: """
-                <|im_start|>system
-                You create concise titles for text. Output ONLY the title (1-5 words).<|im_end|>
-                <|im_start|>user
-                Create a short title (1-5 words) that captures the main idea of the following text:
-
-                {content}<|im_end|>
-                <|im_start|>assistant
-
-                """,
-                temperature: 0.2,
-                maxTokens: 30
+                prompt: "Create a short title (1-5 words) that captures the main idea. Return ONLY the title with no additional commentary.",
+                temperature: 0.2, maxTokens: 30
             )
 
         case .custom:
             return LLMConfig(
-                prompt: """
-                <|im_start|>system
-                You are a helpful assistant.<|im_end|>
-                <|im_start|>user
-
-                """,
-                temperature: 0.5,
-                maxTokens: nil
+                prompt: "You are a helpful assistant.",
+                temperature: 0.5, maxTokens: nil
             )
+
         }
     }
 }
@@ -466,52 +283,46 @@ private enum Phi2Configs {
         switch toolType {
         case .autocomplete:
             return LLMConfig(
-                prompt: "Instruct: Continue the following text naturally. Write only the next few words.\n\n{content}\n\nOutput:",
-                temperature: 0.6,
-                maxTokens: 50
+                prompt: "Continue the following text naturally. Write only the next few words that would logically follow.",
+                temperature: 0.6, maxTokens: 50
             )
 
         case .patch:
             return LLMConfig(
-                prompt: "Instruct: Fix all spelling and grammar errors in the following text. Preserve the original meaning. Return only the corrected text.\n\n{content}\n\nOutput:",
-                temperature: 0.05,
-                maxTokens: nil
+                prompt: "Fix all spelling and grammar errors while preserving the original meaning. Return ONLY the corrected text with no additional commentary.",
+                temperature: 0.05, maxTokens: nil
             )
 
         case .rephrase:
             return LLMConfig(
-                prompt: "Instruct: Rewrite the following text more clearly and concisely. Return only the rewritten text.\n\n{content}\n\nOutput:",
-                temperature: 0.3,
-                maxTokens: nil
+                prompt: "Rewrite the following text to be clearer and more readable. Return ONLY the rewritten text with no additional commentary.",
+                temperature: 0.3, maxTokens: nil
             )
 
         case .summarize:
             return LLMConfig(
-                prompt: "Instruct: Read the following text and create a concise summary in 1-2 sentences. Return only the summary.\n\n{content}\n\nOutput:",
-                temperature: 0.2,
-                maxTokens: 150
+                prompt: "Summarize the following text in 1-2 sentences. Return ONLY the summary with no additional commentary.",
+                temperature: 0.2, maxTokens: 150
             )
 
         case .translate:
             return LLMConfig(
-                prompt: "Instruct: Translate the following text to {language}. Provide only the translation.\n\n{content}\n\nOutput:",
-                temperature: 0.1,
-                maxTokens: nil
+                prompt: "Translate the following text to {language}. Return ONLY the translation with no additional commentary.",
+                temperature: 0.1, maxTokens: nil
             )
 
         case .titleGeneration:
             return LLMConfig(
-                prompt: "Instruct: Create a short title (1-5 words) that captures the main idea of the following text. Return only the title.\n\n{content}\n\nOutput:",
-                temperature: 0.2,
-                maxTokens: 30
+                prompt: "Create a short title (1-5 words) that captures the main idea. Return ONLY the title with no additional commentary.",
+                temperature: 0.2, maxTokens: 30
             )
 
         case .custom:
             return LLMConfig(
-                prompt: "Instruct: ",
-                temperature: 0.6,
-                maxTokens: nil
+                prompt: "You are a helpful assistant.",
+                temperature: 0.6, maxTokens: nil
             )
+
         }
     }
 }
@@ -527,107 +338,46 @@ private enum GemmaTwoConfigs {
         switch toolType {
         case .autocomplete:
             return LLMConfig(
-                prompt: """
-                <start_of_turn>user
-                You are a helpful writing assistant. Continue the following text with just the next few words that would naturally follow:
-
-                {content}<end_of_turn>
-                <start_of_turn>model
-                """,
-                temperature: 0.6,
-                maxTokens: 50
+                prompt: "Continue the following text naturally. Write only the next few words that would logically follow.",
+                temperature: 0.6, maxTokens: 50
             )
 
         case .patch:
             return LLMConfig(
-                prompt: """
-                <start_of_turn>user
-                You are a grammar and spelling correction assistant. Fix all spelling and grammar errors while preserving meaning. Output ONLY the corrected text without any explanations.
-
-                Fix the following text and return only the corrected version:
-
-                {content}<end_of_turn>
-                <start_of_turn>model
-
-                """,
-                temperature: 0.05,
-                maxTokens: nil
+                prompt: "Fix all spelling and grammar errors while preserving the original meaning. Return ONLY the corrected text with no additional commentary.",
+                temperature: 0.05, maxTokens: nil
             )
 
         case .rephrase:
             return LLMConfig(
-                prompt: """
-                <start_of_turn>user
-                You are a writing improvement assistant. Rewrite text more clearly and concisely. Output ONLY the rewritten text without explanations.
-
-                Rewrite the following text and return only the rewritten version:
-
-                {content}<end_of_turn>
-                <start_of_turn>model
-
-                """,
-                temperature: 0.3,
-                maxTokens: nil
+                prompt: "Rewrite the following text to be clearer and more readable. Return ONLY the rewritten text with no additional commentary.",
+                temperature: 0.3, maxTokens: nil
             )
 
         case .summarize:
             return LLMConfig(
-                prompt: """
-                <start_of_turn>user
-                You are a helpful assistant that creates concise summaries. Output ONLY the summary without preamble.
-
-                Summarize the following text in 1-2 sentences. Return only the summary:
-
-                {content}<end_of_turn>
-                <start_of_turn>model
-
-                """,
-                temperature: 0.2,
-                maxTokens: 150
+                prompt: "Summarize the following text in 1-2 sentences. Return ONLY the summary with no additional commentary.",
+                temperature: 0.2, maxTokens: 150
             )
 
         case .translate:
             return LLMConfig(
-                prompt: """
-                <start_of_turn>user
-                You are an expert translator. Output ONLY the translation without notes or explanations.
-
-                Translate the following text to {language}. Return only the translation:
-
-                {content}<end_of_turn>
-                <start_of_turn>model
-
-                """,
-                temperature: 0.1,
-                maxTokens: nil
+                prompt: "Translate the following text to {language}. Return ONLY the translation with no additional commentary.",
+                temperature: 0.1, maxTokens: nil
             )
 
         case .titleGeneration:
             return LLMConfig(
-                prompt: """
-                <start_of_turn>user
-                You are a helpful assistant that creates concise titles. Output ONLY the title (1-5 words).
-
-                Create a short title (1-5 words) that captures the main idea of the following text:
-
-                {content}<end_of_turn>
-                <start_of_turn>model
-
-                """,
-                temperature: 0.2,
-                maxTokens: 30
+                prompt: "Create a short title (1-5 words) that captures the main idea. Return ONLY the title with no additional commentary.",
+                temperature: 0.2, maxTokens: 30
             )
 
         case .custom:
             return LLMConfig(
-                prompt: """
-                <start_of_turn>user
-                You are a helpful assistant.
-
-                """,
-                temperature: 0.6,
-                maxTokens: nil
+                prompt: "You are a helpful assistant.",
+                temperature: 0.6, maxTokens: nil
             )
+
         }
     }
 }
@@ -643,110 +393,46 @@ private enum PhiThreeFiveConfigs {
         switch toolType {
         case .autocomplete:
             return LLMConfig(
-                prompt: """
-                <|system|>
-                You are a helpful writing assistant. Continue text naturally and concisely.<|end|>
-                <|user|>
-                Continue the following text with just the next few words:
-
-                {content}<|end|>
-                <|assistant|>
-                """,
-                temperature: 0.6,
-                maxTokens: 50
+                prompt: "Continue the following text naturally. Write only the next few words that would logically follow.",
+                temperature: 0.6, maxTokens: 50
             )
 
         case .patch:
             return LLMConfig(
-                prompt: """
-                <|system|>
-                You fix spelling and grammar errors while preserving meaning. Output ONLY the corrected text without explanations.<|end|>
-                <|user|>
-                Fix all spelling and grammar errors. Return only the corrected text:
-
-                {content}<|end|>
-                <|assistant|>
-
-                """,
-                temperature: 0.05,
-                maxTokens: nil
+                prompt: "Fix all spelling and grammar errors while preserving the original meaning. Return ONLY the corrected text with no additional commentary.",
+                temperature: 0.05, maxTokens: nil
             )
 
         case .rephrase:
             return LLMConfig(
-                prompt: """
-                <|system|>
-                You rewrite text for improved clarity and readability. Output ONLY the rewritten text without explanations.<|end|>
-                <|user|>
-                Rewrite the following text more clearly. Return only the rewritten text:
-
-                {content}<|end|>
-                <|assistant|>
-
-                """,
-                temperature: 0.3,
-                maxTokens: nil
+                prompt: "Rewrite the following text to be clearer and more readable. Return ONLY the rewritten text with no additional commentary.",
+                temperature: 0.3, maxTokens: nil
             )
 
         case .summarize:
             return LLMConfig(
-                prompt: """
-                <|system|>
-                You create clear, concise summaries. Output ONLY the summary without preamble.<|end|>
-                <|user|>
-                Summarize the following text in 1-2 sentences. Return only the summary:
-
-                {content}<|end|>
-                <|assistant|>
-
-                """,
-                temperature: 0.2,
-                maxTokens: 150
+                prompt: "Summarize the following text in 1-2 sentences. Return ONLY the summary with no additional commentary.",
+                temperature: 0.2, maxTokens: 150
             )
 
         case .translate:
             return LLMConfig(
-                prompt: """
-                <|system|>
-                You are an expert translator. Output ONLY the translation without notes or explanations.<|end|>
-                <|user|>
-                Translate the following text to {language}. Return only the translation:
-
-                {content}<|end|>
-                <|assistant|>
-
-                """,
-                temperature: 0.1,
-                maxTokens: nil
+                prompt: "Translate the following text to {language}. Return ONLY the translation with no additional commentary.",
+                temperature: 0.1, maxTokens: nil
             )
 
         case .titleGeneration:
             return LLMConfig(
-                prompt: """
-                <|system|>
-                You create concise titles for text. Output ONLY the title (1-5 words).<|end|>
-                <|user|>
-                Create a short title (1-5 words) that captures the main idea of the following text:
-
-                {content}<|end|>
-                <|assistant|>
-
-                """,
-                temperature: 0.2,
-                maxTokens: 30
+                prompt: "Create a short title (1-5 words) that captures the main idea. Return ONLY the title with no additional commentary.",
+                temperature: 0.2, maxTokens: 30
             )
 
         case .custom:
             return LLMConfig(
-                prompt: """
-                <|system|>
-                You are a helpful assistant.<|end|>
-                <|user|>
-
-                """,
-                temperature: 0.6,
-                maxTokens: nil
+                prompt: "You are a helpful assistant.",
+                temperature: 0.6, maxTokens: nil
             )
+
         }
     }
 }

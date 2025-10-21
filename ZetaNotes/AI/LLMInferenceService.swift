@@ -519,9 +519,22 @@ class LLMInferenceService: @unchecked Sendable {
                     }
 
                     // Get model's chat template
-                    guard let tmpl = llama_model_chat_template(mdl, nil) else {
-                        print("❌ Model has no chat template")
-                        continuation.resume(returning: nil)
+                    let tmpl = llama_model_chat_template(mdl, nil)
+
+                    // If no chat template, fall back to simple prompt format
+                    if tmpl == nil {
+                        print("⚠️ Model has no chat template, falling back to simple format")
+                        let fallbackPrompt = "\(systemMessage)\n\n\(userMessage)"
+
+                        Task {
+                            let result = await self.generate(
+                                prompt: fallbackPrompt,
+                                maxTokens: maxTokens,
+                                temperature: temperature,
+                                grammar: grammar
+                            )
+                            continuation.resume(returning: result)
+                        }
                         return
                     }
 

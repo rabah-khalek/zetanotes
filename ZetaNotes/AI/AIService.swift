@@ -350,13 +350,14 @@ extension AIService {
         let instruction = prompt // The buildPrompt already includes the instruction
 
         // Estimate if we need batching
-        let estimatedTokens = estimateTokens(for: prompt)
+        let estimatedTokens = estimateTokens(for: text)
         let modelBatchSize = Int(llmService.getCurrentModel().optimalBatchSize)
 
-        // If prompt fits in one batch, use direct generation for efficiency
+        // If text fits in one batch, use direct generation for efficiency
         if estimatedTokens < modelBatchSize {
-            guard let rawOutput = await llmService.generate(
-                prompt: prompt,
+            guard let rawOutput = await llmService.generateWithChatTemplate(
+                systemMessage: instruction,
+                userMessage: text,
                 maxTokens: config.maxTokens,
                 temperature: config.temperature
             ) else {
@@ -369,7 +370,7 @@ extension AIService {
         // This shouldn't happen often for autocomplete/title, but provides safety
         return await processBatched(
             text,
-            instruction: prompt,
+            instruction: instruction,
             maxTokens: config.maxTokens,
             separator: " "
         )
@@ -393,14 +394,9 @@ extension AIService {
         // Use custom prompt if not empty, otherwise use default
         let instruction = customPrompt.isEmpty ? defaultPrompt : customPrompt
 
-        let prompt = """
-        \(instruction)
-
-        \(text)
-        """
-
-        guard let rawOutput = await llmService.generate(
-            prompt: prompt,
+        guard let rawOutput = await llmService.generateWithChatTemplate(
+            systemMessage: instruction,
+            userMessage: text,
             maxTokens: maxTokens ?? config.maxTokens,
             temperature: config.temperature
         ) else {
