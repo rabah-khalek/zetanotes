@@ -549,35 +549,42 @@ struct ContentView: View {
                 .allowsHitTesting(true)
 
             // Toolbar content (buttons on top of draggable area)
-            HStack(spacing: 0) {
-                // Left: Settings and New Note
-                toolbarLeftItems
-                    .padding(.leading, 16)
-                    .allowsHitTesting(true) // Allow buttons to receive clicks
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 0) {
+                    // Left: Settings and New Note
+                    toolbarLeftItems
+                        .padding(.leading, 16)
+                        .allowsHitTesting(true) // Allow buttons to receive clicks
+                        .fixedSize(horizontal: true, vertical: false)
 
-                Spacer()
-                    .allowsHitTesting(false) // Spacer doesn't block dragging
+                    Spacer(minLength: 8)
+                        .allowsHitTesting(false) // Spacer doesn't block dragging
 
-                // Center: AI Tools
-                toolbarCenterItems
-                    .allowsHitTesting(true) // Allow buttons to receive clicks
+                    // Center: AI Tools
+                    toolbarCenterItems
+                        .allowsHitTesting(true) // Allow buttons to receive clicks
+                        .fixedSize(horizontal: true, vertical: false)
 
-                Spacer()
-                    .allowsHitTesting(false) // Spacer doesn't block dragging
+                    Spacer(minLength: 8)
+                        .allowsHitTesting(false) // Spacer doesn't block dragging
 
-                // Right: Chat button (hidden when chat open)
-                if !showingChat {
-                    toolbarRightItems
-                        .padding(.trailing, 16)
-                        .allowsHitTesting(true) // Allow button to receive clicks
-                } else {
-                    // Empty spacer when chat is open to maintain balance
-                    Color.clear
-                        .frame(width: 60)
-                        .padding(.trailing, 16)
-                        .allowsHitTesting(false)
+                    // Right: Chat button (hidden when chat open)
+                    if !showingChat {
+                        toolbarRightItems
+                            .padding(.trailing, 16)
+                            .allowsHitTesting(true) // Allow button to receive clicks
+                            .fixedSize(horizontal: true, vertical: false)
+                    } else {
+                        // Empty spacer when chat is open to maintain balance
+                        Color.clear
+                            .frame(width: 60)
+                            .padding(.trailing, 16)
+                            .allowsHitTesting(false)
+                    }
                 }
+                .frame(minWidth: 0)
             }
+            .allowsHitTesting(true)
         }
         .frame(height: 52)
     }

@@ -38,32 +38,35 @@ struct CustomToolbarView<LeftContent: View, CenterContent: View, RightContent: V
                 .allowsHitTesting(true)
 
             // Toolbar content (buttons on top of draggable area)
-            HStack(spacing: 0) {
-                // Left items
-                leftContent
-                    .padding(.leading, AppTheme.Spacing.toolbarHorizontalPadding)
-                    .allowsHitTesting(true)
-                    .fixedSize(horizontal: true, vertical: false)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 0) {
+                    // Left items
+                    leftContent
+                        .padding(.leading, AppTheme.Spacing.toolbarHorizontalPadding)
+                        .allowsHitTesting(true)
+                        .fixedSize(horizontal: true, vertical: false)
 
-                Spacer(minLength: 8)
-                    .allowsHitTesting(false)
+                    Spacer(minLength: 8)
+                        .allowsHitTesting(false)
 
-                // Center items
-                centerContent
-                    .allowsHitTesting(true)
-                    .fixedSize(horizontal: false, vertical: false)
-                    .layoutPriority(1)
+                    // Center items
+                    centerContent
+                        .allowsHitTesting(true)
+                        .fixedSize(horizontal: true, vertical: false)
+                        .layoutPriority(1)
 
-                Spacer(minLength: 8)
-                    .allowsHitTesting(false)
+                    Spacer(minLength: 8)
+                        .allowsHitTesting(false)
 
-                // Right items
-                rightContent
-                    .padding(.trailing, 8)
-                    .allowsHitTesting(true)
-                    .fixedSize(horizontal: true, vertical: false)
+                    // Right items
+                    rightContent
+                        .padding(.trailing, 8)
+                        .allowsHitTesting(true)
+                        .fixedSize(horizontal: true, vertical: false)
+                }
+                .frame(minWidth: 0)
             }
-            .frame(maxWidth: .infinity)
+            .allowsHitTesting(true)
         }
         .frame(height: height)
         .background(
