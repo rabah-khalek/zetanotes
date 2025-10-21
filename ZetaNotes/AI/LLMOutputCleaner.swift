@@ -75,7 +75,11 @@ enum LLMOutputCleaner {
         cleaned = cleaned.replacingOccurrences(of: "<|system|>", with: "")
         cleaned = cleaned.replacingOccurrences(of: "<|system_info", with: "") // Broken system_info token
         cleaned = cleaned.replacingOccurrences(of: "_id|>", with: "")
-        cleaned = cleaned.replacingOccurrences(of: "|>", with: "") // Partial artifact - IMPORTANT: clean this before ygiene_code check
+        cleaned = cleaned
+            .replacingOccurrences(
+                of: "|>",
+                with: ""
+            ) // Partial artifact - IMPORTANT: clean this before ygiene_code check
 
         // Llama 3.2 1B specific artifacts (broken template markers appearing as standalone words)
         // Use regex to remove these ONLY when they appear as isolated words

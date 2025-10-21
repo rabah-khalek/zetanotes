@@ -264,7 +264,7 @@ struct StatusFooterView: View {
             if licenseManager.isPro {
                 // Pro user: Simple report issue link
                 Button(action: {
-                    if let url = URL(string: "https://rabah-khalek.github.io/zetanotes/feedback.html") {
+                    if let url = URL(string: "https://zetanotes.com/feedback") {
                         NSWorkspace.shared.open(url)
                     }
                 }) {
@@ -276,25 +276,13 @@ struct StatusFooterView: View {
                 .buttonStyle(.plain)
             } else {
                 // Free user: Full disclaimer with upgrade option
-                Text("Tools usually reliable • Model is fast but limited •")
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundColor(.secondary)
-
-                Button(action: {
-                    if let url = URL(string: "https://rabah-khalek.github.io/zetanotes/feedback.html") {
-                        NSWorkspace.shared.open(url)
-                    }
-                }) {
-                    Text("Report issue")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(.blue)
-                        .underline()
-                }
-                .buttonStyle(.plain)
-
-                Text("•")
-                    .font(.system(size: 10))
-                    .foregroundColor(.secondary)
+                (
+                    Text("Tools generally work • Fast but ") +
+                        Text("error-prone").foregroundColor(.primary) +
+                        Text(" model •")
+                )
+                .font(.system(size: 10, weight: .medium))
+                .foregroundColor(.secondary)
 
                 Button(action: {
                     // Show upgrade prompt for free users
@@ -306,6 +294,22 @@ struct StatusFooterView: View {
                     Text("Upgrade model")
                         .font(.system(size: 10, weight: .medium))
                         .foregroundColor(.purple)
+                        .underline()
+                }
+                .buttonStyle(.plain)
+
+                Text("•")
+                    .font(.system(size: 10))
+                    .foregroundColor(.secondary)
+
+                Button(action: {
+                    if let url = URL(string: "https://zetanotes.com/feedback") {
+                        NSWorkspace.shared.open(url)
+                    }
+                }) {
+                    Text("Report issue")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundColor(.blue)
                         .underline()
                 }
                 .buttonStyle(.plain)
@@ -323,7 +327,8 @@ struct StatusFooterView: View {
         )
         .help(licenseManager.isPro
             ? "Report any issues or provide feedback"
-            : "AI tools are generally reliable but may have limitations. Report issues or upgrade to Pro for more capable models.")
+            :
+            "AI tools are generally reliable but may have limitations. Report issues or upgrade to Pro for more capable models.")
     }
 
     private func downloadProgressBadge(modelName: String) -> some View {

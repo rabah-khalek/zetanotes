@@ -204,16 +204,16 @@ struct ToolEditorView: View {
 
                         // Temporarily disabled - allow prompts without {content} placeholder
                         /*
-                        if !tool.prompt.isEmpty && !tool.prompt.contains("{content}") {
-                            HStack(spacing: 4) {
-                                Image(systemName: "exclamationmark.triangle.fill")
-                                    .font(.caption)
-                                Text("Prompt must include {content} placeholder")
-                                    .font(.caption)
-                            }
-                            .foregroundColor(.orange)
-                        }
-                        */
+                         if !tool.prompt.isEmpty && !tool.prompt.contains("{content}") {
+                             HStack(spacing: 4) {
+                                 Image(systemName: "exclamationmark.triangle.fill")
+                                     .font(.caption)
+                                 Text("Prompt must include {content} placeholder")
+                                     .font(.caption)
+                             }
+                             .foregroundColor(.orange)
+                         }
+                         */
                     }
                 }
                 .padding(.horizontal, 20)

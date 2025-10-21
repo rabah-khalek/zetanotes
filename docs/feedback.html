@@ -298,10 +298,6 @@
                 ✗ <span id="errorMessage">Something went wrong. Please try again or report directly on GitHub.</span>
             </div>
 
-            <div id="infoAlert" class="alert alert-info">
-                ℹ️ No GitHub account needed! Fill out the form below and we'll create an issue for you.
-            </div>
-
             <form id="feedbackForm">
                 <div class="form-group">
                     <label for="title">Issue Title <span class="required">*</span></label>
@@ -444,7 +440,7 @@
                 // Log response for debugging
                 console.log('Response status:', response.status);
                 console.log('Response headers:', response.headers);
-                
+
                 const responseText = await response.text();
                 console.log('Response text:', responseText);
 

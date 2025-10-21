@@ -575,7 +575,14 @@ class LLMInferenceService: @unchecked Sendable {
                                         llama_chat_message(role: systemRolePtr, content: systemPtr),
                                         llama_chat_message(role: userRolePtr, content: userPtr)
                                     ]
-                                    return llama_chat_apply_template(tmpl, &messages, 2, true, &buffer, Int32(buffer.count))
+                                    return llama_chat_apply_template(
+                                        tmpl,
+                                        &messages,
+                                        2,
+                                        true,
+                                        &buffer,
+                                        Int32(buffer.count)
+                                    )
                                 }
                             }
                         }

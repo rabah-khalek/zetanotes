@@ -710,9 +710,11 @@ struct GeneralSettingsContent: View {
                         .font(.system(size: 11))
                         .foregroundColor(.secondary)
 
-                    Text("Payments and licenses are managed securely by Paddle; no billing data is stored in ZetaNotes.")
-                        .font(.system(size: 11))
-                        .foregroundColor(.secondary)
+                    Text(
+                        "Payments and licenses are managed securely by Paddle; no billing data is stored in ZetaNotes."
+                    )
+                    .font(.system(size: 11))
+                    .foregroundColor(.secondary)
                 }
             }
             .padding()
@@ -1486,9 +1488,11 @@ struct LegalSupportSection: View {
             }
 
             VStack(alignment: .leading, spacing: 12) {
-                Text("ZetaNotes runs fully on your Mac. Notes, embeddings, and chat history stay local unless you export or share them.")
-                    .font(.system(size: 12))
-                    .foregroundColor(.secondary)
+                Text(
+                    "ZetaNotes runs fully on your Mac. Notes, embeddings, and chat history stay local unless you export or share them."
+                )
+                .font(.system(size: 12))
+                .foregroundColor(.secondary)
 
                 HStack(spacing: 12) {
                     Button {
@@ -1552,9 +1556,11 @@ struct LegalSupportSection: View {
                     .fill(Color(nsColor: .controlBackgroundColor).opacity(0.5))
             )
 
-            Text("Need to revoke data? Export or delete everything from the actions above, or email support to request account deletion.")
-                .font(.caption)
-                .foregroundColor(.secondary)
+            Text(
+                "Need to revoke data? Export or delete everything from the actions above, or email support to request account deletion."
+            )
+            .font(.caption)
+            .foregroundColor(.secondary)
         }
         .padding(.horizontal)
     }

@@ -20,6 +20,6 @@ struct CenteredScrollingModifier: ViewModifier {
 
 extension View {
     func centeredScrolling() -> some View {
-        self.modifier(CenteredScrollingModifier())
+        modifier(CenteredScrollingModifier())
     }
 }
