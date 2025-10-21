@@ -202,6 +202,8 @@ struct ToolEditorView: View {
                                     )
                             )
 
+                        // Temporarily disabled - allow prompts without {content} placeholder
+                        /*
                         if !tool.prompt.isEmpty && !tool.prompt.contains("{content}") {
                             HStack(spacing: 4) {
                                 Image(systemName: "exclamationmark.triangle.fill")
@@ -211,6 +213,7 @@ struct ToolEditorView: View {
                             }
                             .foregroundColor(.orange)
                         }
+                        */
                     }
                 }
                 .padding(.horizontal, 20)
@@ -502,7 +505,7 @@ struct ToolEditorView: View {
     private var isValid: Bool {
         !tool.name.isEmpty &&
             !tool.prompt.isEmpty &&
-            tool.prompt.contains("{content}") && // Must include placeholder
+            // tool.prompt.contains("{content}") && // Temporarily disabled - allow prompts without {content}
             shortcutError == nil &&
             nameError == nil
         // Note: keyboard shortcut is optional

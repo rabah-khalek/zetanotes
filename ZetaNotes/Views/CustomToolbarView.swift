@@ -17,14 +17,17 @@ struct CustomToolbarView<LeftContent: View, CenterContent: View, RightContent: V
     let centerContent: CenterContent
     let rightContent: RightContent
     let height: CGFloat
+    let sidebarVisible: Bool
 
     init(
         height: CGFloat = 52,
+        sidebarVisible: Bool = true,
         @ViewBuilder leftContent: () -> LeftContent,
         @ViewBuilder centerContent: () -> CenterContent,
         @ViewBuilder rightContent: () -> RightContent
     ) {
         self.height = height
+        self.sidebarVisible = sidebarVisible
         self.leftContent = leftContent()
         self.centerContent = centerContent()
         self.rightContent = rightContent()
@@ -42,7 +45,7 @@ struct CustomToolbarView<LeftContent: View, CenterContent: View, RightContent: V
                 HStack(spacing: 0) {
                     // Left items
                     leftContent
-                        .padding(.leading, AppTheme.Spacing.toolbarHorizontalPadding)
+                        .padding(.leading, sidebarVisible ? AppTheme.Spacing.toolbarHorizontalPadding : 80)
                         .allowsHitTesting(true)
                         .fixedSize(horizontal: true, vertical: false)
 

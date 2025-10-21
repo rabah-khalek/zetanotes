@@ -198,7 +198,7 @@ struct ContentView: View {
 
     @ViewBuilder
     private func buildCustomToolbar() -> some View {
-        CustomToolbarView(height: 52) {
+        CustomToolbarView(height: 52, sidebarVisible: showingSidebar) {
             // Left items
             toolbarLeftItems
         } centerContent: {
@@ -553,7 +553,7 @@ struct ContentView: View {
                 HStack(spacing: 0) {
                     // Left: Settings and New Note
                     toolbarLeftItems
-                        .padding(.leading, 16)
+                        .padding(.leading, showingSidebar ? 16 : 80)
                         .allowsHitTesting(true) // Allow buttons to receive clicks
                         .fixedSize(horizontal: true, vertical: false)
 

@@ -19,42 +19,46 @@ struct StatusFooterView: View {
     @State private var showingModelMetadata = false
 
     var body: some View {
-        HStack(spacing: 0) {
-            Spacer()
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 0) {
+                Spacer(minLength: 8)
 
-            // All items centered
-            HStack(spacing: 8) {
-                // Created timestamp
-                if let createdAt = createdAt {
-                    timestampBadge(label: "Created", date: createdAt, color: .green)
+                // All items centered
+                HStack(spacing: 8) {
+                    // Created timestamp
+                    if let createdAt = createdAt {
+                        timestampBadge(label: "Created", date: createdAt, color: .green)
+                    }
+
+                    // Word count
+                    wordCountBadge
+
+                    // Active AI Model (only show when model is loaded)
+                    if !systemMonitor.activeModel.isEmpty && aiEngine.isModelLoaded {
+                        activeModelBadge
+                    }
+
+                    // Performance (tokens/sec)
+                    if systemMonitor.tokensPerSecond > 0 {
+                        performanceBadge
+                    }
+
+                    // System usage (only show when model is loaded)
+                    if aiEngine.isModelLoaded {
+                        systemUsageBadge
+                    }
+
+                    // Model Download Progress (if downloading)
+                    if downloadState.isDownloading, let modelName = downloadState.downloadingModelName {
+                        downloadProgressBadge(modelName: modelName)
+                    }
                 }
+                .fixedSize(horizontal: true, vertical: false)
+                .padding(.vertical, 6)
 
-                // Word count
-                wordCountBadge
-
-                // Active AI Model (only show when model is loaded)
-                if !systemMonitor.activeModel.isEmpty && aiEngine.isModelLoaded {
-                    activeModelBadge
-                }
-
-                // Performance (tokens/sec)
-                if systemMonitor.tokensPerSecond > 0 {
-                    performanceBadge
-                }
-
-                // System usage (only show when model is loaded)
-                if aiEngine.isModelLoaded {
-                    systemUsageBadge
-                }
-
-                // Model Download Progress (if downloading)
-                if downloadState.isDownloading, let modelName = downloadState.downloadingModelName {
-                    downloadProgressBadge(modelName: modelName)
-                }
+                Spacer(minLength: 8)
             }
-            .padding(.vertical, 6)
-
-            Spacer()
+            .frame(minWidth: 0)
         }
         .padding(.vertical, 4)
         .frame(maxWidth: .infinity)
