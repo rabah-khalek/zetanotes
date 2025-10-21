@@ -79,7 +79,7 @@ private enum TinyLlamaConfigs {
 
         case .titleGeneration:
             return LLMConfig(
-                prompt: "Create a short, concise title (1-5 words) that captures the main idea. Return ONLY the title with no additional commentary.",
+                prompt: "Title (1-5 words):",
                 temperature: 0.2,
                 maxTokens: 30
             )
@@ -144,7 +144,7 @@ private enum LlamaThreeTwoConfigs {
 
         case .titleGeneration:
             return LLMConfig(
-                prompt: "Generate a 2-5 word title. Return only the title with no punctuation or explanation.",
+                prompt: "Title (2-5 words):",
                 temperature: 0.3,
                 maxTokens: 12
             )
@@ -201,7 +201,7 @@ private enum QwenTwoFiveConfigs {
 
         case .titleGeneration:
             return LLMConfig(
-                prompt: "Create a short title (1-5 words) that captures the main idea. Return ONLY the title with no additional commentary.",
+                prompt: "Title (1-5 words):",
                 temperature: 0.2, maxTokens: 30
             )
 
@@ -256,7 +256,7 @@ private enum SmolLMTwoConfigs {
 
         case .titleGeneration:
             return LLMConfig(
-                prompt: "Create a short title (1-5 words) that captures the main idea. Return ONLY the title with no additional commentary.",
+                prompt: "Title (1-5 words):",
                 temperature: 0.2, maxTokens: 30
             )
 
@@ -311,7 +311,7 @@ private enum Phi2Configs {
 
         case .titleGeneration:
             return LLMConfig(
-                prompt: "Create a short title (1-5 words) that captures the main idea. Return ONLY the title with no additional commentary.",
+                prompt: "Title (1-5 words):",
                 temperature: 0.2, maxTokens: 30
             )
 
@@ -365,7 +365,7 @@ private enum GemmaTwoConfigs {
 
         case .titleGeneration:
             return LLMConfig(
-                prompt: "Create a short title (1-5 words) that captures the main idea. Return ONLY the title with no additional commentary.",
+                prompt: "Title (1-5 words):",
                 temperature: 0.2, maxTokens: 30
             )
 
@@ -419,7 +419,7 @@ private enum PhiThreeFiveConfigs {
 
         case .titleGeneration:
             return LLMConfig(
-                prompt: "Create a short title (1-5 words) that captures the main idea. Return ONLY the title with no additional commentary.",
+                prompt: "Title (1-5 words):",
                 temperature: 0.2, maxTokens: 30
             )
 

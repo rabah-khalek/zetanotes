@@ -145,6 +145,8 @@ struct InlineAutocompleteTextEditor: NSViewRepresentable {
             return
         }
 
+        guard let textStorage = textView.textStorage else { return }
+
         // Create attributed string with ghost text
         let fullText = text + suggestion
         let attributedString = NSMutableAttributedString(string: fullText)
@@ -162,8 +164,10 @@ struct InlineAutocompleteTextEditor: NSViewRepresentable {
             range: NSRange(location: text.count, length: suggestion.count)
         )
 
-        // Update text storage safely
-        textView.textStorage?.setAttributedString(attributedString)
+        // Update text storage SAFELY with begin/end editing
+        textStorage.beginEditing()
+        textStorage.setAttributedString(attributedString)
+        textStorage.endEditing()
 
         // Restore cursor position to end of actual text
         textView.setSelectedRange(NSRange(location: cursorPosition, length: 0))
@@ -173,8 +177,14 @@ struct InlineAutocompleteTextEditor: NSViewRepresentable {
         // Only remove if there's extra content (ghost text present)
         let currentText = textView.string
         if currentText != text {
+            guard let textStorage = textView.textStorage else { return }
             let selectedRange = textView.selectedRange()
-            textView.string = text
+
+            // Safely update text storage
+            textStorage.beginEditing()
+            textStorage.mutableString.setString(text)
+            textStorage.endEditing()
+
             // Restore cursor position after removing ghost text
             textView.setSelectedRange(NSRange(location: min(selectedRange.location, text.count), length: 0))
         }

@@ -68,6 +68,13 @@ enum LLMOutputCleaner {
         cleaned = cleaned.replacingOccurrences(of: "<|eot_", with: "")
         cleaned = cleaned.replacingOccurrences(of: "<|start_header", with: "")
 
+        // Common role markers and partial artifacts (CLEAN THESE EARLY - before checking for isolated words)
+        cleaned = cleaned.replacingOccurrences(of: "<|assistant|>", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "<|user|>", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "<|system|>", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "_id|>", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "|>", with: "") // Partial artifact - IMPORTANT: clean this before ygiene_code check
+
         // Llama 3.2 1B specific artifacts (broken template markers appearing as standalone words)
         // Use regex to remove these ONLY when they appear as isolated words
         let isolatedArtifacts = ["_header", "assistant", "system", "user", "ygiene_code", "_code", "header_"]
@@ -75,7 +82,7 @@ enum LLMOutputCleaner {
             // Remove if at start of string followed by whitespace
             if let regex = try? NSRegularExpression(
                 pattern: "^" + NSRegularExpression.escapedPattern(for: artifact) + "\\s*",
-                options: []
+                options: [.caseInsensitive]
             ) {
                 let range = NSRange(cleaned.startIndex..., in: cleaned)
                 cleaned = regex.stringByReplacingMatches(in: cleaned, options: [], range: range, withTemplate: "")
@@ -83,12 +90,42 @@ enum LLMOutputCleaner {
             // Remove if preceded by whitespace or newline (isolated word)
             if let regex = try? NSRegularExpression(
                 pattern: "\\s+" + NSRegularExpression.escapedPattern(for: artifact) + "(?=\\s|$)",
-                options: []
+                options: [.caseInsensitive]
             ) {
                 let range = NSRange(cleaned.startIndex..., in: cleaned)
                 cleaned = regex.stringByReplacingMatches(in: cleaned, options: [], range: range, withTemplate: " ")
             }
         }
+
+        // Additional Llama 3.2 broken artifacts with wildcards (case-insensitive)
+        // Matches: ygiene_*, hygiene_*, _model, _modei, _mode, etc.
+        let brokenArtifactPatterns = [
+            // Pattern 1: [Yy]giene with optional underscore and any suffix
+            "(?:^|\\s)([Yy]giene(?:_\\w+)?)(?=\\s|$)",
+
+            // Pattern 2: [Hh]ygiene with optional underscore and any suffix
+            "(?:^|\\s)([Hh]ygiene(?:_\\w+)?)(?=\\s|$)",
+
+            // Pattern 3: _model variants (_model, _modei, _mode)
+            "(?:^|\\s)(_model[ei]?)(?=\\s|$)"
+        ]
+
+        for pattern in brokenArtifactPatterns {
+            if let regex = try? NSRegularExpression(pattern: pattern, options: []) {
+                let range = NSRange(cleaned.startIndex..., in: cleaned)
+                // Replace with single space to maintain word separation
+                cleaned = regex.stringByReplacingMatches(
+                    in: cleaned,
+                    options: [],
+                    range: range,
+                    withTemplate: " "
+                )
+            }
+        }
+
+        // Clean up any double spaces or leading/trailing spaces
+        cleaned = cleaned.replacingOccurrences(of: "  +", with: " ", options: .regularExpression)
+        cleaned = cleaned.trimmingCharacters(in: .whitespaces)
 
         // Qwen 2.5, Phi-2
         cleaned = cleaned.replacingOccurrences(of: "<|endoftext|>", with: "")
@@ -101,15 +138,8 @@ enum LLMOutputCleaner {
         // Phi-3.5 (Microsoft format)
         cleaned = cleaned.replacingOccurrences(of: "<|end|>", with: "")
 
-        // Common role markers and artifacts
-        cleaned = cleaned.replacingOccurrences(of: "<|assistant|>", with: "")
-        cleaned = cleaned.replacingOccurrences(of: "<|user|>", with: "")
-        cleaned = cleaned.replacingOccurrences(of: "<|system|>", with: "")
-        cleaned = cleaned.replacingOccurrences(of: "_id|>", with: "")
-        cleaned = cleaned.replacingOccurrences(of: "|>", with: "") // Partial artifact
-
         // Remove trailing incomplete tokens (e.g., "App Notarization<" where < is start of <|eot_id|>)
-        let trailingIncompleteTokens = ["<", "<|", "<|e", "<|eo", "<|eot", "|>", ">"]
+        let trailingIncompleteTokens = ["<", "<|", "<|e", "<|eo", "<|eot", ">"]
         for token in trailingIncompleteTokens {
             if cleaned.hasSuffix(token) {
                 cleaned = String(cleaned.dropLast(token.count))

@@ -870,7 +870,7 @@ class LLMInferenceService: @unchecked Sendable {
                         generatedTokens: Int(perfData.n_eval),
                         promptTime: perfData.t_p_eval_ms,
                         generationTime: perfData.t_eval_ms,
-                        tokensPerSecond: perfData.n_eval > 0 ? (
+                        tokensPerSecond: (perfData.n_eval > 0 && perfData.t_eval_ms > 0.001) ? (
                             Double(perfData.n_eval) / (perfData.t_eval_ms / 1000.0)
                         ) : 0
                     )
@@ -893,6 +893,7 @@ class LLMInferenceService: @unchecked Sendable {
                     print(
                         "⚡ Performance: \(String(format: "%.1f", perfMetrics.tokensPerSecond)) t/s, prompt: \(String(format: "%.0f", perfMetrics.promptTime))ms, gen: \(String(format: "%.0f", perfMetrics.generationTime))ms"
                     )
+                    print("🔍 Debug - n_eval: \(perfData.n_eval), t_eval_ms: \(perfData.t_eval_ms)")
                     print("📄 Output preview: \(generatedText.prefix(200))\(generatedText.count > 200 ? "..." : "")")
                     print("=== Generation Complete ===\n")
                     continuation.resume(returning: generatedText)
