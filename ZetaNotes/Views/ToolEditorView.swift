@@ -114,7 +114,7 @@ struct ToolEditorView: View {
 
     private var formContent: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
+            VStack(alignment: .leading, spacing: 20) {
                 nameField
                 colorPicker
                 keyboardShortcutField
@@ -122,7 +122,43 @@ struct ToolEditorView: View {
                 Divider()
                     .padding(.horizontal, 20)
 
-                VStack(alignment: .leading, spacing: 10) {
+                // Language Picker (Translation tool only) - Shown BEFORE prompt
+                if tool.name == "Translate", let languageBinding = targetLanguage {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Label("Target Language", systemImage: "globe")
+                                .font(.system(size: 14, weight: .semibold))
+                            Spacer()
+                        }
+
+                        Picker("Target Language", selection: languageBinding) {
+                            Text("English").tag("English")
+                            Text("Spanish").tag("Spanish")
+                            Text("French").tag("French")
+                            Text("German").tag("German")
+                            Text("Portuguese").tag("Portuguese")
+                            Text("Italian").tag("Italian")
+                            Text("Dutch").tag("Dutch")
+                            Text("Chinese").tag("Chinese")
+                            Text("Japanese").tag("Japanese")
+                            Text("Korean").tag("Korean")
+                            Text("Russian").tag("Russian")
+                            Text("Arabic").tag("Arabic")
+                        }
+                        .pickerStyle(.menu)
+                        .frame(width: 200)
+                        .disabled(isReadOnly)
+
+                        Text(
+                            "The prompt uses {language} placeholder which will be replaced with this language at runtime."
+                        )
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    }
+                    .padding(.horizontal, 20)
+                }
+
+                VStack(alignment: .leading, spacing: 8) {
                     HStack {
                         Label("AI Prompt", systemImage: "text.bubble")
                             .font(.system(size: 14, weight: .semibold))
@@ -150,11 +186,11 @@ struct ToolEditorView: View {
                                 .background(Color(nsColor: .controlBackgroundColor).opacity(0.3))
                                 .cornerRadius(8)
                         }
-                        .frame(height: 160)
+                        .frame(minHeight: 60, maxHeight: 200)
                     } else {
                         TextEditor(text: $tool.prompt)
                             .font(.system(size: 13))
-                            .frame(height: 160)
+                            .frame(minHeight: 60, maxHeight: 200)
                             .padding(8)
                             .background(Color(nsColor: .textBackgroundColor))
                             .cornerRadius(8)
@@ -175,42 +211,6 @@ struct ToolEditorView: View {
                             }
                             .foregroundColor(.orange)
                         }
-                    }
-
-                    // Language Picker (Translation tool only)
-                    if tool.name == "Translate", let languageBinding = targetLanguage {
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Label("Target Language", systemImage: "globe")
-                                    .font(.system(size: 13, weight: .medium))
-                                Spacer()
-                            }
-
-                            Picker("Target Language", selection: languageBinding) {
-                                Text("English").tag("English")
-                                Text("Spanish").tag("Spanish")
-                                Text("French").tag("French")
-                                Text("German").tag("German")
-                                Text("Portuguese").tag("Portuguese")
-                                Text("Italian").tag("Italian")
-                                Text("Dutch").tag("Dutch")
-                                Text("Chinese").tag("Chinese")
-                                Text("Japanese").tag("Japanese")
-                                Text("Korean").tag("Korean")
-                                Text("Russian").tag("Russian")
-                                Text("Arabic").tag("Arabic")
-                            }
-                            .pickerStyle(.menu)
-                            .frame(width: 200)
-                            .disabled(isReadOnly)
-
-                            Text(
-                                "The prompt uses {language} placeholder which will be replaced with this language at runtime."
-                            )
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        }
-                        .padding(.top, 8)
                     }
                 }
                 .padding(.horizontal, 20)
@@ -317,7 +317,7 @@ struct ToolEditorView: View {
                     }
                 }
                 .padding(.horizontal, 20)
-                .padding(.top, -16)
+                .padding(.top, -8)
                 .padding(.bottom, 16)
             }
 
