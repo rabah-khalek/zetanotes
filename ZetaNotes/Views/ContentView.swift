@@ -175,6 +175,9 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .toggleChat)) { _ in
             showingChat.toggle()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .showModelPicker)) { _ in
+            showingSettings = true
+        }
         .onDisappear {
             systemMonitor.stopMonitoring()
             // Flush any pending saves when view disappears

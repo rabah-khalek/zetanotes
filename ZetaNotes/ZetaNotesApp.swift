@@ -217,4 +217,5 @@ extension Notification.Name {
     static let triggerSearch = Notification.Name("triggerSearch")
     static let showUpgradePrompt = Notification.Name("showUpgradePrompt")
     static let toggleChat = Notification.Name("toggleChat")
+    static let showModelPicker = Notification.Name("showModelPicker")
 }

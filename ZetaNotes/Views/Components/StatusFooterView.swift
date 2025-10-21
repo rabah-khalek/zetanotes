@@ -11,6 +11,7 @@ struct StatusFooterView: View {
     @ObservedObject var systemMonitor: SystemMonitor
     @ObservedObject var aiEngine: AIEngine
     @ObservedObject var downloadState: ModelDownloadState
+    @ObservedObject var licenseManager = LicenseManager.shared
 
     var wordCount: Int
     var characterCount: Int
@@ -32,11 +33,6 @@ struct StatusFooterView: View {
                     // Word count
                     wordCountBadge
 
-                    // Active AI Model (only show when model is loaded)
-                    if !systemMonitor.activeModel.isEmpty && aiEngine.isModelLoaded {
-                        activeModelBadge
-                    }
-
                     // Performance (tokens/sec)
                     if systemMonitor.tokensPerSecond > 0 {
                         performanceBadge
@@ -46,6 +42,14 @@ struct StatusFooterView: View {
                     if aiEngine.isModelLoaded {
                         systemUsageBadge
                     }
+
+                    // Active AI Model (only show when model is loaded)
+                    if !systemMonitor.activeModel.isEmpty && aiEngine.isModelLoaded {
+                        activeModelBadge
+                    }
+
+                    // Disclaimer badge
+                    disclaimerBadge
 
                     // Model Download Progress (if downloading)
                     if downloadState.isDownloading, let modelName = downloadState.downloadingModelName {
@@ -249,6 +253,77 @@ struct StatusFooterView: View {
         (\(String(format: "%.1f", systemMonitor.memoryUsagePercentage))% of \
         \(Int(systemMonitor.totalSystemMemory / 1024))GB)
         """)
+    }
+
+    private var disclaimerBadge: some View {
+        HStack(spacing: 4) {
+            Image(systemName: "info.circle.fill")
+                .font(.system(size: 9))
+                .foregroundColor(.blue)
+
+            if licenseManager.isPro {
+                // Pro user: Simple report issue link
+                Button(action: {
+                    if let url = URL(string: "https://rabah-khalek.github.io/zetanotes/feedback.html") {
+                        NSWorkspace.shared.open(url)
+                    }
+                }) {
+                    Text("Report issue")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundColor(.blue)
+                        .underline()
+                }
+                .buttonStyle(.plain)
+            } else {
+                // Free user: Full disclaimer with upgrade option
+                Text("Tools usually reliable • Model is fast but limited •")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundColor(.secondary)
+
+                Button(action: {
+                    if let url = URL(string: "https://rabah-khalek.github.io/zetanotes/feedback.html") {
+                        NSWorkspace.shared.open(url)
+                    }
+                }) {
+                    Text("Report issue")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundColor(.blue)
+                        .underline()
+                }
+                .buttonStyle(.plain)
+
+                Text("•")
+                    .font(.system(size: 10))
+                    .foregroundColor(.secondary)
+
+                Button(action: {
+                    // Show upgrade prompt for free users
+                    NotificationCenter.default.post(
+                        name: .showUpgradePrompt,
+                        object: UpgradePromptView.PromptType.modelSwitching
+                    )
+                }) {
+                    Text("Upgrade model")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundColor(.purple)
+                        .underline()
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 7)
+        .padding(.vertical, 4)
+        .background(
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color.blue.opacity(0.08))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 4)
+                        .strokeBorder(Color.blue.opacity(0.2), lineWidth: 0.5)
+                )
+        )
+        .help(licenseManager.isPro
+            ? "Report any issues or provide feedback"
+            : "AI tools are generally reliable but may have limitations. Report issues or upgrade to Pro for more capable models.")
     }
 
     private func downloadProgressBadge(modelName: String) -> some View {

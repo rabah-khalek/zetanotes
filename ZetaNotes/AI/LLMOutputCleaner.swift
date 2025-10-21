@@ -53,6 +53,7 @@ enum LLMOutputCleaner {
         cleaned = cleaned.replacingOccurrences(of: "<|start_header_id|>", with: "")
         cleaned = cleaned.replacingOccurrences(of: "<|end_header_id|>", with: "")
         cleaned = cleaned.replacingOccurrences(of: "<|begin_of_text|>", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "<|end_request", with: "")
 
         // Llama 3.2 reserved special tokens (appear with large contexts)
         // Format: <|reserved_special_token_XXX| where XXX is a number
@@ -72,6 +73,7 @@ enum LLMOutputCleaner {
         cleaned = cleaned.replacingOccurrences(of: "<|assistant|>", with: "")
         cleaned = cleaned.replacingOccurrences(of: "<|user|>", with: "")
         cleaned = cleaned.replacingOccurrences(of: "<|system|>", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "<|system_info", with: "") // Broken system_info token
         cleaned = cleaned.replacingOccurrences(of: "_id|>", with: "")
         cleaned = cleaned.replacingOccurrences(of: "|>", with: "") // Partial artifact - IMPORTANT: clean this before ygiene_code check
 

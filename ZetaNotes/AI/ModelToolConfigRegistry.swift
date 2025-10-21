@@ -137,16 +137,16 @@ private enum LlamaThreeTwoConfigs {
 
         case .translate:
             return LLMConfig(
-                prompt: "Translate to {language}. Return only the {language} translation with no English words or explanations.",
+                prompt: "Translate to {language}. Return only the translation with no preamble.",
                 temperature: 0.3,
                 maxTokens: nil
             )
 
         case .titleGeneration:
             return LLMConfig(
-                prompt: "Title (2-5 words):",
-                temperature: 0.3,
-                maxTokens: 12
+                prompt: "Create a short title for this text. Return only the title with no preamble.",
+                temperature: 0.6,
+                maxTokens: 30
             )
 
         case .custom:
