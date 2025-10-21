@@ -210,7 +210,6 @@ private enum QwenTwoFiveConfigs {
                 prompt: "You are a helpful assistant.",
                 temperature: 0.7, maxTokens: nil
             )
-
         }
     }
 }
@@ -266,7 +265,6 @@ private enum SmolLMTwoConfigs {
                 prompt: "You are a helpful assistant.",
                 temperature: 0.5, maxTokens: nil
             )
-
         }
     }
 }
@@ -322,7 +320,6 @@ private enum Phi2Configs {
                 prompt: "You are a helpful assistant.",
                 temperature: 0.6, maxTokens: nil
             )
-
         }
     }
 }
@@ -377,7 +374,6 @@ private enum GemmaTwoConfigs {
                 prompt: "You are a helpful assistant.",
                 temperature: 0.6, maxTokens: nil
             )
-
         }
     }
 }
@@ -432,7 +428,6 @@ private enum PhiThreeFiveConfigs {
                 prompt: "You are a helpful assistant.",
                 temperature: 0.6, maxTokens: nil
             )
-
         }
     }
 }

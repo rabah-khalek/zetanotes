@@ -73,12 +73,18 @@ enum LLMOutputCleaner {
         let isolatedArtifacts = ["_header", "assistant", "system", "user", "ygiene_code", "_code", "header_"]
         for artifact in isolatedArtifacts {
             // Remove if at start of string followed by whitespace
-            if let regex = try? NSRegularExpression(pattern: "^" + NSRegularExpression.escapedPattern(for: artifact) + "\\s*", options: []) {
+            if let regex = try? NSRegularExpression(
+                pattern: "^" + NSRegularExpression.escapedPattern(for: artifact) + "\\s*",
+                options: []
+            ) {
                 let range = NSRange(cleaned.startIndex..., in: cleaned)
                 cleaned = regex.stringByReplacingMatches(in: cleaned, options: [], range: range, withTemplate: "")
             }
             // Remove if preceded by whitespace or newline (isolated word)
-            if let regex = try? NSRegularExpression(pattern: "\\s+" + NSRegularExpression.escapedPattern(for: artifact) + "(?=\\s|$)", options: []) {
+            if let regex = try? NSRegularExpression(
+                pattern: "\\s+" + NSRegularExpression.escapedPattern(for: artifact) + "(?=\\s|$)",
+                options: []
+            ) {
                 let range = NSRange(cleaned.startIndex..., in: cleaned)
                 cleaned = regex.stringByReplacingMatches(in: cleaned, options: [], range: range, withTemplate: " ")
             }
