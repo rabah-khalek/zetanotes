@@ -68,6 +68,22 @@ enum LLMOutputCleaner {
         cleaned = cleaned.replacingOccurrences(of: "<|eot_", with: "")
         cleaned = cleaned.replacingOccurrences(of: "<|start_header", with: "")
 
+        // Llama 3.2 1B specific artifacts (broken template markers appearing as standalone words)
+        // Use regex to remove these ONLY when they appear as isolated words
+        let isolatedArtifacts = ["_header", "assistant", "system", "user", "ygiene_code", "_code", "header_"]
+        for artifact in isolatedArtifacts {
+            // Remove if at start of string followed by whitespace
+            if let regex = try? NSRegularExpression(pattern: "^" + NSRegularExpression.escapedPattern(for: artifact) + "\\s*", options: []) {
+                let range = NSRange(cleaned.startIndex..., in: cleaned)
+                cleaned = regex.stringByReplacingMatches(in: cleaned, options: [], range: range, withTemplate: "")
+            }
+            // Remove if preceded by whitespace or newline (isolated word)
+            if let regex = try? NSRegularExpression(pattern: "\\s+" + NSRegularExpression.escapedPattern(for: artifact) + "(?=\\s|$)", options: []) {
+                let range = NSRange(cleaned.startIndex..., in: cleaned)
+                cleaned = regex.stringByReplacingMatches(in: cleaned, options: [], range: range, withTemplate: " ")
+            }
+        }
+
         // Qwen 2.5, Phi-2
         cleaned = cleaned.replacingOccurrences(of: "<|endoftext|>", with: "")
 
