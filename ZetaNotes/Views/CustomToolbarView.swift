@@ -41,47 +41,50 @@ struct CustomToolbarView<LeftContent: View, CenterContent: View, RightContent: V
                 .allowsHitTesting(true)
 
             // Toolbar content (buttons on top of draggable area)
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 0) {
-                    // Left items
-                    leftContent
-                        .padding(.leading, sidebarVisible ? AppTheme.Spacing.toolbarHorizontalPadding : 80)
-                        .allowsHitTesting(true)
-                        .fixedSize(horizontal: true, vertical: false)
+            HStack(spacing: 0) {
+                // Left items
+                leftContent
+                    .padding(.leading, sidebarVisible ? 16 : 80)
+                    .allowsHitTesting(true)
+                    .fixedSize(horizontal: true, vertical: false)
 
-                    Spacer(minLength: 8)
-                        .allowsHitTesting(false)
+                Spacer()
+                    .allowsHitTesting(false)
 
-                    // Center items
-                    centerContent
-                        .allowsHitTesting(true)
-                        .fixedSize(horizontal: true, vertical: false)
-                        .layoutPriority(1)
-
-                    Spacer(minLength: 8)
-                        .allowsHitTesting(false)
-
-                    // Right items
-                    rightContent
-                        .padding(.trailing, 8)
-                        .allowsHitTesting(true)
-                        .fixedSize(horizontal: true, vertical: false)
+                // Center items - centered with scrolling capability
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack {
+                        Spacer()
+                        centerContent
+                            .allowsHitTesting(true)
+                            .fixedSize(horizontal: true, vertical: false)
+                        Spacer()
+                    }
                 }
-                .frame(minWidth: 0)
+                .frame(maxWidth: .infinity)
+                .allowsHitTesting(true)
+
+                Spacer()
+                    .allowsHitTesting(false)
+
+                // Right items - stays visible and slides with chat
+                rightContent
+                    .padding(.trailing, 16)
+                    .allowsHitTesting(true)
+                    .fixedSize(horizontal: true, vertical: false)
             }
-            .allowsHitTesting(true)
         }
         .frame(height: height)
         .background(
-            AppTheme.Colors.toolbarBackground
-                .opacity(AppTheme.Colors.toolbarBackgroundOpacity)
-                .background(AppTheme.Effects.toolbarMaterial)
+            Color(nsColor: .windowBackgroundColor)
+                .opacity(0.98)
+                .background(.ultraThinMaterial)
         )
         .overlay(
             // Bottom border
             Rectangle()
-                .fill(AppTheme.Colors.toolbarBorder)
-                .frame(height: AppTheme.Effects.borderWidth),
+                .fill(Color.secondary.opacity(0.15))
+                .frame(height: 1),
             alignment: .bottom
         )
         .zIndex(10) // Ensure toolbar stays on top

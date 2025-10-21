@@ -20,10 +20,9 @@ struct StatusFooterView: View {
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 0) {
-                Spacer(minLength: 8)
+            HStack {
+                Spacer()
 
-                // All items centered
                 HStack(spacing: 8) {
                     // Created timestamp
                     if let createdAt = createdAt {
@@ -56,9 +55,8 @@ struct StatusFooterView: View {
                 .fixedSize(horizontal: true, vertical: false)
                 .padding(.vertical, 6)
 
-                Spacer(minLength: 8)
+                Spacer()
             }
-            .frame(minWidth: 0)
         }
         .padding(.vertical, 4)
         .frame(maxWidth: .infinity)

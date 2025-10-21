@@ -549,40 +549,33 @@ struct ContentView: View {
                 .allowsHitTesting(true)
 
             // Toolbar content (buttons on top of draggable area)
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 0) {
-                    // Left: Settings and New Note
-                    toolbarLeftItems
-                        .padding(.leading, showingSidebar ? 16 : 80)
-                        .allowsHitTesting(true) // Allow buttons to receive clicks
-                        .fixedSize(horizontal: true, vertical: false)
+            HStack(spacing: 0) {
+                // Left: Settings and New Note
+                toolbarLeftItems
+                    .padding(.leading, showingSidebar ? 16 : 80)
+                    .allowsHitTesting(true) // Allow buttons to receive clicks
+                    .fixedSize(horizontal: true, vertical: false)
 
-                    Spacer(minLength: 8)
-                        .allowsHitTesting(false) // Spacer doesn't block dragging
+                Spacer()
+                    .allowsHitTesting(false) // Spacer doesn't block dragging
 
-                    // Center: AI Tools
+                // Center: AI Tools - centered with ScrollView for overflow
+                ScrollView(.horizontal, showsIndicators: false) {
                     toolbarCenterItems
                         .allowsHitTesting(true) // Allow buttons to receive clicks
                         .fixedSize(horizontal: true, vertical: false)
-
-                    Spacer(minLength: 8)
-                        .allowsHitTesting(false) // Spacer doesn't block dragging
-
-                    // Right: Chat button (hidden when chat open)
-                    if !showingChat {
-                        toolbarRightItems
-                            .padding(.trailing, 16)
-                            .allowsHitTesting(true) // Allow button to receive clicks
-                            .fixedSize(horizontal: true, vertical: false)
-                    } else {
-                        // Empty spacer when chat is open to maintain balance
-                        Color.clear
-                            .frame(width: 60)
-                            .padding(.trailing, 16)
-                            .allowsHitTesting(false)
-                    }
                 }
-                .frame(minWidth: 0)
+                .frame(maxWidth: .infinity)
+                .allowsHitTesting(true)
+
+                Spacer()
+                    .allowsHitTesting(false) // Spacer doesn't block dragging
+
+                // Right: Chat button - always visible, slides with chat
+                toolbarRightItems
+                    .padding(.trailing, 16)
+                    .allowsHitTesting(true) // Allow button to receive clicks
+                    .fixedSize(horizontal: true, vertical: false)
             }
             .allowsHitTesting(true)
         }
