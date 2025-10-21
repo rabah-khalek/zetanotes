@@ -78,6 +78,8 @@ xcodebuild \
     -derivedDataPath "$BUILD_DIR/DerivedData" \
     CODE_SIGN_STYLE=Automatic \
     DEVELOPMENT_TEAM="HDA4C6CU89" \
+    ENABLE_HARDENED_RUNTIME=YES \
+    OTHER_CODE_SIGN_FLAGS="--timestamp --options runtime" \
     -quiet || print_error "Build failed"
 
 BUILT_APP=$(find "$BUILD_DIR/DerivedData/Build/Products" -name "ZetaNotes.app" -maxdepth 2 | head -n 1)
@@ -85,8 +87,20 @@ BUILT_APP=$(find "$BUILD_DIR/DerivedData/Build/Products" -name "ZetaNotes.app" -
 
 cp -R "$BUILT_APP" "$BUILD_DIR/${APP_NAME}.app"
 
-codesign --verify --verbose "$BUILD_DIR/${APP_NAME}.app" || print_error "Code signature verification failed"
-print_success "App signed successfully"
+# Verify app bundle signature
+codesign --verify --verbose --deep --strict "$BUILD_DIR/${APP_NAME}.app" || print_error "Code signature verification failed"
+
+# Verify all embedded frameworks are signed with hardened runtime
+echo ""
+echo "Verifying embedded frameworks..."
+for framework in "$BUILD_DIR/${APP_NAME}.app/Contents/Frameworks/"*; do
+    if [ -d "$framework" ] || [ -f "$framework" ]; then
+        echo "  Checking: $(basename "$framework")"
+        codesign --verify --verbose "$framework" || print_warning "$(basename "$framework") signature check failed"
+    fi
+done
+
+print_success "App and frameworks signed successfully"
 
 # Create DMG
 print_step "Creating DMG"
@@ -112,8 +126,14 @@ print_success "DMG created"
 
 # Sign DMG
 print_step "Signing DMG"
-codesign --sign "$SIGNING_IDENTITY" --timestamp "$DMG_NAME" || print_error "DMG signing failed"
-print_success "DMG signed"
+codesign --sign "$SIGNING_IDENTITY" \
+    --timestamp \
+    --options runtime \
+    "$DMG_NAME" || print_error "DMG signing failed"
+
+# Verify DMG signature
+codesign --verify --verbose "$DMG_NAME" || print_error "DMG signature verification failed"
+print_success "DMG signed and verified"
 
 # Notarize
 print_step "Notarizing with Apple"

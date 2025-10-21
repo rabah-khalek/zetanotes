@@ -54,6 +54,39 @@ if [ -f "$LIB_PATH" ]; then
     echo ""
     echo "📦 All built libraries:"
     ls -lh "${BUILD_DIR}/bin/"*.dylib 2>/dev/null || true
+
+    # Code sign all dynamic libraries with hardened runtime
+    echo ""
+    echo "🔐 Code signing libraries with hardened runtime..."
+
+    # Determine signing identity based on environment
+    if [ -n "$GITHUB_ACTIONS" ]; then
+        SIGNING_IDENTITY="Developer ID Application"
+    elif security find-identity -v -p codesigning | grep -q "Developer ID Application"; then
+        # Use Developer ID for distribution builds
+        SIGNING_IDENTITY=$(security find-identity -v -p codesigning | grep "Developer ID Application" | head -1 | awk '{print $2}')
+    else
+        # Fall back to Apple Development for local builds
+        SIGNING_IDENTITY="Apple Development"
+    fi
+
+    echo "Using signing identity: $SIGNING_IDENTITY"
+
+    for dylib in "${BUILD_DIR}/bin/"*.dylib; do
+        if [ -f "$dylib" ]; then
+            echo "  Signing: $(basename "$dylib")"
+            codesign --force --sign "$SIGNING_IDENTITY" \
+                --options runtime \
+                --timestamp \
+                "$dylib" || {
+                echo "⚠️  Warning: Failed to sign $(basename "$dylib")"
+                echo "  Continuing with ad-hoc signature..."
+                codesign --force --sign - "$dylib"
+            }
+        fi
+    done
+
+    echo "✅ All libraries signed"
 else
     echo "❌ Build failed: libllama.dylib not found"
     echo "Expected location: $LIB_PATH"

@@ -538,20 +538,28 @@ class LLMInferenceService: @unchecked Sendable {
                         return
                     }
 
-                    // Build messages array
-                    let systemMsg = systemMessage.withCString { strdup($0) }
-                    let userMsg = userMessage.withCString { strdup($0) }
+                    // Build messages array using Swift-safe memory management
+                    // Store strings to keep them alive during C API call
+                    let systemMsgString = systemMessage
+                    let userMsgString = userMessage
+                    let systemRoleString = "system"
+                    let userRoleString = "user"
 
-                    var messages: [llama_chat_message] = [
-                        llama_chat_message(role: "system", content: systemMsg),
-                        llama_chat_message(role: "user", content: userMsg)
-                    ]
+                    let requiredSize = systemRoleString.withCString { systemRolePtr in
+                        userRoleString.withCString { userRolePtr in
+                            systemMsgString.withCString { systemPtr in
+                                userMsgString.withCString { userPtr in
+                                    var messages: [llama_chat_message] = [
+                                        llama_chat_message(role: systemRolePtr, content: systemPtr),
+                                        llama_chat_message(role: userRolePtr, content: userPtr)
+                                    ]
+                                    return llama_chat_apply_template(tmpl, &messages, 2, true, nil, 0)
+                                }
+                            }
+                        }
+                    }
 
-                    // Calculate required buffer size
-                    let requiredSize = llama_chat_apply_template(tmpl, &messages, 2, true, nil, 0)
                     guard requiredSize > 0 else {
-                        free(systemMsg)
-                        free(userMsg)
                         print("❌ Failed to calculate chat template size")
                         continuation.resume(returning: nil)
                         return
@@ -559,10 +567,19 @@ class LLMInferenceService: @unchecked Sendable {
 
                     // Allocate buffer and apply template
                     var buffer = [CChar](repeating: 0, count: Int(requiredSize) + 1)
-                    let actualSize = llama_chat_apply_template(tmpl, &messages, 2, true, &buffer, Int32(buffer.count))
-
-                    free(systemMsg)
-                    free(userMsg)
+                    let actualSize = systemRoleString.withCString { systemRolePtr in
+                        userRoleString.withCString { userRolePtr in
+                            systemMsgString.withCString { systemPtr in
+                                userMsgString.withCString { userPtr in
+                                    var messages: [llama_chat_message] = [
+                                        llama_chat_message(role: systemRolePtr, content: systemPtr),
+                                        llama_chat_message(role: userRolePtr, content: userPtr)
+                                    ]
+                                    return llama_chat_apply_template(tmpl, &messages, 2, true, &buffer, Int32(buffer.count))
+                                }
+                            }
+                        }
+                    }
 
                     guard actualSize > 0 else {
                         print("❌ Failed to apply chat template")
