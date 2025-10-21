@@ -14,6 +14,12 @@ ZetaNotes/Resources/Models/
 *.backup
 .env
 scripts/release.sh.corrupted
+
+# Node.js / Netlify
+node_modules/
+package-lock.json
+.netlify/
+
 # Xcode
 #
 # gitignore contributors: remember to update Global/Xcode.gitignore, Objective-C.gitignore & Swift.gitignore

@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZetaNotes - Report Issue</title>
+    <meta name="description" content="Report an issue or provide feedback for ZetaNotes">
+
+    <!-- Umami Analytics -->
+    <script defer src="https://cloud.umami.is/script.js"
+        data-website-id="b494d074-1b7d-4266-8c69-913450df0f53"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #e4e4e7;
+            background: #0a0a0a;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 0 24px;
+            flex: 1;
+        }
+
+        header {
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 16px 0;
+        }
+
+        .header-content {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 20px;
+            font-weight: 600;
+            color: #ffffff;
+            letter-spacing: -0.02em;
+            text-decoration: none;
+        }
+
+        .logo-image {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            object-fit: contain;
+        }
+
+        .main-content {
+            padding: 60px 0;
+        }
+
+        h1 {
+            font-size: 42px;
+            font-weight: 650;
+            margin-bottom: 16px;
+            color: #ffffff;
+            letter-spacing: -0.03em;
+        }
+
+        .subtitle {
+            font-size: 18px;
+            color: #a1a1aa;
+            margin-bottom: 40px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ffffff;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: #1a1a1a;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 15px;
+            font-family: inherit;
+            transition: border-color 0.2s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: rgba(56, 189, 248, 0.5);
+        }
+
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        select {
+            cursor: pointer;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            font-size: 15px;
+            font-weight: 500;
+            border-radius: 8px;
+            border: 1px solid rgba(56, 189, 248, 0.5);
+            background: rgba(56, 189, 248, 0.15);
+            color: #ffffff;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-block;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            background: rgba(56, 189, 248, 0.25);
+            border-color: rgba(56, 189, 248, 0.7);
+            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.2);
+            margin-left: 12px;
+            text-decoration: none;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: none;
+        }
+
+        .helper-text {
+            font-size: 13px;
+            color: #71717a;
+            margin-top: 6px;
+        }
+
+        .required {
+            color: #FF453A;
+        }
+
+        .info-box {
+            margin-top: 40px;
+            padding: 20px;
+            background: rgba(56, 189, 248, 0.05);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            border-radius: 8px;
+        }
+
+        .info-box p {
+            font-size: 14px;
+            color: #a1a1aa;
+        }
+
+        .info-box strong {
+            color: #ffffff;
+        }
+
+        .info-box a {
+            color: #38bdf8;
+            text-decoration: underline;
+        }
+
+        footer {
+            background: #0a0a0a;
+            color: #a1a1aa;
+            padding: 30px 0;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: auto;
+        }
+
+        footer a {
+            color: #71717a;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        footer a:hover {
+            color: white;
+        }
+
+        footer p {
+            font-size: 14px;
+        }
+
+        .alert {
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+
+        .alert-info {
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            color: #38bdf8;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="header-content">
+            <a href="index.html" class="logo">
+                <img src="logo.png" alt="ZetaNotes Logo" class="logo-image">
+                <span>ZetaNotes</span>
+            </a>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="main-content">
+            <h1>Report an Issue</h1>
+            <p class="subtitle">Help us improve ZetaNotes by reporting bugs or suggesting features</p>
+
+            <div class="alert alert-info">
+                ℹ️ No GitHub account needed! Your feedback will be sent directly to the development team.
+            </div>
+
+            <!-- Simple GitHub Issues redirect for now -->
+            <!-- TODO: Set up Formspree or serverless function for form submission -->
+            <form action="https://github.com/rabah-khalek/zetanotes/issues/new" method="get" target="_blank">
+                <div class="form-group">
+                    <label for="title">Issue Title <span class="required">*</span></label>
+                    <input type="text" id="title" name="title" required 
+                           placeholder="Brief description of the issue">
+                    <div class="helper-text">Keep it short and descriptive</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="body">Description <span class="required">*</span></label>
+                    <textarea id="body" name="body" required 
+                              placeholder="Describe the issue in detail. Include steps to reproduce if it's a bug."></textarea>
+                    <div class="helper-text">Be as detailed as possible</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="labels">Issue Type</label>
+                    <select id="type" name="labels" onchange="updateEmoji()">
+                        <option value="bug">🐛 Bug Report</option>
+                        <option value="enhancement">✨ Feature Request</option>
+                        <option value="question">❓ Question</option>
+                        <option value="feedback">💬 Feedback</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn" onclick="trackSubmit()">
+                    Submit on GitHub
+                </button>
+                <a href="https://github.com/rabah-khalek/zetanotes/issues" target="_blank" class="btn btn-secondary">
+                    View existing issues
+                </a>
+            </form>
+
+            <div class="info-box">
+                <p>
+                    <strong>Note:</strong> This will redirect you to GitHub to create the issue. 
+                    You'll need a GitHub account to submit. If you don't have one, you can 
+                    <a href="https://github.com/signup" target="_blank">create a free account</a> in less than a minute.
+                </p>
+                <p style="margin-top: 12px;">
+                    <strong>Alternative:</strong> Send feedback directly to 
+                    <a href="mailto:feedback@zetanotes.dev?subject=ZetaNotes%20Feedback">feedback@zetanotes.dev</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 ZetaNotes. All rights reserved.</p>
+            <p style="margin-top: 10px;">
+                <a href="index.html">Home</a> •
+                <a href="https://github.com/rabah-khalek/zetanotes" target="_blank">GitHub</a>
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        function updateEmoji() {
+            const titleInput = document.getElementById('title');
+            const typeSelect = document.getElementById('type');
+            const emojiMap = {
+                'bug': '🐛 ',
+                'enhancement': '✨ ',
+                'question': '❓ ',
+                'feedback': '💬 '
+            };
+            
+            // Only add emoji if title doesn't already have one
+            if (!titleInput.value.match(/^[🐛✨❓💬]/)) {
+                titleInput.value = emojiMap[typeSelect.value] + titleInput.value;
+            }
+        }
+
+        function trackSubmit() {
+            if (window.umami) {
+                umami.track('feedback-form-opened');
+            }
+        }
+    </script>
+</body>
+
+</html>
