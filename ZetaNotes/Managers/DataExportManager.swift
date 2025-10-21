@@ -213,17 +213,14 @@ class DataExportManager: ObservableObject {
         if fileManager.fileExists(atPath: modelsDir.path) {
             let contents = try fileManager.contentsOfDirectory(
                 at: modelsDir,
-                includingPropertiesForKeys: [.fileSizeKey, .creationDateKey],
+                includingPropertiesForKeys: nil,
                 options: .skipsHiddenFiles
             )
 
             for modelFile in contents {
-                let attributes = try fileManager.attributesOfItem(atPath: modelFile.path)
                 modelFiles.append([
                     "filename": modelFile.lastPathComponent,
-                    "path": modelFile.path,
-                    "size": attributes[.size] as? Int64 ?? 0,
-                    "createdAt": Self.iso8601Formatter.string(from: attributes[.creationDate] as? Date ?? Date())
+                    "path": modelFile.path
                 ])
             }
         }

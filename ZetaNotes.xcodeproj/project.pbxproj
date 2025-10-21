@@ -36,7 +36,6 @@
 		81DE4F832EA2DCB4006293FC /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F812EA2DCB4006293FC /* ChatMessage.swift */; };
 		81DE4F842EA2DCB4006293FC /* ChatSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F822EA2DCB4006293FC /* ChatSettings.swift */; };
 		81DE4F892EA2DCE9006293FC /* ChatManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F862EA2DCE9006293FC /* ChatManager.swift */; };
-		81DE4F8A2EA2DCE9006293FC /* AnalyticsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F852EA2DCE9006293FC /* AnalyticsManager.swift */; };
 		81DE4F8B2EA2DCE9006293FC /* LicenseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F872EA2DCE9006293FC /* LicenseManager.swift */; };
 		81DE4F8D2EA2DCF9006293FC /* ChatService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F8C2EA2DCF9006293FC /* ChatService.swift */; };
 		81DE4F8F2EA2DD06006293FC /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F8E2EA2DD06006293FC /* ChatView.swift */; };
@@ -133,7 +132,6 @@
 		81DE4F762EA25B10006293FC /* ToolButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolButton.swift; sourceTree = "<group>"; };
 		81DE4F812EA2DCB4006293FC /* ChatMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessage.swift; sourceTree = "<group>"; };
 		81DE4F822EA2DCB4006293FC /* ChatSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatSettings.swift; sourceTree = "<group>"; };
-		81DE4F852EA2DCE9006293FC /* AnalyticsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsManager.swift; sourceTree = "<group>"; };
 		81DE4F862EA2DCE9006293FC /* ChatManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatManager.swift; sourceTree = "<group>"; };
 		81DE4F872EA2DCE9006293FC /* LicenseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseManager.swift; sourceTree = "<group>"; };
 		81DE4F8C2EA2DCF9006293FC /* ChatService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatService.swift; sourceTree = "<group>"; };
@@ -213,7 +211,6 @@
 			isa = PBXGroup;
 			children = (
 				81C5A72A2EA57C7B00B5077D /* DataExportManager.swift */,
-				81DE4F852EA2DCE9006293FC /* AnalyticsManager.swift */,
 				81DE4F862EA2DCE9006293FC /* ChatManager.swift */,
 				81DE4F872EA2DCE9006293FC /* LicenseManager.swift */,
 				81MDLST012E9B3C2400692788 /* ModelDownloadState.swift */,
@@ -510,7 +507,6 @@
 				81DE4F8F2EA2DD06006293FC /* ChatView.swift in Sources */,
 				81DE4F7B2EA25B10006293FC /* StatusFooterView.swift in Sources */,
 				81DE4F892EA2DCE9006293FC /* ChatManager.swift in Sources */,
-				81DE4F8A2EA2DCE9006293FC /* AnalyticsManager.swift in Sources */,
 				81DE4F8B2EA2DCE9006293FC /* LicenseManager.swift in Sources */,
 				81MDLST002E9B3C2400692788 /* ModelDownloadState.swift in Sources */,
 				81DE4F7C2EA25B10006293FC /* ToolButton.swift in Sources */,

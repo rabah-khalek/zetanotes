@@ -127,6 +127,24 @@ struct ZetaNotesApp: App {
             CommandGroup(after: .appInfo) {
                 CheckForUpdatesView(updater: updaterController.updater)
             }
+
+            CommandGroup(after: .help) {
+                Button("Privacy Policy…") {
+                    openExternalLink("https://www.zetanotes.com/privacy.html")
+                }
+
+                Button("Terms of Use…") {
+                    openExternalLink("https://www.zetanotes.com/terms.html")
+                }
+
+                Button("Support & Refunds…") {
+                    openExternalLink("https://www.zetanotes.com/refunds.html")
+                }
+
+                Button("Contact Support…") {
+                    openExternalLink("mailto:rabah.khalek@gmail.com?subject=ZetaNotes%20Support")
+                }
+            }
         }
         .windowStyle(.hiddenTitleBar)
         .windowToolbarStyle(.unified)
@@ -144,6 +162,11 @@ struct ZetaNotesApp: App {
         default:
             return nil // Auto - follows system
         }
+    }
+
+    private func openExternalLink(_ string: String) {
+        guard let url = URL(string: string) else { return }
+        NSWorkspace.shared.open(url)
     }
 
     // MARK: - Lifecycle Handling

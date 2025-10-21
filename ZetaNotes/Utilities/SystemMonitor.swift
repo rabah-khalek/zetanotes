@@ -82,17 +82,9 @@ class SystemMonitor: ObservableObject {
     // MARK: - System Capabilities Detection
 
     private func detectSystemCapabilities() {
-        // Get total system memory
-        var size = UInt64(0)
-        var len = MemoryLayout<UInt64>.size
-        sysctlbyname("hw.memsize", &size, &len, nil, 0)
-        totalSystemMemory = Double(size) / 1024 / 1024 // Convert to MB
-
-        // Get CPU core count
-        var count = 0
-        var countSize = MemoryLayout<Int>.size
-        sysctlbyname("hw.ncpu", &count, &countSize, nil, 0)
-        cpuCoreCount = count
+        let processInfo = ProcessInfo.processInfo
+        totalSystemMemory = Double(processInfo.physicalMemory) / 1024 / 1024
+        cpuCoreCount = processInfo.processorCount
 
         print("📊 System: \(cpuCoreCount) cores, \(Int(totalSystemMemory))MB RAM")
     }

@@ -189,8 +189,7 @@ ZetaNotes/
 │   └── SemanticSearchEngine.swift
 ├── Managers/              # App managers
 │   ├── LicenseManager.swift
-│   ├── ChatManager.swift
-│   └── AnalyticsManager.swift
+│   └── ChatManager.swift
 └── Storage/               # Data persistence
     └── PersistenceController.swift
 ```

@@ -40,10 +40,6 @@
 	<key>NSHighResolutionCapable</key>
 	<true/>
 
-	<!-- Privacy - Usage Descriptions -->
-	<!-- Note: Currently app is fully local, but adding these for future features -->
-	<key>NSLocalNetworkUsageDescription</key>
-	<string>ZetaNotes downloads AI models from the internet to provide local, private AI features. No user data is uploaded.</string>
 
 	<!-- Document Types (for future file association) -->
 	<key>CFBundleDocumentTypes</key>

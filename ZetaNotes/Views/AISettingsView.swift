@@ -484,6 +484,10 @@ struct GeneralSettingsContent: View {
 
             Divider()
 
+            LegalSupportSection()
+
+            Divider()
+
             // Danger Zone Section
             VStack(alignment: .leading, spacing: 0) {
                 // Header with warning stripe
@@ -701,6 +705,14 @@ struct GeneralSettingsContent: View {
                         .font(.system(size: 12))
                         .foregroundColor(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
+
+                    Text("Updates are delivered through Sparkle over HTTPS and verified with an EdDSA signature.")
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary)
+
+                    Text("Payments and licenses are managed securely by Paddle; no billing data is stored in ZetaNotes.")
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary)
                 }
             }
             .padding()
@@ -1311,6 +1323,10 @@ struct PromptSection: View {
 struct ProStatusSection: View {
     @ObservedObject var licenseManager = LicenseManager.shared
     let dismiss: DismissAction
+    @Environment(\.openURL) private var openURL
+
+    private let supportEmail = "mailto:rabah.khalek@gmail.com?subject=ZetaNotes%20Support"
+    private let paddlePortal = URL(string: "https://my.paddle.com/")!
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -1347,6 +1363,33 @@ struct ProStatusSection: View {
                 .padding()
                 .background(Color.green.opacity(0.1))
                 .cornerRadius(8)
+
+                HStack(spacing: 12) {
+                    Button {
+                        openURL(paddlePortal)
+                    } label: {
+                        Label("Manage License & Billing", systemImage: "creditcard")
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+
+                    Button {
+                        if let url = URL(string: supportEmail) {
+                            openURL(url)
+                        }
+                    } label: {
+                        Label("Contact Support", systemImage: "envelope")
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                }
+                .padding(.horizontal)
+                .padding(.bottom, 4)
+
+                Text("Licensing and payment processing are securely handled by Paddle.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(.horizontal)
             } else {
                 // Free Tier State
                 VStack(alignment: .leading, spacing: 12) {
@@ -1387,7 +1430,7 @@ struct ProStatusSection: View {
                         .buttonStyle(.borderedProminent)
                         .controlSize(.large)
 
-                        Button("Enter License Key") {
+                        Button("Restore License") {
                             dismiss()
                             // Small delay to ensure settings closes before activation prompt shows
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
@@ -1402,6 +1445,116 @@ struct ProStatusSection: View {
                 .background(Color.orange.opacity(0.1))
                 .cornerRadius(8)
             }
+        }
+        .padding(.horizontal)
+    }
+}
+
+struct LegalSupportSection: View {
+    @Environment(\.openURL) private var openURL
+
+    private let privacyURL = URL(string: "https://www.zetanotes.com/privacy.html")!
+    private let termsURL = URL(string: "https://www.zetanotes.com/terms.html")!
+    private let refundsURL = URL(string: "https://www.zetanotes.com/refunds.html")!
+    private let sparkleURL = URL(string: "https://sparkle-project.org")!
+    private let paddlePortal = URL(string: "https://my.paddle.com/")!
+    private let supportEmail = "mailto:rabah.khalek@gmail.com?subject=ZetaNotes%20Support"
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(spacing: 12) {
+                Image(systemName: "shield.lefthalf.filled")
+                    .font(.system(size: 20, weight: .semibold))
+                    .foregroundColor(.blue)
+                    .frame(width: 36, height: 36)
+                    .background(
+                        Circle()
+                            .fill(Color.blue.opacity(0.12))
+                    )
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Legal, Privacy & Support")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.primary)
+
+                    Text("View policies, reach support, and manage your license")
+                        .font(.system(size: 12))
+                        .foregroundColor(.secondary)
+                }
+
+                Spacer()
+            }
+
+            VStack(alignment: .leading, spacing: 12) {
+                Text("ZetaNotes runs fully on your Mac. Notes, embeddings, and chat history stay local unless you export or share them.")
+                    .font(.system(size: 12))
+                    .foregroundColor(.secondary)
+
+                HStack(spacing: 12) {
+                    Button {
+                        openURL(privacyURL)
+                    } label: {
+                        Label("Privacy Policy", systemImage: "doc.text")
+                    }
+                    .buttonStyle(.bordered)
+
+                    Button {
+                        openURL(termsURL)
+                    } label: {
+                        Label("Terms of Use", systemImage: "doc.richtext")
+                    }
+                    .buttonStyle(.bordered)
+
+                    Button {
+                        openURL(refundsURL)
+                    } label: {
+                        Label("Refund Policy", systemImage: "arrow.uturn.backward")
+                    }
+                    .buttonStyle(.bordered)
+                }
+
+                HStack(spacing: 12) {
+                    Button {
+                        if let url = URL(string: supportEmail) {
+                            openURL(url)
+                        }
+                    } label: {
+                        Label("Contact Support", systemImage: "envelope")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.blue)
+
+                    Button {
+                        openURL(paddlePortal)
+                    } label: {
+                        Label("Manage License", systemImage: "creditcard")
+                    }
+                    .buttonStyle(.bordered)
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Automatic updates are delivered securely via Sparkle using HTTPS and signed feeds.")
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary)
+
+                    Button {
+                        openURL(sparkleURL)
+                    } label: {
+                        Label("About Sparkle Updater", systemImage: "sparkles")
+                    }
+                    .buttonStyle(.link)
+                    .font(.system(size: 11))
+                }
+            }
+            .padding(16)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color(nsColor: .controlBackgroundColor).opacity(0.5))
+            )
+
+            Text("Need to revoke data? Export or delete everything from the actions above, or email support to request account deletion.")
+                .font(.caption)
+                .foregroundColor(.secondary)
         }
         .padding(.horizontal)
     }
