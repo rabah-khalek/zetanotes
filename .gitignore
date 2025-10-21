@@ -1,5 +1,8 @@
 # ZetaNotes Project Specific
 #
+# Release build output directory
+releases/
+
 # External dependencies (large, should be cloned/built separately)
 llama.cpp/
 

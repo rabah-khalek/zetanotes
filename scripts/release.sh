@@ -14,8 +14,8 @@ NC='\033[0m'
 
 # Configuration
 VERSION="${1:-1.0.0}"
-BUILD_DIR="$HOME/Desktop/ZetaNotes-Release-$(date +%Y%m%d-%H%M%S)"
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+BUILD_DIR="$PROJECT_DIR/releases/ZetaNotes-Release-$(date +%Y%m%d-%H%M%S)"
 APP_NAME="ZetaNotes"
 DMG_NAME="${APP_NAME}-v${VERSION}.dmg"
 

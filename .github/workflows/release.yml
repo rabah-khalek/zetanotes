@@ -155,8 +155,8 @@ jobs:
           chmod +x scripts/release.sh
           ./scripts/release.sh ${{ steps.version.outputs.VERSION }}
 
-          # Find the built DMG
-          BUILD_DIR=$(find ~/Desktop -name "ZetaNotes-Release-*" -type d | head -n 1)
+          # Find the built DMG in releases/ directory
+          BUILD_DIR=$(find releases -name "ZetaNotes-Release-*" -type d | head -n 1)
           DMG_FILE=$(find "$BUILD_DIR" -name "*.dmg" | head -n 1)
           SHA_FILE="${DMG_FILE}.sha256"
 
