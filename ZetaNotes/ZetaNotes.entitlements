@@ -2,11 +2,11 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- NOTE: App Sandbox disabled for direct distribution outside Mac App Store -->
-	<!-- App Sandbox conflicts with llama.cpp's memory requirements and causes issues -->
-	<!-- If distributing via Mac App Store in the future, re-enable sandbox and test thoroughly -->
-	<!-- <key>com.apple.security.app-sandbox</key> -->
-	<!-- <true/> -->
+	<!-- App Sandbox REQUIRED for App Store distribution with In-App Purchases -->
+	<!-- Note: llama.cpp requires special entitlements (JIT, unsigned memory) -->
+	<!-- These may need additional review from Apple for App Store approval -->
+	<key>com.apple.security.app-sandbox</key>
+	<true/>
 
 	<!-- Network access for downloading AI models -->
 	<key>com.apple.security.network.client</key>

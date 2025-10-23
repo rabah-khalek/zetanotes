@@ -7,7 +7,6 @@
 //
 
 import AppKit
-import Sparkle
 import SwiftUI
 
 // MARK: - AppDelegate for macOS-specific lifecycle events
@@ -46,8 +45,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 struct ZetaNotesApp: App {
     // Register AppDelegate for macOS lifecycle events
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    // Sparkle updater controller - handles automatic updates
-    private let updaterController: SPUStandardUpdaterController
 
     // Persistence controller manages Core Data stack
     @StateObject private var persistenceController = PersistenceController.shared
@@ -68,12 +65,6 @@ struct ZetaNotesApp: App {
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
-        // Initialize Sparkle updater controller
-        updaterController = SPUStandardUpdaterController(
-            startingUpdater: true,
-            updaterDelegate: nil,
-            userDriverDelegate: nil
-        )
 
         // Setup memory pressure monitoring
         setupMemoryPressureHandler()
@@ -121,11 +112,6 @@ struct ZetaNotesApp: App {
                     NotificationCenter.default.post(name: .createNewNote, object: nil)
                 }
                 .keyboardShortcut("n", modifiers: .command)
-            }
-
-            // Add Sparkle's Check for Updates menu item
-            CommandGroup(after: .appInfo) {
-                CheckForUpdatesView(updater: updaterController.updater)
             }
 
             CommandGroup(after: .help) {

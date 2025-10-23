@@ -1,343 +1,225 @@
 #!/bin/bash
+# ZetaNotes Unified Release Script
+# Works in both local and CI environments
+#
+# Usage:
+#   ./release.sh <version> [--app-review]
+#
+# Examples:
+#   ./release.sh 1.0.0              # Release with fresh llama.cpp build
+#   ./release.sh 1.0.0 --app-review # Build for App Store review (enables test credentials)
+#
+# Environment variables:
+#   APPLE_ID                       - Apple ID email (for notarization)
+#   APPLE_TEAM_ID                  - Team ID (for notarization)
+#   APPLE_APP_SPECIFIC_PASSWORD    - App-specific password (for notarization)
+#   SPARKLE_PRIVATE_KEY            - EdDSA private key (for CI Sparkle signing)
+#   SPARKLE_ACCOUNT_NAME           - Keychain account (for local Sparkle signing)
 
 set -e  # Exit on any error
 
-# ZetaNotes Release Script - Signed & Notarized Distribution
-# For Apple Developer Program members
-#
-# Usage:
-#   ./release.sh <version> [rebuild]
-#
-# Examples:
-#   ./release.sh 1.0.0              # Normal release with existing llama.cpp build
-#   ./release.sh 1.0.0 rebuild      # Rebuild llama.cpp from scratch before release
-#
-# Environment variables required for notarization:
-#   APPLE_ID - Your Apple ID email
-#   APPLE_TEAM_ID - Your Team ID (e.g., HDA4C6CU89)
-#   APPLE_APP_SPECIFIC_PASSWORD - App-specific password from appleid.apple.com
+# Get script directory and project root
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m'
+# Load configuration
+source "$SCRIPT_DIR/release-config.sh"
 
-# Configuration
-VERSION="${1:-1.0.0}"
-REBUILD_LLAMA="${2:-no}"  # Pass "rebuild" as second argument to force llama.cpp rebuild
-PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-BUILD_DIR="$PROJECT_DIR/releases/ZetaNotes-Release-$(date +%Y%m%d-%H%M%S)"
-APP_NAME="ZetaNotes"
-DMG_NAME="${APP_NAME}-v${VERSION}.dmg"
-VERIFY_SCRIPT="$PROJECT_DIR/scripts/verify-signatures.sh"
+# Load library functions
+source "$SCRIPT_DIR/lib/colors.sh"
+source "$SCRIPT_DIR/lib/validation.sh"
+source "$SCRIPT_DIR/lib/xcode.sh"
+source "$SCRIPT_DIR/lib/signing.sh"
+source "$SCRIPT_DIR/lib/sparkle.sh"
+source "$SCRIPT_DIR/lib/notarization.sh"
+source "$SCRIPT_DIR/lib/packaging.sh"
 
-# Detect certificate name based on environment
-if [ -n "$GITHUB_ACTIONS" ]; then
-    SIGNING_IDENTITY="Developer ID Application"
-else
-    SIGNING_IDENTITY="Developer ID Application: Rabah Abdul Khalek (HDA4C6CU89)"
+# Parse arguments
+VERSION="${1}"
+REBUILD_LLAMA="always"  # Always rebuild for fresh signatures
+APP_REVIEW_MODE="false"
+
+# Check for --app-review flag
+if [ "$2" = "--app-review" ] || [ "$1" = "--app-review" ]; then
+    APP_REVIEW_MODE="true"
+    # If --app-review is first arg, shift to get version
+    if [ "$1" = "--app-review" ]; then
+        VERSION="${2}"
+    fi
 fi
 
-echo -e "${BLUE}╔═══════════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║  ZetaNotes Release Builder v4.0 (Signed)     ║${NC}"
-echo -e "${BLUE}╚═══════════════════════════════════════════════╝${NC}"
-echo ""
-echo -e "${GREEN}Version:${NC} ${VERSION}"
+if [ -z "$VERSION" ]; then
+    print_error "Version required. Usage: ./release.sh <version> [--app-review]"
+fi
+
+# Detect environment and set paths
+ENVIRONMENT=$(detect_environment)
+SIGNING_IDENTITY=$(get_signing_identity "$ENVIRONMENT")
+BUILD_DIR="$PROJECT_DIR/releases/${APP_NAME}-Release-$(date +%Y%m%d-%H%M%S)"
+DMG_NAME="${APP_NAME}-v${VERSION}.dmg"
+
+# Show banner
+print_banner "$VERSION" "$ENVIRONMENT"
 echo -e "${GREEN}Signing Identity:${NC} ${SIGNING_IDENTITY}"
 echo -e "${GREEN}Build directory:${NC} ${BUILD_DIR}"
-echo -e "${GREEN}Rebuild llama.cpp:${NC} ${REBUILD_LLAMA}"
+if [ "$APP_REVIEW_MODE" = "true" ]; then
+    echo -e "${YELLOW}⚠️  APP REVIEW MODE ENABLED${NC}"
+    echo -e "${YELLOW}   Test credentials: Email='admin' Key='TEST'${NC}"
+fi
 echo ""
 
-# Helper functions
-print_step() {
-    echo ""
-    echo -e "${BLUE}▶ $1${NC}"
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-}
+# ============================================================================
+# STEP 1: Prerequisites
+# ============================================================================
 
-print_success() {
-    echo -e "${GREEN}✓ $1${NC}"
-}
-
-print_error() {
-    echo -e "${RED}✗ Error: $1${NC}"
-    exit 1
-}
-
-print_warning() {
-    echo -e "${YELLOW}⚠ $1${NC}"
-}
-
-# Check prerequisites
 print_step "Checking prerequisites"
 
-if ! security find-identity -v -p codesigning | grep -q "Developer ID Application"; then
-    print_error "No Developer ID certificate found!"
+check_certificate
+check_create_dmg
+check_sparkle_tools "$PROJECT_DIR/$SIGN_UPDATE_PATH"
+
+IS_CI_ENV="false"
+[ "$ENVIRONMENT" = "ci" ] && IS_CI_ENV="true"
+
+NOTARIZATION_ENABLED="false"
+if check_notarization_credentials "$IS_CI_ENV"; then
+    NOTARIZATION_ENABLED="true"
 fi
-print_success "Found Developer ID certificate"
 
 mkdir -p "$BUILD_DIR"
 
-# Optionally rebuild llama.cpp
-if [ "$REBUILD_LLAMA" = "rebuild" ]; then
-    print_step "Rebuilding llama.cpp from scratch"
+# ============================================================================
+# STEP 2: Rebuild llama.cpp (always - ensures fresh signatures)
+# ============================================================================
 
-    # Remove existing build
-    if [ -d "$PROJECT_DIR/llama.cpp/build" ]; then
-        echo "Removing old llama.cpp build..."
-        rm -rf "$PROJECT_DIR/llama.cpp/build"
-    fi
+rebuild_llama_if_needed "$REBUILD_LLAMA" "$PROJECT_DIR"
 
-    # Build llama.cpp
-    echo "Building llama.cpp with Metal support..."
-    cd "$PROJECT_DIR"
-    bash scripts/build-llama.sh || print_error "llama.cpp build failed"
+# ============================================================================
+# STEP 3: Build app
+# ============================================================================
 
-    print_success "llama.cpp rebuilt successfully"
-fi
+build_app "$PROJECT_DIR" "$BUILD_DIR" "$TEAM_ID" "$APP_REVIEW_MODE"
 
-# Build
-print_step "Building and signing app"
-cd "$PROJECT_DIR"
+# ============================================================================
+# STEP 4: Re-sign components
+# ============================================================================
 
-xcodebuild clean -project ZetaNotes.xcodeproj -scheme ZetaNotes -configuration Release -quiet
+resign_sparkle_components "$BUILD_DIR" "$SIGNING_IDENTITY"
+resign_llama_libraries "$BUILD_DIR" "$SIGNING_IDENTITY"
+resign_app_bundle "$BUILD_DIR" "$PROJECT_DIR" "$SIGNING_IDENTITY"
 
-xcodebuild \
-    -project ZetaNotes.xcodeproj \
-    -scheme ZetaNotes \
-    -configuration Release \
-    -derivedDataPath "$BUILD_DIR/DerivedData" \
-    CODE_SIGN_STYLE=Automatic \
-    DEVELOPMENT_TEAM="HDA4C6CU89" \
-    ENABLE_HARDENED_RUNTIME=YES \
-    OTHER_CODE_SIGN_FLAGS="--timestamp --options runtime" \
-    -quiet || print_error "Build failed"
+# ============================================================================
+# STEP 5: Verify signatures
+# ============================================================================
 
-BUILT_APP=$(find "$BUILD_DIR/DerivedData/Build/Products" -name "ZetaNotes.app" -maxdepth 2 | head -n 1)
-[ -z "$BUILT_APP" ] && print_error "App not found after build"
-
-cp -R "$BUILT_APP" "$BUILD_DIR/${APP_NAME}.app"
-
-# CRITICAL: Sign Sparkle XPC services and Updater.app with Developer ID
-# These components are often signed ad-hoc by Xcode, which causes notarization rejection
-print_step "Re-signing Sparkle components with Developer ID"
-
-SPARKLE_FRAMEWORK="$BUILD_DIR/${APP_NAME}.app/Contents/Frameworks/Sparkle.framework"
-
-if [ -d "$SPARKLE_FRAMEWORK" ]; then
-    # Sign XPC Services
-    for xpc in "$SPARKLE_FRAMEWORK"/Versions/B/XPCServices/*.xpc; do
-        if [ -d "$xpc" ]; then
-            echo "  Signing: $(basename "$xpc")"
-            codesign --force --sign "$SIGNING_IDENTITY" \
-                --options runtime \
-                --timestamp \
-                --deep \
-                "$xpc" || print_error "Failed to sign $(basename "$xpc")"
-        fi
-    done
-
-    # Sign Updater.app
-    UPDATER_APP="$SPARKLE_FRAMEWORK/Versions/B/Updater.app"
-    if [ -d "$UPDATER_APP" ]; then
-        echo "  Signing: Updater.app"
-        codesign --force --sign "$SIGNING_IDENTITY" \
-            --options runtime \
-            --timestamp \
-            --deep \
-            "$UPDATER_APP" || print_error "Failed to sign Updater.app"
-    fi
-
-    # Re-sign the Sparkle framework itself
-    echo "  Re-signing: Sparkle.framework"
-    codesign --force --sign "$SIGNING_IDENTITY" \
-        --options runtime \
-        --timestamp \
-        "$SPARKLE_FRAMEWORK" || print_error "Failed to sign Sparkle.framework"
-
-    print_success "Sparkle components re-signed with Developer ID"
-else
-    print_warning "Sparkle framework not found - skipping Sparkle signing"
-fi
-
-# Re-sign all llama.cpp dylibs with Developer ID (in case they were signed ad-hoc)
-echo ""
-echo "Re-signing llama.cpp libraries..."
-for dylib in "$BUILD_DIR/${APP_NAME}.app/Contents/Frameworks/"*.dylib; do
-    if [ -f "$dylib" ]; then
-        echo "  Signing: $(basename "$dylib")"
-        codesign --force --sign "$SIGNING_IDENTITY" \
-            --options runtime \
-            --timestamp \
-            "$dylib" || print_error "Failed to sign $(basename "$dylib")"
-    fi
-done
-
-# CRITICAL: Re-sign the main app bundle AFTER modifying nested components
-# When you modify any nested code (frameworks, dylibs, XPC services), you MUST re-sign the parent
-print_step "Re-signing main app bundle (required after modifying nested components)"
-
-codesign --force --sign "$SIGNING_IDENTITY" \
-    --entitlements "$PROJECT_DIR/ZetaNotes/ZetaNotes.entitlements" \
-    --options runtime \
-    --timestamp \
-    --deep \
-    "$BUILD_DIR/${APP_NAME}.app" || print_error "Failed to re-sign main app bundle"
-
-print_success "Main app bundle re-signed"
-
-# Verify app bundle signature
-echo ""
-echo "Verifying final app signature..."
-codesign --verify --verbose --deep --strict "$BUILD_DIR/${APP_NAME}.app" || print_error "Code signature verification failed"
-
-# Verify all embedded frameworks are signed with hardened runtime
-echo ""
-echo "Verifying embedded frameworks..."
-for framework in "$BUILD_DIR/${APP_NAME}.app/Contents/Frameworks/"*; do
-    if [ -d "$framework" ] || [ -f "$framework" ]; then
-        echo "  Checking: $(basename "$framework")"
-        codesign --verify --verbose "$framework" || print_warning "$(basename "$framework") signature check failed"
-    fi
-done
-
-print_success "App and frameworks signed successfully"
-
-# Verify all signatures before proceeding
 print_step "Verifying all signatures"
 
-if [ ! -f "$VERIFY_SCRIPT" ]; then
-    print_error "Signature verification script not found at: $VERIFY_SCRIPT"
-fi
+verify_app_signature "$BUILD_DIR/${APP_NAME}.app"
+verify_all_frameworks "$BUILD_DIR/${APP_NAME}.app"
+run_verification_script "$BUILD_DIR/${APP_NAME}.app" "$PROJECT_DIR/$VERIFY_SCRIPT_PATH"
 
-# Make sure verification script is executable
-chmod +x "$VERIFY_SCRIPT"
+print_success "All signatures verified"
 
-# Run verification script
-if bash "$VERIFY_SCRIPT" "$BUILD_DIR/${APP_NAME}.app"; then
-    print_success "All signatures verified successfully"
-else
-    print_error "Signature verification failed! Fix errors before submitting for notarization."
-fi
+# ============================================================================
+# STEP 6: Create and sign DMG
+# ============================================================================
 
-# Create DMG
-print_step "Creating DMG"
+create_dmg "$BUILD_DIR" "$DMG_NAME"
+sign_dmg "$BUILD_DIR/$DMG_NAME" "$SIGNING_IDENTITY"
+
+# ============================================================================
+# STEP 7: Generate Sparkle signature
+# ============================================================================
+
 cd "$BUILD_DIR"
 
-if ! command -v create-dmg &> /dev/null; then
-    print_error "create-dmg not found! Install with: brew install create-dmg"
-fi
+SPARKLE_SIGNATURE=""
+FILE_SIZE=$(stat -f%z "$DMG_NAME")
 
-create-dmg \
-    --volname "${APP_NAME}" \
-    --window-pos 200 120 \
-    --window-size 600 400 \
-    --icon-size 100 \
-    --icon "${APP_NAME}.app" 175 190 \
-    --hide-extension "${APP_NAME}.app" \
-    --app-drop-link 425 185 \
-    --no-internet-enable \
+# Generate signature
+if generate_sparkle_signature \
     "$DMG_NAME" \
-    "${APP_NAME}.app" || print_error "DMG creation failed"
+    "$PROJECT_DIR/$SIGN_UPDATE_PATH" \
+    "$SPARKLE_ACCOUNT_NAME" \
+    "$SPARKLE_PRIVATE_KEY"; then
 
-print_success "DMG created"
+    # Capture the signature (last line of output)
+    SPARKLE_SIGNATURE_OUTPUT=$(generate_sparkle_signature \
+        "$DMG_NAME" \
+        "$PROJECT_DIR/$SIGN_UPDATE_PATH" \
+        "$SPARKLE_ACCOUNT_NAME" \
+        "$SPARKLE_PRIVATE_KEY")
 
-# Sign DMG
-print_step "Signing DMG"
-codesign --sign "$SIGNING_IDENTITY" \
-    --timestamp \
-    --options runtime \
-    "$DMG_NAME" || print_error "DMG signing failed"
+    SPARKLE_SIGNATURE=$(echo "$SPARKLE_SIGNATURE_OUTPUT" | tail -n 1)
 
-# Verify DMG signature
-codesign --verify --verbose "$DMG_NAME" || print_error "DMG signature verification failed"
-print_success "DMG signed and verified"
-
-# Notarize
-print_step "Notarizing with Apple"
-
-if [ -n "$APPLE_ID" ] && [ -n "$APPLE_TEAM_ID" ] && [ -n "$APPLE_APP_SPECIFIC_PASSWORD" ]; then
-    echo "Submitting for notarization..."
-
-    # Verify DMG exists before submitting
-    if [ ! -f "$DMG_NAME" ]; then
-        print_error "DMG file not found: $DMG_NAME"
+    # Save signature to file
+    if [ -n "$SPARKLE_SIGNATURE" ]; then
+        save_sparkle_signature "$DMG_NAME" "$SPARKLE_SIGNATURE" "$FILE_SIZE"
     fi
-
-    echo "File to notarize: $(pwd)/$DMG_NAME"
-
-    # Submit and capture output with verbose logging
-    NOTARIZATION_OUTPUT=$(xcrun notarytool submit "$DMG_NAME" \
-        --verbose \
-        --apple-id "$APPLE_ID" \
-        --team-id "$APPLE_TEAM_ID" \
-        --password "$APPLE_APP_SPECIFIC_PASSWORD" \
-        --wait 2>&1 | tee notarization.log)
-
-    # Extract and display submission ID prominently
-    SUBMISSION_ID=$(echo "$NOTARIZATION_OUTPUT" | grep -o "id: [a-f0-9-]*" | head -1 | awk '{print $2}')
-    if [ -n "$SUBMISSION_ID" ]; then
-        echo ""
-        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        echo "Submission ID: $SUBMISSION_ID"
-        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        echo ""
-    fi
-
-    echo "$NOTARIZATION_OUTPUT"
-
-    if echo "$NOTARIZATION_OUTPUT" | grep -q "status: Accepted"; then
-        print_success "Notarization successful!"
-        xcrun stapler staple "$DMG_NAME" 2>&1 || print_warning "Stapling failed"
-    else
-        # Extract submission ID for detailed error log
-        SUBMISSION_ID=$(echo "$NOTARIZATION_OUTPUT" | grep -o "id: [a-f0-9-]*" | head -1 | awk '{print $2}')
-
-        print_error "Notarization failed"
-
-        if [ -n "$SUBMISSION_ID" ]; then
-            echo ""
-            echo "Fetching detailed failure log from Apple..."
-            xcrun notarytool log "$SUBMISSION_ID" \
-                --apple-id "$APPLE_ID" \
-                --team-id "$APPLE_TEAM_ID" \
-                --password "$APPLE_APP_SPECIFIC_PASSWORD" \
-                notarization-failure.json 2>/dev/null
-
-            if [ -f "notarization-failure.json" ]; then
-                echo ""
-                echo "Failure details saved to: notarization-failure.json"
-
-                # Try to show key issues if jq is available
-                if command -v jq &> /dev/null; then
-                    echo ""
-                    echo "Issues found:"
-                    jq -r '.issues[]? | "  • [\(.severity)] \(.message)"' notarization-failure.json 2>/dev/null || true
-                fi
-            fi
-        fi
-
-        exit 1
-    fi
-else
-    print_warning "Skipping notarization (credentials not set)"
 fi
 
-# Checksum
-print_step "Generating checksum"
-shasum -a 256 "$DMG_NAME" > "${DMG_NAME}.sha256"
-print_success "SHA256 checksum created"
+# In CI, require Sparkle signature
+if [ "$ENVIRONMENT" = "ci" ] && [ -z "$SPARKLE_SIGNATURE" ]; then
+    print_error "CRITICAL: Sparkle signature is required in CI but was not generated"
+fi
 
-# Summary
-print_step "Release Summary"
-echo ""
-echo -e "${GREEN}✅ Release build complete!${NC}"
-echo ""
-echo -e "${BLUE}Version:${NC} ${VERSION}"
-echo -e "${BLUE}DMG:${NC} ${DMG_NAME}"
-echo -e "${BLUE}Location:${NC} ${BUILD_DIR}"
-echo -e "${BLUE}Size:${NC} $(du -h "$DMG_NAME" | cut -f1)"
-echo -e "${BLUE}SHA256:${NC} $(cat "${DMG_NAME}.sha256" | cut -d' ' -f1)"
-echo ""
+# ============================================================================
+# STEP 8: Notarize DMG
+# ============================================================================
+
+NOTARIZATION_STATUS="Skipped"
+
+if [ "$NOTARIZATION_ENABLED" = "true" ]; then
+    if notarize_dmg \
+        "$DMG_NAME" \
+        "$APPLE_ID" \
+        "$APPLE_TEAM_ID" \
+        "$APPLE_APP_SPECIFIC_PASSWORD"; then
+
+        NOTARIZATION_STATUS="Accepted"
+    else
+        NOTARIZATION_STATUS="Failed"
+
+        # In CI, notarization is required
+        if [ "$ENVIRONMENT" = "ci" ]; then
+            print_error "Notarization failed in CI - this is required"
+        fi
+    fi
+fi
+
+# ============================================================================
+# STEP 9: Generate metadata
+# ============================================================================
+
+SHA256=$(generate_checksum "$DMG_NAME")
+generate_appcast_info "$DMG_NAME" "$VERSION" "$SPARKLE_SIGNATURE"
+
+# ============================================================================
+# STEP 10: Summary
+# ============================================================================
+
+print_release_summary "$VERSION" "$DMG_NAME" "$SPARKLE_SIGNATURE" "$NOTARIZATION_STATUS"
+
+if [ "$APP_REVIEW_MODE" = "true" ]; then
+    echo ""
+    echo -e "${YELLOW}═══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${YELLOW}  APP REVIEW BUILD - PROVIDE THESE CREDENTIALS TO APPLE${NC}"
+    echo -e "${YELLOW}═══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${YELLOW}  Email:        ${NC}admin"
+    echo -e "${YELLOW}  License Key:  ${NC}TEST"
+    echo -e "${YELLOW}═══════════════════════════════════════════════════════════════${NC}"
+    echo ""
+fi
+
+# Export outputs for CI
+if [ -n "$GITHUB_OUTPUT" ]; then
+    echo "DMG_FILE=$BUILD_DIR/$DMG_NAME" >> "$GITHUB_OUTPUT"
+    echo "SHA_FILE=$BUILD_DIR/${DMG_NAME}.sha256" >> "$GITHUB_OUTPUT"
+    echo "DMG_NAME=$DMG_NAME" >> "$GITHUB_OUTPUT"
+    echo "FILE_SIZE=$FILE_SIZE" >> "$GITHUB_OUTPUT"
+    echo "SPARKLE_SIGNATURE=$SPARKLE_SIGNATURE" >> "$GITHUB_OUTPUT"
+    echo "BUILD_DIR=$BUILD_DIR" >> "$GITHUB_OUTPUT"
+    echo "CHECKSUM=$SHA256" >> "$GITHUB_OUTPUT"
+fi
+
+print_success "Release complete!"

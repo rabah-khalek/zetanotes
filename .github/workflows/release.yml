@@ -1,4 +1,4 @@
-name: Build and Release to Public Repo
+name: Build and Release
 
 on:
   push:
@@ -16,7 +16,6 @@ on:
         type: string
         default: |
           ## What's New
-
           - Bug fixes and performance improvements
 
 env:
@@ -25,15 +24,15 @@ env:
 
 jobs:
   build-and-release:
-    runs-on: macos-14  # macOS with Apple Silicon support
+    runs-on: macos-14
 
     steps:
-      - name: Checkout dev repo
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Set version from tag or input
+      - name: Set version
         id: version
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
@@ -44,30 +43,16 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
           echo "Building version: $VERSION"
 
-      - name: Update Info.plist with version
+      - name: Update Info.plist
         run: |
           VERSION="${{ steps.version.outputs.VERSION }}"
           INFO_PLIST="ZetaNotes/Info.plist"
 
-          echo "Updating Info.plist with version: $VERSION"
-
-          # Update CFBundleShortVersionString
           /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" "$INFO_PLIST"
-
-          # Update CFBundleVersion (use timestamp for unique build number)
           BUILD_NUMBER=$(date +%Y%m%d%H%M%S)
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" "$INFO_PLIST"
 
-          echo "✅ Updated Info.plist:"
-          echo "  Version: $VERSION"
-          echo "  Build: $BUILD_NUMBER"
-
-          # Verify the update
-          PLIST_VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$INFO_PLIST")
-          if [ "$PLIST_VERSION" != "$VERSION" ]; then
-            echo "❌ Failed to update Info.plist version"
-            exit 1
-          fi
+          echo "✅ Updated Info.plist to version $VERSION (build $BUILD_NUMBER)"
 
       - name: Set up Xcode
         uses: maxim-lobanov/setup-xcode@v1
@@ -76,52 +61,9 @@ jobs:
 
       - name: Install dependencies
         run: |
-          # Add Homebrew to PATH for GitHub Actions
           echo "/usr/local/bin:/opt/homebrew/bin" >> $GITHUB_PATH
-
-          # Install create-dmg if not present
           if ! command -v create-dmg &> /dev/null; then
             brew install create-dmg
-          fi
-
-      - name: Setup llama.cpp
-        run: |
-          echo "📦 Setting up llama.cpp..."
-
-          # Set SRCROOT environment variable for the build script
-          export SRCROOT="${GITHUB_WORKSPACE}"
-
-          # Use the existing build script
-          chmod +x scripts/build-llama.sh
-          ./scripts/build-llama.sh
-
-          echo "✅ llama.cpp setup complete"
-
-      - name: Setup Sparkle generate_appcast
-        run: |
-          echo "Setting up generate_appcast tool..."
-
-          # Use the local Sparkle tools from scripts/sparkle/bin
-          SPARKLE_TOOL="scripts/sparkle/bin/generate_appcast"
-
-          if [ -f "$SPARKLE_TOOL" ]; then
-            mkdir -p $HOME/bin
-            cp "$SPARKLE_TOOL" $HOME/bin/generate_appcast
-            chmod +x $HOME/bin/generate_appcast
-            echo "✅ Using generate_appcast from scripts/sparkle/bin/"
-          else
-            echo "❌ generate_appcast not found at $SPARKLE_TOOL"
-            echo "Expected to find Sparkle tools in the repository."
-            exit 1
-          fi
-
-          # Verify the tool works
-          if $HOME/bin/generate_appcast --help >/dev/null 2>&1; then
-            echo "✅ generate_appcast is working correctly"
-          else
-            echo "❌ generate_appcast is not working properly"
-            $HOME/bin/generate_appcast --help || true
-            exit 1
           fi
 
       - name: Setup signing certificate
@@ -129,20 +71,16 @@ jobs:
           APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
         run: |
-          # Create keychain
           security create-keychain -p actions build.keychain
           security default-keychain -s build.keychain
           security unlock-keychain -p actions build.keychain
           security set-keychain-settings -t 3600 -u build.keychain
 
-          # Import certificate
           echo "$APPLE_CERTIFICATE_BASE64" | base64 --decode > certificate.p12
           security import certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple: -s -k actions build.keychain
 
-          # Verify certificate
           security find-identity -v -p codesigning
-
           rm -f certificate.p12
 
       - name: Build, sign, and notarize release
@@ -151,153 +89,15 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-        run: |
-          chmod +x scripts/release.sh
-          ./scripts/release.sh ${{ steps.version.outputs.VERSION }}
-
-          # Find the built DMG in releases/ directory
-          BUILD_DIR=$(find releases -name "ZetaNotes-Release-*" -type d | head -n 1)
-          DMG_FILE=$(find "$BUILD_DIR" -name "*.dmg" | head -n 1)
-          SHA_FILE="${DMG_FILE}.sha256"
-
-          echo "BUILD_DIR=$BUILD_DIR" >> $GITHUB_OUTPUT
-          echo "DMG_FILE=$DMG_FILE" >> $GITHUB_OUTPUT
-          echo "SHA_FILE=$SHA_FILE" >> $GITHUB_OUTPUT
-          echo "DMG_NAME=$(basename $DMG_FILE)" >> $GITHUB_OUTPUT
-
-          # Get file size
-          FILE_SIZE=$(stat -f%z "$DMG_FILE")
-          echo "FILE_SIZE=$FILE_SIZE" >> $GITHUB_OUTPUT
-
-          # Get checksum
-          CHECKSUM=$(cat "$SHA_FILE")
-          echo "CHECKSUM=$CHECKSUM" >> $GITHUB_OUTPUT
-
-          # Extract notarization submission ID from log
-          NOTARIZATION_LOG="$BUILD_DIR/notarization.log"
-          if [ -f "$NOTARIZATION_LOG" ]; then
-            SUBMISSION_ID=$(grep -o "id: [a-f0-9-]*" "$NOTARIZATION_LOG" | head -1 | awk '{print $2}')
-            if [ -n "$SUBMISSION_ID" ]; then
-              echo "SUBMISSION_ID=$SUBMISSION_ID" >> $GITHUB_OUTPUT
-              echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-              echo "📋 Notarization Submission ID: $SUBMISSION_ID"
-              echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-            fi
-          fi
-
-      - name: Generate Sparkle EdDSA signature
-        id: signature
-        env:
           SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
         run: |
-          # Check if generate_appcast is available
-          if [ -f "$HOME/bin/generate_appcast_unavailable" ]; then
-            echo "⚠️  generate_appcast not available - skipping signature generation"
-            echo "⚠️  Auto-updates will NOT work without Sparkle signatures!"
-            echo "SIGNATURE=" >> $GITHUB_OUTPUT
-            exit 0
-          fi
+          chmod +x scripts/release-new.sh
+          ./scripts/release-new.sh ${{ steps.version.outputs.VERSION }}
 
-          # Check if we have the private key
-          if [ -z "$SPARKLE_PRIVATE_KEY" ]; then
-            echo "⚠️  No Sparkle private key available (SPARKLE_PRIVATE_KEY secret not set)"
-            echo "⚠️  Auto-updates will NOT work without Sparkle signatures!"
-            echo ""
-            echo "To set up Sparkle signing:"
-            echo "  1. Run: ./scripts/setup-sparkle-keys.sh"
-            echo "  2. Follow the instructions to generate keys"
-            echo "  3. Add SPARKLE_PRIVATE_KEY to GitHub Secrets"
-            echo ""
-            echo "Continuing without signature..."
-            echo "SIGNATURE=" >> $GITHUB_OUTPUT
-            exit 0
-          fi
+          # Outputs are already set by release-new.sh via GITHUB_OUTPUT
+          echo "✅ Release build complete"
 
-          # Save private key to temp file
-          echo "$SPARKLE_PRIVATE_KEY" > /tmp/sparkle_private_key
-
-          # Generate signature using sign_update tool directly (more reliable than generate_appcast)
-          echo "Generating Sparkle EdDSA signature..."
-
-          DMG_PATH="${{ steps.build.outputs.DMG_FILE }}"
-
-          if [ ! -f "$DMG_PATH" ]; then
-            echo "❌ DMG file not found at: $DMG_PATH"
-            rm -f /tmp/sparkle_private_key
-            exit 1
-          fi
-
-          echo "Signing DMG: $DMG_PATH"
-          echo "DMG size: $(ls -lh "$DMG_PATH")"
-
-          # Use sign_update from sparkle tools
-          if [ -f "scripts/sparkle/bin/sign_update" ]; then
-            echo "Using sign_update tool..."
-
-            # Run sign_update with --ed-key-file parameter
-            SIGN_OUTPUT=$(scripts/sparkle/bin/sign_update --ed-key-file /tmp/sparkle_private_key "$DMG_PATH" 2>&1)
-            SIGN_EXIT_CODE=$?
-
-            if [ $SIGN_EXIT_CODE -eq 0 ]; then
-              echo "✅ sign_update completed successfully"
-              echo "Output: $SIGN_OUTPUT"
-
-              # Extract just the signature value from the output
-              # Expected format: sparkle:edSignature="..." length="..."
-              SIGNATURE=$(echo "$SIGN_OUTPUT" | grep -o 'sparkle:edSignature="[^"]*"' | sed 's/sparkle:edSignature="\([^"]*\)"/\1/')
-
-              if [ -n "$SIGNATURE" ]; then
-                echo "✅ Extracted signature: $SIGNATURE"
-              else
-                echo "⚠️  sign_update succeeded but couldn't extract signature from output"
-                echo "Full output: $SIGN_OUTPUT"
-                SIGNATURE=""
-              fi
-            else
-              echo "❌ sign_update failed with exit code: $SIGN_EXIT_CODE"
-              echo "Error output: $SIGN_OUTPUT"
-              SIGNATURE=""
-            fi
-          else
-            echo "⚠️  sign_update tool not found at scripts/sparkle/bin/sign_update"
-            SIGNATURE=""
-          fi
-
-          # Verify we got a non-empty signature
-          if [ -z "$SIGNATURE" ]; then
-            echo "❌❌❌ CRITICAL ERROR: Failed to generate Sparkle signature ❌❌❌"
-            echo ""
-            echo "Auto-updates REQUIRE a valid EdDSA signature for security."
-            echo "The release CANNOT proceed without it."
-            echo ""
-            echo "Troubleshooting info:"
-            echo "  DMG file: $DMG_PATH"
-            echo "  DMG exists: $(test -f "$DMG_PATH" && echo "yes" || echo "no")"
-            echo "  DMG size: $(ls -lh "$DMG_PATH" 2>/dev/null || echo "N/A")"
-            echo "  Private key exists: $(test -f /tmp/sparkle_private_key && echo "yes" || echo "no")"
-            echo ""
-            echo "Common causes:"
-            echo "  1. Private key format is wrong (should be base64-encoded Ed25519 key)"
-            echo "  2. SPARKLE_PRIVATE_KEY GitHub secret not set correctly"
-            echo "  3. Private key doesn't match the public key in Info.plist"
-            echo ""
-            echo "To fix:"
-            echo "  1. Run: ./scripts/setup-sparkle-keys.sh"
-            echo "  2. Copy the private key shown"
-            echo "  3. Update SPARKLE_PRIVATE_KEY GitHub secret"
-            echo "  4. Ensure public key in Info.plist matches"
-            echo ""
-            rm -f /tmp/sparkle_private_key
-            exit 1
-          fi
-
-          echo "✅ Generated signature: $SIGNATURE"
-          echo "SIGNATURE=$SIGNATURE" >> $GITHUB_OUTPUT
-
-          # Clean up private key
-          rm -f /tmp/sparkle_private_key
-
-      - name: Create release in public repo
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           repository: ${{ env.PUBLIC_REPO }}
@@ -312,21 +112,17 @@ jobs:
             **Download the DMG, open it, and drag to Applications.**
 
             ### Privacy & Security
-
             - ✅ 100% offline AI processing
             - ✅ No cloud sync or data upload
             - ✅ No analytics or telemetry
             - ✅ No account required
 
             ### System Requirements
-
             - macOS 13.0 (Ventura) or later
             - Apple Silicon (M1/M2/M3/M4) recommended, Intel supported
             - 4 GB RAM minimum, 8 GB+ recommended
-            - 1 GB disk space for app + AI model
 
             ### Verification
-
             **SHA256:** `${{ steps.build.outputs.CHECKSUM }}`
           files: |
             ${{ steps.build.outputs.DMG_FILE }}
@@ -334,26 +130,18 @@ jobs:
           draft: false
           prerelease: false
 
-      - name: Clone public repo and update appcast
+      - name: Update appcast.xml
         env:
           PUBLIC_REPO_TOKEN: ${{ secrets.PUBLIC_REPO_TOKEN }}
         run: |
-          # Clone public repo
           git clone https://x-access-token:$PUBLIC_REPO_TOKEN@github.com/${{ env.PUBLIC_REPO }}.git /tmp/public-repo
           cd /tmp/public-repo
 
-          # Configure git
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Prepare release notes for appcast (convert markdown to basic HTML)
-          RELEASE_NOTES='${{ github.event.inputs.release_notes }}'
-          if [ -z "$RELEASE_NOTES" ]; then
-            RELEASE_NOTES="Bug fixes and performance improvements"
-          fi
+          RELEASE_NOTES='${{ github.event.inputs.release_notes || 'Bug fixes and performance improvements' }}'
 
-          # Generate appcast.xml in the root of the public repo
-          # This will be served via GitHub Pages at: https://www.zetanotes.com/appcast.xml
           cat > appcast.xml << EOF
           <?xml version="1.0" encoding="utf-8"?>
           <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
@@ -363,7 +151,6 @@ jobs:
                   <description>Most recent updates for ZetaNotes</description>
                   <language>en</language>
 
-                  <!-- Version ${{ steps.version.outputs.VERSION }} -->
                   <item>
                       <title>Version ${{ steps.version.outputs.VERSION }}</title>
                       <link>https://github.com/${{ env.PUBLIC_REPO }}</link>
@@ -380,65 +167,48 @@ jobs:
                           sparkle:shortVersionString="${{ steps.version.outputs.VERSION }}"
                           length="${{ steps.build.outputs.FILE_SIZE }}"
                           type="application/octet-stream"
-                          sparkle:edSignature="${{ steps.signature.outputs.SIGNATURE }}" />
+                          sparkle:edSignature="${{ steps.build.outputs.SPARKLE_SIGNATURE }}" />
                       <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
                   </item>
-
               </channel>
           </rss>
           EOF
 
-          # Commit and push appcast.xml
           git add appcast.xml
-          git commit -m "Update appcast.xml for v${{ steps.version.outputs.VERSION }}" || echo "No changes to commit"
+          git commit -m "Update appcast.xml for v${{ steps.version.outputs.VERSION }}" || echo "No changes"
           git push
 
-      - name: Update website download link
+      - name: Update website
         env:
           PUBLIC_REPO_TOKEN: ${{ secrets.PUBLIC_REPO_TOKEN }}
         run: |
-          # Already in /tmp/public-repo from previous step
           cd /tmp/public-repo
 
           VERSION="${{ steps.version.outputs.VERSION }}"
           DMG_NAME="${{ steps.build.outputs.DMG_NAME }}"
 
-          echo "Updating website download link to version $VERSION"
-
-          # Update index.html download link to point to the new version
-          # This updates the href in the download button
           sed -i "s|releases/latest/download/ZetaNotes-v[0-9.]*\.dmg|releases/latest/download/$DMG_NAME|g" docs/index.html
-
-          # Update version in Umami event tracking attribute
           sed -i "s|data-umami-event-version=\"[0-9.]*\"|data-umami-event-version=\"$VERSION\"|g" docs/index.html
 
-          # Check if changes were made
-          if git diff --quiet docs/index.html; then
-            echo "No changes needed to docs/index.html"
-          else
-            echo "Changes made to docs/index.html:"
-            git diff docs/index.html
-
-            # Commit and push website update
+          if ! git diff --quiet docs/index.html; then
             git add docs/index.html
             git commit -m "Update download link to v$VERSION"
             git push
-
-            echo "✅ Website updated with download link for v$VERSION"
+            echo "✅ Website updated"
           fi
 
       - name: Summary
         run: |
-          echo "## ✅ Release Build Complete!" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Version:** ${{ steps.version.outputs.VERSION }}" >> $GITHUB_STEP_SUMMARY
-          echo "**DMG:** ${{ steps.build.outputs.DMG_NAME }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Size:** ${{ steps.build.outputs.FILE_SIZE }} bytes" >> $GITHUB_STEP_SUMMARY
-          echo "**SHA256:** \`${{ steps.build.outputs.CHECKSUM }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 🚀 Next Steps:" >> $GITHUB_STEP_SUMMARY
-          echo "- Release published to: https://github.com/${{ env.PUBLIC_REPO }}/releases/tag/v${{ steps.version.outputs.VERSION }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Website download link auto-updated to v${{ steps.version.outputs.VERSION }}" >> $GITHUB_STEP_SUMMARY
-          echo "- GitHub Pages will auto-deploy in a few minutes" >> $GITHUB_STEP_SUMMARY
-          echo "- Download page: https://www.zetanotes.com/" >> $GITHUB_STEP_SUMMARY
-          echo "- Appcast URL: https://www.zetanotes.com/appcast.xml" >> $GITHUB_STEP_SUMMARY
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+          ## ✅ Release Complete!
+
+          **Version:** ${{ steps.version.outputs.VERSION }}
+          **DMG:** ${{ steps.build.outputs.DMG_NAME }}
+          **Size:** ${{ steps.build.outputs.FILE_SIZE }} bytes
+          **SHA256:** \`${{ steps.build.outputs.CHECKSUM }}\`
+
+          ### Links
+          - [GitHub Release](https://github.com/${{ env.PUBLIC_REPO }}/releases/tag/v${{ steps.version.outputs.VERSION }})
+          - [Download Page](https://www.zetanotes.com/)
+          - [Appcast](https://www.zetanotes.com/appcast.xml)
+          EOF

@@ -2,46 +2,32 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- Application Identification -->
 	<key>CFBundleDevelopmentRegion</key>
-	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<string>en</string>
 	<key>CFBundleExecutable</key>
-	<string>$(EXECUTABLE_NAME)</string>
+	<string>ZetaNotes</string>
 	<key>CFBundleIdentifier</key>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<string>com.zetanotes.zetanotes</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>$(PRODUCT_NAME)</string>
+	<string>ZetaNotes</string>
 	<key>CFBundlePackageType</key>
-	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
+	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
 	<string>1.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
-
-	<!-- Display Name -->
 	<key>CFBundleDisplayName</key>
 	<string>ZetaNotes</string>
-
-	<!-- Copyright & Credits -->
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2025 ZetaNotes. All rights reserved.</string>
-
-	<!-- Minimum System Version -->
 	<key>LSMinimumSystemVersion</key>
-	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
-
-	<!-- Application Category -->
+	<string>13.0</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.productivity</string>
-
-	<!-- High Resolution Support -->
 	<key>NSHighResolutionCapable</key>
 	<true/>
-
-
-	<!-- Document Types (for future file association) -->
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
@@ -53,8 +39,6 @@
 			<string>Owner</string>
 		</dict>
 	</array>
-
-	<!-- Services Menu -->
 	<key>NSServices</key>
 	<array>
 		<dict>
@@ -74,18 +58,12 @@
 			</array>
 		</dict>
 	</array>
-
-	<!-- Application Features -->
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
-
-	<!-- App Transport Security -->
-	<!-- Allow HTTPS connections for model downloads -->
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
 		<false/>
-		<!-- Specifically allow Hugging Face for model downloads -->
 		<key>NSExceptionDomains</key>
 		<dict>
 			<key>huggingface.co</key>
@@ -99,31 +77,16 @@
 			</dict>
 		</dict>
 	</dict>
-
-	<!-- Support Dark Mode -->
 	<key>NSRequiresAquaSystemAppearance</key>
 	<false/>
-
-	<!-- Main Storyboard (if using storyboards) -->
-	<!-- ZetaNotes uses SwiftUI, so this is commented out -->
-	<!-- <key>NSMainStoryboardFile</key> -->
-	<!-- <string>Main</string> -->
-
-	<!-- Principal Class for SwiftUI App -->
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
-
-	<!-- Supported Platforms -->
 	<key>CFBundleSupportedPlatforms</key>
 	<array>
 		<string>MacOSX</string>
 	</array>
-
-	<!-- Application Features Description -->
 	<key>NSHumanReadableDescription</key>
 	<string>Offline AI-powered note-taking for Mac. Features intelligent autocomplete, summarization, translation, and semantic search - all running privately on your device with portable LLMs.</string>
-
-	<!-- URL Schemes (for future deep linking) -->
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -135,37 +98,19 @@
 			</array>
 		</dict>
 	</array>
-
-	<!-- Sparkle Auto-Update Configuration -->
-	<key>SUFeedURL</key>
-	<string>https://www.zetanotes.com/appcast.xml</string>
-	<key>SUPublicEDKey</key>
-	<string>OaS6XLRg52NaUmFiFX46nv1MlVb2gicyeSuxemv9N5I=</string>
-	<key>SUEnableAutomaticChecks</key>
-	<true/>
-	<key>SUScheduledCheckInterval</key>
-	<integer>86400</integer>
-
-	<!-- Privacy - Usage Descriptions -->
-	<!-- These are defensive - included for future-proofing even if not currently needed -->
 	<key>NSNetworkUsageDescription</key>
 	<string>ZetaNotes downloads AI models from Hugging Face to provide offline AI features.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>ZetaNotes may access your local network for future collaboration features.</string>
-
-	<!-- Accessibility -->
 	<key>NSSupportsAutomaticTermination</key>
 	<true/>
 	<key>NSSupportsSuddenTermination</key>
 	<true/>
-
-	<!-- Background Modes (if needed for future features) -->
-	<!-- Currently not needed as all processing is on-demand -->
-
-	<!-- App Icons -->
 	<key>CFBundleIconFile</key>
 	<string>AppIcon</string>
 	<key>CFBundleIconName</key>
 	<string>AppIcon</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>

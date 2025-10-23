@@ -706,12 +706,12 @@ struct GeneralSettingsContent: View {
                         .foregroundColor(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
 
-                    Text("Updates are delivered through Sparkle over HTTPS and verified with an EdDSA signature.")
+                    Text("Updates are delivered automatically through the Mac App Store.")
                         .font(.system(size: 11))
                         .foregroundColor(.secondary)
 
                     Text(
-                        "Payments and licenses are managed securely by Paddle; no billing data is stored in ZetaNotes."
+                        "Payments are securely processed through the App Store. No billing data is stored in ZetaNotes."
                     )
                     .font(.system(size: 11))
                     .foregroundColor(.secondary)
@@ -1328,7 +1328,6 @@ struct ProStatusSection: View {
     @Environment(\.openURL) private var openURL
 
     private let supportEmail = "mailto:rabah.khalek@gmail.com?subject=ZetaNotes%20Support"
-    private let paddlePortal = URL(string: "https://my.paddle.com/")!
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -1344,23 +1343,18 @@ struct ProStatusSection: View {
                             .font(.headline)
                             .fontWeight(.semibold)
 
-                        if let email = licenseManager.licenseEmail {
-                            Text(email)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
+                        #if DEV_PRO_MODE
+                        Text("\(licenseManager.subscriptionTier.displayName) (App Review Build)")
+                            .font(.caption)
+                            .foregroundColor(.orange)
+                        #else
+                        Text(licenseManager.subscriptionTier.displayName)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        #endif
                     }
 
                     Spacer()
-
-                    #if DEBUG
-                    Button("Deactivate (Dev)") {
-                        licenseManager.deactivateLicense()
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-                    .foregroundColor(.orange)
-                    #endif
                 }
                 .padding()
                 .background(Color.green.opacity(0.1))
@@ -1368,9 +1362,12 @@ struct ProStatusSection: View {
 
                 HStack(spacing: 12) {
                     Button {
-                        openURL(paddlePortal)
+                        // Open App Store subscription management
+                        if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
+                            openURL(url)
+                        }
                     } label: {
-                        Label("Manage License & Billing", systemImage: "creditcard")
+                        Label("Manage Subscription", systemImage: "creditcard")
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
@@ -1388,7 +1385,7 @@ struct ProStatusSection: View {
                 .padding(.horizontal)
                 .padding(.bottom, 4)
 
-                Text("Licensing and payment processing are securely handled by Paddle.")
+                Text("Subscriptions are managed through the App Store.")
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .padding(.horizontal)
@@ -1432,11 +1429,13 @@ struct ProStatusSection: View {
                         .buttonStyle(.borderedProminent)
                         .controlSize(.large)
 
-                        Button("Restore License") {
-                            dismiss()
-                            // Small delay to ensure settings closes before activation prompt shows
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                NotificationCenter.default.post(name: .showLicenseActivation, object: nil)
+                        Button("Restore Purchases") {
+                            Task {
+                                do {
+                                    try await licenseManager.restorePurchases()
+                                } catch {
+                                    print("❌ Failed to restore purchases: \(error)")
+                                }
                             }
                         }
                         .buttonStyle(.bordered)
@@ -1458,8 +1457,6 @@ struct LegalSupportSection: View {
     private let privacyURL = URL(string: "https://www.zetanotes.com/privacy.html")!
     private let termsURL = URL(string: "https://www.zetanotes.com/terms.html")!
     private let refundsURL = URL(string: "https://www.zetanotes.com/refunds.html")!
-    private let sparkleURL = URL(string: "https://sparkle-project.org")!
-    private let paddlePortal = URL(string: "https://my.paddle.com/")!
     private let supportEmail = "mailto:rabah.khalek@gmail.com?subject=ZetaNotes%20Support"
 
     var body: some View {
@@ -1529,26 +1526,19 @@ struct LegalSupportSection: View {
                     .tint(.blue)
 
                     Button {
-                        openURL(paddlePortal)
+                        // Open App Store subscription management
+                        if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
+                            openURL(url)
+                        }
                     } label: {
-                        Label("Manage License", systemImage: "creditcard")
+                        Label("Manage Subscription", systemImage: "creditcard")
                     }
                     .buttonStyle(.bordered)
                 }
 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Automatic updates are delivered securely via Sparkle using HTTPS and signed feeds.")
-                        .font(.system(size: 11))
-                        .foregroundColor(.secondary)
-
-                    Button {
-                        openURL(sparkleURL)
-                    } label: {
-                        Label("About Sparkle Updater", systemImage: "sparkles")
-                    }
-                    .buttonStyle(.link)
+                Text("Updates are delivered automatically through the Mac App Store.")
                     .font(.system(size: 11))
-                }
+                    .foregroundColor(.secondary)
             }
             .padding(16)
             .background(

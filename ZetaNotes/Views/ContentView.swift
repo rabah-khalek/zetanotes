@@ -32,7 +32,6 @@ struct ContentView: View {
 
     // License/Upgrade state
     @State private var showUpgradePrompt = false
-    @State private var showLicenseActivation = false
     @State private var upgradePromptType: UpgradePromptView.PromptType = .general
 
     // Word and character count state
@@ -108,9 +107,6 @@ struct ContentView: View {
                 promptType: upgradePromptType
             )
         }
-        .sheet(isPresented: $showLicenseActivation) {
-            LicenseActivationView(isPresented: $showLicenseActivation)
-        }
         .onAppear {
             // Start system monitoring for CPU/GPU usage
             systemMonitor.startMonitoring()
@@ -168,9 +164,6 @@ struct ContentView: View {
             showingSettings = false
             showingToolEditor = false
             showUpgradePrompt = true
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .showLicenseActivation)) { _ in
-            showLicenseActivation = true
         }
         .onReceive(NotificationCenter.default.publisher(for: .toggleChat)) { _ in
             showingChat.toggle()

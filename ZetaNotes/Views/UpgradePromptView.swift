@@ -2,15 +2,19 @@
 //  UpgradePromptView.swift
 //  ZetaNotes
 //
-//  Beautiful upgrade prompt for Pro features
+//  Beautiful upgrade prompt for Pro features with StoreKit 2
 //
 
 import SwiftUI
+import StoreKit
 
 struct UpgradePromptView: View {
     @ObservedObject var licenseManager = LicenseManager.shared
+    @ObservedObject var storeKit = StoreKitManager.shared
     @Binding var isPresented: Bool
-    @State private var selectedTier: String = "lifetime" // "monthly", "annual", "lifetime"
+    @State private var selectedProductID: ProductID = .lifetime
+    @State private var isPurchasing = false
+    @State private var errorMessage: String?
 
     enum PromptType {
         case modelSwitching
@@ -126,106 +130,150 @@ struct UpgradePromptView: View {
                 Text("Choose Your Plan")
                     .font(.headline)
 
-                HStack(spacing: 12) {
-                    // Monthly option
-                    CompactPricingCard(
-                        title: "Monthly",
-                        price: "$1",
-                        period: "/mo",
-                        badge: nil,
-                        isSelected: selectedTier == "monthly",
-                        action: { selectedTier = "monthly" }
-                    )
+                if storeKit.products.isEmpty {
+                    ProgressView("Loading products...")
+                        .padding()
+                } else {
+                    HStack(spacing: 12) {
+                        // Monthly option
+                        if let monthlyProduct = storeKit.product(for: .monthly) {
+                            CompactPricingCard(
+                                title: "Monthly",
+                                price: monthlyProduct.displayPrice,
+                                period: "/mo",
+                                badge: nil,
+                                isSelected: selectedProductID == .monthly,
+                                action: { selectedProductID = .monthly }
+                            )
+                        }
 
-                    // Annual option
-                    CompactPricingCard(
-                        title: "Annual",
-                        price: "$6",
-                        period: "/yr",
-                        badge: nil,
-                        isSelected: selectedTier == "annual",
-                        action: { selectedTier = "annual" }
-                    )
+                        // Annual option
+                        if let annualProduct = storeKit.product(for: .annual) {
+                            CompactPricingCard(
+                                title: "Annual",
+                                price: annualProduct.displayPrice,
+                                period: "/yr",
+                                badge: "Best Value",
+                                isSelected: selectedProductID == .annual,
+                                action: { selectedProductID = .annual }
+                            )
+                        }
 
-                    // Lifetime option
-                    CompactPricingCard(
-                        title: "Lifetime",
-                        price: "$20",
-                        period: "once",
-                        badge: nil,
-                        isSelected: selectedTier == "lifetime",
-                        action: { selectedTier = "lifetime" }
-                    )
+                        // Lifetime option
+                        if let lifetimeProduct = storeKit.product(for: .lifetime) {
+                            CompactPricingCard(
+                                title: "Lifetime",
+                                price: lifetimeProduct.displayPrice,
+                                period: "once",
+                                badge: nil,
+                                isSelected: selectedProductID == .lifetime,
+                                action: { selectedProductID = .lifetime }
+                            )
+                        }
+                    }
+
+                    Text("All plans include full access to Pro features")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                 }
-
-                Text("All plans include full access to Pro features")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
             }
             .padding()
 
             Divider()
 
+            // Error message
+            if let error = errorMessage {
+                HStack {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundColor(.red)
+                    Text(error)
+                        .font(.caption)
+                        .foregroundColor(.red)
+                }
+                .padding(.horizontal)
+                .padding(.top, 8)
+            }
+
             // Actions
             VStack(spacing: 12) {
                 Button(action: {
-                    // Open Paddle purchase page
-                    openPaddlePage()
-                    // Note: Analytics tracking removed to avoid import issues
+                    Task {
+                        await purchaseSelected()
+                    }
                 }) {
                     HStack {
-                        Image(systemName: "cart.fill")
-                        Text("Upgrade to Pro")
+                        if isPurchasing {
+                            ProgressView()
+                                .controlSize(.small)
+                        } else {
+                            Image(systemName: "cart.fill")
+                            Text("Upgrade to Pro")
+                        }
                     }
                     .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
+                .disabled(isPurchasing || storeKit.products.isEmpty)
+
+                Button(action: {
+                    Task {
+                        await restorePurchases()
+                    }
+                }) {
+                    Text("Restore Purchases")
+                        .font(.caption)
+                        .foregroundColor(.blue)
+                }
+                .buttonStyle(.plain)
+                .disabled(isPurchasing)
             }
             .padding()
-
-            // Already purchased link
-            Button(action: {
-                showLicenseActivation()
-            }) {
-                Text("Already purchased? Enter license key")
-                    .font(.caption)
-                    .foregroundColor(.blue)
-            }
-            .buttonStyle(.plain)
-            .padding(.bottom)
         }
         .frame(width: 600)
         .background(Color(nsColor: .controlBackgroundColor))
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .shadow(radius: 20)
-    }
-
-    private func openPaddlePage() {
-        // DEV_TODO: Replace with your actual Paddle checkout URLs for each tier
-        // Get these from your Paddle dashboard after creating the products
-        let checkoutURL: String
-
-        switch selectedTier {
-        case "monthly":
-            checkoutURL = "https://buy.paddle.com/product/DEV_MONTHLY_PRICE_ID"
-        case "annual":
-            checkoutURL = "https://buy.paddle.com/product/DEV_ANNUAL_PRICE_ID"
-        case "lifetime":
-            checkoutURL = "https://buy.paddle.com/product/DEV_LIFETIME_PRICE_ID"
-        default:
-            checkoutURL = "https://buy.paddle.com/product/DEV_LIFETIME_PRICE_ID"
-        }
-
-        if let url = URL(string: checkoutURL) {
-            NSWorkspace.shared.open(url)
+        .task {
+            // Load products when view appears
+            await storeKit.loadProducts()
         }
     }
 
-    private func showLicenseActivation() {
-        isPresented = false
-        // Post notification to show license activation
-        NotificationCenter.default.post(name: .showLicenseActivation, object: nil)
+    private func purchaseSelected() async {
+        errorMessage = nil
+        isPurchasing = true
+
+        do {
+            try await licenseManager.purchase(selectedProductID)
+            // Success - close the view
+            isPresented = false
+        } catch StoreError.productNotFound {
+            errorMessage = "Product not available. Please try again."
+        } catch {
+            errorMessage = "Purchase failed: \(error.localizedDescription)"
+        }
+
+        isPurchasing = false
+    }
+
+    private func restorePurchases() async {
+        errorMessage = nil
+        isPurchasing = true
+
+        do {
+            try await licenseManager.restorePurchases()
+            // Check if purchase was restored
+            if licenseManager.isPro {
+                isPresented = false
+            } else {
+                errorMessage = "No previous purchases found."
+            }
+        } catch {
+            errorMessage = "Restore failed: \(error.localizedDescription)"
+        }
+
+        isPurchasing = false
     }
 }
 
@@ -294,64 +342,6 @@ struct CompactPricingCard: View {
     }
 }
 
-// MARK: - Pricing Option Row
-
-struct PricingOptionRow: View {
-    let title: String
-    let price: String
-    let period: String
-    let badge: String?
-    let isSelected: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 8) {
-                        Text(title)
-                            .font(.headline)
-                            .foregroundColor(isSelected ? .white : .primary)
-
-                        if let badge = badge {
-                            Text(badge)
-                                .font(.caption2)
-                                .fontWeight(.bold)
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(Color.green)
-                                .cornerRadius(3)
-                        }
-                    }
-                    Text(period)
-                        .font(.caption)
-                        .foregroundColor(isSelected ? .white.opacity(0.8) : .secondary)
-                }
-
-                Spacer()
-
-                Text(price)
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .foregroundColor(isSelected ? .white : .primary)
-
-                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .foregroundColor(isSelected ? .white : .secondary)
-                    .font(.title3)
-            }
-            .padding()
-            .background(isSelected ? Color.blue : Color(nsColor: .controlBackgroundColor))
-            .cornerRadius(8)
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(isSelected ? Color.blue : Color.gray.opacity(0.3), lineWidth: isSelected ? 2 : 1)
-            )
-        }
-        .buttonStyle(.plain)
-    }
-}
-
 // MARK: - Feature Row
 
 struct FeatureRow: View {
@@ -382,213 +372,12 @@ struct FeatureRow: View {
     }
 }
 
-// MARK: - License Activation View
-
-struct LicenseActivationView: View {
-    @ObservedObject var licenseManager = LicenseManager.shared
-    @Binding var isPresented: Bool
-
-    @State private var email: String = ""
-    @State private var licenseKey: String = ""
-    @State private var isValidating: Bool = false
-    @State private var errorMessage: String?
-    @State private var showSuccess: Bool = false
-
-    var body: some View {
-        VStack(spacing: 0) {
-            // Header
-            HStack {
-                Image(systemName: "key.fill")
-                    .font(.system(size: 32))
-                    .foregroundColor(.blue)
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Activate Pro License")
-                        .font(.title2)
-                        .fontWeight(.bold)
-
-                    Text("Enter your license key from your purchase email")
-                        .font(.body)
-                        .foregroundColor(.secondary)
-                }
-                .padding(.leading, 8)
-
-                Spacer()
-
-                Button(action: {
-                    isPresented = false
-                }) {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 20))
-                        .foregroundColor(.secondary)
-                }
-                .buttonStyle(.plain)
-            }
-            .padding()
-
-            Divider()
-
-            if showSuccess {
-                // Success state
-                VStack(spacing: 16) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 60))
-                        .foregroundColor(.green)
-
-                    Text("Pro Activated! 🎉")
-                        .font(.title)
-                        .fontWeight(.bold)
-
-                    Text("You now have access to all open-source features")
-                        .foregroundColor(.secondary)
-
-                    Button("Get Started") {
-                        isPresented = false
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
-                }
-                .padding(40)
-            } else {
-                // Input form
-                VStack(alignment: .leading, spacing: 16) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Email")
-                            .font(.headline)
-                        TextField("your@email.com", text: $email)
-                            .textFieldStyle(.roundedBorder)
-                    }
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("License Key")
-                            .font(.headline)
-                        TextField("XXXX-XXXX-XXXX-XXXX", text: $licenseKey)
-                            .textFieldStyle(.roundedBorder)
-                    }
-
-                    if let error = errorMessage {
-                        HStack {
-                            Image(systemName: "exclamationmark.triangle.fill")
-                                .foregroundColor(.red)
-                            Text(error)
-                                .font(.caption)
-                                .foregroundColor(.red)
-                        }
-                    }
-
-                    #if DEBUG
-                    Text("Debug: Use email 'admin' and key 'test'")
-                        .font(.caption)
-                        .foregroundColor(.orange)
-                    #endif
-                }
-                .padding()
-
-                Divider()
-
-                // Actions
-                HStack {
-                    Button("Cancel") {
-                        isPresented = false
-                    }
-                    .buttonStyle(.bordered)
-
-                    Spacer()
-
-                    Button(action: activateLicense) {
-                        if isValidating {
-                            ProgressView()
-                                .controlSize(.small)
-                                .padding(.horizontal)
-                        } else {
-                            Text("Activate License")
-                        }
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(email.isEmpty || licenseKey.isEmpty || isValidating)
-                }
-                .padding()
-            }
-        }
-        .frame(width: 450)
-        .background(Color(nsColor: .controlBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-        .shadow(radius: 20)
-    }
-
-    private func activateLicense() {
-        // Validate inputs first
-        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedKey = licenseKey.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        if trimmedEmail.isEmpty {
-            errorMessage = "Please enter your email address."
-            return
-        }
-
-        if trimmedKey.isEmpty {
-            errorMessage = "Please enter your license key."
-            return
-        }
-
-        // Email validation - allow test credentials in DEBUG mode
-        #if DEBUG
-        let isTestCredential = trimmedEmail.lowercased() == "admin" && trimmedKey.lowercased() == "test"
-        if !trimmedEmail.contains("@"), !isTestCredential {
-            errorMessage = "Please enter a valid email address."
-            return
-        }
-        #else
-        if !trimmedEmail.contains("@") {
-            errorMessage = "Please enter a valid email address."
-            return
-        }
-        #endif
-
-        isValidating = true
-        errorMessage = nil
-
-        Task {
-            let success = await licenseManager.validateLicense(key: trimmedKey, email: trimmedEmail)
-
-            await MainActor.run {
-                isValidating = false
-
-                if success {
-                    showSuccess = true
-                    // Auto-dismiss after 2 seconds
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                        isPresented = false
-                    }
-                } else {
-                    errorMessage = "Invalid license key or email. Please double-check your purchase email and license key, then try again."
-                }
-            }
-        }
-    }
-}
-
-// MARK: - Notification Extension
-
-extension Notification.Name {
-    static let showLicenseActivation = Notification.Name("showLicenseActivation")
-}
-
 // MARK: - Preview
 
 #if DEBUG
 struct UpgradePromptView_Previews: PreviewProvider {
     static var previews: some View {
-        Group {
-            UpgradePromptView(isPresented: .constant(true), promptType: .modelSwitching)
-                .previewDisplayName("Model Switching")
-
-            UpgradePromptView(isPresented: .constant(true), promptType: .promptEditing)
-                .previewDisplayName("Prompt Editing")
-
-            LicenseActivationView(isPresented: .constant(true))
-                .previewDisplayName("License Activation")
-        }
+        UpgradePromptView(isPresented: .constant(true), promptType: .general)
     }
 }
 #endif

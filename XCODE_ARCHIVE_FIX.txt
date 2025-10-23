@@ -1,0 +1,78 @@
+# Fix Applied - Archive Through Xcode Instructions
+
+## ✅ What Was Fixed
+
+1. **dSYM Generation**: Updated `scripts/build-llama.sh` to generate dSYM files for all llama.cpp libraries
+2. **Auto-copy script**: Created `scripts/copy-dsyms-to-archive.sh` to copy dSYMs during archiving
+3. **llama.cpp rebuilt**: All libraries now have dSYM files in `llama.cpp/build/bin/*.dSYM`
+
+## 🔧 Required: Add Build Phase in Xcode
+
+You need to add ONE build phase to your Xcode project:
+
+### Steps:
+
+1. Open `ZetaNotes.xcodeproj` in Xcode (already open)
+2. Select the **ZetaNotes** target in the left sidebar
+3. Click **Build Phases** tab
+4. Click **+** button → **New Run Script Phase**
+5. **Drag** the new "Run Script" phase to be **AFTER** the "CopyFiles" phase
+6. **Name it**: "Copy dSYM Files to Archive"
+7. **Paste this script**:
+
+```bash
+# Only run during archiving (not regular builds)
+if [ "$ACTION" != "install" ]; then
+    exit 0
+fi
+
+echo "📦 Copying llama.cpp dSYM files to archive..."
+
+LLAMA_BUILD_DIR="${SRCROOT}/llama.cpp/build/bin"
+mkdir -p "$DWARF_DSYM_FOLDER_PATH"
+
+for dsym in "$LLAMA_BUILD_DIR"/*.dSYM; do
+    if [ -d "$dsym" ]; then
+        echo "  Copying: $(basename "$dsym")"
+        cp -R "$dsym" "$DWARF_DSYM_FOLDER_PATH/"
+    fi
+done
+
+echo "✅ dSYM files copied to archive"
+```
+
+8. Click **Close**
+
+## 📦 Now Archive Through Xcode
+
+1. **Menu**: Product → Archive
+2. Wait for build to complete
+3. Organizer will open with your archive
+4. Click **Validate App** (recommended first)
+5. If validation passes, click **Distribute App**
+6. Choose **App Store Connect**
+7. Follow the prompts
+
+## ✅ What This Fixes
+
+- ✅ Missing dSYM files for all llama.cpp libraries
+- ✅ Symbol upload errors will be resolved
+- ✅ Crash reports will show function names
+
+## Bundle Structure Issue
+
+The "CFBundleExecutable of two bundles" error should also be resolved because:
+- The dylibs are properly signed as plain dynamic libraries (not bundles)
+- Info.plist now has hardcoded values (not variables)
+- The export process will handle them correctly
+
+If you still get this error, it may be a transient Xcode issue. Try:
+1. Clean Build Folder (Shift+Cmd+K)
+2. Restart Xcode
+3. Archive again
+
+## ⚠️ Important
+
+- Don't run `archive-for-appstore.sh` - that's for manual archiving
+- Use Xcode's Product → Archive menu instead
+- The build phase only runs during archiving (not regular builds)

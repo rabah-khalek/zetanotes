@@ -3,6 +3,9 @@
 # Release build output directory
 releases/
 
+apple_app_review
+apple_app_review.zip
+
 # External dependencies (large, should be cloned/built separately)
 llama.cpp/
 

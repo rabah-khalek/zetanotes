@@ -1,0 +1,134 @@
+{
+  "identifier" : "F8E6B2A1",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+    {
+      "displayPrice" : "20",
+      "familyShareable" : false,
+      "internalID" : "6738392845",
+      "localizations" : [
+        {
+          "description" : "One-time purchase for lifetime access to all Pro features",
+          "displayName" : "ZetaNotes Pro Lifetime",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.zetanotes.pro.lifetime",
+      "referenceName" : "Pro Lifetime",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_failTransactionsEnabled" : false,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Load Products"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Purchase"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Verification"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Transaction"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Manage Subscriptions Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Refund Request Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Offer Code Redeem Sheet"
+      }
+    ]
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "21527373",
+      "localizations" : [
+        {
+          "description" : "Access all Pro features with flexible subscription options",
+          "displayName" : "ZetaNotes Pro",
+          "locale" : "en_US"
+        }
+      ],
+      "name" : "ZetaNotes Pro",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "1",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6738392201",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Monthly access to all Pro features - 8 AI models, chat, and custom tools",
+              "displayName" : "ZetaNotes Pro Monthly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.zetanotes.pro.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Pro Monthly",
+          "subscriptionGroupID" : "21527373",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "6",
+          "familyShareable" : false,
+          "groupNumber" : 2,
+          "internalID" : "6738392422",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Annual access to all Pro features - 8 AI models, chat, and custom tools. Best value!",
+              "displayName" : "ZetaNotes Pro Annual",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "com.zetanotes.pro.annual",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Pro Annual",
+          "subscriptionGroupID" : "21527373",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

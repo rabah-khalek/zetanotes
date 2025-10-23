@@ -21,8 +21,8 @@
 		81111F642EA0891A00D7317B /* InlineAutocompleteTextEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F622EA0891A00D7317B /* InlineAutocompleteTextEditor.swift */; };
 		81111F652EA0891A00D7317B /* UpgradePromptView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F632EA0891A00D7317B /* UpgradePromptView.swift */; };
 		81C5A72B2EA57C7B00B5077D /* DataExportManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81C5A72A2EA57C7B00B5077D /* DataExportManager.swift */; };
-		81C5A72D2EA58A1700B5077D /* CheckForUpdatesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81C5A72C2EA58A1700B5077D /* CheckForUpdatesView.swift */; };
 		81C5A7332EA7337C00B5077D /* CenteredScrolling.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81C5A7322EA7337C00B5077D /* CenteredScrolling.swift */; };
+		81C5A7352EA9B1EC00B5077D /* StoreKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81C5A7342EA9B1EC00B5077D /* StoreKitManager.swift */; };
 		81DE21652E9B3C2400692788 /* ModelDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE21642E9B3C2400692788 /* ModelDownloader.swift */; };
 		81DE4F6B2EA1A524006293FC /* MarkdownRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F6A2EA1A524006293FC /* MarkdownRenderer.swift */; };
 		81DE4F6E2EA1CE1A006293FC /* AITool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F6C2EA1CE1A006293FC /* AITool.swift */; };
@@ -47,8 +47,6 @@
 		81DE4F9F2EA33EF3006293FC /* CustomToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F9B2EA33EF3006293FC /* CustomToolbarView.swift */; };
 		81DE4FA12EA34106006293FC /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4FA02EA34106006293FC /* AppTheme.swift */; };
 		81DE4FA32EA46176006293FC /* LLMOutputCleaner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4FA22EA46176006293FC /* LLMOutputCleaner.swift */; };
-		81DE4FA62EA492FA006293FC /* Sparkle.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 81DE4FA52EA492FA006293FC /* Sparkle.xcframework */; };
-		81DE4FA72EA492FA006293FC /* Sparkle.xcframework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 81DE4FA52EA492FA006293FC /* Sparkle.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		81EFBE2E2E9B05C700F7E48B /* libllama.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 81EFBE282E9B05C700F7E48B /* libllama.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		81EFBE2F2E9B05C700F7E48B /* libggml-base.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 81EFBE292E9B05C700F7E48B /* libggml-base.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		81EFBE302E9B05C700F7E48B /* libggml-metal.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 81EFBE2A2E9B05C700F7E48B /* libggml-metal.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -94,7 +92,6 @@
 				81EFBE2E2E9B05C700F7E48B /* libllama.dylib in CopyFiles */,
 				81EFBE2F2E9B05C700F7E48B /* libggml-base.dylib in CopyFiles */,
 				81EFBE302E9B05C700F7E48B /* libggml-metal.dylib in CopyFiles */,
-				81DE4FA72EA492FA006293FC /* Sparkle.xcframework in CopyFiles */,
 				81EFBE312E9B05C700F7E48B /* libggml-cpu.dylib in CopyFiles */,
 				81EFBE322E9B05C700F7E48B /* libggml.dylib in CopyFiles */,
 				81EFBE332E9B05C700F7E48B /* libggml-blas.dylib in CopyFiles */,
@@ -117,8 +114,11 @@
 		81111F622EA0891A00D7317B /* InlineAutocompleteTextEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineAutocompleteTextEditor.swift; sourceTree = "<group>"; };
 		81111F632EA0891A00D7317B /* UpgradePromptView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpgradePromptView.swift; sourceTree = "<group>"; };
 		81C5A72A2EA57C7B00B5077D /* DataExportManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataExportManager.swift; sourceTree = "<group>"; };
-		81C5A72C2EA58A1700B5077D /* CheckForUpdatesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckForUpdatesView.swift; sourceTree = "<group>"; };
 		81C5A7322EA7337C00B5077D /* CenteredScrolling.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CenteredScrolling.swift; sourceTree = "<group>"; };
+		81C5A7342EA9B1EC00B5077D /* StoreKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreKitManager.swift; sourceTree = "<group>"; };
+		81C5A7362EA9B75000B5077D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		81C5A7382EA9B9E900B5077D /* Configuration.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = Configuration.storekit; sourceTree = "<group>"; };
+		81C5A73A2EA9BD3E00B5077D /* Configuration.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; name = Configuration.storekit; path = ZetaNotes/Configuration.storekit; sourceTree = "<group>"; };
 		81DE21642E9B3C2400692788 /* ModelDownloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelDownloader.swift; sourceTree = "<group>"; };
 		81DE4F652EA18C90006293FC /* NotesDataModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = NotesDataModel.xcdatamodel; sourceTree = "<group>"; };
 		81DE4F6A2EA1A524006293FC /* MarkdownRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownRenderer.swift; sourceTree = "<group>"; };
@@ -144,7 +144,6 @@
 		81DE4F9C2EA33EF3006293FC /* CustomWindowLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomWindowLayout.swift; sourceTree = "<group>"; };
 		81DE4FA02EA34106006293FC /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		81DE4FA22EA46176006293FC /* LLMOutputCleaner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMOutputCleaner.swift; sourceTree = "<group>"; };
-		81DE4FA52EA492FA006293FC /* Sparkle.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = Sparkle.xcframework; path = Frameworks/Sparkle.xcframework; sourceTree = "<group>"; };
 		81EFBE282E9B05C700F7E48B /* libllama.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libllama.dylib; path = llama.cpp/build/bin/libllama.dylib; sourceTree = "<group>"; };
 		81EFBE292E9B05C700F7E48B /* libggml-base.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libggml-base.dylib"; path = "llama.cpp/build/bin/libggml-base.dylib"; sourceTree = "<group>"; };
 		81EFBE2A2E9B05C700F7E48B /* libggml-metal.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libggml-metal.dylib"; path = "llama.cpp/build/bin/libggml-metal.dylib"; sourceTree = "<group>"; };
@@ -188,7 +187,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				81DE4FA62EA492FA006293FC /* Sparkle.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -210,6 +208,7 @@
 		81DE4F882EA2DCE9006293FC /* Managers */ = {
 			isa = PBXGroup;
 			children = (
+				81C5A7342EA9B1EC00B5077D /* StoreKitManager.swift */,
 				81C5A72A2EA57C7B00B5077D /* DataExportManager.swift */,
 				81DE4F862EA2DCE9006293FC /* ChatManager.swift */,
 				81DE4F872EA2DCE9006293FC /* LicenseManager.swift */,
@@ -221,7 +220,6 @@
 		81DE4FA42EA492FA006293FC /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				81DE4FA52EA492FA006293FC /* Sparkle.xcframework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -229,6 +227,8 @@
 		A1000038000000000000001 = {
 			isa = PBXGroup;
 			children = (
+				81C5A7382EA9B9E900B5077D /* Configuration.storekit */,
+				81C5A73A2EA9BD3E00B5077D /* Configuration.storekit */,
 				81EFBE2C2E9B05C700F7E48B /* libggml.dylib */,
 				81EFBE292E9B05C700F7E48B /* libggml-base.dylib */,
 				81EFBE2D2E9B05C700F7E48B /* libggml-blas.dylib */,
@@ -244,6 +244,7 @@
 		A1000039000000000000001 /* ZetaNotes */ = {
 			isa = PBXGroup;
 			children = (
+				81C5A7362EA9B75000B5077D /* Info.plist */,
 				81DE4F882EA2DCE9006293FC /* Managers */,
 				A1000002000000000000001 /* ZetaNotesApp.swift */,
 				A1000041000000000000001 /* Views */,
@@ -272,7 +273,6 @@
 			isa = PBXGroup;
 			children = (
 				81C5A7322EA7337C00B5077D /* CenteredScrolling.swift */,
-				81C5A72C2EA58A1700B5077D /* CheckForUpdatesView.swift */,
 				81DE4F9A2EA33EF3006293FC /* CustomSidebarView.swift */,
 				81DE4F9B2EA33EF3006293FC /* CustomToolbarView.swift */,
 				81DE4F9C2EA33EF3006293FC /* CustomWindowLayout.swift */,
@@ -393,6 +393,7 @@
 				A1000037000000000000001 /* Frameworks */,
 				A1000051000000000000001 /* Resources */,
 				81EFBE272E9B056E00F7E48B /* CopyFiles */,
+				81ACDA0D2EA9D591007FF51D /* Copy dSYM Files to Archive */,
 			);
 			buildRules = (
 			);
@@ -448,6 +449,27 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		81ACDA0D2EA9D591007FF51D /* Copy dSYM Files to Archive */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Copy dSYM Files to Archive";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+			shellPath = /bin/sh;
+			shellScript = "set -x\necho \"🔍 Script started - ACTION=$ACTION\"\necho \"🔍 DWARF_DSYM_FOLDER_PATH=$DWARF_DSYM_FOLDER_PATH\"\necho \"🔍 INSTALL_DIR=$INSTALL_DIR\"\necho \"� FRAMEWORKS_FOLDER_PATH=$FRAMEWORKS_FOLDER_PATH\"\n\n# Generate dSYM files for llama.cpp libraries\nAPP_FRAMEWORKS=\"${INSTALL_DIR}/${FRAMEWORKS_FOLDER_PATH}\"\necho \"🔍 Looking for dylibs in: $APP_FRAMEWORKS\"\n\nif [ ! -d \"$APP_FRAMEWORKS\" ]; then\n    echo \"⚠️  Frameworks directory not found, trying alternate path\"\n    APP_FRAMEWORKS=\"${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}\"\n    echo \"🔍 Trying: $APP_FRAMEWORKS\"\nfi\n\nif [ ! -d \"$APP_FRAMEWORKS\" ]; then\n    echo \"❌ ERROR: Cannot find Frameworks directory\"\n    exit 1\nfi\n\nmkdir -p \"$DWARF_DSYM_FOLDER_PATH\"\n\n# Generate dSYM for each dylib\nfor dylib in \"$APP_FRAMEWORKS\"/*.dylib; do\n    if [ -f \"$dylib\" ]; then\n        dylib_name=$(basename \"$dylib\")\n        echo \"📦 Generating dSYM for: $dylib_name\"\n        dsymutil \"$dylib\" -o \"$DWARF_DSYM_FOLDER_PATH/${dylib_name}.dSYM\" && {\n            echo \"✅ Generated: ${dylib_name}.dSYM\"\n        } || {\n            echo \"❌ Failed: $dylib_name\"\n        }\n    fi\ndone\n\necho \"✅ dSYM generation complete\"\nls -la \"$DWARF_DSYM_FOLDER_PATH\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		A1000050000000000000001 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -456,7 +478,6 @@
 				A1000003000000000000001 /* ContentView.swift in Sources */,
 				A1000001000000000000001 /* ZetaNotesApp.swift in Sources */,
 				A1000009000000000000001 /* NotesDataModel.xcdatamodeld in Sources */,
-				81C5A72D2EA58A1700B5077D /* CheckForUpdatesView.swift in Sources */,
 				81111F612E9F37FB00D7317B /* DefaultPrompts.swift in Sources */,
 				64D52F7A4AC043C7A510C356 /* LLMConfig.swift in Sources */,
 				4A0ABDEFA72E47F0B951871F /* ModelToolConfigRegistry.swift in Sources */,
@@ -471,6 +492,7 @@
 				A1000017000000000000001 /* PersistenceController.swift in Sources */,
 				A1000062000000000000001 /* NoteRepository.swift in Sources */,
 				A1000019000000000000001 /* AIEngine.swift in Sources */,
+				81C5A7352EA9B1EC00B5077D /* StoreKitManager.swift in Sources */,
 				A1000021000000000000001 /* LLMInferenceService.swift in Sources */,
 				81DE21652E9B3C2400692788 /* ModelDownloader.swift in Sources */,
 				81DE4F8D2EA2DCF9006293FC /* ChatService.swift in Sources */,
@@ -582,7 +604,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited) DEV_PRO_MODE";
 				SWIFT_COMPILATION_MODE = incremental;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -677,7 +699,7 @@
 					"-lggml",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.zetanotes.ZetaNotes;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zetanotes.zetanotes;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -692,7 +714,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = ZetaNotes/ZetaNotes.entitlements;
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "Developer ID Application";
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"ZetaNotes/Preview Content\"";
@@ -719,7 +742,7 @@
 					"-lggml",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.zetanotes.ZetaNotes;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zetanotes.zetanotes;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/ZetaNotes/ZetaNotes-Bridging-Header.h";
