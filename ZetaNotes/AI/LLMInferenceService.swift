@@ -259,6 +259,14 @@ class LLMInferenceService: @unchecked Sendable {
     private var currentModel: AIModel = .tinyLlama
     private let inferenceQueue = DispatchQueue(label: "com.zetanotes.inference", qos: .userInitiated)
 
+    // MARK: - Cancellation Support
+    private var currentGenerationTask: Task<Void, Never>?
+    private var shouldCancelGeneration = false
+
+    // MARK: - Thread Safety
+    // Serial queue ensures only one generation runs at a time
+    // inferenceQueue already provides this - we just need to ensure proper cancellation
+
     // MARK: - Performance Metrics
 
     /// Performance metrics from last generation
@@ -612,6 +620,13 @@ class LLMInferenceService: @unchecked Sendable {
         }
     }
 
+    /// Cancels any ongoing text generation
+    /// Safe to call even if no generation is in progress
+    func cancelGeneration() {
+        shouldCancelGeneration = true
+        print("🛑 Generation cancellation requested")
+    }
+
     /// Generates text completion for the given prompt
     /// - Parameters:
     ///   - prompt: The input text prompt
@@ -630,6 +645,9 @@ class LLMInferenceService: @unchecked Sendable {
             return nil
         }
 
+        // Cancel any ongoing generation before starting new one
+        cancelGeneration()
+
         return await withCheckedContinuation { continuation in
             inferenceQueue.async { [weak self] in
                 // Wrap entire generation in autorelease pool to prevent memory buildup
@@ -642,6 +660,9 @@ class LLMInferenceService: @unchecked Sendable {
                         continuation.resume(returning: nil)
                         return
                     }
+
+                    // Reset cancellation flag at start of new generation
+                    self.shouldCancelGeneration = false
 
                     print("\n🚀 === Text Generation Started ===")
                     print("📝 Prompt: \(prompt.prefix(150))\(prompt.count > 150 ? "..." : "")")
@@ -799,6 +820,13 @@ class LLMInferenceService: @unchecked Sendable {
                     let vocab = llama_model_get_vocab(mdl)
 
                     while nCur < nLen {
+                        // Check for cancellation request
+                        if self.shouldCancelGeneration {
+                            print("🛑 Generation cancelled by request")
+                            continuation.resume(returning: nil)
+                            return
+                        }
+
                         // Sample the next token using the sampler chain
                         let newTokenId = llama_sampler_sample(newSamplerChain, ctx, -1)
 

@@ -52,6 +52,8 @@ class AutocompleteService: AIService {
 
     // MARK: - AIService Protocol
 
+
+
     func buildPrompt(for text: String) -> String {
         // Get the last N characters for context
         let contextLength = min(text.count, Config.contextLength)

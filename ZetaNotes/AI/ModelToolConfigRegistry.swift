@@ -144,9 +144,9 @@ private enum LlamaThreeTwoConfigs {
 
         case .titleGeneration:
             return LLMConfig(
-                prompt: "Create a short title for this text. Return only the title with no preamble.",
-                temperature: 0.6,
-                maxTokens: 30
+                prompt: "", // Not used - title generation uses direct completion format
+                temperature: 0.1,
+                maxTokens: 8
             )
 
         case .custom:

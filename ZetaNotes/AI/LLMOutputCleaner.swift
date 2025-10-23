@@ -28,14 +28,18 @@ enum LLMOutputCleaner {
             }
         }
 
-        // EDGE CASE FIX: Remove single letter prefixes (e.g., "T " from "T I decided")
+        // EDGE CASE FIX: Remove single letter prefixes ONLY if followed by lowercase (e.g., "T i decided")
         // This happens when the model starts generating but gets confused
-        if cleaned.count > 2 {
-            let firstTwoChars = cleaned.prefix(2)
-            if firstTwoChars.count == 2 {
-                let firstChar = firstTwoChars.first!
-                let secondChar = firstTwoChars.dropFirst().first!
-                if firstChar.isUppercase && secondChar == " " {
+        // BUT preserve legitimate single letters before proper nouns (e.g., "X Interview", "A Company")
+        if cleaned.count > 3 {
+            let firstThreeChars = cleaned.prefix(3)
+            if firstThreeChars.count == 3 {
+                let firstChar = firstThreeChars.first!
+                let secondChar = firstThreeChars.dropFirst().first!
+                let thirdChar = firstThreeChars.dropFirst(2).first!
+                // Only remove if: single uppercase + space + lowercase (confused generation)
+                // Keep if: single uppercase + space + uppercase (proper title like "X Interview")
+                if firstChar.isUppercase && secondChar == " " && thirdChar.isLowercase {
                     cleaned = String(cleaned.dropFirst(2)).trimmingCharacters(in: .whitespacesAndNewlines)
                 }
             }

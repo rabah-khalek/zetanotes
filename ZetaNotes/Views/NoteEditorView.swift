@@ -102,6 +102,7 @@ struct SimpleTextEditor: NSViewRepresentable {
     class Coordinator: NSObject, NSTextViewDelegate {
         var parent: SimpleTextEditor
         var isUpdatingProgrammatically = false
+        var lastCursorPosition: Int = 0
 
         init(_ parent: SimpleTextEditor) {
             self.parent = parent
@@ -119,6 +120,29 @@ struct SimpleTextEditor: NSViewRepresentable {
 
             DispatchQueue.main.async {
                 self.parent.text = currentText
+                self.parent.onChange?(currentText, cursorPosition)
+            }
+
+            lastCursorPosition = cursorPosition
+        }
+
+        // Detect cursor position changes (clicking, arrow keys, etc.)
+        func textViewDidChangeSelection(_ notification: Notification) {
+            guard let textView = notification.object as? NSTextView else { return }
+
+            // Don't notify if we're updating programmatically
+            guard !isUpdatingProgrammatically else { return }
+
+            let cursorPosition = textView.selectedRange().location
+
+            // Only trigger if cursor actually moved (not just selection changes)
+            guard cursorPosition != lastCursorPosition else { return }
+
+            lastCursorPosition = cursorPosition
+            let currentText = textView.string
+
+            // Trigger autocomplete on cursor position change
+            DispatchQueue.main.async {
                 self.parent.onChange?(currentText, cursorPosition)
             }
         }
@@ -169,12 +193,26 @@ struct SimpleTextEditor: NSViewRepresentable {
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
         guard let textView = scrollView.documentView as? AutocompleteTextView else { return }
 
-        // Update text if it differs (from switching notes or autocomplete acceptance)
+        // ✅ FIX: Only update text if it differs significantly to reduce layout storms
         if textView.string != text {
             // Set flag to prevent textDidChange from triggering
             context.coordinator.isUpdatingProgrammatically = true
 
-            textView.string = text
+            // ✅ FIX: Use replaceCharacters for better performance on large texts
+            if let textStorage = textView.textStorage {
+                let fullRange = NSRange(location: 0, length: textStorage.length)
+
+                // Create attributed string with proper text color for dark mode
+                let attributes: [NSAttributedString.Key: Any] = [
+                    .font: textView.font ?? NSFont.systemFont(ofSize: NSFont.systemFontSize),
+                    .foregroundColor: NSColor.labelColor
+                ]
+                let attributedText = NSAttributedString(string: text, attributes: attributes)
+
+                textStorage.replaceCharacters(in: fullRange, with: attributedText)
+            } else {
+                textView.string = text
+            }
 
             // Set cursor position if specified (for autocomplete acceptance)
             if let desiredPosition = desiredCursorPosition {
@@ -186,21 +224,26 @@ struct SimpleTextEditor: NSViewRepresentable {
             context.coordinator.isUpdatingProgrammatically = false
         }
 
-        // Update ghost text
-        textView.ghostText = ghostText
+        // Update ghost text only if changed
+        if textView.ghostText != ghostText {
+            textView.ghostText = ghostText
+        }
 
-        // Update key handlers
+        // Update key handlers (these are cheap to update)
         textView.onTabPressed = onTabPressed
         textView.onEscapePressed = onEscapePressed
         textView.onRightArrowPressed = onRightArrowPressed
 
-        // Apply search highlighting if needed
-        if let matchText = semanticMatchText, !matchText.isEmpty {
+        // ✅ FIX: Optimize highlighting updates - only update if search query changed
+        let currentMatchText = semanticMatchText ?? ""
+        let currentSearchQuery = searchQuery ?? ""
+
+        if !currentMatchText.isEmpty {
             // Semantic result: highlight the matched text
-            highlightSearchResults(in: textView, query: matchText)
-        } else if let searchQuery = searchQuery, !searchQuery.isEmpty {
+            highlightSearchResults(in: textView, query: currentMatchText)
+        } else if !currentSearchQuery.isEmpty {
             // Keyword: highlight search query as you type
-            highlightSearchResults(in: textView, query: searchQuery)
+            highlightSearchResults(in: textView, query: currentSearchQuery)
         } else {
             // Clear highlighting
             clearHighlighting(in: textView)
@@ -259,6 +302,10 @@ struct NoteEditorView: View {
     @State private var lastContentLength: Int = 0
     @State private var isLoading: Bool = false
 
+    // ✅ FIX: Add debounce for expensive operations
+    @State private var autocompleteDebounceTimer: Timer?
+    private let autocompleteDebounceDelay: TimeInterval = 0.3 // Wait 300ms after last keystroke
+
     var body: some View {
         VStack(spacing: 0) {
             // Title Field with AI Generate Button and Markdown Toggle
@@ -308,9 +355,16 @@ struct NoteEditorView: View {
                     .textFieldStyle(.plain)
                     .onChange(of: title) { newValue in
                         guard !isLoading else { return } // Don't save when loading note
-                        note.title = newValue
-                        note.touch() // Update timestamp when title changes
-                        viewModel.saveNoteDebounced(note) // Use debounced save like content
+
+                        // ✅ FIX: Defer note updates to background to prevent crashes
+                        DispatchQueue.global(qos: .userInitiated).async {
+                            note.title = newValue
+                            note.touch() // Update timestamp when title changes
+
+                            DispatchQueue.main.async {
+                                viewModel.saveNoteDebounced(note)
+                            }
+                        }
                     }
 
                 // Markdown Preview Toggle - RIGHT SIDE
@@ -375,13 +429,19 @@ struct NoteEditorView: View {
                         let isPasteOperation = textLengthChange > 50 // More than 50 chars changed at once
                         lastContentLength = newValue.count
 
-                        // Update both the state and note content IMMEDIATELY
+                        // ✅ FIX: Only update content immediately, defer note updates
                         content = newValue
-                        note.content = newValue
-                        note.touch() // Update timestamp immediately
 
-                        // Debounced save to disk (reduces I/O during typing)
-                        viewModel.saveNoteDebounced(note)
+                        // ✅ FIX: Defer note updates to background queue to prevent UI blocking
+                        DispatchQueue.global(qos: .userInitiated).async {
+                            note.content = newValue
+                            note.touch() // Update timestamp
+
+                            // Debounced save to disk (reduces I/O during typing)
+                            DispatchQueue.main.async {
+                                viewModel.saveNoteDebounced(note)
+                            }
+                        }
 
                         // Disable autocomplete on paste to prevent crashes
                         if isPasteOperation {
@@ -389,24 +449,46 @@ struct NoteEditorView: View {
                             return
                         }
 
-                        // Check if cursor is in base content (not in AI-generated sections)
-                        if isInBaseContent(content: newValue, cursorPosition: cursorPosition) {
-                            // Smart triggering: only suggest at natural pause points
-                            if shouldTriggerAutocomplete(text: newValue, cursorPosition: cursorPosition) {
-                                // Request autocomplete only if model is loaded
-                                if aiEngine.isModelLoaded, newValue.count >= 10 {
-                                    // Extract text up to cursor for better autocomplete accuracy
-                                    let textUpToCursor = String(newValue.prefix(min(cursorPosition, newValue.count)))
-                                    viewModel.requestAutocomplete(for: textUpToCursor)
+                        // ✅ FIX: Throttle autocomplete checks to reduce string operations
+                        guard !newValue.isEmpty else {
+                            viewModel.dismissAutocomplete()
+                            return
+                        }
+
+                        // ✅ FIX: Debounce autocomplete to reduce CPU usage
+                        // Cancel any pending autocomplete request
+                        autocompleteDebounceTimer?.invalidate()
+
+                        // Schedule new autocomplete check after delay
+                        autocompleteDebounceTimer = Timer.scheduledTimer(withTimeInterval: autocompleteDebounceDelay, repeats: false) { [weak viewModel] _ in
+                            // ✅ FIX: Dispatch to main actor for main-actor isolated calls
+                            DispatchQueue.main.async {
+                                guard let viewModel = viewModel else { return }
+
+                                // Check if cursor is in base content (not in AI-generated sections)
+                                // ✅ FIX: Use cached check result to avoid expensive string operations
+                                let isBaseContent = isInBaseContent(content: newValue, cursorPosition: cursorPosition)
+
+                                if isBaseContent {
+                                    // Smart triggering: only suggest at natural pause points
+                                    if shouldTriggerAutocomplete(text: newValue, cursorPosition: cursorPosition) {
+                                        // Request autocomplete only if model is loaded
+                                        if aiEngine.isModelLoaded, newValue.count >= 10 {
+                                            // ✅ FIX: Extract text more efficiently
+                                            let safePosition = min(cursorPosition, newValue.count)
+                                            let textUpToCursor = String(newValue.prefix(safePosition))
+                                            viewModel.requestAutocomplete(for: textUpToCursor)
+                                        } else {
+                                            viewModel.dismissAutocomplete()
+                                        }
+                                    } else {
+                                        viewModel.dismissAutocomplete()
+                                    }
                                 } else {
+                                    // Dismiss autocomplete when in AI-generated sections
                                     viewModel.dismissAutocomplete()
                                 }
-                            } else {
-                                viewModel.dismissAutocomplete()
                             }
-                        } else {
-                            // Dismiss autocomplete when in AI-generated sections
-                            viewModel.dismissAutocomplete()
                         }
                     },
                     onTabPressed: {
@@ -437,19 +519,21 @@ struct NoteEditorView: View {
             // Load note content when view appears
             loadNoteContent()
         }
-        .onChange(of: note.content) { newContent in
+        .onReceive(note.objectWillChange) { _ in
             // Sync the @State content with note.content changes (e.g., from translation)
-            if let newContent = newContent, newContent != content {
+            if let newContent = note.content, newContent != content {
                 content = newContent
             }
-        }
-        .onChange(of: note.title) { newTitle in
             // Sync the @State title with note.title changes (e.g., from AI generation)
-            if let newTitle = newTitle, newTitle != title {
+            if let newTitle = note.title, newTitle != title {
                 title = newTitle
             }
         }
         .onDisappear {
+            // ✅ FIX: Clean up debounce timer when view disappears
+            autocompleteDebounceTimer?.invalidate()
+            autocompleteDebounceTimer = nil
+
             // Note: Saving is handled by NoteViewModel.selectedNote.willSet
             // No need to save here - it would be redundant and cause double-saves
             // The willSet already cancels timers and saves immediately when switching notes
@@ -467,8 +551,18 @@ struct NoteEditorView: View {
         isLoading = false
     }
 
+    // ✅ FIX: Cache for AI section position to avoid repeated string searches
+    @State private var cachedAISectionPosition: Int?
+    @State private var cachedContentForAICheck: String = ""
+
     /// Check if cursor position is within base content (not in AI-generated sections)
+    /// ✅ OPTIMIZED: Uses caching to avoid expensive string operations on every keystroke
     private func isInBaseContent(content: String, cursorPosition: Int) -> Bool {
+        // ✅ FIX: Use cached position if content hasn't changed significantly
+        if content == cachedContentForAICheck, let cachedPos = cachedAISectionPosition {
+            return cursorPosition < cachedPos
+        }
+
         // Define all AI-generated section markers (prefix matching to support timestamps)
         let markers = [
             "\n\n--- Summary",
@@ -477,35 +571,48 @@ struct NoteEditorView: View {
             "\n\n--- Reformulated"
         ]
 
-        // Find the earliest AI section marker
-        var firstAIPosition: Int?
+        // ✅ FIX: Use NSString for faster range finding
+        let nsContent = content as NSString
+        var firstAIPosition: Int = content.count // Default to end of content
+        var foundMarker = false
 
         for marker in markers {
-            if let range = content.range(of: marker) {
-                let position = content.distance(from: content.startIndex, to: range.lowerBound)
-                if firstAIPosition == nil || position < firstAIPosition! {
-                    firstAIPosition = position
+            let range = nsContent.range(of: marker)
+            if range.location != NSNotFound {
+                foundMarker = true
+                if range.location < firstAIPosition {
+                    firstAIPosition = range.location
                 }
             }
         }
 
+        // Cache the result
+        if foundMarker {
+            cachedAISectionPosition = firstAIPosition
+        } else {
+            cachedAISectionPosition = nil
+        }
+        cachedContentForAICheck = content
+
         // If no AI sections found, cursor is always in base content
-        guard let aiPosition = firstAIPosition else {
+        guard foundMarker else {
             return true
         }
 
         // Cursor is in base content if it's before the first AI section
-        return cursorPosition < aiPosition
+        return cursorPosition < firstAIPosition
     }
 
     private func acceptAutocomplete() {
         if let suggestion = viewModel.acceptAutocomplete() {
-            // Insert suggestion at current cursor position, followed by a space
+            // ✅ FIX: Use NSString for faster string manipulation
             let insertPosition = min(currentCursorPosition, content.count)
-            let index = content.index(content.startIndex, offsetBy: insertPosition)
-            var newContent = content
             let suggestionWithSpace = suggestion + " "
-            newContent.insert(contentsOf: suggestionWithSpace, at: index)
+
+            // ✅ FIX: Use NSMutableString for better performance
+            let mutableContent = NSMutableString(string: content)
+            mutableContent.insert(suggestionWithSpace, at: insertPosition)
+            let newContent = mutableContent as String
 
             // Set desired cursor position to be after the inserted suggestion + space
             let newCursorPos = insertPosition + suggestionWithSpace.count
@@ -513,8 +620,14 @@ struct NoteEditorView: View {
             currentCursorPosition = newCursorPos
 
             content = newContent
-            note.content = newContent
-            viewModel.saveNoteDebounced(note) // ✅ Use debounced save
+
+            // ✅ FIX: Defer note updates to background
+            DispatchQueue.global(qos: .userInitiated).async {
+                note.content = newContent
+                DispatchQueue.main.async {
+                    viewModel.saveNoteDebounced(note)
+                }
+            }
 
             // Request new autocomplete with updated text
             if aiEngine.isModelLoaded, shouldTriggerAutocomplete(text: newContent, cursorPosition: newCursorPos) {
@@ -528,31 +641,33 @@ struct NoteEditorView: View {
     private func acceptOneWord() {
         guard let suggestion = viewModel.autocompleteSuggestion else { return }
 
-        // Find the first word boundary (space or punctuation)
-        var firstWordEnd = suggestion.firstIndex(where: { char in
-            char == " " || char == "." || char == "," || char == "!" || char == "?" || char == "\n"
-        })
+        // ✅ FIX: Use NSString for faster searching
+        let nsSuggestion = suggestion as NSString
+        let wordBoundaryChars = CharacterSet(charactersIn: " .,!?\n")
+        let range = nsSuggestion.rangeOfCharacter(from: wordBoundaryChars)
 
-        // If found, include the delimiter; otherwise take the whole suggestion
-        if let endIndex = firstWordEnd {
-            // Include the space/punctuation
-            firstWordEnd = suggestion.index(after: endIndex)
+        let oneWord: String
+        if range.location != NSNotFound {
+            // Include the delimiter
+            let endIndex = min(range.location + 1, nsSuggestion.length)
+            oneWord = nsSuggestion.substring(to: endIndex)
+        } else {
+            oneWord = suggestion
         }
-
-        let oneWord = String(suggestion[..<(firstWordEnd ?? suggestion.endIndex)])
 
         // Insert the word at current cursor position
         let insertPosition = min(currentCursorPosition, content.count)
-        let index = content.index(content.startIndex, offsetBy: insertPosition)
-        var newContent = content
 
         // If the word ends with a sentence-ending punctuation, add a space
         var wordToInsert = oneWord
-        if oneWord.last == "." || oneWord.last == "!" || oneWord.last == "?" {
+        if let last = oneWord.last, ".,!?".contains(last) {
             wordToInsert = oneWord + " "
         }
 
-        newContent.insert(contentsOf: wordToInsert, at: index)
+        // ✅ FIX: Use NSMutableString for performance
+        let mutableContent = NSMutableString(string: content)
+        mutableContent.insert(wordToInsert, at: insertPosition)
+        let newContent = mutableContent as String
 
         // Set desired cursor position to be after the inserted word
         let newCursorPos = insertPosition + wordToInsert.count
@@ -560,8 +675,14 @@ struct NoteEditorView: View {
         currentCursorPosition = newCursorPos
 
         content = newContent
-        note.content = newContent
-        viewModel.saveNoteDebounced(note) // ✅ Use debounced save
+
+        // ✅ FIX: Defer note updates to background
+        DispatchQueue.global(qos: .userInitiated).async {
+            note.content = newContent
+            DispatchQueue.main.async {
+                viewModel.saveNoteDebounced(note)
+            }
+        }
 
         // Update the suggestion to remove the accepted word (original, not with added space)
         viewModel.acceptPartialAutocomplete(oneWord)
