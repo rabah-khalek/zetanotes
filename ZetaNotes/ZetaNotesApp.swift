@@ -123,10 +123,6 @@ struct ZetaNotesApp: App {
                     openExternalLink("https://www.zetanotes.com/terms.html")
                 }
 
-                Button("Support & Refunds…") {
-                    openExternalLink("https://www.zetanotes.com/refunds.html")
-                }
-
                 Button("Contact Support…") {
                     openExternalLink("mailto:rabah.khalek@gmail.com?subject=ZetaNotes%20Support")
                 }

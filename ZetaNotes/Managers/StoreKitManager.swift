@@ -29,8 +29,8 @@ enum SubscriptionTier: String, Codable {
         switch self {
         case .free: return "$0"
         case .monthly: return "$0.99/month"
-        case .annual: return "$6/year"
-        case .lifetime: return "$20 one-time"
+        case .annual: return "$5.99/year"
+        case .lifetime: return "$19.99 one-time"
         }
     }
 }

@@ -181,6 +181,25 @@ struct UpgradePromptView: View {
 
             Divider()
 
+            // Legal Links (Apple Requirement)
+            HStack(spacing: 4) {
+                Text("By purchasing, you agree to our")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                Link("Terms of Use", destination: URL(string: "https://www.zetanotes.com/terms.html")!)
+                    .font(.caption)
+
+                Text("and")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                Link("Privacy Policy", destination: URL(string: "https://www.zetanotes.com/privacy.html")!)
+                    .font(.caption)
+            }
+            .padding(.horizontal)
+            .padding(.top, 12)
+
             // Error message
             if let error = errorMessage {
                 HStack {

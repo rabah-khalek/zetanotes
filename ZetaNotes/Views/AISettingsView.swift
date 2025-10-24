@@ -715,6 +715,27 @@ struct GeneralSettingsContent: View {
                     )
                     .font(.system(size: 11))
                     .foregroundColor(.secondary)
+
+                    Divider()
+                        .padding(.vertical, 4)
+
+                    // Rate ZetaNotes Button
+                    Button(action: {
+                        ReviewManager.shared.requestReviewManually()
+                    }) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "star.fill")
+                                .font(.system(size: 12))
+                                .foregroundColor(.yellow)
+                            Text("Rate ZetaNotes on the App Store")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(.primary)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                    }
+                    .buttonStyle(.bordered)
+                    .help("Help us by rating ZetaNotes on the App Store")
                 }
             }
             .padding()
@@ -1456,7 +1477,6 @@ struct LegalSupportSection: View {
 
     private let privacyURL = URL(string: "https://www.zetanotes.com/privacy.html")!
     private let termsURL = URL(string: "https://www.zetanotes.com/terms.html")!
-    private let refundsURL = URL(string: "https://www.zetanotes.com/refunds.html")!
     private let supportEmail = "mailto:rabah.khalek@gmail.com?subject=ZetaNotes%20Support"
 
     var body: some View {
@@ -1503,13 +1523,6 @@ struct LegalSupportSection: View {
                         openURL(termsURL)
                     } label: {
                         Label("Terms of Use", systemImage: "doc.richtext")
-                    }
-                    .buttonStyle(.bordered)
-
-                    Button {
-                        openURL(refundsURL)
-                    } label: {
-                        Label("Refund Policy", systemImage: "arrow.uturn.backward")
                     }
                     .buttonStyle(.bordered)
                 }

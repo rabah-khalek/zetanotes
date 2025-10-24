@@ -264,7 +264,7 @@ struct StatusFooterView: View {
             if licenseManager.isPro {
                 // Pro user: Simple report issue link
                 Button(action: {
-                    if let url = URL(string: "https://zetanotes.com/feedback") {
+                    if let url = URL(string: "mailto:rabah.khalek@gmail.com?subject=ZetaNotes%20Bug%20Report&body=Please%20describe%20the%20issue%20and%20steps%20to%20reproduce:") {
                         NSWorkspace.shared.open(url)
                     }
                 }) {
@@ -303,7 +303,7 @@ struct StatusFooterView: View {
                     .foregroundColor(.secondary)
 
                 Button(action: {
-                    if let url = URL(string: "https://zetanotes.com/feedback") {
+                    if let url = URL(string: "mailto:rabah.khalek@gmail.com?subject=ZetaNotes%20Bug%20Report&body=Please%20describe%20the%20issue%20and%20steps%20to%20reproduce:") {
                         NSWorkspace.shared.open(url)
                     }
                 }) {
