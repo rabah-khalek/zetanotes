@@ -21,7 +21,7 @@ open ZetaNotes.xcodeproj
 
 | Tier | Product ID | Price |
 |------|------------|-------|
-| Monthly | `com.zetanotes.pro.monthly` | $1/mo |
+| Monthly | `com.zetanotes.pro.month` | $1/mo |
 | Annual | `com.zetanotes.pro.annual` | $6/yr |
 | Lifetime | `com.zetanotes.pro.lifetime` | $20 once |
 

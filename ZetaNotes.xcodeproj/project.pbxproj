@@ -466,7 +466,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 			shellPath = /bin/sh;
-			shellScript = "set -x\necho \"🔍 Script started - ACTION=$ACTION\"\necho \"🔍 DWARF_DSYM_FOLDER_PATH=$DWARF_DSYM_FOLDER_PATH\"\necho \"🔍 INSTALL_DIR=$INSTALL_DIR\"\necho \"� FRAMEWORKS_FOLDER_PATH=$FRAMEWORKS_FOLDER_PATH\"\n\n# Generate dSYM files for llama.cpp libraries\nAPP_FRAMEWORKS=\"${INSTALL_DIR}/${FRAMEWORKS_FOLDER_PATH}\"\necho \"🔍 Looking for dylibs in: $APP_FRAMEWORKS\"\n\nif [ ! -d \"$APP_FRAMEWORKS\" ]; then\n    echo \"⚠️  Frameworks directory not found, trying alternate path\"\n    APP_FRAMEWORKS=\"${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}\"\n    echo \"🔍 Trying: $APP_FRAMEWORKS\"\nfi\n\nif [ ! -d \"$APP_FRAMEWORKS\" ]; then\n    echo \"❌ ERROR: Cannot find Frameworks directory\"\n    exit 1\nfi\n\nmkdir -p \"$DWARF_DSYM_FOLDER_PATH\"\n\n# Generate dSYM for each dylib\nfor dylib in \"$APP_FRAMEWORKS\"/*.dylib; do\n    if [ -f \"$dylib\" ]; then\n        dylib_name=$(basename \"$dylib\")\n        echo \"📦 Generating dSYM for: $dylib_name\"\n        dsymutil \"$dylib\" -o \"$DWARF_DSYM_FOLDER_PATH/${dylib_name}.dSYM\" && {\n            echo \"✅ Generated: ${dylib_name}.dSYM\"\n        } || {\n            echo \"❌ Failed: $dylib_name\"\n        }\n    fi\ndone\n\necho \"✅ dSYM generation complete\"\nls -la \"$DWARF_DSYM_FOLDER_PATH\"\n";
+			shellScript = "echo \"🔍 dSYM generation for llama.cpp libraries\"\necho \"🔍 DWARF_DSYM_FOLDER_PATH=$DWARF_DSYM_FOLDER_PATH\"\n\n# Generate dSYM files for llama.cpp libraries\nAPP_FRAMEWORKS=\"${INSTALL_DIR}/${FRAMEWORKS_FOLDER_PATH}\"\n\nif [ ! -d \"$APP_FRAMEWORKS\" ]; then\n    APP_FRAMEWORKS=\"${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}\"\nfi\n\nif [ ! -d \"$APP_FRAMEWORKS\" ]; then\n    echo \"⚠️  Frameworks directory not found, skipping dSYM generation\"\n    exit 0\nfi\n\nmkdir -p \"$DWARF_DSYM_FOLDER_PATH\"\n\n# Generate dSYM for each dylib\nfor dylib in \"$APP_FRAMEWORKS\"/*.dylib; do\n    if [ -f \"$dylib\" ]; then\n        dylib_name=$(basename \"$dylib\")\n        echo \"📦 Generating dSYM for: $dylib_name\"\n        dsymutil \"$dylib\" -o \"$DWARF_DSYM_FOLDER_PATH/${dylib_name}.dSYM\" 2>&1 && {\n            echo \"✅ Generated: ${dylib_name}.dSYM\"\n        } || {\n            echo \"⚠️  Could not generate dSYM for: $dylib_name\"\n        }\n    fi\ndone\n\necho \"✅ dSYM generation complete\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -661,6 +661,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEV_PRO_MODE";
 				SWIFT_COMPILATION_MODE = wholemodule;
 			};
 			name = Release;

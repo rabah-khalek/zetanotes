@@ -106,7 +106,7 @@ Go to [App Store Connect](https://appstoreconnect.apple.com):
 
 | Product ID | Type | Price | Duration |
 |------------|------|-------|----------|
-| `com.zetanotes.pro.monthly` | Auto-Renewable Subscription | $1 | 1 Month |
+| `com.zetanotes.pro.month` | Auto-Renewable Subscription | $1 | 1 Month |
 | `com.zetanotes.pro.annual` | Auto-Renewable Subscription | $6 | 1 Year |
 | `com.zetanotes.pro.lifetime` | Non-Consumable | $20.00 | N/A |
 

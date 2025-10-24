@@ -130,7 +130,7 @@ struct UpgradePromptView: View {
                     // Monthly option
                     CompactPricingCard(
                         title: "Monthly",
-                        price: "$1",
+                        price: "$0.99",
                         period: "/mo",
                         badge: nil,
                         isSelected: selectedTier == "monthly",

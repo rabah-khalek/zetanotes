@@ -581,6 +581,42 @@ struct ContentView: View {
     @ViewBuilder
     private var toolbarRightItems: some View {
         HStack(spacing: 8) {
+            #if DEV_PRO_MODE
+            // Dev Mode Toggle for App Reviewers
+            Button(action: {
+                StoreKitManager.shared.toggleDevMode()
+            }) {
+                HStack(spacing: 6) {
+                    Image(systemName: StoreKitManager.shared.isPro ? "crown.fill" : "crown")
+                        .font(.system(size: 13))
+                        .foregroundColor(StoreKitManager.shared.isPro ? .yellow : .gray)
+
+                    Text(StoreKitManager.shared.isPro ? "PRO" : "FREE")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(StoreKitManager.shared.isPro ? .yellow : .gray)
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(StoreKitManager.shared.isPro ? Color.yellow.opacity(0.15) : Color.gray.opacity(0.1))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6)
+                        .strokeBorder(
+                            StoreKitManager.shared.isPro ? Color.yellow.opacity(0.4) : Color.gray.opacity(0.3),
+                            lineWidth: 1
+                        )
+                )
+            }
+            .buttonStyle(.plain)
+            .help("Toggle between FREE and PRO for testing (App Review Only)")
+
+            Rectangle()
+                .fill(Color.secondary.opacity(0.2))
+                .frame(width: 1, height: 14)
+            #endif
+
             // Chat toggle (symmetric to sidebar toggle)
             Button(action: {
                 if licenseManager.isPro {

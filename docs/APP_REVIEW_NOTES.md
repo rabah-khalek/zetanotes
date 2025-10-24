@@ -112,7 +112,7 @@ These entitlements are properly declared in the app's entitlements file and are 
 ### StoreKit Configuration
 
 Product IDs:
-- `com.zetanotes.pro.monthly` - Monthly subscription
+- `com.zetanotes.pro.month` - Monthly subscription
 - `com.zetanotes.pro.annual` - Annual subscription
 - `com.zetanotes.pro.lifetime` - Lifetime purchase (non-consumable)
 

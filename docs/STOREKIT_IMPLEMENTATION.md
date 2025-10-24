@@ -14,7 +14,7 @@ ZetaNotes now uses **Apple In-App Purchases (StoreKit 2)** for all Pro subscript
 
 This file enables local testing in Xcode without needing App Store Connect:
 
-- **Monthly Subscription**: $1/month (`com.zetanotes.pro.monthly`)
+- **Monthly Subscription**: $1/month (`com.zetanotes.pro.month`)
 - **Annual Subscription**: $6/year (`com.zetanotes.pro.annual`)
 - **Lifetime Purchase**: $20 one-time (`com.zetanotes.pro.lifetime`)
 
@@ -172,7 +172,7 @@ In Xcode, you can:
 1. **Create IAP Products** in App Store Connect:
 
    **Monthly Subscription:**
-   - Product ID: `com.zetanotes.pro.monthly`
+   - Product ID: `com.zetanotes.pro.month`
    - Type: Auto-Renewable Subscription
    - Subscription Group: "ZetaNotes Pro"
    - Duration: 1 Month

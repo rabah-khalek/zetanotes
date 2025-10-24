@@ -97,7 +97,7 @@ Once configured:
 
 When you're ready for real Sandbox testing:
 1. Create products in App Store Connect with matching IDs:
-   - `com.zetanotes.pro.monthly`
+   - `com.zetanotes.pro.month`
    - `com.zetanotes.pro.annual`
    - `com.zetanotes.pro.lifetime`
 2. Create Sandbox tester account

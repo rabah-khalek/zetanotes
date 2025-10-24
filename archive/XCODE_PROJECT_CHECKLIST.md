@@ -97,7 +97,7 @@ grep "productID" ZetaNotes/Configuration.storekit
 grep "case.*=.*com.zetanotes" ZetaNotes/Managers/StoreKitManager.swift
 
 # They should match:
-# - com.zetanotes.pro.monthly
+# - com.zetanotes.pro.month
 # - com.zetanotes.pro.annual
 # - com.zetanotes.pro.lifetime
 ```

@@ -5,7 +5,7 @@
   ],
   "products" : [
     {
-      "displayPrice" : "20",
+      "displayPrice" : "19.99",
       "familyShareable" : false,
       "internalID" : "6738392845",
       "localizations" : [
@@ -81,7 +81,7 @@
           "codeOffers" : [
 
           ],
-          "displayPrice" : "1",
+          "displayPrice" : "0.99",
           "familyShareable" : false,
           "groupNumber" : 1,
           "internalID" : "6738392201",
@@ -93,7 +93,7 @@
               "locale" : "en_US"
             }
           ],
-          "productID" : "com.zetanotes.pro.monthly",
+          "productID" : "com.zetanotes.pro.month",
           "recurringSubscriptionPeriod" : "P1M",
           "referenceName" : "Pro Monthly",
           "subscriptionGroupID" : "21527373",
@@ -106,7 +106,7 @@
           "codeOffers" : [
 
           ],
-          "displayPrice" : "6",
+          "displayPrice" : "5.99",
           "familyShareable" : false,
           "groupNumber" : 2,
           "internalID" : "6738392422",

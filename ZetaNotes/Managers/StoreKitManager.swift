@@ -28,7 +28,7 @@ enum SubscriptionTier: String, Codable {
     var price: String {
         switch self {
         case .free: return "$0"
-        case .monthly: return "$1/month"
+        case .monthly: return "$0.99/month"
         case .annual: return "$6/year"
         case .lifetime: return "$20 one-time"
         }
@@ -37,7 +37,7 @@ enum SubscriptionTier: String, Codable {
 
 /// Product identifiers matching App Store Connect and Configuration.storekit
 enum ProductID: String, CaseIterable {
-    case monthly = "com.zetanotes.pro.monthly"
+    case monthly = "com.zetanotes.pro.month"
     case annual = "com.zetanotes.pro.annual"
     case lifetime = "com.zetanotes.pro.lifetime"
 
@@ -59,6 +59,7 @@ class StoreKitManager: ObservableObject {
     // Set to true for App Review builds to enable Pro features without purchase
     #if DEV_PRO_MODE
     private let devProMode = true
+    @Published var devModeSubscriptionTier: SubscriptionTier = .lifetime // Toggle between .free and .lifetime
     #else
     private let devProMode = false
     #endif
@@ -84,9 +85,11 @@ class StoreKitManager: ObservableObject {
     private init() {
         // For DEV_PRO_MODE builds (App Review), enable Pro immediately
         if devProMode {
+            #if DEV_PRO_MODE
             isPro = true
-            subscriptionTier = .lifetime
-            print("🔓 [DEV] Pro mode enabled for App Review build")
+            subscriptionTier = devModeSubscriptionTier
+            print("🔓 [DEV] Pro mode enabled for App Review build - Tier: \(devModeSubscriptionTier.displayName)")
+            #endif
         }
 
         // Start listening for transaction updates
@@ -267,13 +270,16 @@ class StoreKitManager: ObservableObject {
 
     /// Determine Pro status and subscription tier from purchases
     private func updateProStatus() {
-        // DEV_PRO_MODE: Always enable Pro for App Review builds
+        // DEV_PRO_MODE: Use the dev mode tier setting
+        #if DEV_PRO_MODE
         if devProMode {
-            isPro = true
-            subscriptionTier = .lifetime
+            isPro = devModeSubscriptionTier != .free
+            subscriptionTier = devModeSubscriptionTier
             subscriptionExpiryDate = nil
+            print("🔓 [DEV] Using tier: \(subscriptionTier.displayName), Pro: \(isPro)")
             return
         }
+        #endif
 
         // Check for lifetime purchase
         if purchasedProductIDs.contains(ProductID.lifetime.rawValue) {
@@ -341,6 +347,17 @@ class StoreKitManager: ObservableObject {
             print("⚠️ Unknown or unsupported subscription state")
         }
     }
+
+    // MARK: - Dev Mode Toggle (App Review Only)
+
+    #if DEV_PRO_MODE
+    /// Toggle between FREE and PRO for app reviewers
+    func toggleDevMode() {
+        devModeSubscriptionTier = devModeSubscriptionTier == .free ? .lifetime : .free
+        updateProStatus()
+        print("🔄 [DEV] Toggled to: \(subscriptionTier.displayName), Pro: \(isPro)")
+    }
+    #endif
 
     // MARK: - Product Helpers
 

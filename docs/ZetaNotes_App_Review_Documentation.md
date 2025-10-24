@@ -77,7 +77,7 @@ While Pro features are pre-enabled in this build, you can still test the purchas
 
 1. **Monthly Subscription** - $1/month
    - Auto-renewable subscription
-   - Product ID: `com.zetanotes.pro.monthly`
+   - Product ID: `com.zetanotes.pro.month`
 
 2. **Annual Subscription** - $6/year
    - Auto-renewable subscription

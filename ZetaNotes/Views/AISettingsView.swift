@@ -1423,7 +1423,7 @@ struct ProStatusSection: View {
                         }) {
                             HStack {
                                 Image(systemName: "cart.fill")
-                                Text("Upgrade Starting at $1/month")
+                                Text("Upgrade Starting at $0.99/month")
                             }
                         }
                         .buttonStyle(.borderedProminent)

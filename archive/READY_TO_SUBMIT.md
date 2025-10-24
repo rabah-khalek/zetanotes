@@ -62,7 +62,7 @@ Go to [App Store Connect](https://appstoreconnect.apple.com):
 **Create 3 products:**
 
 1. **Monthly Subscription**
-   - Product ID: `com.zetanotes.pro.monthly`
+   - Product ID: `com.zetanotes.pro.month`
    - Type: Auto-Renewable Subscription
    - Price: $1/month
    - Subscription Group: "ZetaNotes Pro"
@@ -363,7 +363,7 @@ Project root documents:
 ### Product IDs to Create:
 
 ```
-✅ com.zetanotes.pro.monthly
+✅ com.zetanotes.pro.month
 ✅ com.zetanotes.pro.annual
 ✅ com.zetanotes.pro.lifetime
 ```
