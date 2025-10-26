@@ -1,0 +1,24 @@
+# robots.txt for zetanotes.com
+# Allow all search engines to crawl the site
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://zetanotes.com/sitemap.xml
+
+# Disallow crawling of archive folder if it exists
+User-agent: *
+Disallow: /archive/
+
+# Common SEO best practices
+# Allow Google Image Bot
+User-agent: Googlebot-Image
+Allow: /
+
+# Allow Bingbot
+User-agent: bingbot
+Allow: /
+
+# Crawl-delay for polite crawling (optional)
+# Crawl-delay: 1

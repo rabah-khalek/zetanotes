@@ -27,6 +27,10 @@ class NoteViewModel: ObservableObject {
                     saveDebounceTimers[noteID]?.invalidate()
                     saveDebounceTimers.removeValue(forKey: noteID)
                 }
+
+                // Cancel any pending autocomplete for old note
+                dismissAutocomplete()
+
                 // Save immediately
                 saveNoteImmediately(currentNote)
                 print("💾 Saved note before switching: \(currentNote.displayTitle)")
@@ -61,7 +65,7 @@ class NoteViewModel: ObservableObject {
     @Published var titleGenerationPrompt = DefaultPrompts.titleGeneration
     @Published var autoCorrectPrompt = DefaultPrompts.autoCorrect
     @Published var reformulatePrompt = DefaultPrompts.reformulate
-    @Published var targetLanguage = "Spanish"
+    @AppStorage("targetLanguage") var targetLanguage = "Spanish"
 
     // MARK: - Dependencies
 
@@ -231,20 +235,38 @@ class NoteViewModel: ObservableObject {
         guard let noteID = note.id else { return }
         let noteObjectID = note.objectID
 
-        // Cancel existing timer for this note
+        // Cancel existing timer for this note BEFORE creating new one
         saveDebounceTimers[noteID]?.invalidate()
+        saveDebounceTimers.removeValue(forKey: noteID)
 
         // Create new timer with very short delay (200ms) to protect against force quit
-        let timer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: false) { [weak self] _ in
+        let timer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: false) { [weak self] timer in
             // Use background save for non-critical operation
             Task { @MainActor in
-                guard let self = self else { return }
-                // Get the note from the object ID
-                if let note = try? self.persistenceController.container.viewContext
-                    .existingObject(with: noteObjectID) as? Note {
-                    await self.saveNoteInBackground(note)
+                guard let self = self else {
+                    timer.invalidate()
+                    return
                 }
-                self.saveDebounceTimers[noteID] = nil
+
+                // Double-check note still exists in cache (not deleted)
+                guard self.noteCache[noteID] != nil else {
+                    self.saveDebounceTimers.removeValue(forKey: noteID)
+                    return
+                }
+
+                // Get the note from the object ID with defensive error handling
+                do {
+                    if let note = try self.persistenceController.container.viewContext
+                        .existingObject(with: noteObjectID) as? Note,
+                        !note.isDeleted, !note.isFault {
+                        await self.saveNoteInBackground(note)
+                    }
+                } catch {
+                    print("⚠️ Debounced save skipped: Note no longer exists (\(error.localizedDescription))")
+                }
+
+                // Clean up timer reference
+                self.saveDebounceTimers.removeValue(forKey: noteID)
             }
         }
 
@@ -290,14 +312,27 @@ class NoteViewModel: ObservableObject {
         let noteObjectID = note.objectID
         let noteID = note.id
 
+        // Early validation - ensure note still exists before expensive background work
+        guard let noteID = noteID, noteCache[noteID] != nil else {
+            print("⚠️ Background save skipped: Note no longer in cache")
+            return
+        }
+
         // Perform save on background context
         let backgroundContext = persistenceController.newBackgroundContext()
 
-        await backgroundContext.perform {
+        let saveSucceeded = await backgroundContext.perform { () -> Bool in
             do {
-                // Get note in background context
+                // Get note in background context with defensive nil check
                 guard let bgNote = try? backgroundContext.existingObject(with: noteObjectID) as? Note else {
-                    return
+                    print("⚠️ Background save skipped: Note object not found (objectID: \(noteObjectID))")
+                    return false
+                }
+
+                // Verify the note still exists and is not deleted
+                guard !bgNote.isDeleted, !bgNote.isFault else {
+                    print("⚠️ Background save skipped: Note is deleted or faulted")
+                    return false
                 }
 
                 // Validate and save
@@ -308,21 +343,37 @@ class NoteViewModel: ObservableObject {
                     bgNote.generateTitleFromContent()
                 }
 
+                // Only save if there are actually changes
+                guard backgroundContext.hasChanges else {
+                    print("ℹ️ Background save skipped: No changes detected")
+                    return false
+                }
+
                 try backgroundContext.save()
+                print("✅ Background save successful for note: \(bgNote.id?.uuidString ?? "unknown")")
+                return true
             } catch {
                 print("❌ Background save failed: \(error)")
+                // Roll back the context to prevent corruption
+                backgroundContext.rollback()
+                return false
             }
         }
 
+        // Only update UI if save actually succeeded
+        guard saveSucceeded else { return }
+
         // Update UI on main thread
         await MainActor.run {
-            if let noteID = noteID {
-                NotificationCenter.default.post(
-                    name: Notification.Name("NoteUpdated"),
-                    object: noteID
-                )
-            }
+            // Re-check note still exists (could have been deleted during background save)
+            guard self.noteCache[noteID] != nil else { return }
 
+            NotificationCenter.default.post(
+                name: Notification.Name("NoteUpdated"),
+                object: noteID
+            )
+
+            // Update list item if note still exists
             if let updatedItem = self.repository.makeListItem(from: note) {
                 self.noteCache[updatedItem.id] = note
                 self.upsertListItem(updatedItem)
@@ -330,8 +381,10 @@ class NoteViewModel: ObservableObject {
             }
         }
 
-        // Reindex if needed (already async)
-        await reindexIfNeeded(note)
+        // Reindex if needed (already async) - only if note still exists
+        if noteCache[noteID] != nil {
+            await reindexIfNeeded(note)
+        }
     }
 
     /// Only regenerate embeddings if content changed by >100 characters
@@ -405,17 +458,19 @@ class NoteViewModel: ObservableObject {
             return
         }
 
+        // ✅ CRITICAL: Cancel any ongoing generation to prevent memory corruption
+        aiEngine.llmService.cancelGeneration()
+
         // Immediately clear old suggestion when new request comes in
         autocompleteSuggestion = nil
 
+        // Cancel any pending autocomplete generation
         debounceTimer?.invalidate()
+        debounceTimer = nil
 
-        debounceTimer = Timer.scheduledTimer(withTimeInterval: 0.15, repeats: false) { [weak self] _ in
-            guard let self = self else { return }
-
-            Task {
-                await self.generateAutocomplete(for: text)
-            }
+        // Generate immediately - debouncing already handled by NoteEditorView
+        Task {
+            await self.generateAutocomplete(for: text)
         }
     }
 
@@ -455,7 +510,13 @@ class NoteViewModel: ObservableObject {
     }
 
     func dismissAutocomplete() {
+        // ✅ CRITICAL: Cancel any ongoing generation to prevent memory corruption
+        aiEngine.llmService.cancelGeneration()
+
         autocompleteSuggestion = nil
+        // Clean up any pending timer
+        debounceTimer?.invalidate()
+        debounceTimer = nil
     }
 
     func generateSummary(for note: Note) async {
@@ -858,12 +919,20 @@ class NoteViewModel: ObservableObject {
 
         print("🔧 Custom Tool '\(tool.name)': Processing \(sections.baseContent.count) chars")
 
-        // Use batched generation to handle large texts
-        let result = await aiEngine.llmService.generateBatched(
-            text: sections.baseContent,
+        // Create a temporary service to use the standard AIService infrastructure
+        // This ensures custom tools work the same way as built-in tools (using chat template)
+        let customService = CustomToolService(
+            llmService: aiEngine.llmService,
+            prompt: tool.prompt,
+            temperature: tool.temperature,
+            maxTokens: maxTokens
+        )
+
+        // Use the standard processBatched method (uses chat template with system/user messages)
+        let result = await customService.processBatched(
+            sections.baseContent,
             instruction: tool.prompt,
             maxTokens: maxTokens,
-            temperature: tool.temperature,
             separator: " "
         )
 

@@ -1,5 +1,5 @@
 //
-//  LicenseManager.swift
+//  LicenseManager_Paddle_Backup.swift
 //  ZetaNotes
 //
 //  Manages Pro license validation and feature access

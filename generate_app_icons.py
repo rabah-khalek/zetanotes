@@ -101,8 +101,8 @@ def update_contents_json(output_dir, generated_files):
 
 def main():
     # Paths
-    source_logo = "/Users/projects/Documents/zetanotes/logo.png"
-    output_dir = "/Users/projects/Documents/zetanotes/ZetaNotes/Assets.xcassets/AppIcon.appiconset"
+    source_logo = "/Users/projects/Documents/zetanotes-dev/logo.png"
+    output_dir = "/Users/projects/Documents/zetanotes-dev/ZetaNotes/Assets.xcassets/AppIcon.appiconset"
 
     # Check if source file exists
     if not os.path.exists(source_logo):

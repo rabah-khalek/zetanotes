@@ -97,18 +97,24 @@ class ReviewManager: ObservableObject {
     private func shouldRequestReview() -> Bool {
         // Check if enough time has passed since last request
         if let lastRequestDate = UserDefaults.standard.object(forKey: lastReviewRequestDateKey) as? Date {
-            let daysSinceLastRequest = Calendar.current.dateComponents([.day], from: lastRequestDate, to: Date()).day ?? 0
+            let daysSinceLastRequest = Calendar.current.dateComponents([.day], from: lastRequestDate, to: Date())
+                .day ?? 0
             guard daysSinceLastRequest >= minimumDaysBetweenRequests else {
-                print("⏭️ [ReviewManager] Only \(daysSinceLastRequest) days since last request (need \(minimumDaysBetweenRequests))")
+                print(
+                    "⏭️ [ReviewManager] Only \(daysSinceLastRequest) days since last request (need \(minimumDaysBetweenRequests))"
+                )
                 return false
             }
         }
 
         // Check if enough time has passed since first launch
         if let firstLaunchDate = UserDefaults.standard.object(forKey: firstLaunchDateKey) as? Date {
-            let daysSinceFirstLaunch = Calendar.current.dateComponents([.day], from: firstLaunchDate, to: Date()).day ?? 0
+            let daysSinceFirstLaunch = Calendar.current.dateComponents([.day], from: firstLaunchDate, to: Date())
+                .day ?? 0
             guard daysSinceFirstLaunch >= minimumDaysSinceFirstLaunch else {
-                print("⏭️ [ReviewManager] Only \(daysSinceFirstLaunch) days since first launch (need \(minimumDaysSinceFirstLaunch))")
+                print(
+                    "⏭️ [ReviewManager] Only \(daysSinceFirstLaunch) days since first launch (need \(minimumDaysSinceFirstLaunch))"
+                )
                 return false
             }
         }

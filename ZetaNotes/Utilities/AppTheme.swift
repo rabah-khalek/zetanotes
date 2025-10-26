@@ -39,7 +39,6 @@ enum AppTheme {
         static let accentOrange = Color.orange
         static let accentGreen = Color.green
         static let accentRed = Color.red
-        static let accentPink = Color.pink
         static let accentIndigo = Color.indigo
 
         // Text colors

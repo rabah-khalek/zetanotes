@@ -14,7 +14,7 @@ When submitting your app for review, attach these files to help the review proce
 
 ### 🎥 Demo Video
 
-**Your video file** (e.g., `ZetaNotes_Demo_v1.0.mp4`)
+**Your video file** (e.g., `ZetaNotes_Demo_v1.0.0.mp4`)
 - Shows app functionality
 - Demonstrates purchase flow
 - Shows Pro features
@@ -125,7 +125,7 @@ docs/
 Your demo video should be in:
 ```
 [Wherever you saved your video]
-└── ZetaNotes_Demo_v1.0.mp4                  ← Upload this
+└── ZetaNotes_Demo_v1.0.0.mp4                ← Upload this
 ```
 
 ---

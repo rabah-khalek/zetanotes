@@ -2,7 +2,7 @@
 
 **App Name:** ZetaNotes
 **Bundle ID:** com.zetanotes
-**Version:** 1.0
+**Version:** 1.0.0
 **Category:** Productivity
 **Platform:** macOS
 
@@ -300,6 +300,6 @@ We appreciate your time reviewing this application and are available to answer a
 
 ---
 
-**Document Version:** 1.0
+**Document Version:** 1.0.0
 **Date:** January 2025
 **Prepared for:** Apple App Review Team

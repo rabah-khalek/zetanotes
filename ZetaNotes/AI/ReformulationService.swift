@@ -59,6 +59,11 @@ class ReformulationService: AIService {
             print("✅ Reformulate: Generated \(result.count) chars")
         } else {
             print("❌ Reformulate: Failed to generate output")
+            ErrorLogger.shared.logError(
+                code: .generationFailed,
+                operation: "Reformulation",
+                technicalDetails: "Failed to generate reformulated text. Input length: \(text.count) chars"
+            )
         }
 
         return result

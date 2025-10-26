@@ -12,10 +12,13 @@ struct StatusFooterView: View {
     @ObservedObject var aiEngine: AIEngine
     @ObservedObject var downloadState: ModelDownloadState
     @ObservedObject var licenseManager = LicenseManager.shared
+    @ObservedObject var errorLogger: ErrorLogger
 
     var wordCount: Int
     var characterCount: Int
     var createdAt: Date?
+
+    @Binding var showingErrorLog: Bool
 
     @State private var showingModelMetadata = false
 
@@ -50,6 +53,11 @@ struct StatusFooterView: View {
 
                     // Disclaimer badge
                     disclaimerBadge
+
+                    // Error indicator (show when there are errors)
+                    if !errorLogger.errors.isEmpty {
+                        errorBadge
+                    }
 
                     // Model Download Progress (if downloading)
                     if downloadState.isDownloading, let modelName = downloadState.downloadingModelName {
@@ -136,6 +144,36 @@ struct StatusFooterView: View {
                 )
         )
         .help("\(wordCount) words, \(characterCount) characters")
+    }
+
+    private var errorBadge: some View {
+        Button(action: {
+            showingErrorLog.toggle()
+        }) {
+            HStack(spacing: 4) {
+                Image(systemName: errorLogger.errors.contains(where: { $0.severity == .error })
+                    ? "exclamationmark.triangle.fill"
+                    : "exclamationmark.circle.fill")
+                    .font(.system(size: 9))
+                    .foregroundColor(errorLogger.errors.contains(where: { $0.severity == .error }) ? .red : .orange)
+
+                Text("\(errorLogger.errors.count)")
+                    .font(.system(size: 10, weight: .medium, design: .monospaced))
+                    .foregroundColor(.primary)
+            }
+            .padding(.horizontal, 7)
+            .padding(.vertical, 4)
+            .background(
+                RoundedRectangle(cornerRadius: 4)
+                    .fill((errorLogger.errors.contains(where: { $0.severity == .error }) ? Color.red : Color.orange).opacity(0.08))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 4)
+                            .strokeBorder((errorLogger.errors.contains(where: { $0.severity == .error }) ? Color.red : Color.orange).opacity(0.2), lineWidth: 0.5)
+                    )
+            )
+        }
+        .buttonStyle(.plain)
+        .help("View error log (\(errorLogger.errors.count) error\(errorLogger.errors.count == 1 ? "" : "s"))")
     }
 
     private var activeModelBadge: some View {
@@ -264,7 +302,10 @@ struct StatusFooterView: View {
             if licenseManager.isPro {
                 // Pro user: Simple report issue link
                 Button(action: {
-                    if let url = URL(string: "mailto:rabah.khalek@gmail.com?subject=ZetaNotes%20Bug%20Report&body=Please%20describe%20the%20issue%20and%20steps%20to%20reproduce:") {
+                    if let url =
+                        URL(
+                            string: "mailto:rabah.khalek@gmail.com?subject=ZetaNotes%20Bug%20Report&body=Please%20describe%20the%20issue%20and%20steps%20to%20reproduce:"
+                        ) {
                         NSWorkspace.shared.open(url)
                     }
                 }) {
@@ -303,7 +344,10 @@ struct StatusFooterView: View {
                     .foregroundColor(.secondary)
 
                 Button(action: {
-                    if let url = URL(string: "mailto:rabah.khalek@gmail.com?subject=ZetaNotes%20Bug%20Report&body=Please%20describe%20the%20issue%20and%20steps%20to%20reproduce:") {
+                    if let url =
+                        URL(
+                            string: "mailto:rabah.khalek@gmail.com?subject=ZetaNotes%20Bug%20Report&body=Please%20describe%20the%20issue%20and%20steps%20to%20reproduce:"
+                        ) {
                         NSWorkspace.shared.open(url)
                     }
                 }) {

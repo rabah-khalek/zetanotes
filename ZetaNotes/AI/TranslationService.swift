@@ -122,12 +122,27 @@ class TranslationService: AIService {
         )
 
         if let result = result {
+            // Validate that the output is actually a translation
+            if !isValidTranslation(result, originalText: text) {
+                print("❌ Translate: Output appears to be the same language as input")
+                ErrorLogger.shared.logWarning(
+                    code: WarningCode.generationEmpty,
+                    operation: "Translation",
+                    details: "Translating to \(targetLanguage). Model may not support this language or generated text too similar to input."
+                )
+                return nil
+            }
             print("✅ Translate: Generated \(result.count) chars")
+            return result
         } else {
             print("❌ Translate: Failed to generate output")
+            ErrorLogger.shared.logError(
+                code: ErrorCode.generationFailed,
+                operation: "Translation",
+                technicalDetails: "Failed to generate translation to \(targetLanguage). Input length: \(text.count) chars"
+            )
+            return nil
         }
-
-        return result
     }
 
     // MARK: - Post-processing
@@ -138,14 +153,49 @@ class TranslationService: AIService {
         // First apply centralized artifact removal
         var cleaned = LLMOutputCleaner.clean(output)
 
+        // Remove template artifacts that may leak through
+        cleaned = cleaned.replacingOccurrences(of: "{content}user", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "{content}", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "{language}", with: "")
+
+        // Remove everything before phrases like "Here is a revised version:" which indicate preamble
+        if let range = cleaned.range(of: "Here is a revised version", options: .caseInsensitive),
+           let colonRange = cleaned[range.lowerBound...].range(of: ":") {
+            cleaned = String(cleaned[colonRange.upperBound...]).trimmingCharacters(in: .whitespacesAndNewlines)
+        } else if let range = cleaned.range(of: "Here is the translation", options: .caseInsensitive),
+                  let colonRange = cleaned[range.lowerBound...].range(of: ":") {
+            cleaned = String(cleaned[colonRange.upperBound...]).trimmingCharacters(in: .whitespacesAndNewlines)
+        } else if let range = cleaned.range(of: "Here is", options: .caseInsensitive),
+                  let colonRange = cleaned[range.upperBound...].range(of: ":") {
+            cleaned = String(cleaned[colonRange.upperBound...]).trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
+        // Remove partial continuation from original prompt (e.g., "to fit your needs")
+        let partialPromptPhrases = [
+            "to fit your needs",
+            "to better suit your needs",
+            "can modify the template",
+            "Please let me know if"
+        ]
+        for phrase in partialPromptPhrases {
+            if let range = cleaned.range(of: phrase, options: .caseInsensitive) {
+                // Remove everything up to and including this phrase
+                cleaned = String(cleaned[range.upperBound...]).trimmingCharacters(in: .whitespacesAndNewlines)
+                break
+            }
+        }
+
         // Remove common hallucination prefixes (especially important for translation)
         let hallucinationPrefixes = [
             "Sure! ", "Sure, ", "Certainly! ", "Certainly, ",
             "Here is ", "Here's ", "Here is the ",
             "The translation is: ", "Translation: ", "Translated text: ",
-            "In \(targetLanguage): ", "The \(targetLanguage) translation is: "
+            "I can help", "I'll translate", "I will translate",
+            // Dynamic prefixes with target language
+            "In \(targetLanguage): ", "The \(targetLanguage) translation is: ",
+            "In \(targetLanguage.lowercased()): ", "The \(targetLanguage.lowercased()) translation is: "
         ]
-        for prefix in hallucinationPrefixes where cleaned.hasPrefix(prefix) {
+        for prefix in hallucinationPrefixes where cleaned.lowercased().hasPrefix(prefix.lowercased()) {
             cleaned = String(cleaned.dropFirst(prefix.count))
             break
         }
@@ -158,5 +208,26 @@ class TranslationService: AIService {
         cleaned = cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
         print("🧹 Post-process cleaned output: \(cleaned)")
         return cleaned
+    }
+
+    /// Validates that the translation output is not just repeating/paraphrasing the input
+    /// Returns true if output appears to be a valid translation
+    private func isValidTranslation(_ output: String, originalText: String) -> Bool {
+        // If output is too similar to input, it's likely not translated
+        let outputWords = Set(output.lowercased().split(separator: " ").map(String.init))
+        let inputWords = Set(originalText.lowercased().split(separator: " ").map(String.init))
+
+        // Calculate word overlap percentage
+        let commonWords = outputWords.intersection(inputWords)
+        let overlapPercentage = Double(commonWords.count) / Double(max(outputWords.count, 1)) * 100
+
+        // If more than 70% of words are the same, it's likely not translated
+        let isValid = overlapPercentage < 70
+
+        if !isValid {
+            print("⚠️ Translation validation failed: \(Int(overlapPercentage))% word overlap with original (target language: \(targetLanguage))")
+        }
+
+        return isValid
     }
 }

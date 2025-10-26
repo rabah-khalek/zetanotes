@@ -16,6 +16,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // This is called when the app is about to quit (Cmd+Q or Quit from menu)
         print("🛑 App terminating - performing final save...")
 
+        // Critical: Flush all pending debounced saves FIRST
+        // This must happen synchronously on the main thread to ensure completion
+        DispatchQueue.main.sync {
+            // Post notification to trigger ContentView's flush
+            NotificationCenter.default.post(
+                name: NSNotification.Name("AppWillTerminate"),
+                object: nil
+            )
+        }
+
         // Force save any pending Core Data changes
         let context = PersistenceController.shared.container.viewContext
         if context.hasChanges {
@@ -26,10 +36,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 print("❌ Failed to save on termination: \(error)")
                 // Log error but don't crash during termination
                 ErrorLogger.shared.logError(
-                    "Failed to save notes during app termination",
-                    severity: .error,
+                    code: .databaseSaveFailed,
                     operation: "App Quit",
-                    details: error.localizedDescription
+                    technicalDetails: error.localizedDescription
                 )
             }
         }
@@ -65,7 +74,6 @@ struct ZetaNotesApp: App {
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
-
         // Setup memory pressure monitoring
         setupMemoryPressureHandler()
 

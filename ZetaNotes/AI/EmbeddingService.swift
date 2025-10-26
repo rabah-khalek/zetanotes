@@ -13,20 +13,19 @@ import Foundation
 /// Embeddings enable semantic search across notes
 final class EmbeddingService: @unchecked Sendable {
     private let llmService: LLMInferenceService
-    private let embeddingCache = NSCache<NSString, NSData>()
+    // Embedding cache DISABLED - embeddings are already stored in CoreData
+    // This saves ~1GB of memory fragmentation and SWAP usage
 
     // MARK: - Configuration
 
     private enum Config {
         static let embeddingDimensions = 2048 // TinyLlama embedding size
-        static let maxCacheSize = 100 // Cache up to 100 embeddings
     }
 
     // MARK: - Initialization
 
     init(llmService: LLMInferenceService) {
         self.llmService = llmService
-        embeddingCache.countLimit = Config.maxCacheSize
     }
 
     // MARK: - Embedding Generation
@@ -37,20 +36,11 @@ final class EmbeddingService: @unchecked Sendable {
     func generateEmbedding(for text: String) async -> [Float]? {
         guard !text.isEmpty else { return nil }
 
-        // Check cache first
-        let cacheKey = text as NSString
-        if let cachedData = embeddingCache.object(forKey: cacheKey) {
-            return dataToFloatArray(cachedData as Data)
-        }
-
-        // Generate new embedding
+        // Cache disabled - generate directly and rely on CoreData persistence
+        // This significantly reduces memory usage
         guard let embedding = await llmService.generateEmbedding(for: text) else {
             return nil
         }
-
-        // Cache the result
-        let embeddingData = floatArrayToData(embedding)
-        embeddingCache.setObject(embeddingData as NSData, forKey: cacheKey)
 
         return embedding
     }
@@ -203,8 +193,8 @@ final class EmbeddingService: @unchecked Sendable {
         return array
     }
 
-    /// Clears the embedding cache
+    /// Clears the embedding cache (no-op since cache is disabled)
     func clearCache() {
-        embeddingCache.removeAllObjects()
+        // Cache disabled for memory savings - this is now a no-op
     }
 }

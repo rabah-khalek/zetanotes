@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		4A0ABDEFA72E47F0B951871F /* ModelToolConfigRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B9FCA2E2174FC592D860AE /* ModelToolConfigRegistry.swift */; };
+		500213640C504E3EA564470F /* ErrorCodes.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDCF60559F1F48DD8001CB18 /* ErrorCodes.swift */; };
 		64D52F7A4AC043C7A510C356 /* LLMConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = C19B2B4688514121A68351A9 /* LLMConfig.swift */; };
 		8104180C2E9AF4770086B1B2 /* NoteEmbedding+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 810418082E9AF4770086B1B2 /* NoteEmbedding+CoreDataClass.swift */; };
 		8104180D2E9AF4770086B1B2 /* Tag+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8104180A2E9AF4770086B1B2 /* Tag+CoreDataClass.swift */; };
@@ -24,6 +25,7 @@
 		81C5A72B2EA57C7B00B5077D /* DataExportManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81C5A72A2EA57C7B00B5077D /* DataExportManager.swift */; };
 		81C5A7332EA7337C00B5077D /* CenteredScrolling.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81C5A7322EA7337C00B5077D /* CenteredScrolling.swift */; };
 		81C5A7352EA9B1EC00B5077D /* StoreKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81C5A7342EA9B1EC00B5077D /* StoreKitManager.swift */; };
+		81C8D2D52EAE666800FDD721 /* CustomToolService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81C8D2D42EAE666800FDD721 /* CustomToolService.swift */; };
 		81DE21652E9B3C2400692788 /* ModelDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE21642E9B3C2400692788 /* ModelDownloader.swift */; };
 		81DE4F6B2EA1A524006293FC /* MarkdownRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F6A2EA1A524006293FC /* MarkdownRenderer.swift */; };
 		81DE4F6E2EA1CE1A006293FC /* AITool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F6C2EA1CE1A006293FC /* AITool.swift */; };
@@ -120,7 +122,7 @@
 		81C5A7342EA9B1EC00B5077D /* StoreKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreKitManager.swift; sourceTree = "<group>"; };
 		81C5A7362EA9B75000B5077D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		81C5A7382EA9B9E900B5077D /* Configuration.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = Configuration.storekit; sourceTree = "<group>"; };
-		81C5A73A2EA9BD3E00B5077D /* Configuration.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; name = Configuration.storekit; path = ZetaNotes/Configuration.storekit; sourceTree = "<group>"; };
+		81C8D2D42EAE666800FDD721 /* CustomToolService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomToolService.swift; sourceTree = "<group>"; };
 		81DE21642E9B3C2400692788 /* ModelDownloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelDownloader.swift; sourceTree = "<group>"; };
 		81DE4F652EA18C90006293FC /* NotesDataModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = NotesDataModel.xcdatamodel; sourceTree = "<group>"; };
 		81DE4F6A2EA1A524006293FC /* MarkdownRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownRenderer.swift; sourceTree = "<group>"; };
@@ -180,6 +182,7 @@
 		A1000069000000000000001 /* ErrorLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorLogView.swift; sourceTree = "<group>"; };
 		A1000071000000000000001 /* SystemMonitorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMonitorView.swift; sourceTree = "<group>"; };
 		A1000091000000000000001 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
+		DDCF60559F1F48DD8001CB18 /* ErrorCodes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorCodes.swift; sourceTree = "<group>"; };
 		A1000092000000000000001 /* ErrorManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorManager.swift; sourceTree = "<group>"; };
 		C19B2B4688514121A68351A9 /* LLMConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMConfig.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -231,7 +234,6 @@
 			isa = PBXGroup;
 			children = (
 				81C5A7382EA9B9E900B5077D /* Configuration.storekit */,
-				81C5A73A2EA9BD3E00B5077D /* Configuration.storekit */,
 				81EFBE2C2E9B05C700F7E48B /* libggml.dylib */,
 				81EFBE292E9B05C700F7E48B /* libggml-base.dylib */,
 				81EFBE2D2E9B05C700F7E48B /* libggml-blas.dylib */,
@@ -328,6 +330,7 @@
 		A1000044000000000000001 /* AI */ = {
 			isa = PBXGroup;
 			children = (
+				81C8D2D42EAE666800FDD721 /* CustomToolService.swift */,
 				81DE4FA22EA46176006293FC /* LLMOutputCleaner.swift */,
 				81DE4F8C2EA2DCF9006293FC /* ChatService.swift */,
 				81111F602E9F37FB00D7317B /* DefaultPrompts.swift */,
@@ -381,7 +384,8 @@
 				A1000064000000000000001 /* SystemMonitor.swift */,
 				A1000091000000000000001 /* Logger.swift */,
 				A1000092000000000000001 /* ErrorManager.swift */,
-			);
+							DDCF60559F1F48DD8001CB18 /* ErrorCodes.swift */,
+);
 			path = Utilities;
 			sourceTree = "<group>";
 		};
@@ -530,6 +534,7 @@
 				81DE4F782EA25B10006293FC /* EmptyStateView.swift in Sources */,
 				81DE4F792EA25B10006293FC /* AIToolButton.swift in Sources */,
 				81DE4F7A2EA25B10006293FC /* AutocompleteToggle.swift in Sources */,
+				81C8D2D52EAE666800FDD721 /* CustomToolService.swift in Sources */,
 				81DE4F8F2EA2DD06006293FC /* ChatView.swift in Sources */,
 				81DE4F7B2EA25B10006293FC /* StatusFooterView.swift in Sources */,
 				81DE4F892EA2DCE9006293FC /* ChatManager.swift in Sources */,
@@ -544,7 +549,8 @@
 				81DE4F9D2EA33EF3006293FC /* CustomWindowLayout.swift in Sources */,
 				81DE4F9E2EA33EF3006293FC /* CustomSidebarView.swift in Sources */,
 				81DE4F9F2EA33EF3006293FC /* CustomToolbarView.swift in Sources */,
-			);
+							500213640C504E3EA564470F /* ErrorCodes.swift in Sources */,
+);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
@@ -608,7 +614,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited) DEV_PRO_MODE";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_COMPILATION_MODE = incremental;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -665,7 +671,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEV_PRO_MODE";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited)";
 				SWIFT_COMPILATION_MODE = wholemodule;
 			};
 			name = Release;
@@ -698,7 +704,7 @@
 					"$(SRCROOT)/llama.cpp/build/bin",
 				);
 				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/llama.cpp/build/bin";
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.0;
 				OTHER_LDFLAGS = (
 					"-lllama",
 					"-lggml",
@@ -741,7 +747,7 @@
 					"$(SRCROOT)/llama.cpp/build/bin",
 				);
 				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/llama.cpp/build/bin";
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.0;
 				OTHER_LDFLAGS = (
 					"-lllama",
 					"-lggml",

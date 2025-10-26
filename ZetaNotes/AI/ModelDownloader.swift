@@ -7,57 +7,63 @@
 
 import Foundation
 
+/// Information about an active download task
+private class DownloadTask {
+    let task: URLSessionDownloadTask
+    let observation: NSKeyValueObservation
+    var completionHandlers: [(Result<URL, Error>) -> Void] = []
+
+    init(task: URLSessionDownloadTask, observation: NSKeyValueObservation) {
+        self.task = task
+        self.observation = observation
+    }
+}
+
 /// Service for downloading AI model files
-/// Singleton to ensure downloads continue in background even when views are dismissed
+/// Supports concurrent downloads of multiple models
 class ModelDownloader: NSObject, ObservableObject {
     static let shared = ModelDownloader()
 
     @Published var downloadProgress: Double = 0.0
     @Published var isDownloading = false
     @Published var downloadError: String?
-    @Published var downloadingModel: AIModel? // Track which model is being downloaded
+    @Published var downloadingModel: AIModel? // Track which model is being downloaded (first one for backward compat)
 
-    private var downloadTask: URLSessionDownloadTask?
-    private var observation: NSKeyValueObservation?
-    private var completionHandlers: [(Result<URL, Error>) -> Void] = []
+    private var activeTasks: [String: DownloadTask] = [:] // Key: model fileName
+    private let session: URLSession
 
     // Shared state for UI updates
     private let sharedState = ModelDownloadState.shared
 
     override private init() {
+        let config = URLSessionConfiguration.default
+        config.httpMaximumConnectionsPerHost = 3 // Allow up to 3 concurrent downloads
+        self.session = URLSession(configuration: config)
         super.init()
     }
 
     // MARK: - Download
 
     /// Downloads a model from Hugging Face to Application Support
+    /// Supports concurrent downloads of multiple models
     /// - Parameters:
     ///   - modelType: The model to download
     ///   - completion: Called when download completes or fails (optional)
     func downloadModel(_ modelType: AIModel, completion: ((Result<URL, Error>) -> Void)? = nil) {
+        let fileName = modelType.fileName
+
         // If already downloading this model, just add the completion handler
-        if isDownloading, downloadingModel == modelType {
+        if let existingTask = activeTasks[fileName] {
             if let completion = completion {
-                completionHandlers.append(completion)
+                existingTask.completionHandlers.append(completion)
             }
+            print("ℹ️  Already downloading \(modelType.displayName), added to queue")
             return
-        }
-
-        // If downloading a different model, fail
-        guard !isDownloading else {
-            completion?(.failure(DownloadError.downloadInProgress))
-            return
-        }
-
-        // Clear previous completion handlers and add new one
-        completionHandlers.removeAll()
-        if let completion = completion {
-            completionHandlers.append(completion)
         }
 
         // Get destination directory
         guard let modelsDir = getModelsDirectory() else {
-            notifyCompletion(.failure(DownloadError.failedToCreateDirectory))
+            completion?(.failure(DownloadError.failedToCreateDirectory))
             return
         }
 
@@ -65,56 +71,47 @@ class ModelDownloader: NSObject, ObservableObject {
         do {
             try FileManager.default.createDirectory(at: modelsDir, withIntermediateDirectories: true)
         } catch {
-            notifyCompletion(.failure(error))
+            completion?(.failure(error))
             return
         }
 
-        let destinationURL = modelsDir.appendingPathComponent(modelType.fileName)
+        let destinationURL = modelsDir.appendingPathComponent(fileName)
 
         // Check if already exists
         if FileManager.default.fileExists(atPath: destinationURL.path) {
             print("✅ Model already exists at: \(destinationURL.path)")
-            notifyCompletion(.success(destinationURL))
+            completion?(.success(destinationURL))
             return
         }
 
         // Start download
         guard let url = URL(string: modelType.huggingFaceURL) else {
-            notifyCompletion(.failure(DownloadError.invalidURL))
+            completion?(.failure(DownloadError.invalidURL))
             return
         }
 
         print("📥 Starting download of \(modelType.displayName) from Hugging Face...")
         print("   URL: \(url)")
         print("   Destination: \(destinationURL.path)")
+        print("   Active downloads: \(activeTasks.count + 1)")
 
-        DispatchQueue.main.async {
-            self.isDownloading = true
-            self.downloadProgress = 0.0
-            self.downloadError = nil
-            self.downloadingModel = modelType
-        }
+        // Update shared state
+        sharedState.startDownload(modelName: modelType.displayName)
 
-        let session = URLSession(configuration: .default, delegate: self, delegateQueue: nil)
-        downloadTask = session.downloadTask(with: url) { [weak self] tempURL, _, error in
+        // Create download task
+        let task = session.downloadTask(with: url) { [weak self] tempURL, _, error in
             guard let self = self else { return }
 
-            DispatchQueue.main.async {
-                self.isDownloading = false
-                self.downloadingModel = nil
-            }
-
             if let error = error {
-                print("❌ Download failed: \(error)")
-                DispatchQueue.main.async {
-                    self.downloadError = error.localizedDescription
-                }
-                self.notifyCompletion(.failure(error))
+                print("❌ Download failed for \(modelType.displayName): \(error)")
+                self.sharedState.failDownload(modelName: modelType.displayName, error: error.localizedDescription)
+                self.notifyCompletion(for: fileName, result: .failure(error))
                 return
             }
 
             guard let tempURL = tempURL else {
-                self.notifyCompletion(.failure(DownloadError.noDataReceived))
+                self.sharedState.failDownload(modelName: modelType.displayName, error: "No data received")
+                self.notifyCompletion(for: fileName, result: .failure(DownloadError.noDataReceived))
                 return
             }
 
@@ -126,49 +123,140 @@ class ModelDownloader: NSObject, ObservableObject {
                 }
 
                 try FileManager.default.moveItem(at: tempURL, to: destinationURL)
-                print("✅ Model downloaded successfully to: \(destinationURL.path)")
-                self.notifyCompletion(.success(destinationURL))
+                print("✅ Model downloaded successfully: \(modelType.displayName)")
+                self.sharedState.completeDownload(modelName: modelType.displayName)
+                self.notifyCompletion(for: fileName, result: .success(destinationURL))
             } catch {
                 print("❌ Failed to move downloaded file: \(error)")
-                self.notifyCompletion(.failure(error))
+                self.sharedState.failDownload(modelName: modelType.displayName, error: error.localizedDescription)
+                self.notifyCompletion(for: fileName, result: .failure(error))
             }
         }
 
         // Observe progress
-        observation = downloadTask?.progress.observe(\.fractionCompleted) { [weak self] progress, _ in
+        let observation = task.progress.observe(\.fractionCompleted) { [weak self] progress, _ in
             DispatchQueue.main.async {
-                self?.downloadProgress = progress.fractionCompleted
-                self?.sharedState.updateProgress(progress.fractionCompleted)
+                self?.sharedState.updateProgress(progress.fractionCompleted, for: modelType.displayName)
+                self?.updateGlobalProgress()
             }
         }
 
-        downloadTask?.resume()
+        // Store the task
+        let downloadTask = DownloadTask(task: task, observation: observation)
+        if let completion = completion {
+            downloadTask.completionHandlers.append(completion)
+        }
+        activeTasks[fileName] = downloadTask
+
+        // Update global state
+        updateGlobalProgress()
+
+        task.resume()
     }
 
-    /// Cancels the current download
-    func cancelDownload() {
-        downloadTask?.cancel()
-        downloadTask = nil
-        observation?.invalidate()
-        observation = nil
-
-        DispatchQueue.main.async {
-            self.isDownloading = false
-            self.downloadProgress = 0.0
-            self.downloadingModel = nil
+    /// Cancels a specific download
+    func cancelDownload(for modelType: AIModel) {
+        let fileName = modelType.fileName
+        guard let downloadTask = activeTasks[fileName] else {
+            // Already cancelled or completed, just clean up state
+            DispatchQueue.main.async { [weak self] in
+                self?.sharedState.cancelDownload(modelName: modelType.displayName)
+                self?.updateGlobalProgress()
+            }
+            return
         }
 
-        print("🛑 Download cancelled")
+        downloadTask.task.cancel()
+        downloadTask.observation.invalidate()
+
+        // Notify completion handlers with cancellation error
+        let handlers = downloadTask.completionHandlers
+        for handler in handlers {
+            handler(.failure(NSError(domain: "ModelDownloader", code: -999, userInfo: [
+                NSLocalizedDescriptionKey: "Download cancelled by user"
+            ])))
+        }
+
+        activeTasks.removeValue(forKey: fileName)
+
+        DispatchQueue.main.async { [weak self] in
+            self?.sharedState.cancelDownload(modelName: modelType.displayName)
+            self?.updateGlobalProgress()
+        }
+
+        print("🛑 Download cancelled: \(modelType.displayName)")
+    }
+
+    /// Cancels the first active download (for backward compatibility)
+    func cancelDownload() {
+        guard let firstKey = activeTasks.keys.first,
+              let model = AIModel.allCases.first(where: { $0.fileName == firstKey }) else {
+            return
+        }
+        cancelDownload(for: model)
+    }
+
+    /// Cancels all active downloads
+    func cancelAllDownloads() {
+        let tasksCopy = activeTasks
+
+        for (fileName, downloadTask) in tasksCopy {
+            downloadTask.task.cancel()
+            downloadTask.observation.invalidate()
+
+            // Notify completion handlers
+            let handlers = downloadTask.completionHandlers
+            for handler in handlers {
+                handler(.failure(NSError(domain: "ModelDownloader", code: -999, userInfo: [
+                    NSLocalizedDescriptionKey: "Download cancelled by user"
+                ])))
+            }
+        }
+
+        activeTasks.removeAll()
+
+        DispatchQueue.main.async { [weak self] in
+            self?.sharedState.cancelAllDownloads()
+            self?.updateGlobalProgress()
+        }
+
+        print("🛑 All downloads cancelled")
     }
 
     // MARK: - Helpers
 
-    private func notifyCompletion(_ result: Result<URL, Error>) {
-        let handlers = completionHandlers
-        completionHandlers.removeAll()
+    private func notifyCompletion(for fileName: String, result: Result<URL, Error>) {
+        guard let downloadTask = activeTasks[fileName] else { return }
+
+        let handlers = downloadTask.completionHandlers
+        activeTasks.removeValue(forKey: fileName)
 
         for handler in handlers {
             handler(result)
+        }
+
+        updateGlobalProgress()
+    }
+
+    private func updateGlobalProgress() {
+        DispatchQueue.main.async {
+            self.isDownloading = !self.activeTasks.isEmpty
+
+            if !self.activeTasks.isEmpty {
+                // Calculate average progress
+                let totalProgress = self.activeTasks.values.reduce(0.0) { total, task in
+                    total + task.task.progress.fractionCompleted
+                }
+                self.downloadProgress = totalProgress / Double(self.activeTasks.count)
+
+                // Set first downloading model for backward compatibility
+                self.downloadingModel = AIModel.allCases.first { model in
+                    self.activeTasks.keys.contains(model.fileName)
+                }
+            } else {
+                self.downloadProgress = 0.0
+                self.downloadingModel = nil
+            }
         }
     }
 

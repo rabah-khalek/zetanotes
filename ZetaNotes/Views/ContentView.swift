@@ -43,6 +43,7 @@ struct ContentView: View {
     @State private var searchQuery = ""
     @State private var isSearching = false
     @State private var semanticMatchText = "" // Stores the matched text for highlighting
+    @FocusState private var isSearchFieldFocused: Bool
 
     // Sidebar state
     @State private var showingSidebar = true
@@ -226,9 +227,11 @@ struct ContentView: View {
                         systemMonitor: systemMonitor,
                         aiEngine: aiEngine,
                         downloadState: downloadState,
+                        errorLogger: errorLogger,
                         wordCount: currentWordCount,
                         characterCount: currentCharacterCount,
-                        createdAt: viewModel.selectedNote?.createdAt
+                        createdAt: viewModel.selectedNote?.createdAt,
+                        showingErrorLog: $showingErrorLog
                     )
 
                     // Search bar overlay
@@ -291,9 +294,11 @@ struct ContentView: View {
                                 systemMonitor: systemMonitor,
                                 aiEngine: aiEngine,
                                 downloadState: downloadState,
+                                errorLogger: errorLogger,
                                 wordCount: currentWordCount,
                                 characterCount: currentCharacterCount,
-                                createdAt: viewModel.selectedNote?.createdAt
+                                createdAt: viewModel.selectedNote?.createdAt,
+                                showingErrorLog: $showingErrorLog
                             )
 
                             // Search bar overlay
@@ -347,6 +352,12 @@ struct ContentView: View {
                 action: {
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                         showingSearch.toggle()
+                    }
+                    // Automatically focus the search field when showing search
+                    if showingSearch {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            isSearchFieldFocused = true
+                        }
                     }
                 }
             )
@@ -739,6 +750,7 @@ struct ContentView: View {
                         TextField("Search in original content...", text: $searchQuery)
                             .textFieldStyle(.plain)
                             .font(.system(size: 13))
+                            .focused($isSearchFieldFocused)
                             .onSubmit {
                                 // Semantic search on Enter
                                 performSearch()
@@ -750,6 +762,7 @@ struct ContentView: View {
                                 showingSearch = false
                                 searchQuery = ""
                                 semanticMatchText = ""
+                                isSearchFieldFocused = false
                             }
                         }) {
                             Image(systemName: "xmark.circle.fill")

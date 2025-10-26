@@ -76,11 +76,9 @@ final class PersistenceController: ObservableObject, @unchecked Sendable {
 
                 // Log to ErrorLogger for UI visibility
                 ErrorLogger.shared.logError(
-                    "Failed to load Core Data stack",
-                    severity: .error,
+                    code: .databaseCorrupted,
                     operation: "Core Data Initialization",
-                    details: "\(error.localizedDescription)\n\nError Code: \(nsError.code)\nDomain: \(nsError.domain)\n\n" +
-                        "This is a critical error. The app may not function correctly."
+                    technicalDetails: "\(error.localizedDescription)\n\nError Code: \(nsError.code)\nDomain: \(nsError.domain)"
                 )
 
                 // In production, handle this error appropriately
@@ -106,8 +104,41 @@ final class PersistenceController: ObservableObject, @unchecked Sendable {
         container.viewContext.automaticallyMergesChangesFromParent = true
         container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
 
+        // Set the name for debugging purposes
+        container.viewContext.name = "ViewContext"
+
         // Enable undo for better user experience
         container.viewContext.undoManager = UndoManager()
+
+        // Add observer for merge conflicts to handle them gracefully
+        NotificationCenter.default.addObserver(
+            forName: .NSManagedObjectContextDidSave,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            guard let self = self else { return }
+
+            // Only process notifications from background contexts
+            guard let context = notification.object as? NSManagedObjectContext,
+                  context !== self.container.viewContext
+            else {
+                return
+            }
+
+            // Refresh all objects in the view context to prevent stale data
+            // This helps prevent the nil object crash during merge
+            self.container.viewContext.perform {
+                // Merge changes safely
+                for object in self.container.viewContext.registeredObjects {
+                    // Skip if object is being deleted or is already a fault
+                    if object.isDeleted || object.isFault {
+                        continue
+                    }
+                    // Refresh to get latest data
+                    self.container.viewContext.refresh(object, mergeChanges: true)
+                }
+            }
+        }
     }
 
     // MARK: - Preview Helper
@@ -180,10 +211,9 @@ final class PersistenceController: ObservableObject, @unchecked Sendable {
 
                     // Log to ErrorLogger for UI visibility
                     ErrorLogger.shared.logError(
-                        "Failed to save Core Data context",
-                        severity: .error,
+                        code: .databaseSaveFailed,
                         operation: "Core Data Save",
-                        details: "\(error.localizedDescription)\n\nError Code: \(error.code)\nDomain: \(error.domain)"
+                        technicalDetails: "\(error.localizedDescription)\n\nError Code: \(error.code)\nDomain: \(error.domain)"
                     )
 
                     // For critical errors, we must handle gracefully
@@ -204,6 +234,8 @@ final class PersistenceController: ObservableObject, @unchecked Sendable {
     nonisolated func newBackgroundContext() -> NSManagedObjectContext {
         let context = container.newBackgroundContext()
         context.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+        // Enable automatic merging to prevent context conflicts
+        context.automaticallyMergesChangesFromParent = true
         return context
     }
 

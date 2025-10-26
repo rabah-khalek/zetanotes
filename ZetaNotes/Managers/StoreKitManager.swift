@@ -56,6 +56,7 @@ class StoreKitManager: ObservableObject {
     static let shared = StoreKitManager()
 
     // MARK: - DEV Mode for App Review
+
     // Set to true for App Review builds to enable Pro features without purchase
     #if DEV_PRO_MODE
     private let devProMode = true
@@ -152,7 +153,7 @@ class StoreKitManager: ObservableObject {
         let result = try await product.purchase()
 
         switch result {
-        case .success(let verification):
+        case let .success(verification):
             // Verify the purchase
             let transaction = try checkVerified(verification)
 
@@ -200,7 +201,7 @@ class StoreKitManager: ObservableObject {
             print("❌ Transaction verification failed")
             throw StoreError.failedVerification
 
-        case .verified(let safe):
+        case let .verified(safe):
             return safe
         }
     }
@@ -246,7 +247,6 @@ class StoreKitManager: ObservableObject {
                 // Check if this is a subscription
                 if let product = products.first(where: { $0.id == transaction.productID }),
                    let subscription = product.subscription {
-
                     // Get subscription status
                     let statuses = try await subscription.status
                     if let status = statuses.first {
@@ -265,7 +265,9 @@ class StoreKitManager: ObservableObject {
         // Update Pro status and tier
         updateProStatus()
 
-        print("📊 Product status updated - Purchased: \(purchasedIDs.count), Pro: \(isPro), Tier: \(subscriptionTier.displayName)")
+        print(
+            "📊 Product status updated - Purchased: \(purchasedIDs.count), Pro: \(isPro), Tier: \(subscriptionTier.displayName)"
+        )
     }
 
     /// Determine Pro status and subscription tier from purchases

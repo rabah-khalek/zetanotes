@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZetaNotes - Offline AI Note-Taking for Mac</title>
+    <title>ZetaNotes - Your AI Note-Taking Companion</title>
     <meta name="description"
         content="Offline AI note-taking application for macOS. All processing happens locally on your device.">
 
@@ -13,6 +13,26 @@
         data-website-id="b494d074-1b7d-4266-8c69-913450df0f53"></script>
 
     <style>
+        :root {
+            --color-bg: #000000;
+            --color-bg-secondary: #0a0a0a;
+            --color-text-primary: #ffffff;
+            --color-text-secondary: #888888;
+            --color-text-tertiary: #666666;
+            --color-accent: #EE220C;
+            --color-accent-hover: #FF3320;
+            --color-border: #1a1a1a;
+            --spacing-xs: 8px;
+            --spacing-sm: 16px;
+            --spacing-md: 24px;
+            --spacing-lg: 48px;
+            --spacing-xl: 80px;
+            --spacing-2xl: 120px;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -22,7 +42,7 @@
         @keyframes fadeInUp {
             from {
                 opacity: 0;
-                transform: translateY(30px);
+                transform: translateY(40px);
             }
 
             to {
@@ -41,85 +61,53 @@
             }
         }
 
-        @keyframes gradientShift {
+        @keyframes float {
 
             0%,
             100% {
-                background-position: 0% 50%;
+                transform: translateY(0px);
             }
 
             50% {
-                background-position: 100% 50%;
-            }
-        }
-
-        @keyframes bounce {
-
-            0%,
-            20%,
-            50%,
-            80%,
-            100% {
-                transform: translateY(0) scale(1);
-            }
-
-            40% {
-                transform: translateY(-20px) scale(1.02);
-            }
-
-            60% {
-                transform: translateY(-10px) scale(1.01);
-            }
-        }
-
-        @keyframes glow {
-
-            0%,
-            100% {
-                box-shadow: 0 8px 32px rgba(56, 189, 248, 0.3),
-                    0 0 40px rgba(56, 189, 248, 0.15);
-            }
-
-            50% {
-                box-shadow: 0 12px 40px rgba(56, 189, 248, 0.4),
-                    0 0 60px rgba(56, 189, 248, 0.25);
+                transform: translateY(-10px);
             }
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
             line-height: 1.6;
-            color: #e4e4e7;
-            background: #0a0a0a;
+            color: var(--color-text-primary);
+            background: var(--color-bg);
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+            overflow-x: hidden;
             scroll-behavior: smooth;
+            scroll-padding-top: 80px;
+            /* Accounts for fixed header */
         }
 
         html {
             scroll-behavior: smooth;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 24px;
-        }
-
         /* Header */
         header {
-            background: rgba(10, 10, 10, 0.8);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 16px 0;
-            position: sticky;
+            position: fixed;
             top: 0;
-            z-index: 100;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--color-border);
             animation: fadeIn 0.6s ease-out;
         }
 
         .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 16px var(--spacing-md);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -128,124 +116,87 @@
         .logo {
             display: flex;
             align-items: center;
-            gap: 12px;
-            font-size: 20px;
+            gap: 10px;
+            font-size: 18px;
             font-weight: 600;
-            color: #ffffff;
+            color: var(--color-text-primary);
+            text-decoration: none;
             letter-spacing: -0.02em;
         }
 
         .logo-image {
-            width: 32px;
-            height: 32px;
+            width: 28px;
+            height: 28px;
             border-radius: 6px;
-            object-fit: contain;
         }
 
-        .nav-links {
+        nav ul {
             display: flex;
-            gap: 32px;
+            gap: var(--spacing-md);
             list-style: none;
+            align-items: center;
         }
 
-        .nav-links a {
+        nav a {
             text-decoration: none;
-            color: #a1a1aa;
-            font-weight: 500;
+            color: var(--color-text-secondary);
             font-size: 15px;
+            font-weight: 500;
             transition: color 0.2s ease;
+        }
+
+        nav a:hover {
+            color: var(--color-text-primary);
+        }
+
+        nav a:not(.btn-download-nav)::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: var(--color-accent);
+            transform: scaleX(0);
+            transition: transform 0.2s ease;
+        }
+
+        nav a:not(.btn-download-nav) {
             position: relative;
         }
 
-        .nav-links a::after {
-            content: '';
-            position: absolute;
-            bottom: -4px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: #ffffff;
-            transition: width 0.2s ease;
+        nav a:not(.btn-download-nav):hover::after {
+            transform: scaleX(1);
         }
 
-        .nav-links a:hover {
-            color: #ffffff;
-        }
-
-        .nav-links a:hover::after {
-            width: 100%;
-        }
-
-        /* Accent highlights */
-        .highlight {
-            padding: 2px 8px;
-            border-radius: 4px;
-            border: 1px solid rgba(56, 189, 248, 0.4);
-            background: transparent;
-            color: inherit;
-            font-weight: inherit;
-            white-space: nowrap;
-        }
-
-        .file-size {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 30px;
-            padding: 8px 16px;
-            background: rgba(56, 189, 248, 0.05);
-            border: 1px solid rgba(56, 189, 248, 0.2);
-            border-radius: 8px;
-            color: #a1a1aa;
+        .btn-download-nav {
+            padding: 8px 14px;
+            background: rgba(255, 255, 255, 0.95);
+            color: #000000;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
             font-size: 14px;
             transition: all 0.2s ease;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            display: inline-flex;
+            align-items: center;
         }
 
-        .file-size:hover {
-            border-color: rgba(56, 189, 248, 0.4);
-            background: rgba(56, 189, 248, 0.08);
-        }
-
-        .file-size::before {
-            content: "📦";
-            font-size: 16px;
-        }
-
-        .file-size strong {
-            color: #ffffff;
-            font-weight: 600;
-        }
-
-        /* Demo iframe container */
-        .demo-container {
-            max-width: 900px;
-            margin: 0 auto 32px;
-            padding: 0 20px;
-            animation: fadeInUp 0.8s ease-out 0.2s backwards;
-        }
-
-        .demo-frame {
-            width: 100%;
-            height: 450px;
-            border-radius: 12px;
-            border: 1px solid rgba(56, 189, 248, 0.2);
-            background: #1a1a1a;
-            overflow: hidden;
-            box-shadow: 0 8px 32px rgba(56, 189, 248, 0.1);
-        }
-
-        .demo-frame iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
+        .btn-download-nav:hover {
+            background: #ffffff;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(238, 34, 12, 0.12), 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         /* Hero Section */
         .hero {
-            padding: 100px 0 80px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             text-align: center;
-            background: #0a0a0a;
-            color: white;
+            padding: var(--spacing-2xl) var(--spacing-md) var(--spacing-xl);
             position: relative;
             overflow: hidden;
         }
@@ -253,856 +204,859 @@
         .hero::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background:
-                radial-gradient(circle at 20% 30%, rgba(56, 189, 248, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 80% 70%, rgba(14, 165, 233, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.08) 0%, transparent 60%);
-            pointer-events: none;
-        }
-
-        .hero::after {
-            content: '';
-            position: absolute;
             top: -50%;
-            left: -50%;
-            right: -50%;
-            bottom: -50%;
-            background:
-                linear-gradient(90deg, transparent 0%, rgba(56, 189, 248, 0.03) 50%, transparent 100%),
-                linear-gradient(0deg, transparent 0%, rgba(14, 165, 233, 0.03) 50%, transparent 100%);
-            animation: gradientShift 15s ease infinite;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(238, 34, 12, 0.08) 0%, transparent 70%);
             pointer-events: none;
         }
 
-        .hero .container {
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
             position: relative;
             z-index: 1;
         }
 
+        .hero-app-icon {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 32px;
+            border-radius: 28px;
+            box-shadow: 0 20px 60px rgba(238, 34, 12, 0.25),
+                0 0 0 1px rgba(255, 255, 255, 0.1);
+            animation: fadeInUp 0.6s ease-out 0.15s backwards, float 4s ease-in-out 1.2s infinite;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+            padding: 3px;
+        }
+
+        .hero-app-icon img {
+            width: 100%;
+            height: 100%;
+            border-radius: 25px;
+            display: block;
+        }
+
+        .hero-app-icon:hover {
+            transform: translateY(-8px) scale(1.05);
+            box-shadow: 0 30px 80px rgba(238, 34, 12, 0.35),
+                0 0 0 1px rgba(255, 255, 255, 0.15);
+        }
+
         .hero h1 {
-            font-size: 64px;
-            font-weight: 650;
-            margin-bottom: 20px;
+            font-size: clamp(48px, 8vw, 72px);
+            font-weight: 700;
             line-height: 1.1;
+            margin-bottom: var(--spacing-md);
             letter-spacing: -0.04em;
             animation: fadeInUp 0.8s ease-out;
         }
 
-        .hero .subtitle {
-            font-size: 20px;
-            margin-bottom: 32px;
-            opacity: 0.85;
+        .hero-subtitle {
+            font-size: clamp(18px, 3vw, 24px);
+            color: var(--color-text-secondary);
+            margin-bottom: var(--spacing-lg);
             font-weight: 400;
-            letter-spacing: -0.01em;
-            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.5;
             animation: fadeInUp 0.8s ease-out 0.1s backwards;
         }
 
-        .cta-buttons {
+        .hero-cta {
             display: flex;
-            gap: 16px;
+            gap: var(--spacing-sm);
             justify-content: center;
             flex-wrap: wrap;
             animation: fadeInUp 0.8s ease-out 0.2s backwards;
         }
 
         .btn {
-            padding: 12px 24px;
+            padding: 12px 20px;
             font-size: 15px;
             font-weight: 500;
-            border-radius: 8px;
+            border-radius: var(--radius-sm);
             text-decoration: none;
             display: inline-flex;
             align-items: center;
-            justify-content: center;
             gap: 10px;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid rgba(56, 189, 248, 0.5);
             cursor: pointer;
-            margin-top: auto;
-            background: rgba(56, 189, 248, 0.15);
-            color: #ffffff;
+            border: none;
+            font-family: inherit;
         }
 
-        .btn-icon {
-            width: 20px;
-            height: 20px;
-            border-radius: 4px;
-            object-fit: contain;
+        .btn-primary {
+            background: rgba(255, 255, 255, 0.95);
+            color: #000000;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1), 0 0 0 0 rgba(238, 34, 12, 0);
         }
 
-        /* App Icon Display */
-        .app-icon-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            margin: 24px auto 32px;
-            position: relative;
+        .btn-primary:hover {
+            background: #ffffff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.15), 0 0 0 3px rgba(238, 34, 12, 0.08);
         }
 
-        .app-icon-wrapper {
-            position: relative;
-            width: 96px;
-            height: 96px;
-            animation: bounce 2.5s ease-in-out infinite;
-            cursor: pointer;
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--color-text-primary);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.25);
+            transform: translateY(-1px);
+        }
+
+        .system-info {
+            margin-top: var(--spacing-lg);
+            font-size: 14px;
+            color: var(--color-text-tertiary);
+            animation: fadeInUp 0.8s ease-out 0.3s backwards;
+        }
+
+        /* Demo Section */
+        .demo-section {
+            padding: var(--spacing-xl) var(--spacing-md);
+            max-width: 1200px;
+            margin: 0 auto;
+            animation: fadeInUp 1s ease-out 0.4s backwards;
+        }
+
+        .demo-container {
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            border: 1px solid var(--color-border);
+            background: var(--color-bg-secondary);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .demo-container img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* Section */
+        section {
+            padding: var(--spacing-2xl) var(--spacing-md);
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: clamp(36px, 6vw, 56px);
+            font-weight: 700;
+            margin-bottom: var(--spacing-lg);
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+        }
+
+        .section-subtitle {
+            font-size: clamp(18px, 3vw, 22px);
+            color: var(--color-text-secondary);
+            margin-bottom: var(--spacing-xl);
+            max-width: 700px;
+        }
+
+        /* Features Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--spacing-md);
+            margin-top: var(--spacing-xl);
+        }
+
+        .feature-card {
+            padding: var(--spacing-md);
+            background: var(--color-bg-secondary);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
             transition: all 0.3s ease;
         }
 
-        .app-icon-wrapper:hover {
-            animation: bounce 1s ease-in-out infinite;
+        .feature-card:hover {
+            border-color: rgba(238, 34, 12, 0.2);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(238, 34, 12, 0.06);
         }
 
-        .app-icon {
-            width: 96px;
-            height: 96px;
-            border-radius: 22px;
-            object-fit: contain;
-            background: linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
-            padding: 2px;
-            animation: glow 3s ease-in-out infinite;
-            transition: transform 0.3s ease;
+        .feature-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: var(--spacing-xs);
         }
 
-        .app-icon-wrapper:hover .app-icon {
-            transform: scale(1.08);
-        }
-
-        .download-hint {
-            position: absolute;
-            bottom: -8px;
-            right: -8px;
-            width: 32px;
-            height: 32px;
-            background: #1a1a1a;
-            border: 2px solid rgba(56, 189, 248, 0.5);
-            border-radius: 50%;
+        .feature-icon {
+            flex-shrink: 0;
+            width: 20px;
+            height: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #ffffff;
+        }
+
+        .feature-icon svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--color-text-secondary);
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .feature-card h3 {
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            margin: 0;
+        }
+
+        .feature-card p {
+            color: var(--color-text-secondary);
             font-size: 14px;
-            pointer-events: none;
-            animation: pulse 2s ease-in-out infinite;
-            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+            line-height: 1.5;
         }
 
-        .download-hint::before {
-            content: "";
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 16px;
-            height: 16px;
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>');
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-        }
-
-        @keyframes pulse {
-
-            0%,
-            100% {
-                transform: scale(1);
-                opacity: 1;
-            }
-
-            50% {
-                transform: scale(1.1);
-                opacity: 0.9;
-            }
-        }
-
-        .download-text {
-            text-align: center;
-            color: #a1a1aa;
-            font-size: 14px;
-            margin-top: 20px;
-            opacity: 0.8;
-        }
-
-        .download-text strong {
-            color: #ffffff;
+        .feature-card p strong {
+            color: var(--color-text-primary);
             font-weight: 500;
         }
 
-        .app-icon-wrapper:hover .download-hint {
-            animation: pulse 0.8s ease-in-out infinite;
-            background: #1e1e1e;
-            border-color: rgba(56, 189, 248, 0.7);
-            box-shadow: 0 6px 16px rgba(56, 189, 248, 0.4);
+        /* Highlight Section */
+        .highlight-section {
+            background: var(--color-bg-secondary);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-xl);
+            margin: var(--spacing-xl) 0;
         }
 
-        body {
+        .highlight-content {
+            max-width: 600px;
+        }
 
-            .btn-primary {
-                background: rgba(56, 189, 248, 0.15);
-                color: #ffffff;
-                border: 1px solid rgba(56, 189, 248, 0.5);
+        .highlight-content h3 {
+            font-size: clamp(28px, 5vw, 40px);
+            font-weight: 700;
+            margin-bottom: var(--spacing-sm);
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+        }
+
+        .highlight-content p {
+            color: var(--color-text-secondary);
+            font-size: 18px;
+            line-height: 1.6;
+        }
+
+        /* Pricing */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: var(--spacing-md);
+            margin-top: var(--spacing-xl);
+        }
+
+        .pricing-options-compact {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: var(--color-bg-secondary);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-md) var(--spacing-md) 12px;
+        }
+
+        .pricing-option-compact {
+            background: var(--color-bg);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            padding: var(--spacing-sm);
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .pricing-option-compact:hover {
+            border-color: rgba(238, 34, 12, 0.25);
+            background: #0f0f0f;
+            box-shadow: 0 0 0 1px rgba(238, 34, 12, 0.1);
+        }
+
+        .pricing-option-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 4px;
+        }
+
+        .pricing-option-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+        }
+
+        .pricing-option-price {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--color-text-primary);
+            letter-spacing: -0.02em;
+        }
+
+        .pricing-option-period {
+            font-size: 13px;
+            color: var(--color-text-secondary);
+        }
+
+        .pricing-option-savings {
+            display: inline-block;
+            background: rgba(192, 72, 133, 0.15);
+            color: var(--color-accent);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            margin-left: 8px;
+        }
+
+        .pricing-features-panel {
+            background: var(--color-bg-secondary);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--spacing-lg);
+        }
+
+        .pricing-features-panel h3 {
+            margin: 0 0 var(--spacing-md) 0;
+            font-size: 16px;
+            color: var(--color-text-primary);
+            font-weight: 600;
+        }
+
+        .features-column {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .features-column:first-child {
+            border-right: 1px solid var(--color-border);
+            padding-right: var(--spacing-lg);
+        }
+
+        .pricing-features-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .pricing-features-list li {
+            padding: 10px 0;
+            padding-left: 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            position: relative;
+            color: var(--color-text-secondary);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .pricing-features-list li:last-child {
+            border-bottom: none;
+        }
+
+        .pricing-features-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--color-accent);
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .pricing-cta {
+            margin-top: var(--spacing-md);
+            text-align: center;
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--color-border);
+            padding: var(--spacing-xl) var(--spacing-md);
+            margin-top: var(--spacing-2xl);
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: var(--spacing-md);
+        }
+
+        .footer-links {
+            display: flex;
+            gap: var(--spacing-md);
+            list-style: none;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: var(--color-text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s ease;
+        }
+
+        .footer-links a {
+            position: relative;
+        }
+
+        .footer-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: var(--color-accent);
+            transform: scaleX(0);
+            transition: transform 0.2s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--color-text-primary);
+        }
+
+        .footer-links a:hover::after {
+            transform: scaleX(1);
+        }
+
+        .footer-note {
+            font-size: 14px;
+            color: var(--color-text-tertiary);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero {
+                min-height: 80vh;
+                padding: 100px var(--spacing-md) var(--spacing-xl);
             }
 
-            .btn-primary:hover {
-                transform: translateY(-1px);
-                background: rgba(56, 189, 248, 0.25);
-                border-color: rgba(56, 189, 248, 0.7);
-                box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+            .hero-app-icon {
+                width: 100px;
+                height: 100px;
+                border-radius: 24px;
+                margin-bottom: 24px;
             }
 
-            .btn-secondary {
-                background: rgba(56, 189, 248, 0.15);
-                color: white;
-                border: 1px solid rgba(56, 189, 248, 0.5);
-            }
-
-            .btn-secondary:hover {
-                background: rgba(56, 189, 248, 0.25);
-                border-color: rgba(56, 189, 248, 0.7);
-                box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
-            }
-
-            /* Features Section */
-            .features {
-                padding: 80px 0;
-                background: #111111;
-            }
-
-            .section-title {
-                text-align: center;
-                font-size: 48px;
-                font-weight: 650;
-                margin-bottom: 56px;
-                color: #ffffff;
-                letter-spacing: -0.03em;
-                animation: fadeInUp 0.8s ease-out;
+            .hero-app-icon img {
+                border-radius: 21px;
             }
 
             .features-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-                gap: 24px;
-            }
-
-            .feature-card {
-                padding: 32px 28px;
-                border-radius: 12px;
-                background: #1a1a1a;
-                transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                animation: fadeInUp 0.6s ease-out backwards;
-            }
-
-            .feature-card:nth-child(1) {
-                animation-delay: 0.1s;
-            }
-
-            .feature-card:nth-child(2) {
-                animation-delay: 0.15s;
-            }
-
-            .feature-card:nth-child(3) {
-                animation-delay: 0.2s;
-            }
-
-            .feature-card:nth-child(4) {
-                animation-delay: 0.25s;
-            }
-
-            .feature-card:nth-child(5) {
-                animation-delay: 0.3s;
-            }
-
-            .feature-card:nth-child(6) {
-                animation-delay: 0.35s;
-            }
-
-            .feature-card:nth-child(7) {
-                animation-delay: 0.4s;
-            }
-
-            .feature-card:nth-child(8) {
-                animation-delay: 0.45s;
-            }
-
-            .feature-card:nth-child(9) {
-                animation-delay: 0.5s;
-            }
-
-            .feature-card:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 8px 24px rgba(56, 189, 248, 0.12);
-                border-color: rgba(56, 189, 248, 0.3);
-                background: #1e1e1e;
-            }
-
-            .feature-icon {
-                font-size: 48px;
-                margin-bottom: 20px;
-            }
-
-            .feature-card h3 {
-                font-size: 18px;
-                margin-bottom: 12px;
-                color: #ffffff;
-                text-align: center;
-                font-weight: 600;
-                letter-spacing: -0.01em;
-            }
-
-            .feature-card p {
-                color: #a1a1aa;
-                line-height: 1.6;
-                font-size: 15px;
-            }
-
-            .feature-card strong {
-                color: #ffffff;
-                font-weight: 400;
-            }
-
-            /* Pricing Section */
-            .pricing {
-                padding: 80px 0;
-                background: #0a0a0a;
-            }
-
-            .pricing-intro {
-                text-align: center;
-                max-width: 600px;
-                margin: 0 auto 48px;
-            }
-
-            .pricing-intro p {
-                font-size: 18px;
-                color: #a1a1aa;
-                margin-top: 16px;
+                grid-template-columns: 1fr;
             }
 
             .pricing-grid {
-                display: grid;
-                grid-template-columns: 1fr 2fr;
-                gap: 24px;
-                max-width: 900px;
-                margin: 0 auto;
-            }
-
-            .pricing-options-compact {
-                display: flex;
-                flex-direction: column;
-                gap: 12px;
-                background: #1a1a1a;
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                border-radius: 12px;
-                padding: 24px 24px 12px 24px;
-            }
-
-            .pricing-option-compact {
-                background: #111111;
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                border-radius: 8px;
-                padding: 16px;
-                transition: all 0.2s ease;
-            }
-
-            .pricing-option-compact:hover {
-                border-color: rgba(56, 189, 248, 0.3);
-                background: #141414;
-            }
-
-            .pricing-option-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: baseline;
-                margin-bottom: 8px;
-            }
-
-            .pricing-option-name {
-                font-size: 16px;
-                font-weight: 600;
-                color: #ffffff;
-            }
-
-            .pricing-option-price {
-                font-size: 24px;
-                font-weight: 650;
-                color: #ffffff;
-                letter-spacing: -0.02em;
-            }
-
-            .pricing-option-period {
-                font-size: 13px;
-                color: #a1a1aa;
-            }
-
-            .pricing-option-savings {
-                display: inline-block;
-                background: rgba(56, 189, 248, 0.15);
-                color: #38bdf8;
-                padding: 2px 8px;
-                border-radius: 4px;
-                font-size: 11px;
-                font-weight: 500;
-                margin-left: 8px;
+                grid-template-columns: 1fr;
             }
 
             .pricing-features-panel {
-                background: #1a1a1a;
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                border-radius: 12px;
-                padding: 32px 32px 24px 32px;
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 32px;
-            }
-
-            .pricing-features-panel h3 {
-                margin: 0 0 24px 0;
-                font-size: 18px;
-                color: #ffffff;
-            }
-
-            .features-column {
-                display: flex;
-                flex-direction: column;
+                grid-template-columns: 1fr;
+                gap: var(--spacing-md);
             }
 
             .features-column:first-child {
-                border-right: 1px solid rgba(255, 255, 255, 0.1);
-                padding-right: 32px;
+                border-right: none;
+                border-bottom: 1px solid var(--color-border);
+                padding-right: 0;
+                padding-bottom: var(--spacing-md);
             }
 
-            .features-column:last-child {
-                padding-left: 0;
+            nav ul {
+                gap: var(--spacing-sm);
             }
 
-            .pricing-features-list {
-                list-style: none;
-                margin: 0;
-                padding: 0;
-            }
-
-            .pricing-features-list li {
-                padding: 12px 0;
-                padding-left: 32px;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-                position: relative;
-                color: #a1a1aa;
-                font-size: 14px;
-                line-height: 1.6;
-            }
-
-            .pricing-features-list li:last-child {
-                border-bottom: none;
-            }
-
-            .pricing-features-list li::before {
-                content: "✓";
-                position: absolute;
-                left: 8px;
-                color: #34C759;
-                font-weight: bold;
+            nav a {
                 font-size: 14px;
             }
 
-            .pricing-cta {
-                margin-top: 32px;
+            .footer-content {
+                flex-direction: column;
                 text-align: center;
             }
-
-            @media (max-width: 768px) {
-                .pricing-grid {
-                    grid-template-columns: 1fr;
-                }
-
-                .pricing-features-panel {
-                    grid-template-columns: 1fr;
-                    gap: 24px;
-                }
-
-                .features-column:first-child {
-                    border-right: none;
-                    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-                    padding-right: 0;
-                    padding-bottom: 24px;
-                }
-            }
-
-            /* Download Section */
-            .download {
-                padding: 80px 0;
-                background: #111111;
-                text-align: center;
-            }
-
-            .download-info {
-                max-width: 700px;
-                margin: 0 auto 32px;
-                color: #a1a1aa;
-                font-size: 17px;
-                line-height: 1.6;
-            }
-
-            .system-requirements {
-                background: #1a1a1a;
-                padding: 36px;
-                border-radius: 12px;
-                max-width: 600px;
-                margin: 40px auto 0;
-                text-align: left;
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                animation: fadeInUp 0.8s ease-out 0.3s backwards;
-            }
-
-            .system-requirements h3 {
-                margin-bottom: 20px;
-                color: #ffffff;
-                font-size: 18px;
-                font-weight: 600;
-                letter-spacing: -0.01em;
-            }
-
-            .system-requirements ul {
-                list-style: none;
-                color: #a1a1aa;
-            }
-
-            .system-requirements li {
-                padding: 12px 0;
-                padding-left: 32px;
-                position: relative;
-                font-size: 15px;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-            }
-
-            .system-requirements li:last-child {
-                border-bottom: none;
-            }
-
-            .system-requirements li::before {
-                content: "✓";
-                position: absolute;
-                left: 8px;
-                color: #34C759;
-                font-weight: bold;
-                font-size: 14px;
-            }
-
-            /* Footer */
-            footer {
-                background: #0a0a0a;
-                color: #a1a1aa;
-                padding: 40px 0;
-                text-align: center;
-                border-top: 1px solid rgba(255, 255, 255, 0.1);
-            }
-
-            footer a {
-                color: #71717a;
-                text-decoration: none;
-                transition: color 0.2s ease;
-            }
-
-            footer a:hover {
-                color: white;
-            }
-
-            footer p {
-                font-size: 14px;
-            }
-
-            /* Responsive */
-            @media (max-width: 768px) {
-                .hero {
-                    padding: 80px 0 60px;
-                }
-
-                .hero h1 {
-                    font-size: 42px;
-                }
-
-                .hero .subtitle {
-                    font-size: 18px;
-                }
-
-                .nav-links {
-                    gap: 20px;
-                }
-
-                .section-title {
-                    font-size: 36px;
-                }
-
-                .features {
-                    padding: 60px 0;
-                }
-
-                .pricing,
-                .download {
-                    padding: 60px 0;
-                }
-
-                .pricing-cards {
-                    flex-direction: column;
-                    align-items: center;
-                }
-
-                .pricing-card {
-                    max-width: 280px;
-                    flex: 0 1 280px;
-                }
-
-                .features-grid {
-                    grid-template-columns: 1fr;
-                }
-            }
+        }
     </style>
 </head>
 
 <body>
     <!-- Header -->
     <header>
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">
-                    <img src="logo.png" alt="ZetaNotes Logo" class="logo-image">
-                    <span>ZetaNotes</span>
-                </div>
-                <nav>
-                    <ul class="nav-links">
-                        <li><a href="#features">Features</a></li>
-                        <li><a href="#pricing">Pricing</a></li>
-                        <li><a href="#download">Download</a></li>
-                        <li><a href="mailto:rabah.khalek@gmail.com?subject=ZetaNotes%20Support">Support</a></li>
-                    </ul>
-                </nav>
-            </div>
+        <div class="header-content">
+            <a href="/" class="logo">
+                <img src="logo.png" alt="ZetaNotes" class="logo-image">
+                <span>ZetaNotes</span>
+            </a>
+            <nav>
+                <ul>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#pricing">Pricing</a></li>
+                    <li><a href="mailto:rabah.khalek@gmail.com">Contact</a></li>
+                    <li><a href="https://apps.apple.com/app/id6754346516" class="btn-download-nav" target="_blank"
+                            rel="noopener" data-umami-event="nav-download-click">
+                            <svg width="14" height="14" viewBox="0 0 170 170" fill="none"
+                                xmlns="http://www.w3.org/2000/svg" style="margin-right: 6px;">
+                                <path
+                                    d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.197-2.12-9.973-3.17-14.34-3.17-4.58 0-9.492 1.05-14.746 3.17-5.262 2.13-9.501 3.24-12.742 3.35-4.929.21-9.842-1.96-14.746-6.52-3.13-2.73-7.045-7.41-11.735-14.04-5.032-7.08-9.169-15.29-12.41-24.65-3.471-10.11-5.211-19.9-5.211-29.378 0-10.857 2.346-20.221 7.045-28.068 3.693-6.303 8.606-11.275 14.755-14.925s12.793-5.51 19.948-5.629c3.915 0 9.049 1.211 15.429 3.591 6.362 2.388 10.447 3.599 12.238 3.599 1.339 0 5.877-1.416 13.57-4.239 7.275-2.618 13.415-3.702 18.445-3.275 13.63 1.1 23.87 6.473 30.68 16.153-12.19 7.386-18.22 17.731-18.1 31.002.11 10.337 3.86 18.939 11.23 25.769 3.34 3.17 7.07 5.62 11.22 7.36-.9 2.61-1.85 5.11-2.86 7.51zM119.11 7.24c0 8.102-2.96 15.667-8.86 22.669-7.12 8.324-15.732 13.134-25.071 12.375a25.222 25.222 0 0 1-.188-3.07c0-7.778 3.386-16.102 9.399-22.908 3.002-3.446 6.82-6.311 11.45-8.597 4.62-2.252 8.99-3.497 13.1-3.71.12 1.083.17 2.166.17 3.24z"
+                                    fill="#000" />
+                            </svg>
+                            Download</a></li>
+                </ul>
+            </nav>
         </div>
     </header>
 
     <!-- Hero Section -->
     <section class="hero">
-        <div class="container">
-            <h1>Offline AI Note-Taking for Mac</h1>
-            <p class="subtitle">AI that runs <span class="highlight">entirely offline</span>. Your notes never leave
-                your Mac.</p>
-            <p class="subtitle" style="color: #38bdf8; font-size: 18px; margin-top: -10px; margin-bottom: 20px;">
-                🚀 <strong>Coming Soon</strong>
-            </p>
+        <div class="hero-content">
+            <h1>AI note-taking for macOS.</h1>
+            <p class="hero-subtitle">All AI processing runs locally on your Mac. No internet required, no data leaves
+                your device.</p>
 
-            <!-- Demo/GIF Container -->
-            <div class="demo-container">
-                <div class="demo-frame">
-                    <!-- Replace src with your actual gif/video URL -->
-                    <iframe src="" title="ZetaNotes Demo" allowfullscreen></iframe>
-                    <!-- Alternative: For direct gif embed, uncomment below and remove iframe above -->
-                    <!-- <img src="your-demo.gif" alt="ZetaNotes Demo" style="width: 100%; height: 100%; object-fit: cover;"> -->
-                </div>
+            <div class="hero-app-icon">
+                <img src="logo.png" alt="ZetaNotes App Icon">
             </div>
 
-            <div class="cta-buttons">
-                <a href="#download" class="btn btn-primary" data-umami-event="hero-download-click"
-                    onclick="alert('ZetaNotes is coming soon! Download will be available at launch.'); return false;"
-                    style="cursor: pointer;">Coming Soon</a>
-                <a href="#pricing" class="btn btn-primary" data-umami-event="hero-pricing-click">View Pricing</a>
+            <div class="hero-cta">
+                <a href="https://apps.apple.com/app/id6754346516" class="btn btn-primary" target="_blank" rel="noopener"
+                    data-umami-event="hero-download-click">
+                    <svg width="16" height="16" viewBox="0 0 170 170" fill="none" xmlns="http://www.w3.org/2000/svg"
+                        style="margin-top: -1px;">
+                        <path
+                            d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.197-2.12-9.973-3.17-14.34-3.17-4.58 0-9.492 1.05-14.746 3.17-5.262 2.13-9.501 3.24-12.742 3.35-4.929.21-9.842-1.96-14.746-6.52-3.13-2.73-7.045-7.41-11.735-14.04-5.032-7.08-9.169-15.29-12.41-24.65-3.471-10.11-5.211-19.9-5.211-29.378 0-10.857 2.346-20.221 7.045-28.068 3.693-6.303 8.606-11.275 14.755-14.925s12.793-5.51 19.948-5.629c3.915 0 9.049 1.211 15.429 3.591 6.362 2.388 10.447 3.599 12.238 3.599 1.339 0 5.877-1.416 13.57-4.239 7.275-2.618 13.415-3.702 18.445-3.275 13.63 1.1 23.87 6.473 30.68 16.153-12.19 7.386-18.22 17.731-18.1 31.002.11 10.337 3.86 18.939 11.23 25.769 3.34 3.17 7.07 5.62 11.22 7.36-.9 2.61-1.85 5.11-2.86 7.51zM119.11 7.24c0 8.102-2.96 15.667-8.86 22.669-7.12 8.324-15.732 13.134-25.071 12.375a25.222 25.222 0 0 1-.188-3.07c0-7.778 3.386-16.102 9.399-22.908 3.002-3.446 6.82-6.311 11.45-8.597 4.62-2.252 8.99-3.497 13.1-3.71.12 1.083.17 2.166.17 3.24z"
+                            fill="#000" />
+                    </svg>
+                    Download for Mac
+                </a>
+                <a href="#features" class="btn btn-secondary">
+                    Learn more
+                </a>
             </div>
+
+            <p class="system-info">macOS 13.0+ • Free with optional Pro features</p>
         </div>
     </section>
 
+    <!-- Demo Section -->
+    <div class="demo-section">
+        <div class="demo-container">
+            <img src="demo.gif" alt="ZetaNotes Demo" loading="lazy">
+        </div>
+    </div>
+
     <!-- Features Section -->
-    <section id="features" class="features">
-        <div class="container">
-            <h2 class="section-title">Features</h2>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <h3>Completely Offline</h3>
-                    <p>All AI processing runs <span class="highlight">locally</span> on your Mac. No internet connection
-                        required.
-                        Your notes stay on your device.</p>
+    <section id="features">
+        <h2 class="section-title">Offline AI processing.</h2>
+        <p class="section-subtitle">All models run locally using Metal GPU acceleration. No cloud services, no
+            subscriptions required for core features.</p>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-header">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                    </div>
+                    <h3>Offline Processing</h3>
                 </div>
-                <div class="feature-card">
-                    <h3>Lightweight App</h3>
-                    <p>Native macOS application optimized for <span class="highlight">Apple Silicon</span>. Minimal
-                        resource usage
-                        with efficient memory management.</p>
+                <p>All AI models run <strong>locally</strong> on your device. No internet connection required after
+                    initial setup.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-header">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                        </svg>
+                    </div>
+                    <h3>Metal GPU Acceleration</h3>
                 </div>
-                <div class="feature-card">
-                    <h3>Fast Performance</h3>
-                    <p><span class="highlight">Metal GPU</span> acceleration provides quick AI responses. Instant search
-                        across all
-                        notes with semantic understanding.</p>
+                <p>Optimized for <strong>Apple Silicon</strong> with Metal GPU support for fast inference.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-header">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                    </div>
+                    <h3>Native macOS</h3>
                 </div>
-                <div class="feature-card">
-                    <h3>Expandable</h3>
-                    <p>Create <span class="highlight">custom tools</span> with your own prompts. Configure temperature,
-                        tokens, and
-                        stop sequences for each tool.</p>
-                </div>
-                <div class="feature-card">
-                    <h3>Instant AI Support</h3>
-                    <p>Built-in <span class="highlight">autocomplete</span>, text correction, rephrasing, summarization,
-                        and
-                        translation available in every note.</p>
-                </div>
-                <div class="feature-card">
+                <p>Built natively for macOS with <strong>efficient memory management</strong>.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-header">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                        </svg>
+                    </div>
                     <h3>Multiple Models</h3>
-                    <p>Choose from <span class="highlight">8 models</span>. Download models on first launch (~700MB
-                        each), larger
-                        models available for Pro users.</p>
                 </div>
-                <div class="feature-card">
+                <p>Support for <strong>8 models</strong>: Llama 3.2, Phi-3, Qwen 2.5, Gemma 2. Models are ~700MB each.
+                </p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-header">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                    </div>
+                    <h3>AI Text Tools</h3>
+                </div>
+                <p><strong>Autocomplete</strong>, correction, rephrasing, <strong>summarization</strong>, and
+                    translation.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-header">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                    </div>
                     <h3>Chat Interface</h3>
-                    <p>Conversational AI assistant within the app. Ask questions, get help with writing, or brainstorm
-                        ideas with <span class="highlight">context-aware</span> responses.</p>
                 </div>
-                <div class="feature-card">
-                    <h3>Persistent Storage</h3>
-                    <p>Notes and <span class="highlight">AI conversations</span> are automatically saved. Access your
-                        entire history
-                        anytime with full-text and semantic search.</p>
+                <p><strong>Conversational AI</strong> assistant with context awareness. Available in Pro.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-header">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path
+                                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                            </path>
+                        </svg>
+                    </div>
+                    <h3>Custom Tools</h3>
                 </div>
-                <div class="feature-card">
-                    <h3>Markdown Support</h3>
-                    <p>Write using <span class="highlight">Markdown syntax</span> with live preview. Export notes to
-                        various formats
-                        while maintaining formatting.</p>
+                <p>Create <strong>custom AI tools</strong> with your own prompts and parameters.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-header">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                    </div>
+                    <h3>Markdown</h3>
                 </div>
+                <p><strong>Markdown syntax</strong> with live preview and export options.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-header">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                        </svg>
+                    </div>
+                    <h3>Semantic Search</h3>
+                </div>
+                <p><strong>AI-powered search</strong> across all notes and conversations.</p>
             </div>
         </div>
     </section>
 
     <!-- Pricing Section -->
-    <section id="pricing" class="pricing">
-        <div class="container">
-            <h2 class="section-title">Pricing</h2>
-            <div class="pricing-intro">
-                <p>Choose the plan that works best for you. All Pro plans unlock the same features.</p>
-            </div>
+    <section id="pricing">
+        <h2 class="section-title">Pricing.</h2>
+        <p class="section-subtitle">Free version includes core features. Pro unlocks additional models and
+            chat&nbsp;interface.</p>
 
-            <div class="pricing-grid">
-                <!-- Pricing Options -->
-                <div class="pricing-options-compact">
-                    <div class="pricing-option-compact">
-                        <div class="pricing-option-header">
-                            <span class="pricing-option-name">Free</span>
-                            <span class="pricing-option-price">$0</span>
-                        </div>
-                        <div class="pricing-option-period">Forever free</div>
+        <div class="pricing-grid">
+            <!-- Pricing Options -->
+            <div class="pricing-options-compact">
+                <div class="pricing-option-compact">
+                    <div class="pricing-option-header">
+                        <span class="pricing-option-name">Free</span>
+                        <span class="pricing-option-price">$0</span>
                     </div>
+                    <div class="pricing-option-period">Forever free</div>
+                </div>
 
-                    <div class="pricing-option-compact">
-                        <div class="pricing-option-header">
-                            <span class="pricing-option-name">Monthly</span>
-                            <span class="pricing-option-price">$0.99</span>
-                        </div>
-                        <div class="pricing-option-period">per month</div>
+                <div class="pricing-option-compact">
+                    <div class="pricing-option-header">
+                        <span class="pricing-option-name">Monthly</span>
+                        <span class="pricing-option-price">$0.99</span>
                     </div>
+                    <div class="pricing-option-period">per month</div>
+                </div>
 
-                    <div class="pricing-option-compact">
-                        <div class="pricing-option-header">
-                            <span class="pricing-option-name">Annual</span>
-                            <span class="pricing-option-price">$5.99</span>
-                        </div>
-                        <div class="pricing-option-period">
-                            per year
-                            <span class="pricing-option-savings">50% off</span>
-                        </div>
+                <div class="pricing-option-compact">
+                    <div class="pricing-option-header">
+                        <span class="pricing-option-name">Annual</span>
+                        <span class="pricing-option-price">$5.99</span>
                     </div>
-
-                    <div class="pricing-option-compact">
-                        <div class="pricing-option-header">
-                            <span class="pricing-option-name">Lifetime</span>
-                            <span class="pricing-option-price">$19.99</span>
-                        </div>
-                        <div class="pricing-option-period">one-time payment</div>
+                    <div class="pricing-option-period">
+                        per year
+                        <span class="pricing-option-savings">50% off</span>
                     </div>
                 </div>
 
-                <!-- Features Comparison -->
-                <div class="pricing-features-panel">
-                    <div class="features-column">
-                        <h3>Free Features</h3>
-                        <ul class="pricing-features-list">
-                            <li>Llama 3.2 1B AI model</li>
-                            <li>AI Autocomplete</li>
-                            <li>Text patch & correction</li>
-                            <li>Rephrase text</li>
-                            <li>Summarize notes</li>
-                            <li>Translate to 12+ languages</li>
-                            <li>Semantic search</li>
-                            <li>Unlimited notes</li>
-                        </ul>
+                <div class="pricing-option-compact">
+                    <div class="pricing-option-header">
+                        <span class="pricing-option-name">Lifetime</span>
+                        <span class="pricing-option-price">$19.99</span>
                     </div>
-
-                    <div class="features-column">
-                        <h3>Pro Features <span style="font-size: 14px; color: #a1a1aa; font-weight: 400;">(all paid
-                                plans)</span></h3>
-                        <ul class="pricing-features-list">
-                            <li>Everything in Free</li>
-                            <li>AI Chat Assistant</li>
-                            <li>8 AI models (Phi-3, Qwen 2.5, Llama 3.2, Gemma 2 & more)</li>
-                            <li>Create custom AI tools</li>
-                            <li>Edit all prompts & settings</li>
-                            <li>Priority support</li>
-                        </ul>
-
-                        <div class="pricing-cta">
-                            <a href="#" class="btn btn-primary" data-umami-event="get-pro-click"
-                                onclick="alert('ZetaNotes is coming soon! Pro access will be available at launch.'); return false;">Coming
-                                Soon - Get Pro Access</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Download Section -->
-    <section id="download" class="download">
-        <div class="container">
-            <h2 class="section-title">Download ZetaNotes</h2>
-
-            <!-- Coming Soon Badge -->
-            <div style="text-align: center; margin-bottom: 24px;">
-                <div
-                    style="display: inline-block; background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%); color: white; padding: 8px 20px; border-radius: 24px; font-size: 13px; font-weight: 600; letter-spacing: 0.5px; box-shadow: 0 4px 16px rgba(56, 189, 248, 0.4); text-transform: uppercase;">
-                    Coming Soon
+                    <div class="pricing-option-period">one-time payment</div>
                 </div>
             </div>
 
-            <!-- App Icon -->
-            <div style="text-align: center; margin: 32px 0;">
-                <img src="logo.png" alt="ZetaNotes App Icon"
-                    style="width: 128px; height: 128px; border-radius: 28px; box-shadow: 0 20px 60px rgba(56, 189, 248, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);">
+            <!-- Features Comparison -->
+            <div class="pricing-features-panel">
+                <div class="features-column">
+                    <h3>Free Features</h3>
+                    <ul class="pricing-features-list">
+                        <li>Llama 3.2 1B model</li>
+                        <li>AI autocomplete</li>
+                        <li>Text correction</li>
+                        <li>Rephrasing</li>
+                        <li>Summarization</li>
+                        <li>Translation (12+ languages)</li>
+                        <li>Semantic search</li>
+                        <li>Unlimited notes</li>
+                    </ul>
+                </div>
+
+                <div class="features-column">
+                    <h3>Pro Features</h3>
+                    <ul class="pricing-features-list">
+                        <li>All Free features</li>
+                        <li>Chat interface</li>
+                        <li>8 AI models</li>
+                        <li>Custom tools</li>
+                        <li>Prompt customization</li>
+                        <li>Priority support</li>
+                    </ul>
+
+                    <div class="pricing-cta">
+                        <a href="https://apps.apple.com/app/id6754346516" class="btn btn-primary" target="_blank"
+                            rel="noopener" data-umami-event="pricing-cta-click">
+                            <svg width="16" height="16" viewBox="0 0 170 170" fill="none"
+                                xmlns="http://www.w3.org/2000/svg" style="margin-top: -1px;">
+                                <path
+                                    d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.197-2.12-9.973-3.17-14.34-3.17-4.58 0-9.492 1.05-14.746 3.17-5.262 2.13-9.501 3.24-12.742 3.35-4.929.21-9.842-1.96-14.746-6.52-3.13-2.73-7.045-7.41-11.735-14.04-5.032-7.08-9.169-15.29-12.41-24.65-3.471-10.11-5.211-19.9-5.211-29.378 0-10.857 2.346-20.221 7.045-28.068 3.693-6.303 8.606-11.275 14.755-14.925s12.793-5.51 19.948-5.629c3.915 0 9.049 1.211 15.429 3.591 6.362 2.388 10.447 3.599 12.238 3.599 1.339 0 5.877-1.416 13.57-4.239 7.275-2.618 13.415-3.702 18.445-3.275 13.63 1.1 23.87 6.473 30.68 16.153-12.19 7.386-18.22 17.731-18.1 31.002.11 10.337 3.86 18.939 11.23 25.769 3.34 3.17 7.07 5.62 11.22 7.36-.9 2.61-1.85 5.11-2.86 7.51zM119.11 7.24c0 8.102-2.96 15.667-8.86 22.669-7.12 8.324-15.732 13.134-25.071 12.375a25.222 25.222 0 0 1-.188-3.07c0-7.778 3.386-16.102 9.399-22.908 3.002-3.446 6.82-6.311 11.45-8.597 4.62-2.252 8.99-3.497 13.1-3.71.12 1.083.17 2.166.17 3.24z"
+                                    fill="#000" />
+                            </svg>
+                            Subscribe</a>
+                    </div>
+                </div>
             </div>
-
-            <!-- Coming Soon Text -->
-            <p style="text-align: center; color: #e4e4e7; font-size: 20px; font-weight: 500; margin: 24px 0 16px;">
-                Coming soon on the App Store
-            </p>
-
-            <p class="download-info" style="margin-top: 8px; color: #a1a1aa; font-size: 15px;">
-                <span class="highlight">macOS 13.0+</span> required
-            </p>
         </div>
     </section>
 
     <!-- Footer -->
     <footer>
-        <div class="container">
-            <p style="margin-bottom: 10px;">
-                <a href="privacy.html">Privacy Policy</a> •
-                <a href="terms.html">Terms of Service</a> •
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="privacy.html">Privacy</a>
+                <a href="terms.html">Terms</a>
                 <a href="mailto:rabah.khalek@gmail.com">Support</a>
-            </p>
-            <p>&copy; 2025 ZetaNotes. All rights reserved.</p>
+            </div>
+            <p class="footer-note">© 2025 ZetaNotes. All rights reserved.</p>
         </div>
     </footer>
+
+    <script>
+        // Enhanced smooth scroll with offset for fixed header
+        document.addEventListener('DOMContentLoaded', function () {
+            // Get all anchor links
+            const links = document.querySelectorAll('a[href^="#"]');
+
+            links.forEach(link => {
+                link.addEventListener('click', function (e) {
+                    const href = this.getAttribute('href');
+
+                    // Skip if it's just "#" or empty
+                    if (!href || href === '#') return;
+
+                    const targetId = href.substring(1);
+                    const targetElement = document.getElementById(targetId);
+
+                    if (targetElement) {
+                        e.preventDefault();
+
+                        // Calculate offset for fixed header (header height + some padding)
+                        const headerHeight = document.querySelector('header').offsetHeight;
+                        const offset = headerHeight + 20; // 20px extra padding
+
+                        const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - offset;
+
+                        // Smooth scroll with easing
+                        window.scrollTo({
+                            top: targetPosition,
+                            behavior: 'smooth'
+                        });
+
+                        // Update URL without jumping
+                        if (history.pushState) {
+                            history.pushState(null, null, href);
+                        }
+                    }
+                });
+            });
+
+            // Handle direct navigation (e.g., from URL with hash)
+            if (window.location.hash) {
+                setTimeout(function () {
+                    const targetId = window.location.hash.substring(1);
+                    const targetElement = document.getElementById(targetId);
+
+                    if (targetElement) {
+                        const headerHeight = document.querySelector('header').offsetHeight;
+                        const offset = headerHeight + 20;
+                        const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - offset;
+
+                        window.scrollTo({
+                            top: targetPosition,
+                            behavior: 'smooth'
+                        });
+                    }
+                }, 100);
+            }
+        });
+    </script>
 </body>
 
 </html>

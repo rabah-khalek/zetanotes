@@ -1,5 +1,5 @@
 //
-//  UpgradePromptView.swift
+//  UpgradePromptView_Paddle_Backup.swift
 //  ZetaNotes
 //
 //  Beautiful upgrade prompt for Pro features

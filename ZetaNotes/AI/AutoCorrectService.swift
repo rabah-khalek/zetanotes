@@ -59,6 +59,11 @@ class AutoCorrectService: AIService {
             print("✅ AutoCorrect: Generated \(result.count) chars")
         } else {
             print("❌ AutoCorrect: Failed to generate output")
+            ErrorLogger.shared.logError(
+                code: .generationFailed,
+                operation: "Auto-Correct",
+                technicalDetails: "Failed to generate corrected text. Input length: \(text.count) chars"
+            )
         }
 
         return result

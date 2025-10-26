@@ -65,6 +65,11 @@ class SummarizationService: AIService {
             print("✅ Summarize: Generated \(result.count) chars")
         } else {
             print("❌ Summarize: Failed to generate output")
+            ErrorLogger.shared.logError(
+                code: .generationFailed,
+                operation: "Summarization",
+                technicalDetails: "Failed to generate summary. Input length: \(text.count) chars"
+            )
         }
 
         return result

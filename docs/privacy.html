@@ -40,11 +40,16 @@
             color: #a1a1aa;
             text-decoration: none;
             font-weight: 500;
-            transition: color 0.2s ease;
+            font-size: 15px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
         }
 
         .back-link:hover {
             color: #ffffff;
+            background: rgba(238, 34, 12, 0.05);
+            transform: translateX(-2px);
         }
 
         h1 {
@@ -83,25 +88,38 @@
         }
 
         .highlight {
-            background: rgba(34, 197, 94, 0.15);
-            border: 1px solid rgba(34, 197, 94, 0.3);
+            background: rgba(238, 34, 12, 0.06);
+            border: 1px solid rgba(238, 34, 12, 0.2);
             border-radius: 6px;
             padding: 16px;
             margin: 24px 0;
         }
 
         a {
-            color: #38bdf8;
+            color: #EE220C;
             text-decoration: none;
+            position: relative;
         }
 
-        a:hover {
-            text-decoration: underline;
+        a::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #EE220C;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        a:hover::after {
+            opacity: 0.5;
         }
 
         .contact-info {
             background: #1a1a1a;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(238, 34, 12, 0.15);
             border-radius: 8px;
             padding: 24px;
             margin: 32px 0;
@@ -142,7 +160,8 @@
             <li>Provide customer support when requested</li>
             <li>Support customers with App Store subscription questions</li>
         </ul>
-        <p><strong>Note:</strong> Subscriptions are managed entirely through the App Store. We do not collect or store payment information.</p>
+        <p><strong>Note:</strong> Subscriptions are managed entirely through the App Store. We do not collect or store
+            payment information.</p>
 
         <h2>3. Local AI Processing</h2>
         <p>All AI features run completely on your device:</p>
@@ -160,7 +179,8 @@
             <li>We receive only confirmation of active subscriptions</li>
             <li>No payment details are shared with or stored by ZetaNotes</li>
         </ul>
-        <p>View Apple's privacy policy: <a href="https://www.apple.com/legal/privacy/">https://www.apple.com/legal/privacy/</a></p>
+        <p>View Apple's privacy policy: <a
+                href="https://www.apple.com/legal/privacy/">https://www.apple.com/legal/privacy/</a></p>
 
         <h2>5. Data Security</h2>
         <p>Your data is protected by:</p>

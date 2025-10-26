@@ -112,10 +112,9 @@ class AIEngine: ObservableObject {
 
                 // Log error to error logger
                 ErrorLogger.shared.logError(
-                    "Failed to load \(modelType.displayName)",
-                    severity: .error,
+                    code: .modelLoadFailed,
                     operation: "Model Loading",
-                    details: error.localizedDescription
+                    technicalDetails: "Failed to load \(modelType.displayName): \(error.localizedDescription)"
                 )
             }
 

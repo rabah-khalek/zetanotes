@@ -10,14 +10,12 @@ import Combine
 import Foundation
 
 /// Service providing intelligent autocomplete suggestions
-/// Uses debouncing to ensure smooth, non-blocking experience
+/// Note: Debouncing is handled by the view layer for optimal responsiveness
 class AutocompleteService: AIService {
     let llmService: LLMInferenceService
     let config: AIGenerationConfig
 
     private var currentModel: AIModel
-    private var debounceTimer: Timer?
-    private let debounceDelay: TimeInterval = 0.2 // 200ms debounce
     private var lastContext: String = "" // Store context for post-processing
 
     // MARK: - Configuration
@@ -52,8 +50,6 @@ class AutocompleteService: AIService {
 
     // MARK: - AIService Protocol
 
-
-
     func buildPrompt(for text: String) -> String {
         // Get the last N characters for context
         let contextLength = min(text.count, Config.contextLength)
@@ -63,9 +59,28 @@ class AutocompleteService: AIService {
         // Store context for post-processing
         lastContext = context
 
-        // Get model-specific prompt from registry and replace {content} placeholder
-        let toolConfig = ModelToolConfigRegistry.getConfig(for: currentModel, toolType: .autocomplete)
-        return toolConfig.prompt.replacingOccurrences(of: "{content}", with: context)
+        // For autocomplete, we use direct completion (not chat template)
+        // Just return the context - the model will continue from where it left off
+        return context
+    }
+
+    // Override process() to use direct generation instead of chat template
+    func process(_ text: String) async -> String? {
+        guard !text.isEmpty else { return nil }
+
+        let prompt = buildPrompt(for: text)
+
+        // Use direct generation for autocomplete (not chat template)
+        // This allows the model to continue the text naturally without conversational framing
+        guard let rawOutput = await llmService.generate(
+            prompt: prompt,
+            maxTokens: config.maxTokens,
+            temperature: config.temperature
+        ) else {
+            return nil
+        }
+
+        return postProcess(rawOutput)
     }
 
     // Post-process to clean the autocomplete output
@@ -188,31 +203,5 @@ class AutocompleteService: AIService {
         guard text.count >= Config.minCharacters else { return nil }
 
         return await process(text)
-    }
-
-    /// Generates autocomplete with debouncing
-    /// Returns a publisher that emits suggestions after debounce period
-    /// - Parameter text: The text to complete
-    /// - Returns: Publisher emitting optional suggestion
-    func debouncedSuggestion(for text: String) -> AnyPublisher<String?, Never> {
-        return Future<String?, Never> { [weak self] promise in
-            self?.debounceTimer?.invalidate()
-
-            self?.debounceTimer = Timer
-                .scheduledTimer(withTimeInterval: self?.debounceDelay ?? 0.2, repeats: false) { [weak self] _ in
-                    Task { [weak self] in
-                        let suggestion = await self?.generateSuggestion(for: text)
-                        promise(.success(suggestion))
-                    }
-                }
-        }
-        .eraseToAnyPublisher()
-    }
-
-    // MARK: - Cleanup
-
-    func cancelPendingSuggestion() {
-        debounceTimer?.invalidate()
-        debounceTimer = nil
     }
 }

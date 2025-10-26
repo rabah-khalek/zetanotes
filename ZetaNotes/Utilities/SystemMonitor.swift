@@ -100,12 +100,12 @@ class SystemMonitor: ObservableObject {
         // Update metrics immediately
         updateMetrics()
 
-        // Schedule updates every second
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+        // Schedule updates every 3 seconds (reduced from 1s to save memory)
+        timer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { [weak self] _ in
             self?.updateMetrics()
         }
 
-        print("📊 System monitoring started")
+        print("📊 System monitoring started (polling every 3 seconds)")
     }
 
     /// Stops monitoring system resources

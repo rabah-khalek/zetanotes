@@ -752,11 +752,26 @@ struct GeneralSettingsContent: View {
         // Delete all Core Data (notes)
         viewModel.deleteAllNotes()
 
+        // Clear chat messages from memory AND delete the file
+        ChatManager.shared.clearMessages()
+        print("🗑️ Cleared chat messages from memory")
+
         // Delete all downloaded models
         if let modelsDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?
             .appendingPathComponent("ZetaNotes/Models") {
             try? FileManager.default.removeItem(at: modelsDir)
             print("🗑️ Deleted Models directory from disk")
+        }
+
+        // Delete chat history file (after clearing in-memory messages)
+        if let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first {
+            let zetaNotesDir = appSupport.appendingPathComponent("ZetaNotes")
+            let chatHistoryFile = zetaNotesDir.appendingPathComponent("chat_history.json")
+
+            if FileManager.default.fileExists(atPath: chatHistoryFile.path) {
+                try? FileManager.default.removeItem(at: chatHistoryFile)
+                print("🗑️ Deleted chat history file from disk")
+            }
         }
 
         // Delete Core Data SQLite files (but keep the directory structure)
@@ -1028,6 +1043,7 @@ struct ModelCard: View {
 
     @ObservedObject var licenseManager = LicenseManager.shared
     @ObservedObject var aiEngine = AIEngine.shared
+    @ObservedObject var downloadState = ModelDownloadState.shared
     @State private var showingDeleteConfirmation = false
 
     private var isLocked: Bool {
@@ -1036,6 +1052,15 @@ struct ModelCard: View {
 
     private var isSwitchingToThisModel: Bool {
         aiEngine.isSwitchingModel && aiEngine.switchingToModel == model
+    }
+
+    private var isQueued: Bool {
+        // Check if this model is in the download queue but not currently downloading
+        downloadState.activeDownloads.keys.contains(model.displayName) && !isDownloading
+    }
+
+    private var modelDownloadProgress: Double {
+        downloadState.activeDownloads[model.displayName]?.progress ?? downloadProgress
     }
 
     var body: some View {
@@ -1099,13 +1124,29 @@ struct ModelCard: View {
                 .buttonStyle(.bordered)
                 .controlSize(.small)
                 .foregroundColor(.orange)
-            } else if isDownloading {
-                VStack(spacing: 4) {
-                    ProgressView(value: downloadProgress)
-                        .frame(width: 80)
-                    Text("\(Int(downloadProgress * 100))%")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
+            } else if isDownloading || isQueued {
+                HStack(spacing: 8) {
+                    VStack(spacing: 2) {
+                        ProgressView(value: modelDownloadProgress)
+                            .frame(width: 60)
+                        Text(isQueued ? "Queued" : "\(Int(modelDownloadProgress * 100))%")
+                            .font(.caption2)
+                            .foregroundColor(isQueued ? .orange : .secondary)
+                    }
+
+                    // Cancel button - aligned with progress bar
+                    Button(action: {
+                        // Safely cancel on the main thread to prevent crashes
+                        DispatchQueue.main.async {
+                            ModelDownloader.shared.cancelDownload(for: model)
+                        }
+                    }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.caption)
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundColor(.red)
+                    .help("Cancel download")
                 }
             } else if !isDownloaded {
                 Button(action: onDownload) {

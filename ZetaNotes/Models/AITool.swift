@@ -207,7 +207,7 @@ extension AITool {
                 name: "Translate",
                 icon: "globe",
                 keyboardShortcut: "T",
-                color: .pink,
+                color: .red,
                 isDefault: true,
                 isEditable: false,
                 llmConfig: ModelToolConfigRegistry.getConfig(for: model, toolType: .translate)

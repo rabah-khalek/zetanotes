@@ -5,8 +5,8 @@
 //  Beautiful upgrade prompt for Pro features with StoreKit 2
 //
 
-import SwiftUI
 import StoreKit
+import SwiftUI
 
 struct UpgradePromptView: View {
     @ObservedObject var licenseManager = LicenseManager.shared

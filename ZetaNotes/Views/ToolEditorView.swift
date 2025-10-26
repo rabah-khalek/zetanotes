@@ -172,7 +172,7 @@ struct ToolEditorView: View {
                         Image(systemName: "info.circle")
                             .font(.caption)
                             .foregroundColor(.blue)
-                        Text("Use {content} where you want the selected text to be inserted")
+                        Text("This prompt is the instruction. The selected text will be passed automatically to the AI.")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -197,23 +197,10 @@ struct ToolEditorView: View {
                             .overlay(
                                 RoundedRectangle(cornerRadius: 8)
                                     .strokeBorder(
-                                        tool.prompt.contains("{content}") ? Color.gray.opacity(0.3) : Color.orange,
-                                        lineWidth: tool.prompt.contains("{content}") ? 1 : 2
+                                        Color.gray.opacity(0.3),
+                                        lineWidth: 1
                                     )
                             )
-
-                        // Temporarily disabled - allow prompts without {content} placeholder
-                        /*
-                         if !tool.prompt.isEmpty && !tool.prompt.contains("{content}") {
-                             HStack(spacing: 4) {
-                                 Image(systemName: "exclamationmark.triangle.fill")
-                                     .font(.caption)
-                                 Text("Prompt must include {content} placeholder")
-                                     .font(.caption)
-                             }
-                             .foregroundColor(.orange)
-                         }
-                         */
                     }
                 }
                 .padding(.horizontal, 20)
@@ -505,7 +492,6 @@ struct ToolEditorView: View {
     private var isValid: Bool {
         !tool.name.isEmpty &&
             !tool.prompt.isEmpty &&
-            // tool.prompt.contains("{content}") && // Temporarily disabled - allow prompts without {content}
             shortcutError == nil &&
             nameError == nil
         // Note: keyboard shortcut is optional

@@ -43,22 +43,34 @@ class ToolManager: ObservableObject {
     // MARK: - Loading & Saving
 
     func loadTools() {
+        print("🔄 Loading tools from UserDefaults...")
+
         // Check if we've initialized default tools
         let hasInitialized = UserDefaults.standard.bool(forKey: hasInitializedKey)
+        print("   Has initialized: \(hasInitialized)")
 
         if !hasInitialized {
             // First run: Initialize with default tools
             tools = AITool.createDefaultTools()
             saveTools()
             UserDefaults.standard.set(true, forKey: hasInitializedKey)
-            print("✅ Initialized default tools")
+            print("✅ Initialized default tools (first run)")
             return
         }
 
         // Load from storage
-        guard let data = UserDefaults.standard.data(forKey: storageKey),
-              let decoded = try? JSONDecoder().decode([AITool].self, from: data)
-        else {
+        guard let data = UserDefaults.standard.data(forKey: storageKey) else {
+            print("⚠️ No data found in UserDefaults for key '\(storageKey)'")
+            // Fallback: Re-initialize if load fails
+            tools = AITool.createDefaultTools()
+            saveTools()
+            return
+        }
+
+        print("   Found data in UserDefaults: \(data.count) bytes")
+
+        guard let decoded = try? JSONDecoder().decode([AITool].self, from: data) else {
+            print("❌ Failed to decode tools from UserDefaults")
             // Fallback: Re-initialize if load fails
             tools = AITool.createDefaultTools()
             saveTools()
@@ -66,6 +78,7 @@ class ToolManager: ObservableObject {
         }
 
         tools = decoded
+        print("✅ Loaded \(tools.count) tools (\(tools.filter { !$0.isDefault }.count) custom)")
 
         // Ensure default tools exist (in case of updates/migration)
         ensureDefaultToolsExist()
@@ -146,7 +159,20 @@ class ToolManager: ObservableObject {
         var newTool = tool
         newTool.isDefault = false // Ensure it's marked as custom
         tools.append(newTool)
+
+        print("📝 Adding custom tool: \(newTool.name) (ID: \(newTool.id))")
+        print("📊 Total tools before save: \(tools.count) (custom: \(customTools.count))")
+
         saveTools()
+
+        // Verify it was saved
+        if let data = UserDefaults.standard.data(forKey: storageKey),
+           let decoded = try? JSONDecoder().decode([AITool].self, from: data) {
+            print("✅ Verification: \(decoded.count) tools in UserDefaults after save")
+            print("   Custom tools in storage: \(decoded.filter { !$0.isDefault }.count)")
+        } else {
+            print("❌ Verification failed: Could not read back from UserDefaults")
+        }
     }
 
     func updateTool(_ tool: AITool) {

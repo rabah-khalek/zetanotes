@@ -108,7 +108,6 @@ struct ErrorLogView: View {
 
 struct ErrorRowView: View {
     let error: ErrorLogEntry
-    @State private var isExpanded = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -120,11 +119,23 @@ struct ErrorRowView: View {
                     .frame(width: 16)
 
                 VStack(alignment: .leading, spacing: 4) {
+                    // Error code (if available)
+                    if let errorCode = error.errorCode {
+                        Text(errorCode)
+                            .font(.system(size: 9, weight: .bold, design: .monospaced))
+                            .foregroundColor(errorColor)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(
+                                RoundedRectangle(cornerRadius: 3)
+                                    .fill(errorColor.opacity(0.15))
+                            )
+                    }
+
                     // Error message
                     Text(error.message)
                         .font(.system(size: 11))
                         .foregroundColor(.primary)
-                        .lineLimit(isExpanded ? nil : 2)
 
                     // Timestamp and operation
                     HStack(spacing: 8) {
@@ -147,37 +158,53 @@ struct ErrorRowView: View {
                                         .fill(Color.secondary.opacity(0.15))
                                 )
                         }
-                    }
 
-                    // Extended details (if expanded)
-                    if isExpanded, let details = error.details {
-                        Text(details)
-                            .font(.system(size: 10, design: .monospaced))
+                        Text("•")
+                            .font(.system(size: 8))
                             .foregroundColor(.secondary)
-                            .padding(8)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(
-                                RoundedRectangle(cornerRadius: 4)
-                                    .fill(Color.secondary.opacity(0.1))
-                            )
+
+                        // Report issue button (inline)
+                        Button(action: {
+                            // Build email body with proper line breaks
+                            var emailBody = "Error Code: \(error.errorCode ?? "N/A")\n"
+                            emailBody += "Message: \(error.message)\n"
+                            if let operation = error.operation {
+                                emailBody += "Operation: \(operation)\n"
+                            }
+                            if let details = error.details {
+                                emailBody += "Technical Details: \(details)\n"
+                            }
+                            emailBody += "\n---\nPlease describe what you were doing when this error occurred:"
+
+                            // Properly encode for mailto URL
+                            let subject = "ZetaNotes Error Report [\(error.errorCode ?? "UNKNOWN")]"
+
+                            // Create URL components for proper encoding
+                            var components = URLComponents()
+                            components.scheme = "mailto"
+                            components.path = "rabah.khalek@gmail.com"
+                            components.queryItems = [
+                                URLQueryItem(name: "subject", value: subject),
+                                URLQueryItem(name: "body", value: emailBody)
+                            ]
+
+                            if let url = components.url {
+                                NSWorkspace.shared.open(url)
+                            }
+                        }) {
+                            HStack(spacing: 3) {
+                                Image(systemName: "envelope")
+                                    .font(.system(size: 8))
+                                Text("Report")
+                                    .font(.system(size: 9))
+                            }
+                            .foregroundColor(.blue)
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
 
                 Spacer()
-
-                // Expand/collapse button
-                if error.details != nil {
-                    Button(action: {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                            isExpanded.toggle()
-                        }
-                    }) {
-                        Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                            .font(.system(size: 10))
-                            .foregroundColor(.secondary)
-                    }
-                    .buttonStyle(.plain)
-                }
             }
         }
         .padding(10)
@@ -222,18 +249,100 @@ class ErrorLogger: ObservableObject {
     @Published var errors: [ErrorLogEntry] = []
 
     private let maxErrors = 50 // Keep last 50 errors
+    private var errorTimers: [UUID: Timer] = [:] // Track auto-clear timers for each error
 
+    /// Log an error with error code (preferred method)
+    func logError(
+        code: ErrorCode,
+        operation: String? = nil,
+        technicalDetails: String? = nil
+    ) {
+        // All errors with codes are user-relevant by definition
+        let entry = ErrorLogEntry(
+            message: code.userMessage,
+            severity: .error,
+            operation: operation,
+            details: technicalDetails,
+            errorCode: code.code
+        )
+
+        DispatchQueue.main.async {
+            self.errors.insert(entry, at: 0)
+
+            // Keep only the most recent errors
+            if self.errors.count > self.maxErrors {
+                self.errors = Array(self.errors.prefix(self.maxErrors))
+            }
+
+            // Auto-clear error after 30 seconds
+            self.scheduleAutoClear(for: entry, after: 30.0)
+        }
+
+        // Also print to console for debugging
+        print("❌ [\(code.code)] [\(operation ?? "AI")] \(code.userMessage)")
+        if let details = technicalDetails {
+            print("   Technical details: \(details)")
+        }
+        print("   Report issue: \(ErrorCode.reportIssueURL)")
+    }
+
+    /// Log a warning with warning code
+    func logWarning(
+        code: WarningCode,
+        operation: String? = nil,
+        details: String? = nil
+    ) {
+        let entry = ErrorLogEntry(
+            message: code.userMessage,
+            severity: .warning,
+            operation: operation,
+            details: details,
+            errorCode: code.code
+        )
+
+        DispatchQueue.main.async {
+            self.errors.insert(entry, at: 0)
+
+            // Keep only the most recent errors
+            if self.errors.count > self.maxErrors {
+                self.errors = Array(self.errors.prefix(self.maxErrors))
+            }
+
+            // Auto-clear warning after 20 seconds (faster than errors)
+            self.scheduleAutoClear(for: entry, after: 20.0)
+        }
+
+        // Also print to console for debugging
+        print("⚠️ [\(code.code)] [\(operation ?? "AI")] \(code.userMessage)")
+        if let details = details {
+            print("   Details: \(details)")
+        }
+    }
+
+    /// Legacy method for backward compatibility - filters non-user-relevant errors
+    @available(*, deprecated, message: "Use logError(code:operation:technicalDetails:) instead")
     func logError(
         _ message: String,
         severity: ErrorSeverity = .error,
         operation: String? = nil,
         details: String? = nil
     ) {
+        // Filter out non-user-relevant messages
+        if !ErrorFilter.shouldShowMessage(message) {
+            // Still log to console for debugging
+            print("🔍 [FILTERED] [\(operation ?? "AI")] \(message)")
+            if let details = details {
+                print("   Details: \(details)")
+            }
+            return
+        }
+
         let entry = ErrorLogEntry(
             message: message,
             severity: severity,
             operation: operation,
-            details: details
+            details: details,
+            errorCode: nil
         )
 
         DispatchQueue.main.async {
@@ -255,8 +364,34 @@ class ErrorLogger: ObservableObject {
 
     func clearErrors() {
         DispatchQueue.main.async {
+            // Cancel all pending timers
+            for timer in self.errorTimers.values {
+                timer.invalidate()
+            }
+            self.errorTimers.removeAll()
+
             self.errors.removeAll()
         }
+    }
+
+    /// Schedules automatic removal of an error after a specified time
+    private func scheduleAutoClear(for entry: ErrorLogEntry, after seconds: TimeInterval) {
+        let timer = Timer.scheduledTimer(withTimeInterval: seconds, repeats: false) { [weak self] _ in
+            guard let self = self else { return }
+
+            DispatchQueue.main.async {
+                // Remove the specific error
+                if let index = self.errors.firstIndex(where: { $0.id == entry.id }) {
+                    self.errors.remove(at: index)
+                    print("🧹 Auto-cleared \(entry.severity) from error log: [\(entry.errorCode ?? "N/A")]")
+                }
+
+                // Remove the timer reference
+                self.errorTimers.removeValue(forKey: entry.id)
+            }
+        }
+
+        errorTimers[entry.id] = timer
     }
 }
 
@@ -269,6 +404,7 @@ struct ErrorLogEntry: Identifiable {
     let severity: ErrorSeverity
     let operation: String?
     let details: String?
+    let errorCode: String? // Error code like "ERROR-ML-001" or "WARN-GEN-001"
 }
 
 enum ErrorSeverity {
@@ -291,23 +427,21 @@ struct ErrorLogView_Previews: PreviewProvider {
     static var previews: some View {
         let logger = ErrorLogger()
 
-        // Add some sample errors
+        // Add some sample errors with error codes
         logger.logError(
-            "Model file not found",
-            severity: .error,
+            code: .modelNotFound,
             operation: "Model Loading",
-            details: "Could not locate model file at path: ~/models/llama-7b.gguf"
+            technicalDetails: "Could not locate model file at path: ~/models/llama-7b.gguf"
         )
-        logger.logError(
-            "Inference timeout",
-            severity: .warning,
+        logger.logWarning(
+            code: .generationTruncated,
             operation: "Autocomplete",
-            details: "Request took longer than 5 seconds"
+            details: "Output was limited to 100 tokens"
         )
         logger.logError(
-            "Model loaded successfully",
-            severity: .info,
-            operation: "Initialization"
+            code: .insufficientMemory,
+            operation: "Text Generation",
+            technicalDetails: "Free memory: 342 MB, Required: 500 MB"
         )
 
         return VStack {

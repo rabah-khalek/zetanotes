@@ -44,7 +44,7 @@ private enum TinyLlamaConfigs {
         switch toolType {
         case .autocomplete:
             return LLMConfig(
-                prompt: "Continue the following text naturally. Write only the next few words that would logically follow.",
+                prompt: "Continue writing naturally:",
                 temperature: 0.3,
                 maxTokens: 20
             )
@@ -72,7 +72,7 @@ private enum TinyLlamaConfigs {
 
         case .translate:
             return LLMConfig(
-                prompt: "Translate the following text to {targetLanguage}. Return ONLY the translated text with no additional commentary or labels.",
+                prompt: "Translate to {language}. Output ONLY the {language} translation, no English, no explanations.",
                 temperature: 0.05,
                 maxTokens: nil
             )
@@ -109,7 +109,7 @@ private enum LlamaThreeTwoConfigs {
         switch toolType {
         case .autocomplete:
             return LLMConfig(
-                prompt: "Continue writing. Return only the next 3-8 words that naturally follow.",
+                prompt: "Continue writing naturally:",
                 temperature: 0.4,
                 maxTokens: 30
             )
@@ -137,8 +137,8 @@ private enum LlamaThreeTwoConfigs {
 
         case .translate:
             return LLMConfig(
-                prompt: "Translate to {language}. Return only the translation to {language} with no preamble.",
-                temperature: 0.3,
+                prompt: "Translate to {language}. Output ONLY the {language} translation, no English.",
+                temperature: 0.1,
                 maxTokens: nil
             )
 
@@ -171,7 +171,7 @@ private enum QwenTwoFiveConfigs {
         switch toolType {
         case .autocomplete:
             return LLMConfig(
-                prompt: "Continue the following text naturally. Write only the next few words that would logically follow.",
+                prompt: "Continue writing naturally:",
                 temperature: 0.7, maxTokens: 50
             )
 
@@ -195,7 +195,7 @@ private enum QwenTwoFiveConfigs {
 
         case .translate:
             return LLMConfig(
-                prompt: "Translate the following text to {language}. Return ONLY the translation with no additional commentary.",
+                prompt: "Translate to {language}. Output ONLY the {language} translation.",
                 temperature: 0.1, maxTokens: nil
             )
 
@@ -226,7 +226,7 @@ private enum SmolLMTwoConfigs {
         switch toolType {
         case .autocomplete:
             return LLMConfig(
-                prompt: "Continue the following text naturally. Write only the next few words that would logically follow.",
+                prompt: "Continue writing naturally:",
                 temperature: 0.5, maxTokens: 50
             )
 
@@ -281,7 +281,7 @@ private enum Phi2Configs {
         switch toolType {
         case .autocomplete:
             return LLMConfig(
-                prompt: "Continue the following text naturally. Write only the next few words that would logically follow.",
+                prompt: "Continue writing naturally:",
                 temperature: 0.6, maxTokens: 50
             )
 
@@ -335,7 +335,7 @@ private enum GemmaTwoConfigs {
         switch toolType {
         case .autocomplete:
             return LLMConfig(
-                prompt: "Continue the following text naturally. Write only the next few words that would logically follow.",
+                prompt: "Continue writing naturally:",
                 temperature: 0.6, maxTokens: 50
             )
 
@@ -389,7 +389,7 @@ private enum PhiThreeFiveConfigs {
         switch toolType {
         case .autocomplete:
             return LLMConfig(
-                prompt: "Continue the following text naturally. Write only the next few words that would logically follow.",
+                prompt: "Continue writing naturally:",
                 temperature: 0.6, maxTokens: 50
             )
 

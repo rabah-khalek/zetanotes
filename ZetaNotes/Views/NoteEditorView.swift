@@ -200,7 +200,16 @@ struct SimpleTextEditor: NSViewRepresentable {
 
             // ✅ FIX: Use replaceCharacters for better performance on large texts
             if let textStorage = textView.textStorage {
-                let fullRange = NSRange(location: 0, length: textStorage.length)
+                // Bounds check to prevent crashes on concurrent modifications
+                let currentLength = textStorage.length
+                guard currentLength >= 0 else {
+                    // Fallback to direct string assignment if storage is in invalid state
+                    textView.string = text
+                    context.coordinator.isUpdatingProgrammatically = false
+                    return
+                }
+
+                let fullRange = NSRange(location: 0, length: currentLength)
 
                 // Create attributed string with proper text color for dark mode
                 let attributes: [NSAttributedString.Key: Any] = [
@@ -209,7 +218,10 @@ struct SimpleTextEditor: NSViewRepresentable {
                 ]
                 let attributedText = NSAttributedString(string: text, attributes: attributes)
 
+                // Use beginEditing/endEditing for atomic updates
+                textStorage.beginEditing()
                 textStorage.replaceCharacters(in: fullRange, with: attributedText)
+                textStorage.endEditing()
             } else {
                 textView.string = text
             }
@@ -254,7 +266,16 @@ struct SimpleTextEditor: NSViewRepresentable {
         guard let textStorage = textView.textStorage else { return }
 
         let text = textStorage.string
-        let searchRange = NSRange(location: 0, length: text.utf16.count)
+        // Bounds check to prevent crashes
+        guard text.utf16.count == textStorage.length else {
+            print("⚠️ Text storage length mismatch, skipping highlight")
+            return
+        }
+
+        let searchRange = NSRange(location: 0, length: textStorage.length)
+
+        // Use atomic editing for thread safety
+        textStorage.beginEditing()
 
         // First, remove any existing background colors
         textStorage.removeAttribute(.backgroundColor, range: searchRange)
@@ -266,19 +287,29 @@ struct SimpleTextEditor: NSViewRepresentable {
         while searchStart < text.endIndex,
               let range = text.range(of: query, options: searchOptions, range: searchStart ..< text.endIndex) {
             let nsRange = NSRange(range, in: text)
-            textStorage.addAttribute(
-                .backgroundColor,
-                value: NSColor.systemYellow.withAlphaComponent(0.4),
-                range: nsRange
-            )
+            // Bounds check before applying attribute
+            if nsRange.location >= 0, nsRange.upperBound <= textStorage.length {
+                textStorage.addAttribute(
+                    .backgroundColor,
+                    value: NSColor.systemYellow.withAlphaComponent(0.4),
+                    range: nsRange
+                )
+            }
             searchStart = range.upperBound
         }
+
+        textStorage.endEditing()
     }
 
     private func clearHighlighting(in textView: NSTextView) {
         guard let textStorage = textView.textStorage else { return }
-        let range = NSRange(location: 0, length: textStorage.length)
+        let currentLength = textStorage.length
+        guard currentLength >= 0 else { return }
+
+        let range = NSRange(location: 0, length: currentLength)
+        textStorage.beginEditing()
         textStorage.removeAttribute(.backgroundColor, range: range)
+        textStorage.endEditing()
     }
 }
 
@@ -356,15 +387,10 @@ struct NoteEditorView: View {
                     .onChange(of: title) { newValue in
                         guard !isLoading else { return } // Don't save when loading note
 
-                        // ✅ FIX: Defer note updates to background to prevent crashes
-                        DispatchQueue.global(qos: .userInitiated).async {
-                            note.title = newValue
-                            note.touch() // Update timestamp when title changes
-
-                            DispatchQueue.main.async {
-                                viewModel.saveNoteDebounced(note)
-                            }
-                        }
+                        // Update note on main thread (Core Data objects must stay on their context's thread)
+                        note.title = newValue
+                        note.touch() // Update timestamp when title changes
+                        viewModel.saveNoteDebounced(note)
                     }
 
                 // Markdown Preview Toggle - RIGHT SIDE
@@ -429,19 +455,13 @@ struct NoteEditorView: View {
                         let isPasteOperation = textLengthChange > 50 // More than 50 chars changed at once
                         lastContentLength = newValue.count
 
-                        // ✅ FIX: Only update content immediately, defer note updates
+                        // Update content and note on main thread (Core Data thread safety)
                         content = newValue
+                        note.content = newValue
+                        note.touch() // Update timestamp
 
-                        // ✅ FIX: Defer note updates to background queue to prevent UI blocking
-                        DispatchQueue.global(qos: .userInitiated).async {
-                            note.content = newValue
-                            note.touch() // Update timestamp
-
-                            // Debounced save to disk (reduces I/O during typing)
-                            DispatchQueue.main.async {
-                                viewModel.saveNoteDebounced(note)
-                            }
-                        }
+                        // Debounced save to disk (reduces I/O during typing)
+                        viewModel.saveNoteDebounced(note)
 
                         // Disable autocomplete on paste to prevent crashes
                         if isPasteOperation {
@@ -460,7 +480,10 @@ struct NoteEditorView: View {
                         autocompleteDebounceTimer?.invalidate()
 
                         // Schedule new autocomplete check after delay
-                        autocompleteDebounceTimer = Timer.scheduledTimer(withTimeInterval: autocompleteDebounceDelay, repeats: false) { [weak viewModel] _ in
+                        autocompleteDebounceTimer = Timer.scheduledTimer(
+                            withTimeInterval: autocompleteDebounceDelay,
+                            repeats: false
+                        ) { [weak viewModel] _ in
                             // ✅ FIX: Dispatch to main actor for main-actor isolated calls
                             DispatchQueue.main.async {
                                 guard let viewModel = viewModel else { return }
@@ -620,14 +643,8 @@ struct NoteEditorView: View {
             currentCursorPosition = newCursorPos
 
             content = newContent
-
-            // ✅ FIX: Defer note updates to background
-            DispatchQueue.global(qos: .userInitiated).async {
-                note.content = newContent
-                DispatchQueue.main.async {
-                    viewModel.saveNoteDebounced(note)
-                }
-            }
+            note.content = newContent
+            viewModel.saveNoteDebounced(note)
 
             // Request new autocomplete with updated text
             if aiEngine.isModelLoaded, shouldTriggerAutocomplete(text: newContent, cursorPosition: newCursorPos) {
@@ -675,14 +692,8 @@ struct NoteEditorView: View {
         currentCursorPosition = newCursorPos
 
         content = newContent
-
-        // ✅ FIX: Defer note updates to background
-        DispatchQueue.global(qos: .userInitiated).async {
-            note.content = newContent
-            DispatchQueue.main.async {
-                viewModel.saveNoteDebounced(note)
-            }
-        }
+        note.content = newContent
+        viewModel.saveNoteDebounced(note)
 
         // Update the suggestion to remove the accepted word (original, not with added space)
         viewModel.acceptPartialAutocomplete(oneWord)

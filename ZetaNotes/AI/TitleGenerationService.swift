@@ -59,7 +59,7 @@ class TitleGenerationService: AIService {
         )
 
         // Use custom prompt if provided, otherwise use model-optimized prompt
-        let instruction = customPrompt.isEmpty ? toolConfig.prompt : customPrompt
+        _ = customPrompt.isEmpty ? toolConfig.prompt : customPrompt
 
         // For title generation, use direct completion with explicit constraints
         // Tell the model: generate only a short title (2-4 words), no line breaks
@@ -71,7 +71,8 @@ class TitleGenerationService: AIService {
 
         print("🔍 Title: Using direct completion format")
 
-        // Use direct generate() instead of chat template
+        // Use direct generate() - the cancellation happens but title generation is fast
+        // so it typically completes before other services start
         let result = await llmService.generate(
             prompt: completionPrompt,
             maxTokens: toolConfig.maxTokens ?? Config.maxTokens,
@@ -87,11 +88,21 @@ class TitleGenerationService: AIService {
                 print("✅ Title: Final output: '\(finalTitle)'")
             } else {
                 print("❌ Title: Post-processing resulted in empty output")
+                ErrorLogger.shared.logWarning(
+                    code: .generationEmpty,
+                    operation: "Title Generation",
+                    details: "Model generated output but post-processing resulted in empty title. Input length: \(text.count) chars"
+                )
             }
 
             return finalTitle
         } else {
             print("❌ Title: Failed to generate output")
+            ErrorLogger.shared.logError(
+                code: .generationFailed,
+                operation: "Title Generation",
+                technicalDetails: "Failed to generate title. Input length: \(text.count) chars"
+            )
             return nil
         }
     }
@@ -161,7 +172,22 @@ class TitleGenerationService: AIService {
         cleaned = cleaned.split(separator: " ")
             .enumerated()
             .map { index, word in
-                let lowercased = ["a", "an", "the", "and", "but", "or", "for", "nor", "on", "at", "to", "by", "in", "of"]
+                let lowercased = [
+                    "a",
+                    "an",
+                    "the",
+                    "and",
+                    "but",
+                    "or",
+                    "for",
+                    "nor",
+                    "on",
+                    "at",
+                    "to",
+                    "by",
+                    "in",
+                    "of"
+                ]
                 let wordStr = String(word)
                 let isFirstWord = (index == 0)
                 return lowercased.contains(wordStr.lowercased()) && !isFirstWord
@@ -189,8 +215,8 @@ class TitleGenerationService: AIService {
             let firstLine = lines[0].trimmingCharacters(in: .whitespacesAndNewlines)
             // If first line looks like a greeting, use second line
             if firstLine.hasPrefix("Dear") || firstLine.hasPrefix("Hi") ||
-               firstLine.hasPrefix("Hello") || firstLine.hasPrefix("To") ||
-               firstLine.count < 20 { // Very short first line, probably greeting
+                firstLine.hasPrefix("Hello") || firstLine.hasPrefix("To") ||
+                firstLine.count < 20 { // Very short first line, probably greeting
                 workingText = lines.dropFirst().joined(separator: " ")
             }
         }
