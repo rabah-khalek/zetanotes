@@ -127,11 +127,12 @@ struct NoteListView: View {
 struct NoteRowView: View {
     let item: NoteListItem
     let onDelete: () -> Void
-    @State private var isHovering = false
 
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 8) {
+            // Note content
             VStack(alignment: .leading, spacing: 4) {
+                // Title and timestamp row
                 HStack {
                     Text(item.displayTitle)
                         .font(.system(size: 13, weight: .semibold))
@@ -139,34 +140,33 @@ struct NoteRowView: View {
 
                     Spacer()
 
+                    // Timestamp on the far right, aligned with title
                     Text(item.formattedCreatedDate)
                         .font(.system(size: 10))
                         .foregroundColor(.secondary.opacity(0.7))
                 }
 
-                Text(item.preview)
-                    .font(.system(size: 11))
-                    .foregroundColor(.secondary)
-                    .lineLimit(2)
+                // Preview text and delete button row
+                HStack(alignment: .top, spacing: 8) {
+                    Text(item.preview)
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary)
+                        .lineLimit(2)
+
+                    Spacer()
+
+                    // Delete button - always visible, small, aligned right under timestamp
+                    Button(action: onDelete) {
+                        Image(systemName: "trash")
+                            .font(.system(size: 9))
+                            .foregroundColor(.red.opacity(0.6))
+                    }
+                    .buttonStyle(.plain)
+                    .help("Delete note")
+                    .frame(width: 16, height: 16)
+                }
             }
             .padding(.vertical, 2)
-
-            // Always show button but with opacity
-            Button(action: onDelete) {
-                Image(systemName: "trash")
-                    .font(.system(size: 11))
-                    .foregroundColor(.red.opacity(0.8))
-            }
-            .buttonStyle(.plain)
-            .help("Delete note")
-            .opacity(isHovering ? 1.0 : 0.0)
-            .animation(.easeInOut(duration: 0.15), value: isHovering)
-        }
-        .contentShape(Rectangle()) // Make entire row detect hover
-        .onHover { hovering in
-            withAnimation(.easeInOut(duration: 0.15)) {
-                isHovering = hovering
-            }
         }
     }
 }

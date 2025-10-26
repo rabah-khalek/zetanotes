@@ -431,9 +431,8 @@ struct FirstRunModelSetupView: View {
 
             // Cancel Button
             Button(action: {
-                modelDownloader.cancelDownload()
-                downloadState.cancelDownload()
-                viewState = .initial
+                // Immediate cancellation with proper cleanup
+                cancelDownload()
             }) {
                 HStack(spacing: 5) {
                     Image(systemName: "xmark.circle.fill")
@@ -632,28 +631,48 @@ struct FirstRunModelSetupView: View {
 
     // MARK: - Actions
 
+    private func cancelDownload() {
+        // Cancel in both downloaders (sync for immediate UI response)
+        modelDownloader.cancelDownload(for: defaultModel)
+        downloadState.cancelWelcomeDownloadSync()
+
+        // Go directly to error state (retry page) instead of welcome to prevent flicker
+        viewState = .error
+        errorMessage = "Download cancelled by user"
+    }
+
     private func startDownload() {
-        viewState = .downloading
+        // Clean up any previous download state first (sync for immediate cleanup)
+        modelDownloader.cancelDownload(for: defaultModel)
+        downloadState.cancelWelcomeDownloadSync()
+
+        // Reset error state
         errorMessage = nil
-        downloadState.startDownload(modelName: defaultModel.displayName)
 
-        modelDownloader.downloadModel(defaultModel) { result in
-            DispatchQueue.main.async {
-                switch result {
-                case .success:
-                    downloadState.completeDownload()
-                    // Load the model into AIEngine
-                    Task {
-                        await aiEngine.loadModel(defaultModel)
-                        await MainActor.run {
-                            viewState = .completed
+        // Small delay to ensure clean state before starting new download
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            // Set downloading state and start fresh download
+            viewState = .downloading
+            downloadState.startWelcomeDownloadSync()
+
+            modelDownloader.downloadModel(defaultModel) { result in
+                DispatchQueue.main.async {
+                    switch result {
+                    case .success:
+                        downloadState.completeDownload()
+                        // Load the model into AIEngine
+                        Task {
+                            await aiEngine.loadModel(defaultModel)
+                            await MainActor.run {
+                                viewState = .completed
+                            }
                         }
-                    }
 
-                case let .failure(error):
-                    downloadState.failDownload(error: error.localizedDescription)
-                    viewState = .error
-                    errorMessage = error.localizedDescription
+                    case let .failure(error):
+                        downloadState.failDownload(error: error.localizedDescription)
+                        viewState = .error
+                        errorMessage = error.localizedDescription
+                    }
                 }
             }
         }

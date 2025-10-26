@@ -390,6 +390,9 @@ struct NoteEditorView: View {
                         // Update note on main thread (Core Data objects must stay on their context's thread)
                         note.title = newValue
                         note.touch() // Update timestamp when title changes
+
+                        // Debounced list update (same timing as save to avoid excessive updates)
+                        viewModel.updateListItemDebounced(for: note)
                         viewModel.saveNoteDebounced(note)
                     }
 
@@ -459,6 +462,9 @@ struct NoteEditorView: View {
                         content = newValue
                         note.content = newValue
                         note.touch() // Update timestamp
+
+                        // Debounced list update (same timing as save to avoid excessive updates)
+                        viewModel.updateListItemDebounced(for: note)
 
                         // Debounced save to disk (reduces I/O during typing)
                         viewModel.saveNoteDebounced(note)

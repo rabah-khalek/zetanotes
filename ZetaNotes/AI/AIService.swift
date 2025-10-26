@@ -83,7 +83,7 @@ extension AIService {
         if chunks.count == 1 {
             // Check if we should use prompt as user message or system message
             let (systemMsg, userMsg) = config.usePromptAsUserMessage
-                ? ("", instruction + text)  // Combine instruction and text in user message
+                ? ("Respond only with the requested output.", instruction + text)  // System reminder, combine instruction and text in user message
                 : (instruction, text)        // Separate system instruction and user text
 
             // Use chat template for proper formatting
@@ -107,7 +107,7 @@ extension AIService {
 
             // Check if we should use prompt as user message or system message
             let (systemMsg, userMsg) = config.usePromptAsUserMessage
-                ? ("", instruction + chunk)  // Combine instruction and chunk in user message
+                ? ("Respond only with the requested output.", instruction + chunk)  // System reminder, combine instruction and chunk in user message
                 : (instruction, chunk)        // Separate system instruction and user chunk
 
             // Use chat template for proper formatting

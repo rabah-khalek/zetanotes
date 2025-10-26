@@ -22,10 +22,19 @@ class NoteViewModel: ObservableObject {
         willSet {
             // Save the current note before switching to a new one (immediate, not debounced)
             if let currentNote = selectedNote, newValue?.id != currentNote.id {
-                // Flush any pending saves for this note
+                // Flush any pending saves and list updates for this note
                 if let noteID = currentNote.id {
+                    // Cancel save timer
                     saveDebounceTimers[noteID]?.invalidate()
                     saveDebounceTimers.removeValue(forKey: noteID)
+
+                    // Cancel list update timer and perform final update
+                    listUpdateDebounceTimers[noteID]?.invalidate()
+                    listUpdateDebounceTimers.removeValue(forKey: noteID)
+                    if let updatedItem = repository.makeListItem(from: currentNote) {
+                        upsertListItem(updatedItem)
+                        updateSearchItemIfNeeded(updatedItem)
+                    }
                 }
 
                 // Cancel any pending autocomplete for old note
@@ -89,6 +98,7 @@ class NoteViewModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     private var debounceTimer: Timer?
     private var saveDebounceTimers: [UUID: Timer] = [:]
+    private var listUpdateDebounceTimers: [UUID: Timer] = [:]
     private var lastEmbeddingContent: [UUID: String] = [:]
 
     // MARK: - Initialization
@@ -406,7 +416,7 @@ class NoteViewModel: ObservableObject {
     /// Flush all pending saves - call before app quits or critical operations
     @MainActor
     func flushPendingSaves() {
-        // Invalidate all timers and save immediately
+        // Invalidate all save timers and save immediately
         for (noteID, timer) in saveDebounceTimers {
             timer.invalidate()
             if let note = noteCache[noteID] {
@@ -414,6 +424,17 @@ class NoteViewModel: ObservableObject {
             }
         }
         saveDebounceTimers.removeAll()
+
+        // Invalidate all list update timers and update immediately
+        for (noteID, timer) in listUpdateDebounceTimers {
+            timer.invalidate()
+            if let note = noteCache[noteID],
+               let updatedItem = repository.makeListItem(from: note) {
+                upsertListItem(updatedItem)
+                updateSearchItemIfNeeded(updatedItem)
+            }
+        }
+        listUpdateDebounceTimers.removeAll()
     }
 
     // MARK: - Search
@@ -1133,6 +1154,37 @@ class NoteViewModel: ObservableObject {
             noteListItems.append(item)
         }
         noteListItems.sort(by: { $0.updatedAt > $1.updatedAt })
+    }
+
+    /// Debounced list item update - updates the list display after user pauses typing
+    /// This provides near-real-time sync without excessive array operations on every keystroke
+    /// Uses a short 100ms delay for responsive feel while avoiding performance issues
+    func updateListItemDebounced(for note: Note) {
+        guard let noteID = note.id else { return }
+
+        // Cancel existing timer for this note
+        listUpdateDebounceTimers[noteID]?.invalidate()
+        listUpdateDebounceTimers.removeValue(forKey: noteID)
+
+        // Create new timer with very short delay (100ms for responsive UI)
+        let timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: false) { [weak self] _ in
+            Task { @MainActor in
+                guard let self = self else { return }
+
+                // Update list item only if note still exists
+                guard self.noteCache[noteID] != nil,
+                      let updatedItem = self.repository.makeListItem(from: note) else {
+                    self.listUpdateDebounceTimers.removeValue(forKey: noteID)
+                    return
+                }
+
+                self.upsertListItem(updatedItem)
+                self.updateSearchItemIfNeeded(updatedItem)
+                self.listUpdateDebounceTimers.removeValue(forKey: noteID)
+            }
+        }
+
+        listUpdateDebounceTimers[noteID] = timer
     }
 
     private func updateSearchItemIfNeeded(_ item: NoteListItem) {

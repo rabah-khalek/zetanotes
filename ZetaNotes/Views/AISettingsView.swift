@@ -1154,8 +1154,15 @@ struct ModelCard: View {
 
                     // Cancel button - aligned with progress bar
                     Button(action: {
-                        // Safely cancel on the main thread to prevent crashes
+                        // Ensure cancellation happens on the main thread to prevent crashes
                         DispatchQueue.main.async {
+                            // For queued models, cancel from the state first
+                            // since they might not be in ModelDownloader's activeTasks yet
+                            if isQueued {
+                                ModelDownloadState.shared.cancelDownload(modelName: model.displayName)
+                            }
+                            // Always try to cancel from ModelDownloader as well
+                            // (this handles actively downloading models)
                             ModelDownloader.shared.cancelDownload(for: model)
                         }
                     }) {

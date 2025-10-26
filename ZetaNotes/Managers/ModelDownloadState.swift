@@ -30,23 +30,31 @@ class ModelDownloadState: ObservableObject {
     private init() {}
 
     func startDownload(modelName: String) {
-        activeDownloads[modelName] = ActiveDownload(modelName: modelName, progress: 0.0)
-        updateGlobalState()
+        DispatchQueue.main.async { [weak self] in
+            self?.activeDownloads[modelName] = ActiveDownload(modelName: modelName, progress: 0.0)
+            self?.updateGlobalState()
+        }
     }
 
     func updateProgress(_ progress: Double, for modelName: String) {
-        activeDownloads[modelName]?.progress = progress
-        updateGlobalState()
+        DispatchQueue.main.async { [weak self] in
+            self?.activeDownloads[modelName]?.progress = progress
+            self?.updateGlobalState()
+        }
     }
 
     func completeDownload(modelName: String) {
-        // Keep download visible for a moment then remove
-        activeDownloads[modelName]?.progress = 1.0
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
-            self?.activeDownloads.removeValue(forKey: modelName)
+        DispatchQueue.main.async { [weak self] in
+            // Keep download visible for a moment then remove
+            self?.activeDownloads[modelName]?.progress = 1.0
             self?.updateGlobalState()
+
+            // Remove after showing completion briefly
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+                self?.activeDownloads.removeValue(forKey: modelName)
+                self?.updateGlobalState()
+            }
         }
-        updateGlobalState()
     }
 
     /// Completes the first active download (for backward compatibility)
@@ -56,13 +64,16 @@ class ModelDownloadState: ObservableObject {
     }
 
     func failDownload(modelName: String, error: String) {
-        activeDownloads[modelName]?.error = error
-        // Remove failed download after showing error briefly
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) { [weak self] in
-            self?.activeDownloads.removeValue(forKey: modelName)
+        DispatchQueue.main.async { [weak self] in
+            self?.activeDownloads[modelName]?.error = error
             self?.updateGlobalState()
+
+            // Remove failed download after showing error briefly
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) { [weak self] in
+                self?.activeDownloads.removeValue(forKey: modelName)
+                self?.updateGlobalState()
+            }
         }
-        updateGlobalState()
     }
 
     /// Fails the first active download (for backward compatibility)
@@ -84,6 +95,26 @@ class ModelDownloadState: ObservableObject {
         cancelDownload(modelName: firstKey)
     }
 
+    /// Cancels the welcome page download (specifically for the default model) - SYNC
+    func cancelWelcomeDownloadSync() {
+        let defaultModelName = "Llama 3.2 1B"
+
+        // Synchronous cancellation for welcome page to prevent flicker
+        assert(Thread.isMainThread, "Must be called from main thread")
+        activeDownloads.removeValue(forKey: defaultModelName)
+        updateGlobalState()
+    }
+
+    /// Starts welcome page download with immediate state - SYNC
+    func startWelcomeDownloadSync() {
+        let defaultModelName = "Llama 3.2 1B"
+
+        // Synchronous start for welcome page for immediate UI response
+        assert(Thread.isMainThread, "Must be called from main thread")
+        activeDownloads[defaultModelName] = ActiveDownload(modelName: defaultModelName, progress: 0.0)
+        updateGlobalState()
+    }
+
     func cancelAllDownloads() {
         DispatchQueue.main.async { [weak self] in
             self?.activeDownloads.removeAll()
@@ -92,6 +123,9 @@ class ModelDownloadState: ObservableObject {
     }
 
     private func updateGlobalState() {
+        // Ensure we're on the main thread since we're updating @Published properties
+        assert(Thread.isMainThread, "updateGlobalState must be called on the main thread")
+
         // Update backward-compatible properties
         isDownloading = !activeDownloads.isEmpty
 
