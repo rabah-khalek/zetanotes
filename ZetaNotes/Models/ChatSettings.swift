@@ -23,7 +23,7 @@ struct ChatSettings: Codable {
         topP: 0.95,
         topK: 40,
         repeatPenalty: 1.1,
-        systemPrompt: "You are a helpful AI assistant. Provide clear, concise, and accurate responses.",
+        systemPrompt: "Respond only with the requested output.",
         generationTimeout: 10.0
     )
 

@@ -66,7 +66,7 @@ class NoteViewModel: ObservableObject {
     @Published var autoCorrectPrompt = DefaultPrompts.autoCorrect
     @Published var reformulatePrompt = DefaultPrompts.reformulate
     @AppStorage("targetLanguage") var targetLanguage = "Spanish"
-    
+
     // Prompt Message Type (User vs System)
     @AppStorage("autocompleteUseUserMessage") var autocompleteUseUserMessage = true
     @AppStorage("summarizationUseUserMessage") var summarizationUseUserMessage = true

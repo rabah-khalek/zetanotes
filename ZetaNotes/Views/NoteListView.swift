@@ -151,18 +151,22 @@ struct NoteRowView: View {
             }
             .padding(.vertical, 2)
 
-            if isHovering {
-                Button(action: onDelete) {
-                    Image(systemName: "trash")
-                        .font(.system(size: 11))
-                        .foregroundColor(.red.opacity(0.8))
-                }
-                .buttonStyle(.plain)
-                .help("Delete note")
+            // Always show button but with opacity
+            Button(action: onDelete) {
+                Image(systemName: "trash")
+                    .font(.system(size: 11))
+                    .foregroundColor(.red.opacity(0.8))
             }
+            .buttonStyle(.plain)
+            .help("Delete note")
+            .opacity(isHovering ? 1.0 : 0.0)
+            .animation(.easeInOut(duration: 0.15), value: isHovering)
         }
+        .contentShape(Rectangle()) // Make entire row detect hover
         .onHover { hovering in
-            isHovering = hovering
+            withAnimation(.easeInOut(duration: 0.15)) {
+                isHovering = hovering
+            }
         }
     }
 }

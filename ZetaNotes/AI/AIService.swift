@@ -82,10 +82,10 @@ extension AIService {
         // If only one chunk, process normally without batching
         if chunks.count == 1 {
             // Check if we should use prompt as user message or system message
-            let (systemMsg, userMsg) = config.usePromptAsUserMessage 
+            let (systemMsg, userMsg) = config.usePromptAsUserMessage
                 ? ("", instruction + text)  // Combine instruction and text in user message
                 : (instruction, text)        // Separate system instruction and user text
-            
+
             // Use chat template for proper formatting
             guard let rawOutput = await llmService.generateWithChatTemplate(
                 systemMessage: systemMsg,
@@ -106,10 +106,10 @@ extension AIService {
             print("   Batch \(index + 1)/\(chunks.count): \(chunk.count) chars")
 
             // Check if we should use prompt as user message or system message
-            let (systemMsg, userMsg) = config.usePromptAsUserMessage 
+            let (systemMsg, userMsg) = config.usePromptAsUserMessage
                 ? ("", instruction + chunk)  // Combine instruction and chunk in user message
                 : (instruction, chunk)        // Separate system instruction and user chunk
-            
+
             // Use chat template for proper formatting
             guard let rawOutput = await llmService.generateWithChatTemplate(
                 systemMessage: systemMsg,

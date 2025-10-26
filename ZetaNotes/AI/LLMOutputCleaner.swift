@@ -57,7 +57,8 @@ enum LLMOutputCleaner {
         cleaned = cleaned.replacingOccurrences(of: "<|start_header_id|>", with: "")
         cleaned = cleaned.replacingOccurrences(of: "<|end_header_id|>", with: "")
         cleaned = cleaned.replacingOccurrences(of: "<|begin_of_text|>", with: "")
-        cleaned = cleaned.replacingOccurrences(of: "<|end_request", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "<|end_request|>", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "<|im_end|", with: "")
 
         // Llama 3.2 reserved special tokens (appear with large contexts)
         // Format: <|reserved_special_token_XXX| where XXX is a number

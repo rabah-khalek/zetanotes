@@ -23,7 +23,7 @@ struct LLMConfig: Codable, Equatable {
 
     /// Maximum number of tokens to generate (nil = dynamic based on input)
     var maxTokens: Int?
-    
+
     /// Whether to use the prompt as a user message instead of system message
     /// Default is true (use as user message)
     /// Some models may perform better with user message prompts
