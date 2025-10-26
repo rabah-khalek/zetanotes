@@ -36,7 +36,8 @@ class AutocompleteService: AIService {
 
         config = AIGenerationConfig(
             temperature: toolConfig.temperature,
-            maxTokens: toolConfig.maxTokens ?? 100
+            maxTokens: toolConfig.maxTokens ?? 100,
+            usePromptAsUserMessage: toolConfig.usePromptAsUserMessage
         )
     }
 
@@ -136,14 +137,13 @@ class AutocompleteService: AIService {
             }
         }
 
-        // Allow single newlines in autocomplete (for natural continuation)
-        // Only stop at triple newlines (major paragraph breaks)
-        if let tripleNewline = cleaned.range(of: "\n\n\n") {
-            cleaned = String(cleaned[..<tripleNewline.lowerBound])
+        // LIMIT TO SINGLE LINE: Stop at first newline to avoid multi-line ghost text issues
+        if let newlineIndex = cleaned.firstIndex(where: { $0.isNewline }) {
+            cleaned = String(cleaned[..<newlineIndex])
         }
 
         // Trim only leading whitespace (don't trim trailing - we need it for sentence detection)
-        while cleaned.first?.isWhitespace == true || cleaned.first?.isNewline == true {
+        while cleaned.first?.isWhitespace == true {
             cleaned.removeFirst()
         }
 
@@ -185,8 +185,8 @@ class AutocompleteService: AIService {
             }
         }
 
-        // Finally, trim trailing whitespace (but we already trimmed leading)
-        while cleaned.last?.isWhitespace == true || cleaned.last?.isNewline == true {
+        // Finally, trim trailing whitespace
+        while cleaned.last?.isWhitespace == true {
             cleaned.removeLast()
         }
 

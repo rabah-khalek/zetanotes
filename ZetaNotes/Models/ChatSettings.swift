@@ -14,6 +14,7 @@ struct ChatSettings: Codable {
     var topK: Int
     var repeatPenalty: Double
     var systemPrompt: String
+    var generationTimeout: Double // Timeout in seconds for AI generation
 
     /// Default chat settings optimized for conversation
     static let `default` = ChatSettings(
@@ -22,7 +23,8 @@ struct ChatSettings: Codable {
         topP: 0.95,
         topK: 40,
         repeatPenalty: 1.1,
-        systemPrompt: "You are a helpful AI assistant. Provide clear, concise, and accurate responses."
+        systemPrompt: "You are a helpful AI assistant. Provide clear, concise, and accurate responses.",
+        generationTimeout: 10.0
     )
 
     /// Saves the current settings to UserDefaults
@@ -39,6 +41,10 @@ struct ChatSettings: Codable {
             // Ensure temperature is at least 0.01 to prevent crashes
             if decoded.temperature < 0.01 {
                 decoded.temperature = 0.01
+            }
+            // Ensure timeout is reasonable (between 1 and 60 seconds)
+            if decoded.generationTimeout < 1.0 || decoded.generationTimeout > 60.0 {
+                decoded.generationTimeout = 10.0
             }
             return decoded
         }

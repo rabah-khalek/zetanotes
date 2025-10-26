@@ -23,7 +23,8 @@ class CustomToolService: AIService {
         self.prompt = prompt
         self.config = AIGenerationConfig(
             temperature: temperature,
-            maxTokens: maxTokens
+            maxTokens: maxTokens,
+            usePromptAsUserMessage: true  // Default to true for all tools
         )
     }
 

@@ -140,6 +140,11 @@ enum LLMOutputCleaner {
         // Qwen 2.5, Phi-2
         cleaned = cleaned.replacingOccurrences(of: "<|endoftext|>", with: "")
 
+        // Phi-2 specific artifacts
+        cleaned = cleaned.replacingOccurrences(of: "##OUTPUT", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "## OUTPUT", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "## Output", with: "")
+
         // Gemma 2 (Google format)
         cleaned = cleaned.replacingOccurrences(of: "<end_of_turn>", with: "")
         cleaned = cleaned.replacingOccurrences(of: "<start_of_turn>", with: "")

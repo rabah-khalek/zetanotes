@@ -51,7 +51,7 @@ private enum TinyLlamaConfigs {
 
         case .patch:
             return LLMConfig(
-                prompt: "Fix all spelling and grammar errors. Return ONLY the corrected text with no additional commentary.",
+                prompt: "Fix all spelling and grammar errors in the text below. Output the corrected text exactly as it should appear, with no explanations, no bullet points, no change lists, and no additional commentary:\n\n",
                 temperature: 0.05,
                 maxTokens: nil
             )
@@ -72,7 +72,7 @@ private enum TinyLlamaConfigs {
 
         case .translate:
             return LLMConfig(
-                prompt: "Translate to {language}. Output ONLY the {language} translation, no English, no explanations.",
+                prompt: "Translate the following text to {language}. Output ONLY the translated text in {language}. Do not include any English. Do not add explanations, notes, or commentary. Just provide the direct translation:\n\n",
                 temperature: 0.05,
                 maxTokens: nil
             )
@@ -111,49 +111,56 @@ private enum LlamaThreeTwoConfigs {
             return LLMConfig(
                 prompt: "Continue writing naturally:",
                 temperature: 0.4,
-                maxTokens: 30
+                maxTokens: 30,
+                usePromptAsUserMessage: true
             )
 
         case .patch:
             return LLMConfig(
-                prompt: "Fix all spelling and grammar errors. Return only the corrected text with no other commentary.",
-                temperature: 0.2,
-                maxTokens: nil
+                prompt: "Correct all spelling and grammar errors in the text below:\n\n",
+                temperature: 0.1,
+                maxTokens: nil,
+                usePromptAsUserMessage: true
             )
 
         case .rephrase:
             return LLMConfig(
-                prompt: "Rewrite this text more clearly. Return only the rewritten version with no explanation.",
-                temperature: 0.25,
-                maxTokens: nil
+                prompt: "Rephrase better the text below:\n\n",
+                temperature: 0.3,
+                maxTokens: nil,
+                usePromptAsUserMessage: true
             )
 
         case .summarize:
             return LLMConfig(
-                prompt: "Write a 1-2 sentence summary. Return only the summary with no preamble.",
-                temperature: 0.2,
-                maxTokens: 60
+                prompt: "Summarize the text below in 1-2 sentences:\n\n",
+                temperature: 0.15,
+                maxTokens: 100,
+                usePromptAsUserMessage: true
             )
 
         case .translate:
             return LLMConfig(
-                prompt: "Translate to {language}. Output ONLY the {language} translation, no English.",
-                temperature: 0.1,
-                maxTokens: nil
+                prompt: "Translate to {language} the following text:\n\n",
+                temperature: 0.05,
+                maxTokens: nil,
+                usePromptAsUserMessage: true
             )
 
         case .titleGeneration:
             return LLMConfig(
-                prompt: "", // Not used - title generation uses direct completion format
+                prompt: "Generate a 2-4 word title:",
                 temperature: 0.1,
-                maxTokens: 8
+                maxTokens: 8,
+                usePromptAsUserMessage: true
             )
 
         case .custom:
             return LLMConfig(
                 prompt: "You are a helpful assistant.",
                 temperature: 0.3,
-                maxTokens: nil
+                maxTokens: nil,
+                usePromptAsUserMessage: true
             )
         }
     }
@@ -177,7 +184,7 @@ private enum QwenTwoFiveConfigs {
 
         case .patch:
             return LLMConfig(
-                prompt: "Fix all spelling and grammar errors while preserving the original meaning. Return ONLY the corrected text with no additional commentary.",
+                prompt: "Fix all spelling and grammar errors in the text below. Output the corrected text exactly as it should appear, with no explanations, no bullet points, no change lists, and no additional commentary:\n\n",
                 temperature: 0.05, maxTokens: nil
             )
 
@@ -195,8 +202,8 @@ private enum QwenTwoFiveConfigs {
 
         case .translate:
             return LLMConfig(
-                prompt: "Translate to {language}. Output ONLY the {language} translation.",
-                temperature: 0.1, maxTokens: nil
+                prompt: "Translate the following text to {language}. Output ONLY the translated text in {language}. Do not include any English. Do not add explanations, notes, or commentary. Just provide the direct translation:\n\n",
+                temperature: 0.05, maxTokens: nil
             )
 
         case .titleGeneration:
@@ -232,7 +239,7 @@ private enum SmolLMTwoConfigs {
 
         case .patch:
             return LLMConfig(
-                prompt: "Fix all spelling and grammar errors while preserving the original meaning. Return ONLY the corrected text with no additional commentary.",
+                prompt: "Fix all spelling and grammar errors in the text below. Output the corrected text exactly as it should appear, with no explanations, no bullet points, no change lists, and no additional commentary:\n\n",
                 temperature: 0.05, maxTokens: nil
             )
 
@@ -250,8 +257,8 @@ private enum SmolLMTwoConfigs {
 
         case .translate:
             return LLMConfig(
-                prompt: "Translate the following text to {language}. Return ONLY the translation with no additional commentary.",
-                temperature: 0.1, maxTokens: nil
+                prompt: "Translate the following text to {language}. Output ONLY the translated text in {language}. Do not include any English. Do not add explanations, notes, or commentary. Just provide the direct translation:\n\n",
+                temperature: 0.05, maxTokens: nil
             )
 
         case .titleGeneration:
@@ -287,7 +294,7 @@ private enum Phi2Configs {
 
         case .patch:
             return LLMConfig(
-                prompt: "Fix all spelling and grammar errors while preserving the original meaning. Return ONLY the corrected text with no additional commentary.",
+                prompt: "Fix all spelling and grammar errors in the text below. Output the corrected text exactly as it should appear, with no explanations, no bullet points, no change lists, and no additional commentary:\n\n",
                 temperature: 0.05, maxTokens: nil
             )
 
@@ -305,8 +312,8 @@ private enum Phi2Configs {
 
         case .translate:
             return LLMConfig(
-                prompt: "Translate the following text to {language}. Return ONLY the translation with no additional commentary.",
-                temperature: 0.1, maxTokens: nil
+                prompt: "Translate the following text to {language}. Output ONLY the translated text in {language}. Do not include any English. Do not add explanations, notes, or commentary. Just provide the direct translation:\n\n",
+                temperature: 0.05, maxTokens: nil
             )
 
         case .titleGeneration:
@@ -341,7 +348,7 @@ private enum GemmaTwoConfigs {
 
         case .patch:
             return LLMConfig(
-                prompt: "Fix all spelling and grammar errors while preserving the original meaning. Return ONLY the corrected text with no additional commentary.",
+                prompt: "Fix all spelling and grammar errors in the text below. Output the corrected text exactly as it should appear, with no explanations, no bullet points, no change lists, and no additional commentary:\n\n",
                 temperature: 0.05, maxTokens: nil
             )
 
@@ -359,8 +366,8 @@ private enum GemmaTwoConfigs {
 
         case .translate:
             return LLMConfig(
-                prompt: "Translate the following text to {language}. Return ONLY the translation with no additional commentary.",
-                temperature: 0.1, maxTokens: nil
+                prompt: "Translate the following text to {language}. Output ONLY the translated text in {language}. Do not include any English. Do not add explanations, notes, or commentary. Just provide the direct translation:\n\n",
+                temperature: 0.05, maxTokens: nil
             )
 
         case .titleGeneration:
@@ -395,7 +402,7 @@ private enum PhiThreeFiveConfigs {
 
         case .patch:
             return LLMConfig(
-                prompt: "Fix all spelling and grammar errors while preserving the original meaning. Return ONLY the corrected text with no additional commentary.",
+                prompt: "Fix all spelling and grammar errors in the text below. Output the corrected text exactly as it should appear, with no explanations, no bullet points, no change lists, and no additional commentary:\n\n",
                 temperature: 0.05, maxTokens: nil
             )
 
@@ -413,8 +420,8 @@ private enum PhiThreeFiveConfigs {
 
         case .translate:
             return LLMConfig(
-                prompt: "Translate the following text to {language}. Return ONLY the translation with no additional commentary.",
-                temperature: 0.1, maxTokens: nil
+                prompt: "Translate the following text to {language}. Output ONLY the translated text in {language}. Do not include any English. Do not add explanations, notes, or commentary. Just provide the direct translation:\n\n",
+                temperature: 0.05, maxTokens: nil
             )
 
         case .titleGeneration:

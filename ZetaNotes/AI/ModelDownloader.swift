@@ -200,7 +200,7 @@ class ModelDownloader: NSObject, ObservableObject {
     func cancelAllDownloads() {
         let tasksCopy = activeTasks
 
-        for (fileName, downloadTask) in tasksCopy {
+        for (_, downloadTask) in tasksCopy {
             downloadTask.task.cancel()
             downloadTask.observation.invalidate()
 

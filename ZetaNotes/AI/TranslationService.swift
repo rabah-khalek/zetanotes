@@ -26,7 +26,8 @@ class TranslationService: AIService {
         )
         config = AIGenerationConfig(
             temperature: toolConfig.temperature,
-            maxTokens: toolConfig.maxTokens
+            maxTokens: toolConfig.maxTokens,
+            usePromptAsUserMessage: toolConfig.usePromptAsUserMessage
         )
     }
 
@@ -109,8 +110,8 @@ class TranslationService: AIService {
         let instruction = (customPrompt.isEmpty ? DefaultPrompts.translation : customPrompt)
             .replacingOccurrences(of: "{language}", with: targetLanguage)
 
-        // Calculate dynamic max tokens with 50% buffer
-        let maxTokens = calculateMaxTokens(for: text, bufferPercent: 50, maxLimit: 512)
+        // Calculate dynamic max tokens with 70% buffer (translations often expand)
+        let maxTokens = calculateMaxTokens(for: text, bufferPercent: 70, maxLimit: 1024)
         print("📊 Estimated max tokens needed: \(maxTokens)")
 
         // Use batched processing to handle large texts
@@ -213,6 +214,11 @@ class TranslationService: AIService {
     /// Validates that the translation output is not just repeating/paraphrasing the input
     /// Returns true if output appears to be a valid translation
     private func isValidTranslation(_ output: String, originalText: String) -> Bool {
+        // If output is empty or too short, it's not valid
+        if output.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return false
+        }
+
         // If output is too similar to input, it's likely not translated
         let outputWords = Set(output.lowercased().split(separator: " ").map(String.init))
         let inputWords = Set(originalText.lowercased().split(separator: " ").map(String.init))
@@ -221,11 +227,15 @@ class TranslationService: AIService {
         let commonWords = outputWords.intersection(inputWords)
         let overlapPercentage = Double(commonWords.count) / Double(max(outputWords.count, 1)) * 100
 
-        // If more than 70% of words are the same, it's likely not translated
-        let isValid = overlapPercentage < 70
+        // For small models (1B-3B), be more lenient with validation
+        // Allow up to 80% overlap since smaller models may struggle with complete translation
+        let threshold: Double = 80
+        let isValid = overlapPercentage < threshold
 
         if !isValid {
-            print("⚠️ Translation validation failed: \(Int(overlapPercentage))% word overlap with original (target language: \(targetLanguage))")
+            print("⚠️ Translation validation failed: \(Int(overlapPercentage))% word overlap with original (target language: \(targetLanguage), threshold: \(Int(threshold))%)")
+        } else {
+            print("✅ Translation validation passed: \(Int(overlapPercentage))% overlap (under \(Int(threshold))% threshold)")
         }
 
         return isValid

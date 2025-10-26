@@ -33,7 +33,8 @@ class SummarizationService: AIService {
         )
         config = AIGenerationConfig(
             temperature: toolConfig.temperature,
-            maxTokens: toolConfig.maxTokens ?? Config.maxTokens
+            maxTokens: toolConfig.maxTokens ?? Config.maxTokens,
+            usePromptAsUserMessage: toolConfig.usePromptAsUserMessage
         )
     }
 
@@ -93,15 +94,31 @@ class SummarizationService: AIService {
         // First apply centralized artifact removal
         var cleaned = LLMOutputCleaner.clean(output)
 
-        // Remove common hallucination prefixes
-        let hallucinationPrefixes = [
-            "Sure! ", "Sure, ", "Certainly! ", "Certainly, ",
-            "Here is ", "Here's ", "Summary: ", "The summary is: ",
-            "In summary, ", "To summarize, "
+        // Remove common preamble patterns (case-insensitive)
+        let preamblePatterns = [
+            "a brief summary of the text:",
+            "brief summary:",
+            "summary of the text:",
+            "here is a summary:",
+            "here's a summary:",
+            "the summary is:",
+            "summary:",
+            "in summary,",
+            "to summarize,",
+            "sure!",
+            "sure,",
+            "certainly!",
+            "certainly,"
         ]
-        for prefix in hallucinationPrefixes where cleaned.hasPrefix(prefix) {
-            cleaned = String(cleaned.dropFirst(prefix.count))
-            break
+
+        for pattern in preamblePatterns {
+            if let range = cleaned.range(of: pattern, options: .caseInsensitive) {
+                if range.lowerBound == cleaned.startIndex ||
+                   cleaned[..<range.lowerBound].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    cleaned = String(cleaned[range.upperBound...]).trimmingCharacters(in: .whitespacesAndNewlines)
+                    break
+                }
+            }
         }
 
         // Remove leading markdown quote character if present

@@ -172,7 +172,7 @@ struct ToolEditorView: View {
                         Image(systemName: "info.circle")
                             .font(.caption)
                             .foregroundColor(.blue)
-                        Text("This prompt is the instruction. The selected text will be passed automatically to the AI.")
+                        Text("This prompt is the instruction. The selected text will be passed automatically to the AI model.")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }

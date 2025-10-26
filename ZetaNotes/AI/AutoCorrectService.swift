@@ -24,7 +24,8 @@ class AutoCorrectService: AIService {
         )
         config = AIGenerationConfig(
             temperature: toolConfig.temperature,
-            maxTokens: toolConfig.maxTokens
+            maxTokens: toolConfig.maxTokens,
+            usePromptAsUserMessage: toolConfig.usePromptAsUserMessage
         )
     }
 

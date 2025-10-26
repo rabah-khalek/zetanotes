@@ -186,7 +186,7 @@ enum AIModel: String, CaseIterable, Codable {
         case .qwenTwoFiveThreeB:
             return 8192 // 8K (reduced from 32K to save 4-6GB SWAP)
         case .llamaThreeTwoThreeB:
-            return 8192 // 8K (reduced from 32K to save 4-6GB SWAP)
+            return 8192*2 // 16K (reduced from 32K to save 4-6GB SWAP)
         case .phiThreeFiveMini:
             return 8192 // 8K (reduced from 32K to save 4-6GB SWAP)
         }
@@ -777,12 +777,14 @@ class LLMInferenceService: @unchecked Sendable {
     ///   - maxTokens: Maximum number of tokens to generate (nil = use model's max context)
     ///   - temperature: Sampling temperature (0.0 = deterministic, 1.0 = creative)
     ///   - grammar: Optional GBNF grammar string to constrain output format (e.g., JSON schema)
+    ///   - timeout: Maximum time in seconds for generation (default: 10.0)
     /// - Returns: Generated text
     func generate(
         prompt: String,
         maxTokens: Int? = nil,
         temperature: Float = 0.7,
-        grammar: String? = nil
+        grammar: String? = nil,
+        timeout: TimeInterval = 10.0
     ) async -> String? {
         guard isLoaded else {
             print("⚠️ Model not loaded")
@@ -1066,6 +1068,9 @@ class LLMInferenceService: @unchecked Sendable {
 
                     print("✅ Prompt processed successfully")
 
+                    // Track generation start time for timeout
+                    let generationStartTime = Date()
+
                     // Generate tokens
                     var generatedTokens: [llama_token] = []
                     var nCur = tokenCount
@@ -1089,6 +1094,23 @@ class LLMInferenceService: @unchecked Sendable {
                             print("🛑 Generation cancelled by request")
                             continuation.resume(returning: nil)
                             return
+                        }
+
+                        // Check for timeout
+                        let elapsedTime = Date().timeIntervalSince(generationStartTime)
+                        if elapsedTime >= timeout {
+                            print("⏱️ Generation timeout reached (\(String(format: "%.1f", timeout))s)")
+                            print("   Generated \(generatedTokens.count) tokens before timeout")
+
+                            // Log timeout as a warning (it's recoverable - returns partial results)
+                            ErrorLogger.shared.logWarning(
+                                code: .generationTruncated,
+                                operation: "Text Generation",
+                                details: "Timeout: \(String(format: "%.1f", timeout))s, Generated \(generatedTokens.count) tokens. Returning partial results."
+                            )
+
+                            // Return what we have so far instead of nil
+                            break
                         }
 
                         // Sample the next token using the sampler chain

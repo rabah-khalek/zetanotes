@@ -42,7 +42,8 @@ class ChatService {
         let response = await llmService.generate(
             prompt: prompt,
             maxTokens: settings.maxTokens,
-            temperature: safeTemperature
+            temperature: safeTemperature,
+            timeout: settings.generationTimeout
         )
 
         // Clean artifacts from the response

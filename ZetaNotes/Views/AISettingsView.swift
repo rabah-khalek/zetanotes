@@ -307,7 +307,7 @@ struct GeneralSettingsContent: View {
             // Appearance and Reset Settings (side-by-side)
             HStack(alignment: .top, spacing: 16) {
                 // Reset to Defaults Section (Left)
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: 12) {
                     Label("Reset Settings", systemImage: "arrow.counterclockwise")
                         .font(.headline)
                         .fontWeight(.semibold)
@@ -315,19 +315,20 @@ struct GeneralSettingsContent: View {
                     Text("Restore all defaults")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
 
                     Spacer()
 
                     Button(action: {
                         showResetConfirmation = true
                     }) {
-                        HStack {
+                        HStack(spacing: 6) {
                             Image(systemName: "arrow.counterclockwise.circle.fill")
+                                .font(.system(size: 12))
                             Text("Reset")
+                                .font(.system(size: 13, weight: .medium))
                         }
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 6)
+                        .padding(.vertical, 8)
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(.orange)
@@ -346,18 +347,22 @@ struct GeneralSettingsContent: View {
                         )
                     }
                 }
-                .padding()
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(16)
+                .frame(maxWidth: .infinity, minHeight: 140, alignment: .leading)
                 .background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
                 .cornerRadius(8)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .strokeBorder(Color.gray.opacity(0.3), lineWidth: 1)
+                )
 
                 // Appearance Settings (Right)
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: 12) {
                     Label("Appearance", systemImage: "paintbrush")
                         .font(.headline)
                         .fontWeight(.semibold)
 
-                    Text("Theme")
+                    Text("Choose your theme")
                         .font(.caption)
                         .foregroundColor(.secondary)
 
@@ -372,12 +377,15 @@ struct GeneralSettingsContent: View {
                     .pickerStyle(.segmented)
                     .labelsHidden()
                 }
-                .padding()
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(16)
+                .frame(maxWidth: .infinity, minHeight: 140, alignment: .leading)
                 .background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
                 .cornerRadius(8)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .strokeBorder(Color.gray.opacity(0.3), lineWidth: 1)
+                )
             }
-            .frame(height: 140)
 
             Divider()
 
@@ -481,10 +489,10 @@ struct GeneralSettingsContent: View {
             }
             .background(Color(nsColor: .controlBackgroundColor).opacity(0.3))
             .cornerRadius(8)
-
-            Divider()
-
-            LegalSupportSection()
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .strokeBorder(Color.gray.opacity(0.3), lineWidth: 1)
+            )
 
             Divider()
 
@@ -547,79 +555,69 @@ struct GeneralSettingsContent: View {
                     .frame(height: 2)
 
                 // Content area
-                VStack(alignment: .leading, spacing: 16) {
-                    // Reset App Card
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack(alignment: .top) {
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text("Reset Entire App")
-                                    .font(.system(size: 15, weight: .semibold))
-                                    .foregroundColor(.primary)
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(alignment: .top) {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Reset Entire App")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundColor(.primary)
 
-                                Text("Permanently delete all data and restore to factory defaults")
-                                    .font(.system(size: 12))
-                                    .foregroundColor(.secondary)
-                                    .fixedSize(horizontal: false, vertical: true)
-                            }
-
-                            Spacer()
+                            Text("Permanently delete all data and restore to factory defaults")
+                                .font(.system(size: 12))
+                                .foregroundColor(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
 
-                        // What will be deleted
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("This will permanently delete:")
-                                .font(.system(size: 11, weight: .medium))
-                                .foregroundColor(.red.opacity(0.9))
-                                .textCase(.uppercase)
-                                .tracking(0.5)
+                        Spacer()
+                    }
 
-                            VStack(alignment: .leading, spacing: 6) {
-                                DangerZoneItemView(icon: "doc.text.fill", text: "All notes and their content")
-                                DangerZoneItemView(
-                                    icon: "brain.head.profile",
-                                    text: "All downloaded AI models (~1-2GB)"
-                                )
-                                DangerZoneItemView(icon: "wand.and.stars", text: "All custom prompts and tools")
-                                DangerZoneItemView(icon: "gearshape.fill", text: "All settings and preferences")
-                                DangerZoneItemView(
-                                    icon: "bubble.left.and.bubble.right.fill",
-                                    text: "Complete chat history"
-                                )
-                            }
-                        }
-                        .padding(12)
-                        .background(
-                            RoundedRectangle(cornerRadius: 6)
-                                .fill(Color(nsColor: .controlBackgroundColor).opacity(0.5))
+                    // What will be deleted
+                    Text("This will permanently delete:")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(.red.opacity(0.9))
+                        .textCase(.uppercase)
+                        .tracking(0.5)
+
+                    VStack(alignment: .leading, spacing: 6) {
+                        DangerZoneItemView(icon: "doc.text.fill", text: "All notes and their content")
+                        DangerZoneItemView(
+                            icon: "brain.head.profile",
+                            text: "All downloaded AI models (~1-2GB)"
                         )
-
-                        // Reset button
-                        Button(action: {
-                            showDangerZoneConfirmation = true
-                            confirmationText = ""
-                        }) {
-                            HStack(spacing: 8) {
-                                Image(systemName: "trash.fill")
-                                    .font(.system(size: 13, weight: .semibold))
-                                Text("Reset Entire App")
-                                    .font(.system(size: 13, weight: .semibold))
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 10)
-                            .background(
-                                RoundedRectangle(cornerRadius: 6)
-                                    .fill(Color.red)
-                            )
-                            .foregroundColor(.white)
-                        }
-                        .buttonStyle(.plain)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 6)
-                                .strokeBorder(Color.red.opacity(0.5), lineWidth: 1)
+                        DangerZoneItemView(icon: "wand.and.stars", text: "All custom prompts and tools")
+                        DangerZoneItemView(icon: "gearshape.fill", text: "All settings and preferences")
+                        DangerZoneItemView(
+                            icon: "bubble.left.and.bubble.right.fill",
+                            text: "Complete chat history"
                         )
                     }
-                    .padding(16)
+
+                    // Reset button
+                    Button(action: {
+                        showDangerZoneConfirmation = true
+                        confirmationText = ""
+                    }) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "trash.fill")
+                                .font(.system(size: 13, weight: .semibold))
+                            Text("Reset Entire App")
+                                .font(.system(size: 13, weight: .semibold))
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(Color.red)
+                        )
+                        .foregroundColor(.white)
+                    }
+                    .buttonStyle(.plain)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6)
+                            .strokeBorder(Color.red.opacity(0.5), lineWidth: 1)
+                    )
                 }
+                .padding(16)
             }
             .background(Color(nsColor: .textBackgroundColor))
             .cornerRadius(10)
@@ -652,17 +650,30 @@ struct GeneralSettingsContent: View {
                 .disabled(confirmationText.uppercased() != "DELETE")
             } message: {
                 Text(
-                    "⚠️ WARNING: This action cannot be undone!\n\nThis will permanently delete:\n• All your notes\n• All AI models (~1-2GB)\n• All custom prompts and tools\n• All settings\n• Chat history\n\nThe app will restart as if freshly installed.\n\nType DELETE to confirm."
+                    "⚠️ WARNING: This action cannot be undone!\n\n" +
+                    "This will permanently delete:\n" +
+                    "• All your notes\n" +
+                    "• All AI models (~1-2GB)\n" +
+                    "• All custom prompts and tools\n" +
+                    "• All settings\n" +
+                    "• Chat history\n\n" +
+                    "The app will restart as if freshly installed.\n\n" +
+                    "Type DELETE to confirm."
                 )
             }
 
             Divider()
 
+            // Legal & Support Section
+            LegalSupportSection()
+
+            Divider()
+
             // About Section
-            VStack(alignment: .leading, spacing: 12) {
-                HStack(spacing: 10) {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack(spacing: 12) {
                     Image(systemName: "info.circle.fill")
-                        .font(.system(size: 18))
+                        .font(.system(size: 20))
                         .foregroundColor(.blue)
 
                     Text("About ZetaNotes")
@@ -670,66 +681,69 @@ struct GeneralSettingsContent: View {
                         .fontWeight(.semibold)
                 }
 
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Text("Version")
-                            .font(.system(size: 13))
-                            .foregroundColor(.secondary)
-                        Spacer()
-                        Text("1.0.0")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundColor(.primary)
-                    }
-
-                    if licenseManager.isPro {
+                VStack(alignment: .leading, spacing: 12) {
+                    // Version and License
+                    VStack(alignment: .leading, spacing: 8) {
                         HStack {
-                            Text("License")
+                            Text("Version")
                                 .font(.system(size: 13))
                                 .foregroundColor(.secondary)
                             Spacer()
-                            HStack(spacing: 4) {
-                                Image(systemName: "checkmark.seal.fill")
-                                    .font(.system(size: 12))
-                                    .foregroundColor(.green)
-                                Text("Pro")
-                                    .font(.system(size: 13, weight: .medium))
-                                    .foregroundColor(.green)
+                            Text("1.0.0")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(.primary)
+                        }
+
+                        if licenseManager.isPro {
+                            HStack {
+                                Text("License")
+                                    .font(.system(size: 13))
+                                    .foregroundColor(.secondary)
+                                Spacer()
+                                HStack(spacing: 4) {
+                                    Image(systemName: "checkmark.seal.fill")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.green)
+                                    Text("Pro")
+                                        .font(.system(size: 13, weight: .medium))
+                                        .foregroundColor(.green)
+                                }
                             }
                         }
                     }
 
                     Divider()
-                        .padding(.vertical, 4)
 
-                    Text("Privacy-first note-taking with offline AI. All processing happens on your device.")
-                        .font(.system(size: 12))
-                        .foregroundColor(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
+                    // Description
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Privacy-first note-taking with offline AI. All processing happens on your device.")
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
 
-                    Text("Updates are delivered automatically through the Mac App Store.")
+                        Text("Updates are delivered automatically through the Mac App Store.")
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary)
+
+                        Text(
+                            "Payments are securely processed through the App Store. No billing data is stored in ZetaNotes."
+                        )
                         .font(.system(size: 11))
                         .foregroundColor(.secondary)
-
-                    Text(
-                        "Payments are securely processed through the App Store. No billing data is stored in ZetaNotes."
-                    )
-                    .font(.system(size: 11))
-                    .foregroundColor(.secondary)
+                    }
 
                     Divider()
-                        .padding(.vertical, 4)
 
-                    // Rate ZetaNotes Button
+                    // Rate Button
                     Button(action: {
                         ReviewManager.shared.requestReviewManually()
                     }) {
-                        HStack(spacing: 8) {
+                        HStack(spacing: 6) {
                             Image(systemName: "star.fill")
-                                .font(.system(size: 12))
+                                .font(.system(size: 11))
                                 .foregroundColor(.yellow)
                             Text("Rate ZetaNotes on the App Store")
                                 .font(.system(size: 13, weight: .medium))
-                                .foregroundColor(.primary)
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 8)
@@ -738,9 +752,13 @@ struct GeneralSettingsContent: View {
                     .help("Help us by rating ZetaNotes on the App Store")
                 }
             }
-            .padding()
+            .padding(16)
             .background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
             .cornerRadius(8)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .strokeBorder(Color.gray.opacity(0.3), lineWidth: 1)
+            )
         }
     }
 
@@ -1444,13 +1462,10 @@ struct ProStatusSection: View {
                     .buttonStyle(.bordered)
                     .controlSize(.small)
                 }
-                .padding(.horizontal)
-                .padding(.bottom, 4)
 
                 Text("Subscriptions are managed through the App Store.")
                     .font(.caption)
                     .foregroundColor(.secondary)
-                    .padding(.horizontal)
             } else {
                 // Free Tier State
                 VStack(alignment: .leading, spacing: 12) {
@@ -1509,7 +1524,6 @@ struct ProStatusSection: View {
                 .cornerRadius(8)
             }
         }
-        .padding(.horizontal)
     }
 }
 
@@ -1545,60 +1559,51 @@ struct LegalSupportSection: View {
                 Spacer()
             }
 
-            VStack(alignment: .leading, spacing: 12) {
-                Text(
-                    "ZetaNotes runs fully on your Mac. Notes, embeddings, and chat history stay local unless you export or share them."
-                )
-                .font(.system(size: 12))
-                .foregroundColor(.secondary)
-
-                HStack(spacing: 12) {
-                    Button {
-                        openURL(privacyURL)
-                    } label: {
-                        Label("Privacy Policy", systemImage: "doc.text")
-                    }
-                    .buttonStyle(.bordered)
-
-                    Button {
-                        openURL(termsURL)
-                    } label: {
-                        Label("Terms of Use", systemImage: "doc.richtext")
-                    }
-                    .buttonStyle(.bordered)
-                }
-
-                HStack(spacing: 12) {
-                    Button {
-                        if let url = URL(string: supportEmail) {
-                            openURL(url)
-                        }
-                    } label: {
-                        Label("Contact Support", systemImage: "envelope")
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.blue)
-
-                    Button {
-                        // Open App Store subscription management
-                        if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
-                            openURL(url)
-                        }
-                    } label: {
-                        Label("Manage Subscription", systemImage: "creditcard")
-                    }
-                    .buttonStyle(.bordered)
-                }
-
-                Text("Updates are delivered automatically through the Mac App Store.")
-                    .font(.system(size: 11))
-                    .foregroundColor(.secondary)
-            }
-            .padding(16)
-            .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color(nsColor: .controlBackgroundColor).opacity(0.5))
+            Text(
+                "ZetaNotes runs fully on your Mac. Notes, embeddings, and chat history stay local unless you export or share them."
             )
+            .font(.system(size: 12))
+            .foregroundColor(.secondary)
+
+            HStack(spacing: 12) {
+                Button {
+                    openURL(privacyURL)
+                } label: {
+                    Label("Privacy Policy", systemImage: "doc.text")
+                }
+                .buttonStyle(.bordered)
+
+                Button {
+                    openURL(termsURL)
+                } label: {
+                    Label("Terms of Use", systemImage: "doc.richtext")
+                }
+                .buttonStyle(.bordered)
+
+                Button {
+                    if let url = URL(string: supportEmail) {
+                        openURL(url)
+                    }
+                } label: {
+                    Label("Contact Support", systemImage: "envelope")
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.blue)
+
+                Button {
+                    // Open App Store subscription management
+                    if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
+                        openURL(url)
+                    }
+                } label: {
+                    Label("Manage Subscription", systemImage: "creditcard")
+                }
+                .buttonStyle(.bordered)
+            }
+
+            Text("Updates are delivered automatically through the Mac App Store.")
+                .font(.system(size: 11))
+                .foregroundColor(.secondary)
 
             Text(
                 "Need to revoke data? Export or delete everything from the actions above, or email support to request account deletion."
@@ -1606,7 +1611,13 @@ struct LegalSupportSection: View {
             .font(.caption)
             .foregroundColor(.secondary)
         }
-        .padding(.horizontal)
+        .padding(16)
+        .background(Color(nsColor: .controlBackgroundColor).opacity(0.5))
+        .cornerRadius(8)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .strokeBorder(Color.gray.opacity(0.3), lineWidth: 1)
+        )
     }
 }
 
@@ -1799,6 +1810,10 @@ struct ToolRow: View {
         .padding(12)
         .background(Color(nsColor: .controlBackgroundColor).opacity(0.3))
         .cornerRadius(8)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .strokeBorder(Color.gray.opacity(0.3), lineWidth: 1)
+        )
     }
 }
 
@@ -1842,6 +1857,10 @@ struct AutocompleteSettingsRow: View {
         .padding(12)
         .background(Color(nsColor: .controlBackgroundColor).opacity(0.3))
         .cornerRadius(8)
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .strokeBorder(Color.gray.opacity(0.3), lineWidth: 1)
+        )
     }
 }
 
@@ -1997,6 +2016,29 @@ struct ChatSettingsContent: View {
                         }
 
                     Text("Penalizes repetition: higher values reduce repeated phrases")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                Divider()
+
+                // Generation Timeout
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Generation Timeout")
+                            .font(.headline)
+                        Spacer()
+                        Text(String(format: "%.0f sec", settings.generationTimeout))
+                            .font(.system(size: 13, weight: .medium, design: .monospaced))
+                            .foregroundColor(.secondary)
+                    }
+
+                    Slider(value: $settings.generationTimeout, in: 1.0 ... 60.0, step: 1.0)
+                        .onChange(of: settings.generationTimeout) { _ in
+                            saveSettings()
+                        }
+
+                    Text("Maximum time allowed for AI to generate a response")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }

@@ -12,13 +12,16 @@ import Foundation
 struct AIGenerationConfig {
     let temperature: Float
     let maxTokens: Int?
+    let usePromptAsUserMessage: Bool
 
     init(
         temperature: Float = 0.7,
-        maxTokens: Int? = nil
+        maxTokens: Int? = nil,
+        usePromptAsUserMessage: Bool = true
     ) {
         self.temperature = temperature
         self.maxTokens = maxTokens
+        self.usePromptAsUserMessage = usePromptAsUserMessage
     }
 }
 
@@ -78,10 +81,15 @@ extension AIService {
 
         // If only one chunk, process normally without batching
         if chunks.count == 1 {
+            // Check if we should use prompt as user message or system message
+            let (systemMsg, userMsg) = config.usePromptAsUserMessage 
+                ? ("", instruction + text)  // Combine instruction and text in user message
+                : (instruction, text)        // Separate system instruction and user text
+            
             // Use chat template for proper formatting
             guard let rawOutput = await llmService.generateWithChatTemplate(
-                systemMessage: instruction,
-                userMessage: text,
+                systemMessage: systemMsg,
+                userMessage: userMsg,
                 maxTokens: maxTokens ?? config.maxTokens,
                 temperature: config.temperature
             ) else {
@@ -97,10 +105,15 @@ extension AIService {
         for (index, chunk) in chunks.enumerated() {
             print("   Batch \(index + 1)/\(chunks.count): \(chunk.count) chars")
 
+            // Check if we should use prompt as user message or system message
+            let (systemMsg, userMsg) = config.usePromptAsUserMessage 
+                ? ("", instruction + chunk)  // Combine instruction and chunk in user message
+                : (instruction, chunk)        // Separate system instruction and user chunk
+            
             // Use chat template for proper formatting
             guard let rawOutput = await llmService.generateWithChatTemplate(
-                systemMessage: instruction,
-                userMessage: chunk,
+                systemMessage: systemMsg,
+                userMessage: userMsg,
                 maxTokens: maxTokens ?? config.maxTokens,
                 temperature: config.temperature
             ) else {

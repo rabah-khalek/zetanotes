@@ -30,14 +30,15 @@ class TitleGenerationService: AIService {
         )
         config = AIGenerationConfig(
             temperature: toolConfig.temperature,
-            maxTokens: toolConfig.maxTokens ?? Config.maxTokens
+            maxTokens: toolConfig.maxTokens ?? Config.maxTokens,
+            usePromptAsUserMessage: toolConfig.usePromptAsUserMessage
         )
     }
 
-    // MARK: - AIService Protocol
+        // MARK: - AIService Protocol
 
     func buildPrompt(for text: String) -> String {
-        // Use ModelToolConfigRegistry for consistent configuration
+        // Get the configured prompt from ModelToolConfigRegistry
         let toolConfig = ModelToolConfigRegistry.getConfig(
             for: AIEngine.shared.selectedModel,
             toolType: .titleGeneration
@@ -52,24 +53,23 @@ class TitleGenerationService: AIService {
     func process(_ text: String, customPrompt: String) async -> String? {
         print("📋 Title: Processing \(text.count) chars")
 
-        // Get model-specific config from ModelToolConfigRegistry
+        // Get model-specific config from ModelToolConfigRegistry (for temperature/maxTokens only)
         let toolConfig = ModelToolConfigRegistry.getConfig(
             for: AIEngine.shared.selectedModel,
             toolType: .titleGeneration
         )
 
-        // Use custom prompt if provided, otherwise use model-optimized prompt
-        _ = customPrompt.isEmpty ? toolConfig.prompt : customPrompt
+        // Use custom prompt if provided, otherwise use model-optimized prompt from registry
+        let promptInstruction = customPrompt.isEmpty ? toolConfig.prompt : customPrompt
 
-        // For title generation, use direct completion with explicit constraints
-        // Tell the model: generate only a short title (2-4 words), no line breaks
+        // For title generation, use direct completion with the configured prompt
         let completionPrompt = """
         Text: \(text)
 
-        Generate a 2-4 word title (no line breaks):
+        \(promptInstruction)
         """
 
-        print("🔍 Title: Using direct completion format")
+        print("🔍 Title: Using direct completion format with prompt: '\(promptInstruction)'")
 
         // Use direct generate() - the cancellation happens but title generation is fast
         // so it typically completes before other services start
