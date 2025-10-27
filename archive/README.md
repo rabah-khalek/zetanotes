@@ -319,3 +319,13 @@ Contributions welcome!
 **Made with ❤️ for privacy-conscious note-takers**
 
 *No cloud. No tracking. Just your notes and AI, working together on your Mac.*
+
+
+
+## converting mov to webm and mp4
+
+# For WebM
+ffmpeg -i demo.mov -c:v libvpx-vp9 -b:v 4M -crf 23 -pix_fmt yuv420p -color_range pc -c:a libopus docs/demo.webm
+
+# For MP4
+ffmpeg -i demo.mov -c:v libx264 -crf 20 -pix_fmt yuv420p -color_range pc -c:a aac docs/demo.mp4

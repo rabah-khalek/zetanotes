@@ -685,7 +685,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_ASSET_PATHS = "\"ZetaNotes/Preview Content\"";
 				DEVELOPMENT_TEAM = HDA4C6CU89;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -704,7 +704,7 @@
 					"$(SRCROOT)/llama.cpp/build/bin",
 				);
 				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/llama.cpp/build/bin";
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 1.0.1;
 				OTHER_LDFLAGS = (
 					"-lllama",
 					"-lggml",
@@ -728,7 +728,7 @@
 				CODE_SIGN_IDENTITY = "Developer ID Application";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_ASSET_PATHS = "\"ZetaNotes/Preview Content\"";
 				DEVELOPMENT_TEAM = HDA4C6CU89;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -747,7 +747,7 @@
 					"$(SRCROOT)/llama.cpp/build/bin",
 				);
 				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/llama.cpp/build/bin";
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 1.0.1;
 				OTHER_LDFLAGS = (
 					"-lllama",
 					"-lggml",

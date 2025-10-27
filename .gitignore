@@ -3,6 +3,8 @@
 # Release build output directory
 releases/
 
+demo.mov
+
 apple_app_review
 apple_app_review.zip
 
