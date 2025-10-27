@@ -82,7 +82,7 @@
             -moz-osx-font-smoothing: grayscale;
             overflow-x: hidden;
             scroll-behavior: smooth;
-            scroll-padding-top: 80px;
+            scroll-padding-top: 40px;
             /* Accounts for fixed header */
         }
 
@@ -195,7 +195,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 120px var(--spacing-md) var(--spacing-xl);
+            padding: 100px var(--spacing-md) var(--spacing-lg);
             position: relative;
             overflow: hidden;
         }
@@ -213,31 +213,34 @@
         }
 
         .hero-container {
-            max-width: 1400px;
+            max-width: 900px;
             margin: 0 auto;
-            display: grid;
-            grid-template-columns: 1fr 1.2fr;
-            gap: 60px;
+            display: flex;
+            flex-direction: column;
             align-items: center;
             position: relative;
             z-index: 1;
         }
 
         .hero-content {
-            text-align: left;
+            text-align: center;
+            max-width: 700px;
         }
 
         .hero-app-icon {
             width: 80px;
             height: 80px;
-            margin-bottom: 24px;
+            margin: 0 auto;
             border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(238, 34, 12, 0.25),
+            box-shadow: 0 16px 48px rgba(238, 34, 12, 0.2),
                 0 0 0 1px rgba(255, 255, 255, 0.1);
-            animation: fadeInUp 0.6s ease-out 0.15s backwards, float 4s ease-in-out 1.2s infinite;
+            animation: fadeInUp 0.6s ease-out 0.2s backwards, float 4s ease-in-out 1.2s infinite;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             background: linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
             padding: 3px;
+            position: relative;
+            cursor: pointer;
+            display: block;
         }
 
         .hero-app-icon img {
@@ -248,12 +251,35 @@
         }
 
         .hero-app-icon:hover {
-            transform: translateY(-4px) scale(1.05);
-            box-shadow: 0 30px 80px rgba(238, 34, 12, 0.35),
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 24px 64px rgba(238, 34, 12, 0.3),
                 0 0 0 1px rgba(255, 255, 255, 0.15);
         }
 
+        .download-badge {
+            position: absolute;
+            bottom: -4px;
+            right: -4px;
+            width: 28px;
+            height: 28px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            border: 2px solid var(--color-bg);
+        }
+
+        .download-badge svg {
+            width: 14px;
+            height: 14px;
+        }
+
         .hero-demo {
+            width: 100%;
+            max-width: 800px;
+            margin-top: var(--spacing-md);
             animation: fadeInUp 0.8s ease-out 0.3s backwards;
         }
 
@@ -263,7 +289,6 @@
             border: 1px solid var(--color-border);
             background: var(--color-bg-secondary);
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-            max-width: 700px;
         }
 
         .hero-demo-container video {
@@ -273,20 +298,20 @@
         }
 
         .hero h1 {
-            font-size: clamp(42px, 6vw, 64px);
+            font-size: clamp(36px, 5vw, 52px);
             font-weight: 700;
             line-height: 1.1;
-            margin-bottom: var(--spacing-md);
+            margin-bottom: var(--spacing-xs);
             letter-spacing: -0.04em;
             animation: fadeInUp 0.8s ease-out;
         }
 
         .hero-subtitle {
-            font-size: clamp(17px, 2.5vw, 20px);
+            font-size: clamp(15px, 1.8vw, 17px);
             color: var(--color-text-secondary);
-            margin-bottom: var(--spacing-lg);
+            margin-bottom: var(--spacing-sm);
             font-weight: 400;
-            line-height: 1.6;
+            line-height: 1.5;
             animation: fadeInUp 0.8s ease-out 0.1s backwards;
         }
 
@@ -294,12 +319,13 @@
             display: flex;
             gap: var(--spacing-sm);
             flex-wrap: wrap;
+            justify-content: center;
             animation: fadeInUp 0.8s ease-out 0.2s backwards;
         }
 
         .btn {
-            padding: 12px 20px;
-            font-size: 15px;
+            padding: 14px 24px;
+            font-size: 16px;
             font-weight: 500;
             border-radius: var(--radius-sm);
             text-decoration: none;
@@ -346,39 +372,39 @@
 
         /* Section */
         section {
-            padding: var(--spacing-2xl) var(--spacing-md);
+            padding: var(--spacing-xl) var(--spacing-md);
             max-width: 1200px;
             margin: 0 auto;
         }
 
         .section-title {
-            font-size: clamp(36px, 6vw, 56px);
+            font-size: clamp(32px, 5vw, 48px);
             font-weight: 700;
-            margin-bottom: var(--spacing-lg);
+            margin-bottom: var(--spacing-md);
             letter-spacing: -0.03em;
             line-height: 1.1;
         }
 
         .section-subtitle {
-            font-size: clamp(18px, 3vw, 22px);
+            font-size: clamp(16px, 2.5vw, 18px);
             color: var(--color-text-secondary);
-            margin-bottom: var(--spacing-xl);
+            margin-bottom: var(--spacing-lg);
             max-width: 700px;
         }
 
         /* Features Grid */
         .features-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: var(--spacing-md);
-            margin-top: var(--spacing-xl);
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--spacing-sm);
+            margin-top: var(--spacing-md);
         }
 
         .feature-card {
-            padding: var(--spacing-md);
+            padding: var(--spacing-sm) var(--spacing-md);
             background: var(--color-bg-secondary);
             border: 1px solid var(--color-border);
-            border-radius: var(--radius-lg);
+            border-radius: var(--radius-md);
             transition: all 0.3s ease;
         }
 
@@ -591,8 +617,8 @@
         /* Footer */
         footer {
             border-top: 1px solid var(--color-border);
-            padding: var(--spacing-xl) var(--spacing-md);
-            margin-top: var(--spacing-2xl);
+            padding: var(--spacing-md) var(--spacing-md);
+            margin-top: var(--spacing-xl);
         }
 
         .footer-content {
@@ -651,26 +677,11 @@
         /* Responsive */
         @media (max-width: 1024px) {
             .hero-container {
-                grid-template-columns: 1fr;
-                gap: 40px;
-                text-align: center;
+                max-width: 700px;
             }
 
-            .hero-content {
-                text-align: center;
-            }
-
-            .hero-app-icon {
-                margin-left: auto;
-                margin-right: auto;
-            }
-
-            .hero-cta {
-                justify-content: center;
-            }
-
-            .hero-demo-container {
-                margin: 0 auto;
+            .hero-demo {
+                max-width: 600px;
             }
         }
 
@@ -681,18 +692,19 @@
             }
 
             .hero-app-icon {
-                width: 70px;
-                height: 70px;
-                border-radius: 18px;
-                margin-bottom: 20px;
+                width: 80px;
+                height: 80px;
+                border-radius: 20px;
+                margin-bottom: var(--spacing-md);
             }
 
             .hero-app-icon img {
-                border-radius: 15px;
+                border-radius: 16px;
             }
 
-            .hero-demo-container {
+            .hero-demo {
                 max-width: 100%;
+                margin-top: var(--spacing-lg);
             }
 
             .features-grid {
@@ -762,31 +774,21 @@
     <section class="hero">
         <div class="hero-container">
             <div class="hero-content">
-                <div class="hero-app-icon">
-                    <img src="logo.png" alt="ZetaNotes App Icon">
-                </div>
-
                 <h1>Offline AI notes for Mac.</h1>
-                <p class="hero-subtitle">All AI processing runs locally on your Mac. No internet required, no data leaves
-                    your device.</p>
+                <p class="hero-subtitle">AI that runs locally on your Mac. No internet required.</p>
 
-                <div class="hero-cta">
-                    <a href="https://apps.apple.com/app/id6754346516" class="btn btn-primary" target="_blank" rel="noopener"
-                        data-umami-event="hero-download-click">
-                        <svg width="16" height="16" viewBox="0 0 170 170" fill="none" xmlns="http://www.w3.org/2000/svg"
-                            style="margin-top: -1px;">
-                            <path
-                                d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.197-2.12-9.973-3.17-14.34-3.17-4.58 0-9.492 1.05-14.746 3.17-5.262 2.13-9.501 3.24-12.742 3.35-4.929.21-9.842-1.96-14.746-6.52-3.13-2.73-7.045-7.41-11.735-14.04-5.032-7.08-9.169-15.29-12.41-24.65-3.471-10.11-5.211-19.9-5.211-29.378 0-10.857 2.346-20.221 7.045-28.068 3.693-6.303 8.606-11.275 14.755-14.925s12.793-5.51 19.948-5.629c3.915 0 9.049 1.211 15.429 3.591 6.362 2.388 10.447 3.599 12.238 3.599 1.339 0 5.877-1.416 13.57-4.239 7.275-2.618 13.415-3.702 18.445-3.275 13.63 1.1 23.87 6.473 30.68 16.153-12.19 7.386-18.22 17.731-18.1 31.002.11 10.337 3.86 18.939 11.23 25.769 3.34 3.17 7.07 5.62 11.22 7.36-.9 2.61-1.85 5.11-2.86 7.51zM119.11 7.24c0 8.102-2.96 15.667-8.86 22.669-7.12 8.324-15.732 13.134-25.071 12.375a25.222 25.222 0 0 1-.188-3.07c0-7.778 3.386-16.102 9.399-22.908 3.002-3.446 6.82-6.311 11.45-8.597 4.62-2.252 8.99-3.497 13.1-3.71.12 1.083.17 2.166.17 3.24z"
-                                fill="#000" />
-                        </svg>
-                        Download for Mac
-                    </a>
-                    <a href="#features" class="btn btn-secondary">
-                        Learn more
-                    </a>
-                </div>
-
-                <p class="system-info">macOS 13.0+ • Free with optional Pro features</p>
+                <a href="https://apps.apple.com/app/id6754346516" target="_blank" rel="noopener" data-umami-event="hero-icon-download-click">
+                    <div class="hero-app-icon">
+                        <img src="logo.png" alt="ZetaNotes App Icon">
+                        <div class="download-badge">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                        </div>
+                    </div>
+                </a>
             </div>
 
             <div class="hero-demo">
@@ -803,7 +805,7 @@
 
     <!-- Features Section -->
     <section id="features">
-        <h2 class="section-title">Offline AI processing.</h2>
+        <h2 class="section-title">Features.</h2>
         <p class="section-subtitle">All models run locally using Metal GPU acceleration. No cloud services, no
             subscriptions required for core features.</p>
 
@@ -1055,9 +1057,9 @@
                     if (targetElement) {
                         e.preventDefault();
 
-                        // Calculate offset for fixed header (header height + some padding)
+                        // Calculate offset for fixed header
                         const headerHeight = document.querySelector('header').offsetHeight;
-                        const offset = headerHeight + 20; // 20px extra padding
+                        const offset = headerHeight - 40; // Less offset to reduce top gap
 
                         const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - offset;
 
@@ -1083,7 +1085,7 @@
 
                     if (targetElement) {
                         const headerHeight = document.querySelector('header').offsetHeight;
-                        const offset = headerHeight + 20;
+                        const offset = headerHeight - 40;
                         const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - offset;
 
                         window.scrollTo({
@@ -1099,9 +1101,9 @@
             if (heroVideo) {
                 heroVideo.removeAttribute('loop'); // Remove native loop
 
-                heroVideo.addEventListener('ended', function() {
+                heroVideo.addEventListener('ended', function () {
                     // Pause for 1 second before restarting
-                    setTimeout(function() {
+                    setTimeout(function () {
                         heroVideo.currentTime = 0;
                         heroVideo.play();
                     }, 1000);
