@@ -198,11 +198,11 @@
 
         /* Hero Section */
         .hero {
-            min-height: 100vh;
+            height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 100px var(--spacing-md) var(--spacing-lg);
+            padding: 100px var(--spacing-md) 40px;
             position: relative;
             overflow: hidden;
         }
@@ -210,38 +210,46 @@
         .hero::before {
             content: '';
             position: absolute;
-            top: -50%;
+            top: -20%;
             left: 50%;
             transform: translateX(-50%);
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle, rgba(238, 34, 12, 0.08) 0%, transparent 70%);
+            width: 120%;
+            height: 80%;
+            background: radial-gradient(circle, rgba(238, 34, 12, 0.06) 0%, transparent 60%);
             pointer-events: none;
+            z-index: 0;
         }
 
         .hero-container {
-            max-width: 900px;
+            max-width: 1000px;
+            width: 100%;
+            height: 100%;
             margin: 0 auto;
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
             position: relative;
             z-index: 1;
+            gap: clamp(16px, 2.5vh, 28px);
         }
 
-        .hero-content {
+        .hero-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: clamp(14px, 1.8vh, 22px);
             text-align: center;
-            max-width: 700px;
+            flex-shrink: 0;
         }
 
         .hero-app-icon {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto;
-            border-radius: 20px;
-            box-shadow: 0 16px 48px rgba(238, 34, 12, 0.2),
+            width: clamp(56px, 7vw, 80px);
+            height: clamp(56px, 7vw, 80px);
+            border-radius: clamp(14px, 1.8vw, 20px);
+            box-shadow: 0 20px 60px rgba(238, 34, 12, 0.25),
                 0 0 0 1px rgba(255, 255, 255, 0.1);
-            animation: fadeInUp 0.6s ease-out 0.2s backwards, float 4s ease-in-out 1.2s infinite;
+            animation: fadeInUp 0.6s ease-out 0.1s backwards, float 4s ease-in-out 1.4s infinite;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             background: linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
             padding: 3px;
@@ -253,127 +261,88 @@
         .hero-app-icon img {
             width: 100%;
             height: 100%;
-            border-radius: 17px;
+            border-radius: calc(clamp(14px, 1.8vw, 20px) - 3px);
             display: block;
         }
 
         .hero-app-icon:hover {
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 24px 64px rgba(238, 34, 12, 0.3),
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 0 28px 80px rgba(238, 34, 12, 0.35),
                 0 0 0 1px rgba(255, 255, 255, 0.15);
         }
 
         .download-badge {
             position: absolute;
-            bottom: -4px;
-            right: -4px;
-            width: 28px;
-            height: 28px;
+            bottom: -5px;
+            right: -5px;
+            width: clamp(24px, 3vw, 32px);
+            height: clamp(24px, 3vw, 32px);
             background: rgba(255, 255, 255, 0.95);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
             border: 2px solid var(--color-bg);
         }
 
         .download-badge svg {
-            width: 14px;
-            height: 14px;
+            width: 50%;
+            height: 50%;
+        }
+
+        .hero-text {
+            display: flex;
+            flex-direction: column;
+            gap: clamp(6px, 1vh, 10px);
+        }
+
+        .hero h1 {
+            font-size: clamp(36px, 5.5vw, 64px);
+            font-weight: 700;
+            line-height: 1;
+            margin: 0;
+            letter-spacing: -0.05em;
+            animation: fadeInUp 0.7s ease-out 0.2s backwards;
+        }
+
+        .hero-subtitle {
+            font-size: clamp(15px, 1.8vw, 19px);
+            color: var(--color-text-secondary);
+            font-weight: 400;
+            line-height: 1.3;
+            margin: 0;
+            animation: fadeInUp 0.7s ease-out 0.3s backwards;
         }
 
         .hero-demo {
             width: 100%;
-            max-width: 800px;
-            margin-top: var(--spacing-md);
-            animation: fadeInUp 0.8s ease-out 0.3s backwards;
+            max-width: 750px;
+            flex-shrink: 1;
+            min-height: 0;
+            animation: fadeInUp 0.8s ease-out 0.4s backwards;
         }
 
         .hero-demo-container {
-            border-radius: var(--radius-lg);
+            border-radius: clamp(10px, 1.2vw, 16px);
             overflow: hidden;
             border: 1px solid var(--color-border);
             background: var(--color-bg-secondary);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6),
+                0 0 0 1px rgba(255, 255, 255, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .hero-demo-container:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 32px 100px rgba(0, 0, 0, 0.7),
+                0 0 0 1px rgba(255, 255, 255, 0.08);
         }
 
         .hero-demo-container video {
             width: 100%;
             height: auto;
             display: block;
-        }
-
-        .hero h1 {
-            font-size: clamp(36px, 5vw, 52px);
-            font-weight: 700;
-            line-height: 1.1;
-            margin-bottom: var(--spacing-xs);
-            letter-spacing: -0.04em;
-            animation: fadeInUp 0.8s ease-out;
-        }
-
-        .hero-subtitle {
-            font-size: clamp(15px, 1.8vw, 17px);
-            color: var(--color-text-secondary);
-            margin-bottom: var(--spacing-sm);
-            font-weight: 400;
-            line-height: 1.5;
-            animation: fadeInUp 0.8s ease-out 0.1s backwards;
-        }
-
-        .hero-cta {
-            display: flex;
-            gap: var(--spacing-sm);
-            flex-wrap: wrap;
-            justify-content: center;
-            animation: fadeInUp 0.8s ease-out 0.2s backwards;
-        }
-
-        .btn {
-            padding: 14px 24px;
-            font-size: 16px;
-            font-weight: 500;
-            border-radius: var(--radius-sm);
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
-            border: none;
-            font-family: inherit;
-        }
-
-        .btn-primary {
-            background: rgba(255, 255, 255, 0.95);
-            color: #000000;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1), 0 0 0 0 rgba(238, 34, 12, 0);
-        }
-
-        .btn-primary:hover {
-            background: #ffffff;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.15), 0 0 0 3px rgba(238, 34, 12, 0.08);
-        }
-
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
-            color: var(--color-text-primary);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-        }
-
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: rgba(255, 255, 255, 0.25);
-            transform: translateY(-1px);
-        }
-
-        .system-info {
-            margin-top: var(--spacing-lg);
-            font-size: 14px;
-            color: var(--color-text-tertiary);
-            animation: fadeInUp 0.8s ease-out 0.3s backwards;
         }
 
 
@@ -684,34 +653,44 @@
         /* Responsive */
         @media (max-width: 1024px) {
             .hero-container {
-                max-width: 700px;
+                gap: clamp(14px, 2vh, 24px);
             }
 
             .hero-demo {
-                max-width: 600px;
+                max-width: 650px;
             }
         }
 
         @media (max-width: 768px) {
             .hero {
-                min-height: auto;
-                padding: 100px var(--spacing-md) var(--spacing-xl);
+                height: auto;
+                min-height: 100vh;
+                padding: 100px var(--spacing-md) 32px;
+            }
+
+            .hero-container {
+                gap: clamp(16px, 2.5vh, 24px);
+            }
+
+            .hero-header {
+                gap: clamp(12px, 1.8vh, 18px);
             }
 
             .hero-app-icon {
-                width: 80px;
-                height: 80px;
-                border-radius: 20px;
-                margin-bottom: var(--spacing-md);
+                width: clamp(56px, 14vw, 72px);
+                height: clamp(56px, 14vw, 72px);
             }
 
-            .hero-app-icon img {
-                border-radius: 16px;
+            .hero h1 {
+                font-size: clamp(32px, 8vw, 48px);
+            }
+
+            .hero-subtitle {
+                font-size: clamp(15px, 4vw, 18px);
             }
 
             .hero-demo {
                 max-width: 100%;
-                margin-top: var(--spacing-lg);
             }
 
             .features-grid {
@@ -747,6 +726,68 @@
                 text-align: center;
             }
         }
+
+        @media (max-height: 800px) {
+            .hero {
+                padding: 90px var(--spacing-md) 32px;
+            }
+
+            .hero-container {
+                gap: 14px;
+            }
+
+            .hero-header {
+                gap: 12px;
+            }
+
+            .hero-app-icon {
+                width: 60px;
+                height: 60px;
+            }
+
+            .hero h1 {
+                font-size: clamp(32px, 5vw, 52px);
+            }
+
+            .hero-subtitle {
+                font-size: clamp(14px, 1.6vw, 17px);
+            }
+
+            .hero-demo {
+                max-width: 650px;
+            }
+        }
+
+        @media (max-height: 700px) {
+            .hero {
+                padding: 80px var(--spacing-md) 24px;
+            }
+
+            .hero-container {
+                gap: 12px;
+            }
+
+            .hero-header {
+                gap: 10px;
+            }
+
+            .hero-app-icon {
+                width: 52px;
+                height: 52px;
+            }
+
+            .hero h1 {
+                font-size: clamp(28px, 4.5vw, 48px);
+            }
+
+            .hero-subtitle {
+                font-size: clamp(13px, 1.5vw, 16px);
+            }
+
+            .hero-demo {
+                max-width: 600px;
+            }
+        }
     </style>
 </head>
 
@@ -780,10 +821,7 @@
     <!-- Hero Section -->
     <section class="hero">
         <div class="hero-container">
-            <div class="hero-content">
-                <h1>Offline AI notes for Mac.</h1>
-                <p class="hero-subtitle">AI that runs locally on your Mac. No internet required.</p>
-
+            <div class="hero-header">
                 <a href="https://apps.apple.com/app/id6754346516" target="_blank" rel="noopener" data-umami-event="hero-icon-download-click">
                     <div class="hero-app-icon">
                         <img src="logo.png" alt="ZetaNotes App Icon">
@@ -796,6 +834,11 @@
                         </div>
                     </div>
                 </a>
+
+                <div class="hero-text">
+                    <h1>Offline AI notes for Mac.</h1>
+                    <p class="hero-subtitle">AI that runs locally on your Mac. No internet required.</p>
+                </div>
             </div>
 
             <div class="hero-demo">
