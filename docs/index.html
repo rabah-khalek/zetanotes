@@ -118,6 +118,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: var(--spacing-sm);
         }
 
         .logo {
@@ -385,6 +386,111 @@
             display: block;
         }
 
+        /* Floating News/Updates */
+        .floating-news-card {
+            position: fixed;
+            top: 85px;
+            right: var(--spacing-md);
+            z-index: 999;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 14px;
+            background: rgba(255, 140, 66, 0.06);
+            border: 1px solid rgba(255, 140, 66, 0.15);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            animation: fadeInDown 0.6s ease-out 0.2s backwards;
+        }
+
+        @media (min-width: 1280px) {
+            .floating-news-card {
+                right: calc((100% - 1200px) / 2 + var(--spacing-md));
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .floating-news-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 140, 66, 0.1), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .floating-news-card:hover::before {
+            left: 100%;
+        }
+
+        .floating-news-card:hover {
+            border-color: rgba(255, 140, 66, 0.25);
+            background: rgba(255, 140, 66, 0.08);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(255, 140, 66, 0.12);
+        }
+
+        .floating-news-badge {
+            font-size: 9px;
+            font-weight: 700;
+            color: #FF8C42;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            padding: 3px 8px;
+            background: rgba(255, 140, 66, 0.12);
+            border-radius: 10px;
+            white-space: nowrap;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .floating-news-text {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            line-height: 1.4;
+            margin: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .floating-news-text strong {
+            color: var(--color-text-primary);
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .floating-news-card {
+                top: 77px;
+                right: var(--spacing-md);
+                padding: 6px 12px;
+                gap: 8px;
+            }
+
+            .floating-news-badge {
+                font-size: 8px;
+                padding: 2px 6px;
+            }
+
+            .floating-news-text {
+                font-size: 11px;
+            }
+        }
 
         /* Section */
         section {
@@ -857,6 +963,14 @@
             </nav>
         </div>
     </header>
+
+    <!-- Floating News Card -->
+    <div class="floating-news-card">
+        <div class="floating-news-badge">Coming Soon</div>
+        <div class="floating-news-text">
+            New support for the <strong>Qwen3 4B model</strong>
+        </div>
+    </div>
 
     <!-- Hero Section -->
     <section class="hero">
