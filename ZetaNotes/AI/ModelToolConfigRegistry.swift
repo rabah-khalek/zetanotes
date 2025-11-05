@@ -3,7 +3,7 @@
 //  ZetaNotes
 //
 //  Registry of optimized LLM configurations for each model and tool combination
-//  Based on 2025 best practices research for 9 AI models
+//  Based on 2025 best practices research for 10 AI models
 //
 
 import Foundation
@@ -29,6 +29,8 @@ enum ModelToolConfigRegistry {
             return GemmaTwoConfigs.config(for: toolType)
         case .phiThreeFiveMini:
             return PhiThreeFiveConfigs.config(for: toolType)
+        case .qwenThreeFourB:
+            return QwenThreeFourBConfigs.config(for: toolType)
         }
     }
 }
@@ -434,6 +436,75 @@ private enum PhiThreeFiveConfigs {
             return LLMConfig(
                 prompt: "You are a helpful assistant.",
                 temperature: 0.6, maxTokens: nil
+            )
+        }
+    }
+}
+
+// MARK: - Qwen3 4B Configurations
+
+/// Qwen3-4B-Instruct-2507 optimized configurations
+/// - Version: 2507 (July 2025) - Instruct variant (non-thinking mode by default)
+/// - Format: Qwen3 chat template with ChatML tags (<|im_start|>/<|im_end|>)
+/// - Context: 262K native (16K configured for memory efficiency)
+/// - Parameters: 4B (3.6B non-embedding)
+/// - Official recommendations for non-thinking mode:
+///   * Temperature: 0.7 (general)
+///   * TopP: 0.8
+///   * TopK: 20
+///   * DO NOT use greedy decoding (temp=0)
+/// - Stop sequences: <|im_end|>, <|endoftext|>
+/// - This is the Instruct variant optimized for fast, direct responses without reasoning chains
+private enum QwenThreeFourBConfigs {
+    static func config(for toolType: ToolType) -> LLMConfig {
+        switch toolType {
+        case .autocomplete:
+            return LLMConfig(
+                prompt: "Continue the text naturally, maintaining the same style and tone.",
+                temperature: 0.7,
+                maxTokens: 100  // Increased from 50 for better completions
+            )
+
+        case .patch:
+            return LLMConfig(
+                prompt: "Fix spelling and grammar errors. Return only the corrected text with no explanations or commentary.",
+                temperature: 0.3,  // Increased from 0.05 to avoid greedy decoding
+                maxTokens: nil
+            )
+
+        case .rephrase:
+            return LLMConfig(
+                prompt: "Rewrite this text to be clearer and more professional. Return only the rewritten version.",
+                temperature: 0.7,
+                maxTokens: nil
+            )
+
+        case .summarize:
+            return LLMConfig(
+                prompt: "Provide a concise summary in 1-2 sentences.",
+                temperature: 0.6,
+                maxTokens: 200  // Increased from 150 for more flexibility
+            )
+
+        case .translate:
+            return LLMConfig(
+                prompt: "Translate to {language}. Return only the translation with no additional text.",
+                temperature: 0.4,  // Increased from 0.05 to avoid greedy decoding
+                maxTokens: nil
+            )
+
+        case .titleGeneration:
+            return LLMConfig(
+                prompt: "Generate a short, descriptive title for this text. Output ONLY the title, nothing else. Title:",
+                temperature: 0.5,
+                maxTokens: 20
+            )
+
+        case .custom:
+            return LLMConfig(
+                prompt: "You are a helpful assistant.",  // Qwen3 ships without default system prompt
+                temperature: 0.7,
+                maxTokens: nil
             )
         }
     }

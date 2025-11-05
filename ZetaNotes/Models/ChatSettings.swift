@@ -24,7 +24,7 @@ struct ChatSettings: Codable {
         topK: 40,
         repeatPenalty: 1.1,
         systemPrompt: "Respond only with the requested output.",
-        generationTimeout: 10.0
+        generationTimeout: 120.0  // 2 minutes - increased from 10s to prevent truncation
     )
 
     /// Saves the current settings to UserDefaults
@@ -42,10 +42,29 @@ struct ChatSettings: Codable {
             if decoded.temperature < 0.01 {
                 decoded.temperature = 0.01
             }
-            // Ensure timeout is reasonable (between 1 and 60 seconds)
-            if decoded.generationTimeout < 1.0 || decoded.generationTimeout > 60.0 {
-                decoded.generationTimeout = 10.0
+
+            var needsSave = false
+
+            // Migration: Update old 10-60 second timeouts to new 120 second default
+            // This fixes the "output cut short" issue for existing users
+            if decoded.generationTimeout <= 60.0 {
+                let oldTimeout = decoded.generationTimeout
+                decoded.generationTimeout = 120.0
+                print("⚠️ Migrated chat timeout from \(oldTimeout)s to 120s to prevent truncation")
+                needsSave = true
             }
+
+            // Ensure timeout is reasonable (between 1 and 300 seconds / 5 minutes)
+            if decoded.generationTimeout < 1.0 || decoded.generationTimeout > 300.0 {
+                decoded.generationTimeout = 120.0
+                needsSave = true
+            }
+
+            // Save migrated settings
+            if needsSave {
+                decoded.save()
+            }
+
             return decoded
         }
         return .default

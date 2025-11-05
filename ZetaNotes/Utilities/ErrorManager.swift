@@ -176,6 +176,14 @@ class ErrorManager: ObservableObject {
                 appError = .networkError("Invalid download URL.")
             case .noDataReceived:
                 appError = .networkError("No data received from server.")
+            case .fileSizeMismatch(let expected, let actual):
+                appError = .modelDownloadFailed("File size mismatch. Expected: \(expected), Got: \(actual)")
+            case .fileCorrupted(let reason):
+                appError = .modelDownloadFailed("Downloaded file is corrupted: \(reason)")
+            case .urlNotReachable(_, let statusCode):
+                appError = .networkError("Model file not found (HTTP \(statusCode)). Please check the model configuration.")
+            case .invalidFileFormat(let expected, let actual):
+                appError = .modelDownloadFailed("Invalid file format. Expected: \(expected), Got: \(actual)")
             }
         } else {
             // Generic error

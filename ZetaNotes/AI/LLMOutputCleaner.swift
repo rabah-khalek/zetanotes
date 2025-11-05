@@ -28,6 +28,21 @@ enum LLMOutputCleaner {
             }
         }
 
+        // EDGE CASE FIX: Remove orphaned "et" at the start (leftover from "Let" or similar)
+        // This happens with Qwen3 when partial instruction echoing occurs
+        if cleaned.hasPrefix("et\n") || cleaned.hasPrefix("et ") {
+            cleaned = String(cleaned.dropFirst(3)).trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
+        // EDGE CASE FIX: Remove bare "im_end" or "im_start" without delimiters
+        // Qwen3 sometimes generates these as plain text at the start
+        if cleaned.hasPrefix("im_end\n") || cleaned.hasPrefix("im_end ") {
+            cleaned = String(cleaned.dropFirst(7)).trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        if cleaned.hasPrefix("im_start\n") || cleaned.hasPrefix("im_start ") {
+            cleaned = String(cleaned.dropFirst(9)).trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
         // EDGE CASE FIX: Remove single letter prefixes ONLY if followed by lowercase (e.g., "T i decided")
         // This happens when the model starts generating but gets confused
         // BUT preserve legitimate single letters before proper nouns (e.g., "X Interview", "A Company")

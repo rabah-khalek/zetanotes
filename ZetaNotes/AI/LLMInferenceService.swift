@@ -3,7 +3,7 @@
 //  ZetaNotes
 //
 //  Low-level interface to GGUF models via llama.cpp
-//  Supports TinyLlama 1.1B and Qwen2.5-3B
+//  Supports 10 models: TinyLlama, Llama 3.2, Qwen2.5/3, SmolLM2, Phi-2/3.5, Gemma 2
 //  Uses llama.cpp for CPU/GPU inference on Apple Silicon
 //
 
@@ -24,6 +24,7 @@ enum AIModel: String, CaseIterable, Codable {
     case qwenTwoFiveThreeB = "Qwen2.5 3B"
     case llamaThreeTwoThreeB = "Llama 3.2 3B"
     case phiThreeFiveMini = "Phi-3.5 Mini 3.8B"
+    case qwenThreeFourB = "Qwen3 4B"
 
     var displayName: String {
         rawValue
@@ -49,6 +50,8 @@ enum AIModel: String, CaseIterable, Codable {
             return "Llama-3.2-3B-Instruct-Q4_K_M.gguf"
         case .phiThreeFiveMini:
             return "Phi-3.5-mini-instruct-Q4_K_M.gguf"
+        case .qwenThreeFourB:
+            return "Qwen3-4B-Instruct-2507-Q4_K_M.gguf"
         }
     }
 
@@ -72,6 +75,8 @@ enum AIModel: String, CaseIterable, Codable {
             return "2.0 GB"
         case .phiThreeFiveMini:
             return "2.3 GB"
+        case .qwenThreeFourB:
+            return "2.5 GB"
         }
     }
 
@@ -95,6 +100,8 @@ enum AIModel: String, CaseIterable, Codable {
             return "~2.6 GB"
         case .phiThreeFiveMini:
             return "~2.8 GB"
+        case .qwenThreeFourB:
+            return "~3.2 GB"
         }
     }
 
@@ -117,6 +124,8 @@ enum AIModel: String, CaseIterable, Codable {
         case .llamaThreeTwoThreeB:
             return "Fast"
         case .phiThreeFiveMini:
+            return "Fast"
+        case .qwenThreeFourB:
             return "Fast"
         }
     }
@@ -141,29 +150,33 @@ enum AIModel: String, CaseIterable, Codable {
             return "Very High"
         case .phiThreeFiveMini:
             return "Very High"
+        case .qwenThreeFourB:
+            return "Very High"
         }
     }
 
     var description: String {
         switch self {
         case .tinyLlama:
-            return "Lightweight model, best for autocomplete and embeddings. Limited instruction-following quality."
+            return "TinyLlama's 1.1B model. Lightweight, best for autocomplete and embeddings. Limited instruction-following quality."
         case .llamaThreeTwoOneB:
-            return "Meta's tiny model with latest architecture."
+            return "Meta's Llama 3.2 1B. Tiny model with latest architecture and strong multilingual support."
         case .qwenTwoFiveOneFiveB:
-            return "Qwen's compact model. Good balance of speed and basic instruction-following capabilities."
+            return "Alibaba's Qwen2.5 1.5B. Compact model with good balance of speed and basic instruction-following capabilities."
         case .smolLMTwoOneSevenB:
-            return "Hugging Face's compact model trained on high-quality data. Better instruction-following than TinyLlama."
+            return "Hugging Face's SmolLM2 1.7B. Compact model trained on high-quality data. Better instruction-following than TinyLlama."
         case .phi2:
-            return "Microsoft's small reasoning model. Good at following instructions and logical tasks."
+            return "Microsoft's Phi-2 2.7B. Small reasoning model with good instruction-following and logical task capabilities."
         case .gemmaTwoTwoB:
-            return "Google's efficient 2B model with excellent instruction-following. Great balance of speed and quality."
+            return "Google's Gemma 2 2B. Efficient model with excellent instruction-following and great balance of speed and quality."
         case .qwenTwoFiveThreeB:
-            return "3B parameter model with excellent instruction-following. Much better for patch, reformulate, and title generation."
+            return "Alibaba's Qwen2.5 3B. Excellent instruction-following capabilities. Much better for patch, reformulate, and title generation."
         case .llamaThreeTwoThreeB:
-            return "Meta's latest 3B model. State-of-the-art quality for its size with strong multilingual support."
+            return "Meta's Llama 3.2 3B. State-of-the-art quality for its size with strong multilingual support."
         case .phiThreeFiveMini:
-            return "Microsoft's latest compact model. Best-in-class quality under 4B parameters. Excellent for all tasks."
+            return "Microsoft's Phi-3.5 Mini 3.8B. Best-in-class quality under 4B parameters. Excellent for all tasks."
+        case .qwenThreeFourB:
+            return "Alibaba's Qwen3 4B Instruct (2507). Improved instruction-following, reasoning, and coding. Fast responses without reasoning chains."
         }
     }
 
@@ -189,6 +202,8 @@ enum AIModel: String, CaseIterable, Codable {
             return 8192*2 // 16K (reduced from 32K to save 4-6GB SWAP)
         case .phiThreeFiveMini:
             return 8192 // 8K (reduced from 32K to save 4-6GB SWAP)
+        case .qwenThreeFourB:
+            return 8192*2 // 16K (native 262K, reduced to save memory)
         }
     }
 
@@ -214,6 +229,8 @@ enum AIModel: String, CaseIterable, Codable {
             return 2048 // 2K batch for 8K context (reduced for memory)
         case .phiThreeFiveMini:
             return 2048 // 2K batch for 8K context (reduced for memory)
+        case .qwenThreeFourB:
+            return 8192 // 8K batch for 16K context (increased from 2K for better performance)
         }
     }
 
@@ -237,6 +254,8 @@ enum AIModel: String, CaseIterable, Codable {
             return "https://huggingface.co/bartowski/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2-3B-Instruct-Q4_K_M.gguf"
         case .phiThreeFiveMini:
             return "https://huggingface.co/bartowski/Phi-3.5-mini-instruct-GGUF/resolve/main/Phi-3.5-mini-instruct-Q4_K_M.gguf"
+        case .qwenThreeFourB:
+            return "https://huggingface.co/unsloth/Qwen3-4B-Instruct-2507-GGUF/resolve/main/Qwen3-4B-Instruct-2507-Q4_K_M.gguf"
         }
     }
 }
@@ -777,14 +796,14 @@ class LLMInferenceService: @unchecked Sendable {
     ///   - maxTokens: Maximum number of tokens to generate (nil = use model's max context)
     ///   - temperature: Sampling temperature (0.0 = deterministic, 1.0 = creative)
     ///   - grammar: Optional GBNF grammar string to constrain output format (e.g., JSON schema)
-    ///   - timeout: Maximum time in seconds for generation (default: 10.0)
+    ///   - timeout: Maximum time in seconds for generation (default: 120.0 seconds / 2 minutes)
     /// - Returns: Generated text
     func generate(
         prompt: String,
         maxTokens: Int? = nil,
         temperature: Float = 0.7,
         grammar: String? = nil,
-        timeout: TimeInterval = 10.0
+        timeout: TimeInterval = 120.0  // Increased from 10s to 120s (2 minutes) to prevent premature truncation
     ) async -> String? {
         guard isLoaded else {
             print("⚠️ Model not loaded")
@@ -1638,6 +1657,7 @@ class LLMInferenceService: @unchecked Sendable {
     func getCurrentModel() -> AIModel {
         return currentModel
     }
+
 }
 
 // MARK: - Errors

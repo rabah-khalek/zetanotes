@@ -111,8 +111,10 @@ class TranslationService: AIService {
             .replacingOccurrences(of: "{language}", with: targetLanguage)
 
         // Calculate dynamic max tokens with 70% buffer (translations often expand)
-        let maxTokens = calculateMaxTokens(for: text, bufferPercent: 70, maxLimit: 1024)
-        print("📊 Estimated max tokens needed: \(maxTokens)")
+        // Use config maxTokens if specified, otherwise use intelligent limit based on model context
+        let maxLimit = config.maxTokens ?? Int(llmService.getCurrentModel().maxContextSize) / 2  // Use half of context size as limit
+        let maxTokens = calculateMaxTokens(for: text, bufferPercent: 70, maxLimit: maxLimit)
+        print("📊 Estimated max tokens needed: \(maxTokens) (limit: \(maxLimit))")
 
         // Use batched processing to handle large texts
         let result = await processBatched(

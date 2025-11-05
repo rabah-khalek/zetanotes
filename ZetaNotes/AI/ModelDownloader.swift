@@ -77,11 +77,18 @@ class ModelDownloader: NSObject, ObservableObject {
 
         let destinationURL = modelsDir.appendingPathComponent(fileName)
 
-        // Check if already exists
+        // Check if already exists and validate it
         if FileManager.default.fileExists(atPath: destinationURL.path) {
-            print("✅ Model already exists at: \(destinationURL.path)")
-            completion?(.success(destinationURL))
-            return
+            // Validate existing file
+            if validateDownloadedFile(at: destinationURL, modelType: modelType) {
+                print("✅ Model already exists and validated at: \(destinationURL.path)")
+                completion?(.success(destinationURL))
+                return
+            } else {
+                // Remove corrupted file
+                print("⚠️ Existing model file is corrupted, removing and re-downloading...")
+                try? FileManager.default.removeItem(at: destinationURL)
+            }
         }
 
         // Start download
@@ -89,6 +96,24 @@ class ModelDownloader: NSObject, ObservableObject {
             completion?(.failure(DownloadError.invalidURL))
             return
         }
+
+        // Validate URL is reachable before starting download
+        validateURL(url, modelType: modelType) { [weak self] result in
+            guard let self = self else { return }
+
+            switch result {
+            case .success:
+                self.startDownloadTask(url: url, modelType: modelType, destinationURL: destinationURL, completion: completion)
+            case .failure(let error):
+                self.sharedState.failDownload(modelName: modelType.displayName, error: error.localizedDescription)
+                completion?(.failure(error))
+            }
+        }
+    }
+
+    /// Starts the actual download task after validation
+    private func startDownloadTask(url: URL, modelType: AIModel, destinationURL: URL, completion: ((Result<URL, Error>) -> Void)?) {
+        let fileName = modelType.fileName
 
         print("📥 Starting download of \(modelType.displayName) from Hugging Face...")
         print("   URL: \(url)")
@@ -123,9 +148,20 @@ class ModelDownloader: NSObject, ObservableObject {
                 }
 
                 try FileManager.default.moveItem(at: tempURL, to: destinationURL)
-                print("✅ Model downloaded successfully: \(modelType.displayName)")
-                self.sharedState.completeDownload(modelName: modelType.displayName)
-                self.notifyCompletion(for: fileName, result: .success(destinationURL))
+
+                // Validate the downloaded file
+                if self.validateDownloadedFile(at: destinationURL, modelType: modelType) {
+                    print("✅ Model downloaded and validated successfully: \(modelType.displayName)")
+                    self.sharedState.completeDownload(modelName: modelType.displayName)
+                    self.notifyCompletion(for: fileName, result: .success(destinationURL))
+                } else {
+                    // File validation failed, remove it
+                    try? FileManager.default.removeItem(at: destinationURL)
+                    let error = DownloadError.fileCorrupted(reason: "File validation failed after download")
+                    print("❌ Downloaded file validation failed: \(modelType.displayName)")
+                    self.sharedState.failDownload(modelName: modelType.displayName, error: error.localizedDescription)
+                    self.notifyCompletion(for: fileName, result: .failure(error))
+                }
             } catch {
                 print("❌ Failed to move downloaded file: \(error)")
                 self.sharedState.failDownload(modelName: modelType.displayName, error: error.localizedDescription)
@@ -267,6 +303,94 @@ class ModelDownloader: NSObject, ObservableObject {
         }
         return appSupport.appendingPathComponent("ZetaNotes/Models")
     }
+
+    // MARK: - Validation
+
+    /// Validates a downloaded file to ensure it's not corrupted
+    /// - Parameters:
+    ///   - fileURL: The local file URL to validate
+    ///   - modelType: The model type to validate against
+    /// - Returns: True if file is valid, false otherwise
+    private func validateDownloadedFile(at fileURL: URL, modelType: AIModel) -> Bool {
+        let fileManager = FileManager.default
+
+        // Check if file exists
+        guard fileManager.fileExists(atPath: fileURL.path) else {
+            print("⚠️ Validation failed: File doesn't exist at \(fileURL.path)")
+            return false
+        }
+
+        // Get file attributes
+        guard let attributes = try? fileManager.attributesOfItem(atPath: fileURL.path),
+              let fileSize = attributes[.size] as? Int64 else {
+            print("⚠️ Validation failed: Cannot read file attributes")
+            return false
+        }
+
+        // Check if file is too small (less than 100 MB suggests corruption)
+        let minSizeBytes: Int64 = 100 * 1024 * 1024 // 100 MB
+        if fileSize < minSizeBytes {
+            print("⚠️ Validation failed: File too small (\(ByteCountFormatter.string(fromByteCount: fileSize, countStyle: .file)))")
+            return false
+        }
+
+        // Validate GGUF file signature (first 4 bytes should be "GGUF")
+        do {
+            let fileHandle = try FileHandle(forReadingFrom: fileURL)
+            defer { try? fileHandle.close() }
+
+            guard let headerData = try fileHandle.read(upToCount: 4),
+                  let signature = String(data: headerData, encoding: .ascii) else {
+                print("⚠️ Validation failed: Cannot read file header")
+                return false
+            }
+
+            if signature != "GGUF" {
+                print("⚠️ Validation failed: Invalid GGUF signature. Got '\(signature)' instead of 'GGUF'")
+                return false
+            }
+
+            print("✅ File validation passed for \(modelType.displayName)")
+            return true
+        } catch {
+            print("⚠️ Validation failed: Cannot open file - \(error.localizedDescription)")
+            return false
+        }
+    }
+
+    /// Validates if a URL is reachable with a HEAD request before downloading
+    /// - Parameters:
+    ///   - url: The URL to validate
+    ///   - modelType: The model type being downloaded
+    ///   - completion: Called with success or error
+    private func validateURL(_ url: URL, modelType: AIModel, completion: @escaping (Result<Void, Error>) -> Void) {
+        var request = URLRequest(url: url)
+        request.httpMethod = "HEAD"
+        request.timeoutInterval = 10
+
+        let task = URLSession.shared.dataTask(with: request) { _, response, error in
+            if let error = error {
+                print("⚠️ URL validation failed for \(modelType.displayName): \(error.localizedDescription)")
+                completion(.failure(DownloadError.urlNotReachable(url: url.absoluteString, statusCode: 0)))
+                return
+            }
+
+            guard let httpResponse = response as? HTTPURLResponse else {
+                completion(.failure(DownloadError.invalidURL))
+                return
+            }
+
+            if httpResponse.statusCode == 200 {
+                print("✅ URL validation passed for \(modelType.displayName)")
+                completion(.success(()))
+            } else {
+                print("⚠️ URL returned status code \(httpResponse.statusCode) for \(modelType.displayName)")
+                completion(.failure(DownloadError.urlNotReachable(url: url.absoluteString, statusCode: httpResponse.statusCode)))
+            }
+        }
+
+        task.resume()
+    }
 }
 
 // MARK: - URLSessionDownloadDelegate
@@ -297,6 +421,10 @@ enum DownloadError: Error, LocalizedError {
     case failedToCreateDirectory
     case invalidURL
     case noDataReceived
+    case fileSizeMismatch(expected: String, actual: String)
+    case fileCorrupted(reason: String)
+    case urlNotReachable(url: String, statusCode: Int)
+    case invalidFileFormat(expected: String, actual: String)
 
     var errorDescription: String? {
         switch self {
@@ -308,6 +436,14 @@ enum DownloadError: Error, LocalizedError {
             return "Invalid download URL"
         case .noDataReceived:
             return "No data received from server"
+        case .fileSizeMismatch(let expected, let actual):
+            return "Downloaded file size mismatch. Expected: \(expected), Got: \(actual). The file may be corrupted."
+        case .fileCorrupted(let reason):
+            return "Downloaded file is corrupted: \(reason)"
+        case .urlNotReachable(let url, let statusCode):
+            return "Model file not found at \(url) (HTTP \(statusCode)). The model definition may have an incorrect filename."
+        case .invalidFileFormat(let expected, let actual):
+            return "Invalid file format. Expected: \(expected), Got: \(actual)"
         }
     }
 }

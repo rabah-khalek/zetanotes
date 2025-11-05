@@ -107,7 +107,8 @@ class LicenseManager: ObservableObject {
                 "Gemma 2 2B",
                 "Qwen2.5 3B",
                 "Llama 3.2 3B",
-                "Phi-3.5 Mini 3.8B"
+                "Phi-3.5 Mini 3.8B",
+                "Qwen3 4B"
             ]
         } else {
             return ["Llama 3.2 1B"] // Free tier gets Llama 3.2 1B

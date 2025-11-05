@@ -539,8 +539,11 @@ class NoteViewModel: ObservableObject {
     }
 
     func dismissAutocomplete() {
-        // ✅ CRITICAL: Cancel any ongoing generation to prevent memory corruption
-        aiEngine.llmService.cancelGeneration()
+        // Only cancel generation if there's actually an autocomplete suggestion active
+        // This prevents killing other LLM operations (translation, summarization, chat, etc.)
+        if autocompleteSuggestion != nil {
+            aiEngine.llmService.cancelGeneration()
+        }
 
         autocompleteSuggestion = nil
         // Clean up any pending timer
@@ -779,7 +782,15 @@ class NoteViewModel: ObservableObject {
         isAutocompleteEnabled = true
 
         // Reset AI model to Llama 3.2 1B (default model)
-        AIEngine.shared.selectedModel = .llamaThreeTwoOneB
+        // Only set it if it's actually downloaded, otherwise don't change selection
+        let defaultModel: AIModel = .llamaThreeTwoOneB
+        if AIEngine.shared.isModelDownloaded(defaultModel) {
+            AIEngine.shared.selectedModel = defaultModel
+            print("✅ Reset to default model: \(defaultModel.displayName)")
+        } else {
+            // Default model not downloaded - keep current selection unchanged
+            print("⚠️ Default model not downloaded. Keeping current selection: \(AIEngine.shared.selectedModel.displayName)")
+        }
 
         // Reset tools to defaults (removes custom tools, resets default tools)
         ToolManager.shared.resetToDefaults()
@@ -1171,9 +1182,9 @@ class NoteViewModel: ObservableObject {
             Task { @MainActor in
                 guard let self = self else { return }
 
-                // Update list item only if note still exists
-                guard self.noteCache[noteID] != nil,
-                      let updatedItem = self.repository.makeListItem(from: note) else {
+                // Update list item only if note still exists in cache
+                guard let cachedNote = self.noteCache[noteID],
+                      let updatedItem = self.repository.makeListItem(from: cachedNote) else {
                     self.listUpdateDebounceTimers.removeValue(forKey: noteID)
                     return
                 }
