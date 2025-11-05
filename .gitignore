@@ -2,6 +2,7 @@
 #
 # Release build output directory
 releases/
+posts/
 
 demo.mov
 
