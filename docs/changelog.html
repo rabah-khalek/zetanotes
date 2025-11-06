@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Changelog - ZetaNotes</title>
+    <meta name="description" content="Latest updates and changes to ZetaNotes">
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="manifest" href="site.webmanifest">
+
+    <!-- Umami Analytics -->
+    <script defer src="https://cloud.umami.is/script.js"
+        data-website-id="b494d074-1b7d-4266-8c69-913450df0f53"></script>
+
+    <style>
+        :root {
+            --color-bg: #000000;
+            --color-bg-secondary: #0a0a0a;
+            --color-text-primary: #ffffff;
+            --color-text-secondary: #888888;
+            --color-text-tertiary: #666666;
+            --color-accent: #EE220C;
+            --color-accent-hover: #FF3320;
+            --color-border: #1a1a1a;
+            --spacing-xs: 8px;
+            --spacing-sm: 16px;
+            --spacing-md: 24px;
+            --spacing-lg: 48px;
+            --spacing-xl: 80px;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+            line-height: 1.6;
+            color: var(--color-text-primary);
+            background: var(--color-bg);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Header */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 16px var(--spacing-md);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            text-decoration: none;
+            letter-spacing: -0.02em;
+        }
+
+        .logo-image {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+        }
+
+        nav ul {
+            display: flex;
+            gap: var(--spacing-md);
+            list-style: none;
+            align-items: center;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--color-text-secondary);
+            font-size: 15px;
+            font-weight: 500;
+            transition: color 0.2s ease;
+            position: relative;
+        }
+
+        nav a:hover {
+            color: var(--color-text-primary);
+        }
+
+        nav a:not(.btn-download-nav)::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: var(--color-accent);
+            transform: scaleX(0);
+            transition: transform 0.2s ease;
+        }
+
+        nav a:not(.btn-download-nav):hover::after {
+            transform: scaleX(1);
+        }
+
+        .btn-download-nav {
+            padding: 8px 14px;
+            background: rgba(255, 255, 255, 0.95);
+            color: #000000;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .btn-download-nav:hover {
+            background: #ffffff;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(238, 34, 12, 0.12);
+        }
+
+        /* Main Content */
+        main {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 100px var(--spacing-md) var(--spacing-xl);
+        }
+
+        h1 {
+            font-size: clamp(36px, 5vw, 48px);
+            font-weight: 700;
+            margin-bottom: var(--spacing-sm);
+            letter-spacing: -0.03em;
+        }
+
+        .subtitle {
+            font-size: 18px;
+            color: var(--color-text-secondary);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        /* Changelog Entry */
+        .changelog-entry {
+            margin-bottom: var(--spacing-lg);
+            padding: var(--spacing-md);
+            background: var(--color-bg-secondary);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+        }
+
+        .changelog-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: var(--spacing-sm);
+            flex-wrap: wrap;
+        }
+
+        .version {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-latest {
+            background: rgba(238, 34, 12, 0.15);
+            color: var(--color-accent);
+        }
+
+        .date {
+            font-size: 14px;
+            color: var(--color-text-tertiary);
+            margin-left: auto;
+        }
+
+        .changelog-content ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .changelog-content li {
+            padding: 8px 0 8px 24px;
+            color: var(--color-text-secondary);
+            font-size: 15px;
+            line-height: 1.5;
+            position: relative;
+        }
+
+        .changelog-content li::before {
+            content: "•";
+            position: absolute;
+            left: 8px;
+            color: var(--color-accent);
+            font-weight: bold;
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--color-border);
+            padding: var(--spacing-md);
+            margin-top: var(--spacing-xl);
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: var(--spacing-md);
+        }
+
+        .footer-links {
+            display: flex;
+            gap: var(--spacing-md);
+            list-style: none;
+        }
+
+        .footer-links a {
+            color: var(--color-text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s ease;
+            position: relative;
+        }
+
+        .footer-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: var(--color-accent);
+            transform: scaleX(0);
+            transition: transform 0.2s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--color-text-primary);
+        }
+
+        .footer-links a:hover::after {
+            transform: scaleX(1);
+        }
+
+        .footer-note {
+            font-size: 14px;
+            color: var(--color-text-tertiary);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .changelog-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .date {
+                margin-left: 0;
+            }
+
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <a href="/" class="logo">
+                <img src="logo.png" alt="ZetaNotes" class="logo-image">
+                <span>ZetaNotes</span>
+            </a>
+            <nav>
+                <ul>
+                    <li><a href="/#features">Features</a></li>
+                    <li><a href="/#pricing">Pricing</a></li>
+                    <li><a href="/changelog.html">Updates</a></li>
+                    <li><a href="mailto:rabah.khalek@gmail.com">Contact</a></li>
+                    <li><a href="https://apps.apple.com/app/id6754346516" class="btn-download-nav" target="_blank"
+                            rel="noopener" data-umami-event="nav-download-click">
+                            <svg width="14" height="14" viewBox="0 0 170 170" fill="none"
+                                xmlns="http://www.w3.org/2000/svg" style="margin-right: 6px;">
+                                <path
+                                    d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.197-2.12-9.973-3.17-14.34-3.17-4.58 0-9.492 1.05-14.746 3.17-5.262 2.13-9.501 3.24-12.742 3.35-4.929.21-9.842-1.96-14.746-6.52-3.13-2.73-7.045-7.41-11.735-14.04-5.032-7.08-9.169-15.29-12.41-24.65-3.471-10.11-5.211-19.9-5.211-29.378 0-10.857 2.346-20.221 7.045-28.068 3.693-6.303 8.606-11.275 14.755-14.925s12.793-5.51 19.948-5.629c3.915 0 9.049 1.211 15.429 3.591 6.362 2.388 10.447 3.599 12.238 3.599 1.339 0 5.877-1.416 13.57-4.239 7.275-2.618 13.415-3.702 18.445-3.275 13.63 1.1 23.87 6.473 30.68 16.153-12.19 7.386-18.22 17.731-18.1 31.002.11 10.337 3.86 18.939 11.23 25.769 3.34 3.17 7.07 5.62 11.22 7.36-.9 2.61-1.85 5.11-2.86 7.51zM119.11 7.24c0 8.102-2.96 15.667-8.86 22.669-7.12 8.324-15.732 13.134-25.071 12.375a25.222 25.222 0 0 1-.188-3.07c0-7.778 3.386-16.102 9.399-22.908 3.002-3.446 6.82-6.311 11.45-8.597 4.62-2.252 8.99-3.497 13.1-3.71.12 1.083.17 2.166.17 3.24z"
+                                    fill="#000" />
+                            </svg>
+                            Download</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <h1>Updates</h1>
+        <p class="subtitle">Latest changes and improvements to ZetaNotes</p>
+
+        <!-- Coming Soon: Version 1.0.2 -->
+        <div class="changelog-entry">
+            <div class="changelog-header">
+                <span class="version">v1.0.2</span>
+                <span class="badge badge-latest">In Development</span>
+            </div>
+            <div class="changelog-content">
+                <ul>
+                    <li>Qwen3 4B model support</li>
+                    <li>Enhanced markdown preview with GitHub-flavored support (tables, task lists, images)</li>
+                    <li>Fixed title generation for Llama 3.2 1B model</li>
+                    <li>Updated tool output headers to use markdown heading format</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 1.0.1 -->
+        <div class="changelog-entry">
+            <div class="changelog-header">
+                <span class="version">v1.0.1</span>
+                <span class="date">January 3, 2025</span>
+            </div>
+            <div class="changelog-content">
+                <ul>
+                    <li>Qwen 2.5 3B and 7B model support</li>
+                    <li>Bug fixes and performance improvements</li>
+                    <li>Improved error handling and logging</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Version 1.0.0 -->
+        <div class="changelog-entry">
+            <div class="changelog-header">
+                <span class="version">v1.0.0</span>
+                <span class="date">January 1, 2025</span>
+            </div>
+            <div class="changelog-content">
+                <ul>
+                    <li>Initial App Store release</li>
+                    <li>8 AI models support (Llama 3.2, Phi-3, Qwen 2.5, Gemma 2)</li>
+                    <li>AI autocomplete, correction, rephrasing, summarization, translation</li>
+                    <li>Chat interface with conversational AI</li>
+                    <li>Semantic search across all notes</li>
+                    <li>Custom AI tools creation</li>
+                    <li>Markdown support with live preview</li>
+                    <li>Metal GPU acceleration for fast inference</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="privacy.html">Privacy</a>
+                <a href="terms.html">Terms</a>
+                <a href="mailto:rabah.khalek@gmail.com">Support</a>
+            </div>
+            <p class="footer-note">© 2025 ZetaNotes. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+
+</html>
