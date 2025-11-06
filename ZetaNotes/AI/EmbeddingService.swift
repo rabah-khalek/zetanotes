@@ -148,12 +148,12 @@ final class EmbeddingService: @unchecked Sendable {
 
     /// Extracts only the base content from a note, excluding all AI-generated blocks
     private func extractBaseContent(from content: String) -> String {
-        // Define all AI-generated section markers (new format: ---\n`ServiceName • timestamp`)
+        // Define all AI-generated section markers (new format: #### ServiceName • timestamp)
         let markers = [
-            "\n\n---\n`Summary",
-            "\n\n---\n`Translation to ",
-            "\n\n---\n`Patched",
-            "\n\n---\n`Reformulated"
+            "\n\n#### Summary",
+            "\n\n#### Translation to ",
+            "\n\n#### Patched",
+            "\n\n#### Reformulated"
         ]
 
         // Find the earliest AI section marker

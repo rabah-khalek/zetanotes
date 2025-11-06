@@ -21,6 +21,7 @@
 		81111F612E9F37FB00D7317B /* DefaultPrompts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F602E9F37FB00D7317B /* DefaultPrompts.swift */; };
 		81111F642EA0891A00D7317B /* InlineAutocompleteTextEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F622EA0891A00D7317B /* InlineAutocompleteTextEditor.swift */; };
 		81111F652EA0891A00D7317B /* UpgradePromptView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F632EA0891A00D7317B /* UpgradePromptView.swift */; };
+		819131BD2EBD5F26007738E3 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 819131BC2EBD5F26007738E3 /* MarkdownUI */; };
 		81ACDA0F2EABD611007FF51D /* ReviewManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81ACDA0E2EABD611007FF51D /* ReviewManager.swift */; };
 		81C5A72B2EA57C7B00B5077D /* DataExportManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81C5A72A2EA57C7B00B5077D /* DataExportManager.swift */; };
 		81C5A7332EA7337C00B5077D /* CenteredScrolling.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81C5A7322EA7337C00B5077D /* CenteredScrolling.swift */; };
@@ -182,9 +183,9 @@
 		A1000069000000000000001 /* ErrorLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorLogView.swift; sourceTree = "<group>"; };
 		A1000071000000000000001 /* SystemMonitorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemMonitorView.swift; sourceTree = "<group>"; };
 		A1000091000000000000001 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
-		DDCF60559F1F48DD8001CB18 /* ErrorCodes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorCodes.swift; sourceTree = "<group>"; };
 		A1000092000000000000001 /* ErrorManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorManager.swift; sourceTree = "<group>"; };
 		C19B2B4688514121A68351A9 /* LLMConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMConfig.swift; sourceTree = "<group>"; };
+		DDCF60559F1F48DD8001CB18 /* ErrorCodes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorCodes.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -192,6 +193,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				819131BD2EBD5F26007738E3 /* MarkdownUI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -384,8 +386,8 @@
 				A1000064000000000000001 /* SystemMonitor.swift */,
 				A1000091000000000000001 /* Logger.swift */,
 				A1000092000000000000001 /* ErrorManager.swift */,
-							DDCF60559F1F48DD8001CB18 /* ErrorCodes.swift */,
-);
+				DDCF60559F1F48DD8001CB18 /* ErrorCodes.swift */,
+			);
 			path = Utilities;
 			sourceTree = "<group>";
 		};
@@ -407,6 +409,9 @@
 			dependencies = (
 			);
 			name = ZetaNotes;
+			packageProductDependencies = (
+				819131BC2EBD5F26007738E3 /* MarkdownUI */,
+			);
 			productName = ZetaNotes;
 			productReference = A1000035000000000000001 /* ZetaNotes.app */;
 			productType = "com.apple.product-type.application";
@@ -435,6 +440,9 @@
 				Base,
 			);
 			mainGroup = A1000038000000000000001;
+			packageReferences = (
+				819131BB2EBD5F26007738E3 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
+			);
 			productRefGroup = A1000040000000000000001 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -549,8 +557,8 @@
 				81DE4F9D2EA33EF3006293FC /* CustomWindowLayout.swift in Sources */,
 				81DE4F9E2EA33EF3006293FC /* CustomSidebarView.swift in Sources */,
 				81DE4F9F2EA33EF3006293FC /* CustomToolbarView.swift in Sources */,
-							500213640C504E3EA564470F /* ErrorCodes.swift in Sources */,
-);
+				500213640C504E3EA564470F /* ErrorCodes.swift in Sources */,
+			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
@@ -704,7 +712,7 @@
 					"$(SRCROOT)/llama.cpp/build/bin",
 				);
 				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/llama.cpp/build/bin";
-				MARKETING_VERSION = 1.0.1;
+				MARKETING_VERSION = 1.0.2;
 				OTHER_LDFLAGS = (
 					"-lllama",
 					"-lggml",
@@ -747,7 +755,7 @@
 					"$(SRCROOT)/llama.cpp/build/bin",
 				);
 				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/llama.cpp/build/bin";
-				MARKETING_VERSION = 1.0.1;
+				MARKETING_VERSION = 1.0.2;
 				OTHER_LDFLAGS = (
 					"-lllama",
 					"-lggml",
@@ -783,6 +791,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		819131BB2EBD5F26007738E3 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/gonzalezreal/swift-markdown-ui";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.4.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		819131BC2EBD5F26007738E3 /* MarkdownUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 819131BB2EBD5F26007738E3 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */;
+			productName = MarkdownUI;
+		};
+/* End XCSwiftPackageProductDependency section */
 
 /* Begin XCVersionGroup section */
 		81DE4F642EA18C90006293FC /* NotesDataModel.xcdatamodeld */ = {

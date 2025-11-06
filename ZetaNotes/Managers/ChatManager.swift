@@ -52,7 +52,7 @@ class ChatManager: ObservableObject {
         dateFormatter.dateFormat = "MMM d, h:mm a"
         let dateString = dateFormatter.string(from: Date())
 
-        var markdown = "---\n`Chat • \(dateString)`\n---\n\n"
+        var markdown = "#### Chat • \(dateString)\n\n"
 
         for message in messages {
             // Skip system messages in export

@@ -176,7 +176,7 @@ extension AIService {
             "\n\nThe ",
             "\n\nHere is",
             "\n\nNote:",
-            "\n\n---\n`" // New service delimiter format
+            "\n\n#### " // New service delimiter format
         ]
 
         for marker in stopMarkers {
@@ -251,12 +251,12 @@ extension AIService {
         var searchRange = text.startIndex ..< text.endIndex
 
         while let doubleNewline = text.range(of: "\n\n", range: searchRange) {
-            // Check if this is part of a service delimiter ("\n\n---\n`")
+            // Check if this is part of a service delimiter ("\n\n#### ")
             let afterNewlines = doubleNewline.upperBound
             if afterNewlines < text.endIndex {
                 let remainingText = text[afterNewlines...]
-                // Skip if this "\n\n" is followed by "---\n`" (service delimiter)
-                if remainingText.hasPrefix("---\n`") {
+                // Skip if this "\n\n" is followed by "#### " (service delimiter)
+                if remainingText.hasPrefix("#### ") {
                     searchRange = afterNewlines ..< text.endIndex
                     continue
                 }
@@ -284,12 +284,12 @@ extension AIService {
         var searchRange = text.startIndex ..< text.endIndex
 
         while let doubleNewline = text.range(of: "\n\n", range: searchRange) {
-            // Check if this is part of a service delimiter ("\n\n---\n`")
+            // Check if this is part of a service delimiter ("\n\n#### ")
             let afterNewlines = doubleNewline.upperBound
             if afterNewlines < text.endIndex {
                 let remainingText = text[afterNewlines...]
-                // Skip if this "\n\n" is followed by "---\n`" (service delimiter)
-                if remainingText.hasPrefix("---\n`") {
+                // Skip if this "\n\n" is followed by "#### " (service delimiter)
+                if remainingText.hasPrefix("#### ") {
                     searchRange = afterNewlines ..< text.endIndex
                     continue
                 }

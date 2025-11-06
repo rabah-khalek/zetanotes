@@ -7,6 +7,7 @@
 
 import AppKit
 import SwiftUI
+import MarkdownUI
 
 // MARK: - Custom Text View with Key Handling
 
@@ -438,9 +439,21 @@ struct NoteEditorView: View {
 
             // Content Editor or Markdown Preview
             if showMarkdownPreview {
-                MarkdownRenderer(text: content)
-                    .frame(minHeight: 200)
-                    .transition(.opacity)
+                ZStack {
+                    Color(nsColor: .textBackgroundColor)
+                        .ignoresSafeArea()
+
+                    ScrollView {
+                        Markdown(content)
+                            .markdownTheme(.docC)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 12)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .textSelection(.enabled)
+                    }
+                }
+                .frame(minHeight: 200)
+                .transition(.opacity)
             } else {
                 SimpleTextEditor(
                     text: $content,

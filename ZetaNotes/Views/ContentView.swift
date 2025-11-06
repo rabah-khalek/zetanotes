@@ -130,12 +130,12 @@ struct ContentView: View {
                let note = viewModel.selectedNote {
                 let currentContent = note.content ?? ""
 
-                // Check if this is a chat dump (starts with ---\n`Chat •)
-                if text.hasPrefix("---\n`Chat •") {
+                // Check if this is a chat dump (starts with #### Chat •)
+                if text.hasPrefix("#### Chat •") {
                     // Look for existing chat section to replace
-                    // Match pattern: ---\n`Chat • {date}`\n---\n\n{content}
+                    // Match pattern: #### Chat • {date}\n\n{content}
                     // The content continues until we hit another section marker or end of string
-                    let pattern = #"---\n`Chat • [^`]+`\n---\n\n(?:(?!---\n`(?:Chat|[A-Z][a-z]+ • )).|\n)*"#
+                    let pattern = #"#### Chat • [^\n]+\n\n(?:(?!#### (?:Chat|[A-Z][a-z]+ • )).|\n)*"#
 
                     if let range = currentContent.range(
                         of: pattern,
@@ -952,10 +952,10 @@ struct ContentView: View {
     private func extractBaseContent(from content: String) -> String {
         // Define all AI-generated section markers
         let markers = [
-            "\n\n---\n`Summary",
-            "\n\n---\n`Translation to ",
-            "\n\n---\n`Patched",
-            "\n\n---\n`Reformulated"
+            "\n\n#### Summary",
+            "\n\n#### Translation to ",
+            "\n\n#### Patched",
+            "\n\n#### Reformulated"
         ]
 
         // Find the earliest AI section marker

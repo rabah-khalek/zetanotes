@@ -151,9 +151,9 @@ private enum LlamaThreeTwoConfigs {
 
         case .titleGeneration:
             return LLMConfig(
-                prompt: "Generate a 2-4 word title:",
+                prompt: "Generate a short, descriptive title for this text. Output ONLY the title, nothing else.\n\nTitle:",
                 temperature: 0.1,
-                maxTokens: 8,
+                maxTokens: 20,
                 usePromptAsUserMessage: true
             )
 

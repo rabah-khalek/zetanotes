@@ -574,7 +574,7 @@ class NoteViewModel: ObservableObject {
         if let summary = summary, !summary.isEmpty {
             await MainActor.run {
                 let timestamp = self.generateTimestamp()
-                let summaryBlock = "\n\n---\n`Summary • \(timestamp)`\n---\n\n" + summary
+                let summaryBlock = "\n\n#### Summary • \(timestamp)\n\n" + summary
                 note.content = reconstructContent(
                     base: sections.baseContent,
                     summary: summaryBlock,
@@ -637,7 +637,7 @@ class NoteViewModel: ObservableObject {
         if let translation = translation, !translation.isEmpty {
             await MainActor.run {
                 let timestamp = self.generateTimestamp()
-                let translationBlock = "\n\n---\n`Translation to \(targetLanguage) • \(timestamp)`\n---\n\n" +
+                let translationBlock = "\n\n#### Translation to \(targetLanguage) • \(timestamp)\n\n" +
                     translation
                 note.content = reconstructContent(
                     base: sections.baseContent,
@@ -685,7 +685,7 @@ class NoteViewModel: ObservableObject {
         if let corrected = corrected, !corrected.isEmpty {
             await MainActor.run {
                 let timestamp = self.generateTimestamp()
-                let correctedBlock = "\n\n---\n`Patched • \(timestamp)`\n---\n\n" + corrected
+                let correctedBlock = "\n\n#### Patched • \(timestamp)\n\n" + corrected
                 note.content = reconstructContent(
                     base: sections.baseContent,
                     summary: sections.summaryBlock,
@@ -735,7 +735,7 @@ class NoteViewModel: ObservableObject {
         if let reformulated = reformulated, !reformulated.isEmpty {
             await MainActor.run {
                 let timestamp = self.generateTimestamp()
-                let reformulatedBlock = "\n\n---\n`Reformulated • \(timestamp)`\n---\n\n" + reformulated
+                let reformulatedBlock = "\n\n#### Reformulated • \(timestamp)\n\n" + reformulated
                 note.content = reconstructContent(
                     base: sections.baseContent,
                     summary: sections.summaryBlock,
@@ -985,7 +985,7 @@ class NoteViewModel: ObservableObject {
             if !cleanedResult.isEmpty {
                 await MainActor.run {
                     let timestamp = self.generateTimestamp()
-                    let resultBlock = "\n\n---\n`\(tool.name) • \(timestamp)`\n---\n\n" + cleanedResult
+                    let resultBlock = "\n\n#### \(tool.name) • \(timestamp)\n\n" + cleanedResult
 
                     // Update custom tool blocks, replacing existing block for this tool
                     var updatedCustomServices = sections.customServiceBlocks
@@ -1059,8 +1059,8 @@ class NoteViewModel: ObservableObject {
         var reformulatedBlock = ""
         var customServiceBlocks: [String: String] = [:]
 
-        // Find the first AI-generated section marker (new format: ---\n`ServiceName • timestamp`\n---)
-        let markerPrefix = "\n\n---\n`"
+        // Find the first AI-generated section marker (new format: #### ServiceName • timestamp)
+        let markerPrefix = "\n\n#### "
         var firstAIIndex: String.Index?
 
         if let range = content.range(of: markerPrefix) {
@@ -1072,18 +1072,18 @@ class NoteViewModel: ObservableObject {
             let aiSections = String(content[firstIndex...])
 
             // Split by section markers
-            let sectionPattern = "\n\n---\n`"
+            let sectionPattern = "\n\n#### "
             let parts = aiSections.components(separatedBy: sectionPattern)
 
             for (index, part) in parts.enumerated() {
                 if index == 0 && part.isEmpty { continue } // Skip empty first part
 
-                // Extract section name from the header line (format: "ServiceName • timestamp`\n---")
+                // Extract section name from the header line (format: "ServiceName • timestamp")
                 let lines = part.components(separatedBy: "\n")
                 guard let headerLine = lines.first else { continue }
 
-                // Remove the closing backtick if present
-                let cleanHeader = headerLine.replacingOccurrences(of: "`", with: "")
+                // Use header line directly (no backticks to remove)
+                let cleanHeader = headerLine
 
                 // Reconstruct the full block with marker
                 let fullBlock = (index > 0 || !part.isEmpty) ? sectionPattern + part : part
