@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Generate macOS app icons from a high-quality logo.png
+Generate the macOS AppIcon.appiconset from docs/logo.png. Run from anywhere; paths are relative to the repository.
 """
 
 from PIL import Image
@@ -101,8 +101,9 @@ def update_contents_json(output_dir, generated_files):
 
 def main():
     # Paths
-    source_logo = "/Users/projects/Documents/zetanotes-dev/logo.png"
-    output_dir = "/Users/projects/Documents/zetanotes-dev/ZetaNotes/Assets.xcassets/AppIcon.appiconset"
+    repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    source_logo = os.path.join(repo_root, "docs", "logo.png")
+    output_dir = os.path.join(repo_root, "ZetaNotes", "Assets.xcassets", "AppIcon.appiconset")
 
     # Check if source file exists
     if not os.path.exists(source_logo):

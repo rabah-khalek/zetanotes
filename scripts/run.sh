@@ -1,5 +1,8 @@
 #!/bin/zsh
 
+# Run from the repository root regardless of the current directory
+cd "$(dirname "$0")/.." || exit 1
+
 # Clean, build, and run ZetaNotes in debug mode
 # This script will clean the project, build it, and run the built application
 # with console output visible in the terminal

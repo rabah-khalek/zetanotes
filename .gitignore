@@ -95,3 +95,12 @@ fastlane/test_output
 xcuserdata/
 *.xcuserstate
 DerivedData/
+
+# Added for the public release
+*.bak*
+build/
+*.xcarchive
+.venv/
+.claude/
+scripts/ExportOptions-AppStore.plist
+__pycache__/

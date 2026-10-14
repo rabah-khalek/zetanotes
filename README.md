@@ -28,18 +28,26 @@ Requires macOS 13 or later; Apple silicon recommended. AI models are downloaded 
    git clone --depth 1 https://github.com/ggerganov/llama.cpp.git
    ```
 
-   `scripts/setup-dev.sh` does the same and prebuilds it.
-3. Open `ZetaNotes.xcodeproj` in Xcode 16 or later and build the `ZetaNotes` scheme.
+   `scripts/setup-dev.sh` does the same and prebuilds it, or run `make llama`.
+3. Open `ZetaNotes.xcodeproj` in Xcode 16 or later and build the `ZetaNotes` scheme, or run `make build`.
 
-The signing, notarization and DMG scripts in `scripts/` need an Apple Developer membership and are
-kept for reference; see `scripts/RELEASE_WORKFLOW.md`.
+`make format` and `make lint` run SwiftFormat and SwiftLint with the configuration in `.swiftformat`
+and `.swiftlint.yml`. The signing, notarization and DMG scripts need an Apple Developer membership
+and are documented in [scripts/README.md](scripts/README.md).
 
 ## Project layout
 
-- `ZetaNotes/` app sources (SwiftUI)
-- `docs/` website, served by GitHub Pages
-- `scripts/` build and release tooling
-- `archive/` historical development notes
+- `ZetaNotes/` app sources (SwiftUI): `AI/`, `Managers/`, `Models/`, `Search/`, `Storage/`, `Utilities/`, `ViewModels/`, `Views/`
+- `ZetaNotes.xcodeproj/` Xcode project; Swift package dependencies are resolved by Xcode
+- `docs/` website, served by GitHub Pages at zetanotes.com
+- `scripts/` build and release tooling, see `scripts/README.md`
+- `Makefile` shortcuts for the scripts above
+- `CHANGELOG.md` release history
+
+## Contributing
+
+The project is not maintained, so issues and pull requests are not monitored. Forks are welcome
+under the MIT license.
 
 ## License
 

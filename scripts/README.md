@@ -1,203 +1,60 @@
-# ZetaNotes Release Scripts
+# Scripts
 
-Automated scripts to package and release ZetaNotes with one command.
+Build, release and maintenance tooling for ZetaNotes. Every script runs from the repository root
+and the `Makefile` at the root wraps the common ones (`make build`, `make run`, `make format`,
+`make llama`, `make release VERSION=x.y.z`, `make appstore`).
 
-## 🚀 Quick Start
+## Development
 
-### Create a Release
+| Script | Purpose |
+| --- | --- |
+| `setup-dev.sh` | One-time setup: checks Xcode and Homebrew tools, clones and builds llama.cpp. |
+| `build-llama.sh` | Builds llama.cpp with Metal support into `llama.cpp/build`. Also run by an Xcode build phase, so a plain Xcode build works once `llama.cpp/` exists. |
+| `build.sh` | `xcodebuild` wrapper that prints only errors, warnings and the result. |
+| `run.sh` | Cleans, builds and launches a Debug build with console output. |
+| `format.sh` | Runs SwiftFormat and SwiftLint auto-fix over `ZetaNotes/`, then reports what is left. |
+| `generate-app-icons.py` | Regenerates `AppIcon.appiconset` from `docs/logo.png`. Needs Pillow (`pip install pillow`). |
 
-```bash
-cd /Users/projects/Documents/zetanotes
-./scripts/release.sh 1.0.0
-```
+## Release (Developer ID DMG)
 
-That's it! The script will:
-- ✅ Build the app in Release mode
-- ✅ Create an unsigned DMG (for distribution)
-- ✅ Generate SHA256 checksum
-- ✅ Show installation instructions
+`release.sh <version>` builds a Release configuration, signs it with the Developer ID certificate,
+notarizes it, staples the ticket and packages a DMG with a SHA-256 checksum into
+`releases/ZetaNotes-Release-<timestamp>/`. It is split into `lib/`:
 
-**Time:** 5-10 minutes (Xcode build time)
+| File | Step |
+| --- | --- |
+| `release-config.sh` | App name, scheme, team ID, signing identity, download URL. |
+| `lib/validation.sh` | Checks tools, certificates and credentials before building. |
+| `lib/xcode.sh` | Archives the app and builds llama.cpp first. |
+| `lib/signing.sh` | Deep-signs the app and bundled dylibs with the hardened runtime. |
+| `lib/notarization.sh` | Submits the DMG to Apple's notary service and staples the ticket. |
+| `lib/packaging.sh` | Creates the DMG (`brew install create-dmg`) and the checksum file. |
+| `lib/sparkle.sh` | Stubs left from the removed Sparkle auto-update support. |
+| `verify-signatures.sh` | Checks code signatures and Gatekeeper acceptance of a built app or DMG. |
 
-**Output:** `~/Desktop/ZetaNotes-v1.0.0.dmg`
-
-**Note:** Users download models via the welcome page on first run - no model bundling needed!
-
-### Get your DMG
-
-After completion, find your release at:
-- Location: `~/Desktop/`
-- File: `ZetaNotes-v1.0.0.dmg`
-- Checksum: `ZetaNotes-v1.0.0.dmg.sha256`
-
-## 📁 Scripts Included
-
-### `release.sh`
-**Unified release packaging script**
-
-Creates unsigned DMG distributions for ZetaNotes.
-
-**Features:**
-- ✅ Production safety checks (DEV_TODO markers, DEBUG blocks, test credentials)
-- ✅ Clean Xcode build in Release configuration
-- ✅ Development data cleanup (models, notes, logs)
-- ✅ **No model bundling** - users download via welcome page
-- ✅ DMG creation (create-dmg or fallback hdiutil)
-- ✅ SHA256 checksum generation
-- ✅ Comprehensive installation guide
-
-**When to run:** Every time you want to create a release
-
-**Usage:**
-```bash
-./scripts/release.sh VERSION
-```
-
-Example:
-```bash
-./scripts/release.sh 1.0.0
-```
-
-### Development Scripts
-
-These scripts are for **development setup only**, not for releases:
-
-#### `build-llama.sh`
-**Xcode Run Script phase** - builds llama.cpp with Metal support during Xcode builds.
-
-**When it runs:** Automatically during Xcode builds (via Build Phases)
-
-#### `configure-xcode.sh`
-**Interactive Xcode configuration helper** - sets up build settings for llama.cpp integration.
-
-**When to run:** Once, during initial development setup
-
-#### `setup-dev.sh`
-**One-time development environment setup** - clones llama.cpp, builds it, downloads TinyLlama test model.
-
-**When to run:** Once, when first setting up the development environment
-
-## � Prerequisites
-
-### Required
-
-1. **Xcode Command Line Tools**
-   ```bash
-   xcode-select --install
-   ```
-
-2. **llama.cpp** (for development)
-   - Run `./scripts/setup-dev.sh` once to set up development environment
-
-### Optional (for prettier DMG)
+Credentials are read from the environment, never from the repository. Use either an App Store
+Connect API key:
 
 ```bash
-brew install create-dmg
+export ASC_KEY_PATH=~/.private_keys/AuthKey_XXXXXXXXXX.p8
+export ASC_KEY_ID=XXXXXXXXXX
+export ASC_ISSUER_ID=00000000-0000-0000-0000-000000000000
 ```
 
-If not installed, the script uses a fallback method (works fine, just less pretty).
+or an Apple ID with an app-specific password:
 
-## 🎯 What Gets Created
-
-After running `release.sh`, you get:
-
-```
-~/Desktop/
-├── ZetaNotes-v1.0.0.dmg           # Upload to GitHub ✅
-└── ZetaNotes-v1.0.0.dmg.sha256    # Checksum (update website)
-```
-
-## 📤 Upload to GitHub
-
-1. **Create release on GitHub:**
-   - Go to Releases → Draft a new release
-   - Tag: `v1.0.0`
-   - Title: `ZetaNotes v1.0.0`
-
-2. **Upload DMG:**
-   - Drag `ZetaNotes-v1.0.0.dmg` to release assets
-
-3. **Update website checksum:**
-   ```bash
-   # Copy checksum
-   cat ~/Desktop/ZetaNotes-v1.0.0.dmg.sha256
-
-   # Update docs/download.html
-   # Find the SHA256 section and paste the new checksum
-
-   # Commit and push
-   git add docs/
-   git commit -m "Update download checksum for v1.0.0"
-   git push
-   ```
-
-## 🐛 Troubleshooting
-
-### Build fails
-
-**Problem:** Xcode build errors
-
-**Solution:**
 ```bash
-# Clean and rebuild manually first
-cd /Users/projects/Documents/zetanotes
-xcodebuild clean -project ZetaNotes.xcodeproj -scheme ZetaNotes
-xcodebuild build -project ZetaNotes.xcodeproj -scheme ZetaNotes -configuration Release
-
-# Fix any errors, then re-run release.sh
+export APPLE_ID=you@example.com
+export APPLE_TEAM_ID=XXXXXXXXXX
+export APPLE_APP_SPECIFIC_PASSWORD=xxxx-xxxx-xxxx-xxxx
 ```
 
-### DMG creation fails
+## App Store
 
-**Problem:** create-dmg not installed or errors
+`archive-for-appstore.sh` builds an archive signed with the Apple Distribution certificate and
+exports an App Store package into `build/AppStore/`. Upload it with Transporter, or export the
+archive from Xcode's Organizer. `copy-dsyms-to-archive.sh` adds the llama.cpp dSYMs to an archive
+so crash reports symbolicate.
 
-**Solution:**
-```bash
-# Install create-dmg (optional)
-brew install create-dmg
-
-# Or let script use fallback hdiutil method (works fine)
-```
-
-### Script shows warnings about production readiness
-
-**Problem:** Script found DEV_TODO markers, DEBUG blocks, or test credentials
-
-**Solution:**
-```bash
-# Search for issues
-grep -r "DEV_TODO" ZetaNotes/
-grep -r "DEBUG_BLOCK_START" ZetaNotes/
-grep -r "test@example.com" ZetaNotes/
-
-# Fix the issues, then re-run
-./scripts/release.sh 1.0.0
-```
-
-## ⏱️ Time Breakdown
-
-| Step | Time | Notes |
-|------|------|-------|
-| Safety checks | 10 sec | Quick scans |
-| Xcode build | 5-10 min | Depends on Mac speed |
-| Cleanup | 5 sec | Quick |
-| DMG creation | 1 min | Quick |
-| Checksum | 5 sec | Quick |
-| **Total** | **5-10 min** | Mostly Xcode build |
-
-## 📖 Distribution Philosophy
-
-**ZetaNotes uses a simple, user-friendly distribution model:**
-
-- ✅ **Unsigned DMG** - Easy distribution, no $99/year Apple Developer fee
-- ✅ **First-run model download** - Users choose and download AI models via welcome page
-- ✅ **No model bundling** - Keeps download size small (<10 MB vs >500 MB)
-- ✅ **User control** - Users select which models to download based on their needs
-
-This approach prioritizes accessibility and user choice over Apple ecosystem integration.
-
-## 🆘 Getting Help
-
-- **Script issues:** Open an issue on GitHub
-- **Build issues:** Check Xcode build logs
-- **llama.cpp issues:** See [llama.cpp documentation](https://github.com/ggerganov/llama.cpp)
+All of this needs an active Apple Developer membership. The 1.0.3 release was the last one, so these
+scripts are kept for reference and for forks.

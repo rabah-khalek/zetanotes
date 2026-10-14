@@ -7,10 +7,6 @@ Allow: /
 # Sitemap location
 Sitemap: https://zetanotes.com/sitemap.xml
 
-# Disallow crawling of archive folder if it exists
-User-agent: *
-Disallow: /archive/
-
 # Common SEO best practices
 # Allow Google Image Bot
 User-agent: Googlebot-Image

@@ -22,7 +22,7 @@ check_sparkle_tools() {
 
     if [ ! -f "$sign_update" ]; then
         print_warning "Sparkle sign_update tool not found at: $sign_update"
-        print_warning "Sparkle signatures will be skipped - run ./scripts/setup-sparkle-keys.sh"
+        print_warning "Sparkle support was removed; update signatures are skipped"
         return 1
     fi
     return 0

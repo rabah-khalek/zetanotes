@@ -1,5 +1,8 @@
 #!/bin/zsh
 
+# Run from the repository root regardless of the current directory
+cd "$(dirname "$0")/.." || exit 1
+
 # Build ZetaNotes and show summary of errors/warnings
 # This script builds the project and filters output to show only errors, warnings, and build status
 
