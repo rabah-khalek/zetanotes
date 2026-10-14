@@ -36,7 +36,8 @@ build_app() {
         -scheme ZetaNotes \
         -configuration Release \
         -derivedDataPath "$build_dir/DerivedData" \
-        CODE_SIGN_STYLE=Automatic \
+        CODE_SIGN_STYLE=Manual \
+        CODE_SIGN_IDENTITY="Developer ID Application" \
         DEVELOPMENT_TEAM="$team_id" \
         ENABLE_HARDENED_RUNTIME=YES \
         OTHER_CODE_SIGN_FLAGS="--timestamp --options runtime" \

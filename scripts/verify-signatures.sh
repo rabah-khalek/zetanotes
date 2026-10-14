@@ -102,20 +102,25 @@ check_signature() {
 echo -e "\n${BLUE}━━━ Main Application ━━━${NC}"
 check_signature "$APP_PATH" "ZetaNotes.app"
 
-echo -e "\n${BLUE}━━━ Sparkle Framework ━━━${NC}"
 SPARKLE="$APP_PATH/Contents/Frameworks/Sparkle.framework"
-check_signature "$SPARKLE" "Sparkle.framework"
+if [ -d "$SPARKLE" ]; then
+    echo -e "\n${BLUE}━━━ Sparkle Framework ━━━${NC}"
+    check_signature "$SPARKLE" "Sparkle.framework"
 
-echo -e "\n${BLUE}━━━ Sparkle XPC Services ━━━${NC}"
-for xpc in "$SPARKLE"/Versions/B/XPCServices/*.xpc; do
-    if [ -d "$xpc" ]; then
-        check_signature "$xpc" "$(basename "$xpc")"
-    fi
-done
+    echo -e "\n${BLUE}━━━ Sparkle XPC Services ━━━${NC}"
+    for xpc in "$SPARKLE"/Versions/B/XPCServices/*.xpc; do
+        if [ -d "$xpc" ]; then
+            check_signature "$xpc" "$(basename "$xpc")"
+        fi
+    done
 
-echo -e "\n${BLUE}━━━ Sparkle Updater ━━━${NC}"
-UPDATER="$SPARKLE/Versions/B/Updater.app"
-check_signature "$UPDATER" "Updater.app"
+    echo -e "\n${BLUE}━━━ Sparkle Updater ━━━${NC}"
+    UPDATER="$SPARKLE/Versions/B/Updater.app"
+    check_signature "$UPDATER" "Updater.app"
+else
+    echo -e "\n${BLUE}━━━ Sparkle Framework ━━━${NC}"
+    echo "  Sparkle not bundled (auto-update removed) - skipping"
+fi
 
 echo -e "\n${BLUE}━━━ llama.cpp Libraries ━━━${NC}"
 for dylib in "$APP_PATH/Contents/Frameworks/"*.dylib; do

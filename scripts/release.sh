@@ -76,7 +76,7 @@ print_step "Checking prerequisites"
 
 check_certificate
 check_create_dmg
-check_sparkle_tools "$PROJECT_DIR/$SIGN_UPDATE_PATH"
+check_sparkle_tools "$PROJECT_DIR/$SIGN_UPDATE_PATH" || true  # Sparkle removed; non-fatal
 
 IS_CI_ENV="false"
 [ "$ENVIRONMENT" = "ci" ] && IS_CI_ENV="true"
