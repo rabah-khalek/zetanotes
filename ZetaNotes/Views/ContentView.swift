@@ -21,7 +21,6 @@ struct ContentView: View {
     @StateObject private var errorLogger = ErrorLogger.shared
     @StateObject private var downloadState = ModelDownloadState.shared
     @EnvironmentObject var aiEngine: AIEngine
-    @StateObject private var licenseManager = LicenseManager.shared
     @StateObject private var toolManager = ToolManager.shared
     @State private var showingSettings = false
     @State private var showingErrorLog = false
@@ -30,9 +29,9 @@ struct ContentView: View {
     @State private var showingToolEditor = false
     @State private var editingTool: AITool?
 
-    // License/Upgrade state
-    @State private var showUpgradePrompt = false
-    @State private var upgradePromptType: UpgradePromptView.PromptType = .general
+    // One-time notice that ZetaNotes became free in 1.0.3
+    @AppStorage("hasSeenFreeNotice103") private var hasSeenFreeNotice = false
+    @State private var showingFreeNotice = false
 
     // Word and character count state
     @State private var currentWordCount = 0
@@ -102,11 +101,23 @@ struct ContentView: View {
                 }
             )
         }
-        .sheet(isPresented: $showUpgradePrompt) {
-            UpgradePromptView(
-                isPresented: $showUpgradePrompt,
-                promptType: upgradePromptType
-            )
+        .alert("ZetaNotes is now free", isPresented: $showingFreeNotice) {
+            Button("Learn more") {
+                hasSeenFreeNotice = true
+                if let url = URL(string: "https://www.zetanotes.com") {
+                    NSWorkspace.shared.open(url)
+                }
+            }
+            Button("OK") {
+                hasSeenFreeNotice = true
+            }
+        } message: {
+            Text("All Pro features are now unlocked for everyone and in-app purchases have been removed. ZetaNotes is no longer actively maintained; the source code and downloads are available at zetanotes.com.")
+        }
+        .onAppear {
+            if !hasSeenFreeNotice {
+                showingFreeNotice = true
+            }
         }
         .onAppear {
             // Start system monitoring for CPU/GPU usage
@@ -156,15 +167,6 @@ struct ContentView: View {
 
                 viewModel.saveNote(note)
             }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .showUpgradePrompt)) { notification in
-            if let type = notification.object as? UpgradePromptView.PromptType {
-                upgradePromptType = type
-            }
-            // Close settings and tool editor if open
-            showingSettings = false
-            showingToolEditor = false
-            showUpgradePrompt = true
         }
         .onReceive(NotificationCenter.default.publisher(for: .toggleChat)) { _ in
             showingChat.toggle()
@@ -450,8 +452,8 @@ struct ContentView: View {
                 .fill(Color.secondary.opacity(0.2))
                 .frame(width: 1, height: 14)
 
-            // Show custom tools (Pro only) - all tools shown, keyboard shortcut optional
-            if licenseManager.isPro && !toolManager.customTools.isEmpty {
+            // Show custom tools - all tools shown, keyboard shortcut optional
+            if !toolManager.customTools.isEmpty {
                 ForEach(toolManager.customTools.prefix(3)) { tool in
                     ToolButton(
                         tool: tool,
@@ -476,29 +478,15 @@ struct ContentView: View {
 
             // "+" button to add new custom tool (always visible)
             Button(action: {
-                if licenseManager.isPro {
-                    editingTool = nil
-                    showingToolEditor = true
-                } else {
-                    NotificationCenter.default.post(
-                        name: .showUpgradePrompt,
-                        object: UpgradePromptView.PromptType.general
-                    )
-                }
+                editingTool = nil
+                showingToolEditor = true
             }) {
-                HStack(spacing: 4) {
-                    if !licenseManager.isPro {
-                        Image(systemName: "lock.fill")
-                            .font(.system(size: 9))
-                            .foregroundColor(.orange)
-                    }
-                    Image(systemName: "plus.circle.fill")
-                        .font(.system(size: 14))
-                        .foregroundColor(licenseManager.isPro ? .blue : .orange)
-                }
+                Image(systemName: "plus.circle.fill")
+                    .font(.system(size: 14))
+                    .foregroundColor(.blue)
             }
             .buttonStyle(.plain)
-            .help(licenseManager.isPro ? "Add custom tool" : "Upgrade to Pro for custom tools")
+            .help("Add custom tool")
         }
         .padding(.horizontal, 8)
         .controlSize(.small)
@@ -592,75 +580,18 @@ struct ContentView: View {
     @ViewBuilder
     private var toolbarRightItems: some View {
         HStack(spacing: 8) {
-            #if DEV_PRO_MODE
-            // Dev Mode Toggle for App Reviewers
-            Button(action: {
-                StoreKitManager.shared.toggleDevMode()
-            }) {
-                HStack(spacing: 6) {
-                    Image(systemName: StoreKitManager.shared.isPro ? "crown.fill" : "crown")
-                        .font(.system(size: 13))
-                        .foregroundColor(StoreKitManager.shared.isPro ? .yellow : .gray)
-
-                    Text(StoreKitManager.shared.isPro ? "PRO" : "FREE")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundColor(StoreKitManager.shared.isPro ? .yellow : .gray)
-                }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(StoreKitManager.shared.isPro ? Color.yellow.opacity(0.15) : Color.gray.opacity(0.1))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 6)
-                        .strokeBorder(
-                            StoreKitManager.shared.isPro ? Color.yellow.opacity(0.4) : Color.gray.opacity(0.3),
-                            lineWidth: 1
-                        )
-                )
-            }
-            .buttonStyle(.plain)
-            .help("Toggle between FREE and PRO for testing (App Review Only)")
-
-            Rectangle()
-                .fill(Color.secondary.opacity(0.2))
-                .frame(width: 1, height: 14)
-            #endif
-
             // Chat toggle (symmetric to sidebar toggle)
             Button(action: {
-                if licenseManager.isPro {
-                    withAnimation(AppTheme.Animation.standard) {
-                        showingChat.toggle()
-                    }
-                } else {
-                    NotificationCenter.default.post(
-                        name: .showUpgradePrompt,
-                        object: UpgradePromptView.PromptType.chat
-                    )
+                withAnimation(AppTheme.Animation.standard) {
+                    showingChat.toggle()
                 }
             }) {
-                ZStack(alignment: .topLeading) {
-                    Image(systemName: "bubble.left.and.bubble.right")
-                        .font(.system(size: AppTheme.Typography.toolbarIconSize))
-                        .foregroundColor(
-                            licenseManager.isPro
-                                ? (showingChat ? AppTheme.Colors.accentBlue : AppTheme.Colors.secondaryText)
-                                : .orange
-                        )
-
-                    // Lock icon for free users
-                    if !licenseManager.isPro {
-                        Image(systemName: "lock.fill")
-                            .font(.system(size: 9))
-                            .foregroundColor(.orange)
-                            .offset(x: -4, y: -4)
-                    }
-                }
+                Image(systemName: "bubble.left.and.bubble.right")
+                    .font(.system(size: AppTheme.Typography.toolbarIconSize))
+                    .foregroundColor(showingChat ? AppTheme.Colors.accentBlue : AppTheme.Colors.secondaryText)
             }
             .buttonStyle(.plain)
-            .help(licenseManager.isPro ? "Toggle Chat (⌘⇧C)" : "Upgrade to Pro for AI Chat")
+            .help("Toggle Chat (⌘⇧C)")
             .keyboardShortcut("c", modifiers: [.command, .shift])
         }
         .padding(.horizontal, 4)

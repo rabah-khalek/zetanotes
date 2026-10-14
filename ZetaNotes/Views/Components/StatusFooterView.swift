@@ -11,7 +11,6 @@ struct StatusFooterView: View {
     @ObservedObject var systemMonitor: SystemMonitor
     @ObservedObject var aiEngine: AIEngine
     @ObservedObject var downloadState: ModelDownloadState
-    @ObservedObject var licenseManager = LicenseManager.shared
     @ObservedObject var errorLogger: ErrorLogger
 
     var wordCount: Int
@@ -299,65 +298,20 @@ struct StatusFooterView: View {
                 .font(.system(size: 9))
                 .foregroundColor(.blue)
 
-            if licenseManager.isPro {
-                // Pro user: Simple report issue link
-                Button(action: {
-                    if let url =
-                        URL(
-                            string: "mailto:rabah.khalek@gmail.com?subject=ZetaNotes%20Bug%20Report&body=Please%20describe%20the%20issue%20and%20steps%20to%20reproduce:"
-                        ) {
-                        NSWorkspace.shared.open(url)
-                    }
-                }) {
-                    Text("Report issue")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(.blue)
-                        .underline()
+            Button(action: {
+                if let url =
+                    URL(
+                        string: "mailto:rabah.khalek@gmail.com?subject=ZetaNotes%20Bug%20Report&body=Please%20describe%20the%20issue%20and%20steps%20to%20reproduce:"
+                    ) {
+                    NSWorkspace.shared.open(url)
                 }
-                .buttonStyle(.plain)
-            } else {
-                // Free user: Full disclaimer with upgrade option
-                (
-                    Text("Tools generally work • Fast but ") +
-                        Text("error-prone").foregroundColor(.primary) +
-                        Text(" model •")
-                )
-                .font(.system(size: 10, weight: .medium))
-                .foregroundColor(.secondary)
-
-                Button(action: {
-                    // Show upgrade prompt for free users
-                    NotificationCenter.default.post(
-                        name: .showUpgradePrompt,
-                        object: UpgradePromptView.PromptType.modelSwitching
-                    )
-                }) {
-                    Text("Upgrade model")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(.purple)
-                        .underline()
-                }
-                .buttonStyle(.plain)
-
-                Text("•")
-                    .font(.system(size: 10))
-                    .foregroundColor(.secondary)
-
-                Button(action: {
-                    if let url =
-                        URL(
-                            string: "mailto:rabah.khalek@gmail.com?subject=ZetaNotes%20Bug%20Report&body=Please%20describe%20the%20issue%20and%20steps%20to%20reproduce:"
-                        ) {
-                        NSWorkspace.shared.open(url)
-                    }
-                }) {
-                    Text("Report issue")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(.blue)
-                        .underline()
-                }
-                .buttonStyle(.plain)
+            }) {
+                Text("Report issue")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundColor(.blue)
+                    .underline()
             }
+            .buttonStyle(.plain)
         }
         .padding(.horizontal, 7)
         .padding(.vertical, 4)
@@ -369,10 +323,7 @@ struct StatusFooterView: View {
                         .strokeBorder(Color.blue.opacity(0.2), lineWidth: 0.5)
                 )
         )
-        .help(licenseManager.isPro
-            ? "Report any issues or provide feedback"
-            :
-            "AI tools are generally reliable but may have limitations. Report issues or upgrade to Pro for more capable models.")
+        .help("Report any issues or provide feedback")
     }
 
     private func downloadProgressBadge(modelName: String) -> some View {

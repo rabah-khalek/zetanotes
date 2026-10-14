@@ -205,7 +205,6 @@ extension Notification.Name {
     static let createNewNote = Notification.Name("createNewNote")
     static let deleteNote = Notification.Name("deleteNote")
     static let triggerSearch = Notification.Name("triggerSearch")
-    static let showUpgradePrompt = Notification.Name("showUpgradePrompt")
     static let toggleChat = Notification.Name("toggleChat")
     static let showModelPicker = Notification.Name("showModelPicker")
 }

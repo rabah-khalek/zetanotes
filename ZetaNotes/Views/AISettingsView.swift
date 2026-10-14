@@ -182,7 +182,7 @@ struct AISettingsView: View {
                         get: { toolEditorState != nil },
                         set: { if !$0 { toolEditorState = nil } }
                     ),
-                    isReadOnly: tool.isDefault && !licenseManager.isPro,
+                    isReadOnly: false,
                     targetLanguage: $viewModel.targetLanguage,
                     onSave: { updatedTool in
                         toolManager.updateTool(updatedTool)
@@ -299,7 +299,7 @@ struct GeneralSettingsContent: View {
                 .font(.title2)
                 .fontWeight(.semibold)
 
-            // Pro Status / Upgrade Section
+            // Free app status section
             ProStatusSection(dismiss: dismiss)
 
             Divider()
@@ -689,27 +689,11 @@ struct GeneralSettingsContent: View {
                                 .font(.system(size: 13))
                                 .foregroundColor(.secondary)
                             Spacer()
-                            Text("1.0.0")
+                            Text(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "")
                                 .font(.system(size: 13, weight: .medium))
                                 .foregroundColor(.primary)
                         }
 
-                        if licenseManager.isPro {
-                            HStack {
-                                Text("License")
-                                    .font(.system(size: 13))
-                                    .foregroundColor(.secondary)
-                                Spacer()
-                                HStack(spacing: 4) {
-                                    Image(systemName: "checkmark.seal.fill")
-                                        .font(.system(size: 12))
-                                        .foregroundColor(.green)
-                                    Text("Pro")
-                                        .font(.system(size: 13, weight: .medium))
-                                        .foregroundColor(.green)
-                                }
-                            }
-                        }
                     }
 
                     Divider()
@@ -1064,10 +1048,6 @@ struct ModelCard: View {
     @ObservedObject var downloadState = ModelDownloadState.shared
     @State private var showingDeleteConfirmation = false
 
-    private var isLocked: Bool {
-        !licenseManager.canUseModel(model.displayName)
-    }
-
     private var isSwitchingToThisModel: Bool {
         aiEngine.isSwitchingModel && aiEngine.switchingToModel == model
     }
@@ -1084,17 +1064,9 @@ struct ModelCard: View {
     var body: some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
-                // Model name with lock icon
-                HStack(spacing: 6) {
-                    Text(model.displayName)
-                        .font(.system(size: 14, weight: .semibold))
-
-                    if isLocked {
-                        Image(systemName: "lock.fill")
-                            .font(.caption)
-                            .foregroundColor(.orange)
-                    }
-                }
+                // Model name
+                Text(model.displayName)
+                    .font(.system(size: 14, weight: .semibold))
 
                 // Model specs
                 HStack(spacing: 8) {
@@ -1125,24 +1097,7 @@ struct ModelCard: View {
             Spacer()
 
             // Action button
-            if isLocked {
-                // Show upgrade button for locked models
-                Button(action: {
-                    NotificationCenter.default.post(
-                        name: .showUpgradePrompt,
-                        object: UpgradePromptView.PromptType.modelSwitching
-                    )
-                }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "lock.fill")
-                        Text("Upgrade")
-                            .font(.caption)
-                    }
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
-                .foregroundColor(.orange)
-            } else if isDownloading || isQueued {
+            if isDownloading || isQueued {
                 HStack(spacing: 8) {
                     VStack(spacing: 2) {
                         ProgressView(value: modelDownloadProgress)
@@ -1303,21 +1258,6 @@ struct TranslationPromptSection: View {
 
                 Spacer()
 
-                // Pro badge (moved to the right)
-                if !licenseManager.canEditPrompts {
-                    HStack(spacing: 4) {
-                        Image(systemName: "pencil")
-                            .font(.caption2)
-                        Text("Pro")
-                            .font(.caption2)
-                            .fontWeight(.semibold)
-                    }
-                    .foregroundColor(.orange)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(Color.orange.opacity(0.1))
-                    .cornerRadius(8)
-                }
             }
 
             // Display prompt with {language} replaced by actual language
@@ -1342,8 +1282,6 @@ struct TranslationPromptSection: View {
                 RoundedRectangle(cornerRadius: 6)
                     .stroke(Color.gray.opacity(0.2), lineWidth: 1)
             )
-            .disabled(!licenseManager.canEditPrompts)
-            .opacity(licenseManager.canEditPrompts ? 1.0 : 0.6)
 
             if viewModel.translationPrompt.isEmpty {
                 Text("Enter prompt for translation (use {language} as placeholder)...")
@@ -1370,21 +1308,6 @@ struct PromptSection: View {
                     .font(.subheadline)
                     .fontWeight(.medium)
 
-                if !licenseManager.canEditPrompts {
-                    Spacer()
-                    HStack(spacing: 4) {
-                        Image(systemName: "pencil")
-                            .font(.caption2)
-                        Text("Pro")
-                            .font(.caption2)
-                            .fontWeight(.semibold)
-                    }
-                    .foregroundColor(.orange)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(Color.orange.opacity(0.1))
-                    .cornerRadius(8)
-                }
             }
 
             TextEditor(text: $prompt)
@@ -1397,8 +1320,6 @@ struct PromptSection: View {
                     RoundedRectangle(cornerRadius: 6)
                         .stroke(Color.gray.opacity(0.2), lineWidth: 1)
                 )
-                .disabled(!licenseManager.canEditPrompts)
-                .opacity(licenseManager.canEditPrompts ? 1.0 : 0.6)
 
             if prompt.isEmpty {
                 Text(placeholder)
@@ -1410,126 +1331,60 @@ struct PromptSection: View {
 }
 
 struct ProStatusSection: View {
-    @ObservedObject var licenseManager = LicenseManager.shared
     let dismiss: DismissAction
     @Environment(\.openURL) private var openURL
 
     private let supportEmail = "mailto:rabah.khalek@gmail.com?subject=ZetaNotes%20Support"
+    private let websiteURL = "https://www.zetanotes.com"
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            if licenseManager.isPro {
-                // Pro Active State
-                HStack(spacing: 12) {
-                    Image(systemName: "checkmark.seal.fill")
-                        .font(.system(size: 32))
-                        .foregroundColor(.green)
+            HStack(spacing: 12) {
+                Image(systemName: "checkmark.seal.fill")
+                    .font(.system(size: 32))
+                    .foregroundColor(.green)
 
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Pro Active")
-                            .font(.headline)
-                            .fontWeight(.semibold)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("All features unlocked")
+                        .font(.headline)
+                        .fontWeight(.semibold)
 
-                        #if DEV_PRO_MODE
-                        Text("\(licenseManager.subscriptionTier.displayName) (App Review Build)")
-                            .font(.caption)
-                            .foregroundColor(.orange)
-                        #else
-                        Text(licenseManager.subscriptionTier.displayName)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        #endif
-                    }
-
-                    Spacer()
-                }
-                .padding()
-                .background(Color.green.opacity(0.1))
-                .cornerRadius(8)
-
-                HStack(spacing: 12) {
-                    Button {
-                        // Open App Store subscription management
-                        if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
-                            openURL(url)
-                        }
-                    } label: {
-                        Label("Manage Subscription", systemImage: "creditcard")
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-
-                    Button {
-                        if let url = URL(string: supportEmail) {
-                            openURL(url)
-                        }
-                    } label: {
-                        Label("Contact Support", systemImage: "envelope")
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
+                    Text("ZetaNotes is free. In-app purchases were removed in version 1.0.3.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                 }
 
-                Text("Subscriptions are managed through the App Store.")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            } else {
-                // Free Tier State
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack(spacing: 12) {
-                        Image(systemName: "bolt.fill")
-                            .font(.system(size: 32))
-                            .foregroundColor(.orange)
-
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Upgrade to Pro")
-                                .font(.headline)
-                                .fontWeight(.semibold)
-
-                            Text("Download open-source AI models & customize prompts")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-
-                        Spacer()
-                    }
-
-                    HStack(spacing: 12) {
-                        Button(action: {
-                            dismiss()
-                            // Small delay to ensure settings closes before upgrade prompt shows
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                NotificationCenter.default.post(
-                                    name: .showUpgradePrompt,
-                                    object: UpgradePromptView.PromptType.general
-                                )
-                            }
-                        }) {
-                            HStack {
-                                Image(systemName: "cart.fill")
-                                Text("Upgrade Starting at $0.99/month")
-                            }
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .controlSize(.large)
-
-                        Button("Restore Purchases") {
-                            Task {
-                                do {
-                                    try await licenseManager.restorePurchases()
-                                } catch {
-                                    print("❌ Failed to restore purchases: \(error)")
-                                }
-                            }
-                        }
-                        .buttonStyle(.bordered)
-                        .controlSize(.large)
-                    }
-                }
-                .padding()
-                .background(Color.orange.opacity(0.1))
-                .cornerRadius(8)
+                Spacer()
             }
+            .padding()
+            .background(Color.green.opacity(0.1))
+            .cornerRadius(8)
+
+            HStack(spacing: 12) {
+                Button {
+                    if let url = URL(string: websiteURL) {
+                        openURL(url)
+                    }
+                } label: {
+                    Label("Website & Source Code", systemImage: "globe")
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+
+                Button {
+                    if let url = URL(string: supportEmail) {
+                        openURL(url)
+                    }
+                } label: {
+                    Label("Contact", systemImage: "envelope")
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+            }
+
+            Text("ZetaNotes is no longer actively maintained. Previously purchased Pro plans are no longer needed; everything is included for everyone.")
+                .font(.caption)
+                .foregroundColor(.secondary)
         }
     }
 }
@@ -1654,29 +1509,18 @@ struct ToolsSettingsContent: View {
 
                 // Add Custom Tool button
                 Button(action: {
-                    if licenseManager.isPro {
-                        toolEditorState = .create
-                    } else {
-                        NotificationCenter.default.post(
-                            name: .showUpgradePrompt,
-                            object: UpgradePromptView.PromptType.general
-                        )
-                    }
+                    toolEditorState = .create
                 }) {
                     HStack(spacing: 6) {
-                        if !licenseManager.isPro {
-                            Image(systemName: "lock.fill")
-                                .font(.system(size: 11))
-                        }
                         Image(systemName: "plus.circle.fill")
                             .font(.system(size: 14))
-                        Text(licenseManager.isPro ? "Add Custom Tool" : "Upgrade to Add")
+                        Text("Add Custom Tool")
                             .font(.system(size: 13, weight: .semibold))
                     }
-                    .foregroundColor(licenseManager.isPro ? .white : .orange)
+                    .foregroundColor(.white)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 7)
-                    .background(licenseManager.isPro ? Color.blue : Color.orange.opacity(0.15))
+                    .background(Color.blue)
                     .cornerRadius(8)
                 }
                 .buttonStyle(.plain)
@@ -1687,23 +1531,13 @@ struct ToolsSettingsContent: View {
                 HStack {
                     Text("Default Tools")
                         .font(.headline)
-
-                    if !licenseManager.isPro {
-                        HStack(spacing: 4) {
-                            Image(systemName: "lock.fill")
-                                .font(.system(size: 10))
-                            Text("Pro required to edit")
-                                .font(.caption)
-                        }
-                        .foregroundColor(.orange)
-                    }
                 }
 
                 // Show all default tools (keyboard shortcut is optional)
                 ForEach(toolManager.defaultTools) { tool in
                     ToolRow(
                         tool: tool,
-                        canEdit: licenseManager.isPro,
+                        canEdit: true,
                         onEdit: {
                             toolEditorState = .edit(tool)
                         }
@@ -1900,14 +1734,7 @@ struct ChatSettingsContent: View {
                     .foregroundColor(.secondary)
             }
 
-            // Pro Check
-            if !licenseManager.isPro {
-                ProFeaturePrompt(
-                    icon: "bubble.left.and.bubble.right.fill",
-                    title: "Chat is a Pro Feature",
-                    description: "Upgrade to Pro to access AI chat conversations with customizable parameters"
-                )
-            } else {
+            Group {
                 // Temperature
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
@@ -2107,63 +1934,6 @@ struct ChatSettingsContent: View {
 
     private func saveSettings() {
         chatManager.updateSettings(settings)
-    }
-}
-
-// MARK: - Pro Feature Prompt
-
-struct ProFeaturePrompt: View {
-    let icon: String
-    let title: String
-    let description: String
-
-    var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: icon)
-                .font(.system(size: 48))
-                .foregroundColor(.orange.opacity(0.8))
-
-            VStack(spacing: 8) {
-                Text(title)
-                    .font(.headline)
-                    .foregroundColor(.primary)
-
-                Text(description)
-                    .font(.body)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-            }
-
-            Button(action: {
-                NotificationCenter.default.post(
-                    name: .showUpgradePrompt,
-                    object: UpgradePromptView.PromptType.chat
-                )
-            }) {
-                HStack(spacing: 6) {
-                    Image(systemName: "lock.open.fill")
-                        .font(.system(size: 12))
-                    Text("Upgrade to Pro")
-                        .font(.system(size: 14, weight: .semibold))
-                }
-                .foregroundColor(.white)
-                .padding(.horizontal, 20)
-                .padding(.vertical, 10)
-                .background(Color.orange)
-                .cornerRadius(8)
-            }
-            .buttonStyle(.plain)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(40)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color.orange.opacity(0.05))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .strokeBorder(Color.orange.opacity(0.2), lineWidth: 1)
-                )
-        )
     }
 }
 

@@ -20,12 +20,10 @@
 		81111F5F2E9F348400D7317B /* TranslationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F5A2E9F348400D7317B /* TranslationService.swift */; };
 		81111F612E9F37FB00D7317B /* DefaultPrompts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F602E9F37FB00D7317B /* DefaultPrompts.swift */; };
 		81111F642EA0891A00D7317B /* InlineAutocompleteTextEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F622EA0891A00D7317B /* InlineAutocompleteTextEditor.swift */; };
-		81111F652EA0891A00D7317B /* UpgradePromptView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81111F632EA0891A00D7317B /* UpgradePromptView.swift */; };
 		819131BD2EBD5F26007738E3 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 819131BC2EBD5F26007738E3 /* MarkdownUI */; };
 		81ACDA0F2EABD611007FF51D /* ReviewManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81ACDA0E2EABD611007FF51D /* ReviewManager.swift */; };
 		81C5A72B2EA57C7B00B5077D /* DataExportManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81C5A72A2EA57C7B00B5077D /* DataExportManager.swift */; };
 		81C5A7332EA7337C00B5077D /* CenteredScrolling.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81C5A7322EA7337C00B5077D /* CenteredScrolling.swift */; };
-		81C5A7352EA9B1EC00B5077D /* StoreKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81C5A7342EA9B1EC00B5077D /* StoreKitManager.swift */; };
 		81C8D2D52EAE666800FDD721 /* CustomToolService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81C8D2D42EAE666800FDD721 /* CustomToolService.swift */; };
 		81DE21652E9B3C2400692788 /* ModelDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE21642E9B3C2400692788 /* ModelDownloader.swift */; };
 		81DE4F6B2EA1A524006293FC /* MarkdownRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81DE4F6A2EA1A524006293FC /* MarkdownRenderer.swift */; };
@@ -116,11 +114,9 @@
 		81111F5A2E9F348400D7317B /* TranslationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationService.swift; sourceTree = "<group>"; };
 		81111F602E9F37FB00D7317B /* DefaultPrompts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DefaultPrompts.swift; sourceTree = "<group>"; };
 		81111F622EA0891A00D7317B /* InlineAutocompleteTextEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InlineAutocompleteTextEditor.swift; sourceTree = "<group>"; };
-		81111F632EA0891A00D7317B /* UpgradePromptView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpgradePromptView.swift; sourceTree = "<group>"; };
 		81ACDA0E2EABD611007FF51D /* ReviewManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewManager.swift; sourceTree = "<group>"; };
 		81C5A72A2EA57C7B00B5077D /* DataExportManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataExportManager.swift; sourceTree = "<group>"; };
 		81C5A7322EA7337C00B5077D /* CenteredScrolling.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CenteredScrolling.swift; sourceTree = "<group>"; };
-		81C5A7342EA9B1EC00B5077D /* StoreKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreKitManager.swift; sourceTree = "<group>"; };
 		81C5A7362EA9B75000B5077D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		81C5A7382EA9B9E900B5077D /* Configuration.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = Configuration.storekit; sourceTree = "<group>"; };
 		81C8D2D42EAE666800FDD721 /* CustomToolService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomToolService.swift; sourceTree = "<group>"; };
@@ -216,7 +212,6 @@
 			isa = PBXGroup;
 			children = (
 				81ACDA0E2EABD611007FF51D /* ReviewManager.swift */,
-				81C5A7342EA9B1EC00B5077D /* StoreKitManager.swift */,
 				81C5A72A2EA57C7B00B5077D /* DataExportManager.swift */,
 				81DE4F862EA2DCE9006293FC /* ChatManager.swift */,
 				81DE4F872EA2DCE9006293FC /* LicenseManager.swift */,
@@ -289,7 +284,6 @@
 				81DE4F702EA1CE2D006293FC /* ToolEditorView.swift */,
 				81DE4F6A2EA1A524006293FC /* MarkdownRenderer.swift */,
 				81111F622EA0891A00D7317B /* InlineAutocompleteTextEditor.swift */,
-				81111F632EA0891A00D7317B /* UpgradePromptView.swift */,
 				81FIRST012E9B3C2400692788 /* FirstRunModelSetupView.swift */,
 				A1000004000000000000001 /* ContentView.swift */,
 				A1000012000000000000001 /* NoteListView.swift */,
@@ -508,7 +502,6 @@
 				81ACDA0F2EABD611007FF51D /* ReviewManager.swift in Sources */,
 				A1000062000000000000001 /* NoteRepository.swift in Sources */,
 				A1000019000000000000001 /* AIEngine.swift in Sources */,
-				81C5A7352EA9B1EC00B5077D /* StoreKitManager.swift in Sources */,
 				A1000021000000000000001 /* LLMInferenceService.swift in Sources */,
 				81DE21652E9B3C2400692788 /* ModelDownloader.swift in Sources */,
 				81DE4F8D2EA2DCF9006293FC /* ChatService.swift in Sources */,
@@ -527,7 +520,6 @@
 				A1000029000000000000001 /* SummarizationService.swift in Sources */,
 				A1000031000000000000001 /* Note+Extensions.swift in Sources */,
 				81111F642EA0891A00D7317B /* InlineAutocompleteTextEditor.swift in Sources */,
-				81111F652EA0891A00D7317B /* UpgradePromptView.swift in Sources */,
 				81C5A7332EA7337C00B5077D /* CenteredScrolling.swift in Sources */,
 				81FIRST002E9B3C2400692788 /* FirstRunModelSetupView.swift in Sources */,
 				81DE4F712EA1CE2D006293FC /* ToolEditorView.swift in Sources */,
@@ -693,7 +685,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_ASSET_PATHS = "\"ZetaNotes/Preview Content\"";
 				DEVELOPMENT_TEAM = HDA4C6CU89;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -712,7 +704,7 @@
 					"$(SRCROOT)/llama.cpp/build/bin",
 				);
 				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/llama.cpp/build/bin";
-				MARKETING_VERSION = 1.0.2;
+				MARKETING_VERSION = 1.0.3;
 				OTHER_LDFLAGS = (
 					"-lllama",
 					"-lggml",
@@ -736,7 +728,7 @@
 				CODE_SIGN_IDENTITY = "Developer ID Application";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_ASSET_PATHS = "\"ZetaNotes/Preview Content\"";
 				DEVELOPMENT_TEAM = HDA4C6CU89;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -755,7 +747,7 @@
 					"$(SRCROOT)/llama.cpp/build/bin",
 				);
 				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/llama.cpp/build/bin";
-				MARKETING_VERSION = 1.0.2;
+				MARKETING_VERSION = 1.0.3;
 				OTHER_LDFLAGS = (
 					"-lllama",
 					"-lggml",

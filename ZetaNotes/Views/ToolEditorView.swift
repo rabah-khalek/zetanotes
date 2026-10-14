@@ -16,7 +16,6 @@ struct ToolEditorView: View {
     var targetLanguage: Binding<String>?
 
     @StateObject private var toolManager = ToolManager.shared
-    @StateObject private var licenseManager = LicenseManager.shared
     @StateObject private var aiEngine = AIEngine.shared
     @State private var shortcutError: String?
     @State private var nameError: String?
@@ -52,9 +51,6 @@ struct ToolEditorView: View {
         HStack(spacing: 12) {
             headerIcon
             headerTitle
-            if isReadOnly && tool.isDefault && !licenseManager.isPro {
-                proRequiredBadge
-            }
             Spacer()
             closeButton
         }
@@ -84,20 +80,6 @@ struct ToolEditorView: View {
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
-    }
-
-    private var proRequiredBadge: some View {
-        HStack(spacing: 4) {
-            Image(systemName: "lock.fill")
-                .font(.system(size: 10))
-            Text("Pro required to edit")
-                .font(.caption)
-        }
-        .foregroundColor(.orange)
-        .padding(.horizontal, 10)
-        .padding(.vertical, 4)
-        .background(Color.orange.opacity(0.1))
-        .cornerRadius(6)
     }
 
     private var closeButton: some View {
@@ -350,22 +332,6 @@ struct ToolEditorView: View {
                     .buttonStyle(.borderedProminent)
                     .disabled(!isValid)
                     .keyboardShortcut(.defaultAction)
-                } else if tool.isDefault && !licenseManager.isPro {
-                    Button(action: {
-                        NotificationCenter.default.post(
-                            name: .showUpgradePrompt,
-                            object: UpgradePromptView.PromptType.general
-                        )
-                    }) {
-                        HStack(spacing: 6) {
-                            Image(systemName: "lock.fill")
-                            Text("Upgrade to Edit")
-                                .fontWeight(.semibold)
-                        }
-                        .frame(minWidth: 140)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.orange)
                 }
             }
             .padding(.horizontal, 20)

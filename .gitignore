@@ -89,3 +89,9 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
+
+# System / Xcode user state
+.DS_Store
+xcuserdata/
+*.xcuserstate
+DerivedData/
