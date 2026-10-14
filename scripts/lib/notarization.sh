@@ -11,8 +11,15 @@ notarize_dmg() {
 
     print_step "Notarizing with Apple"
 
-    # Check credentials
-    if [ -z "$apple_id" ] || [ -z "$team_id" ] || [ -z "$app_password" ]; then
+    # Credentials: prefer an App Store Connect API key (ASC_KEY_PATH, ASC_KEY_ID,
+    # ASC_ISSUER_ID), fall back to Apple ID + app-specific password.
+    local -a auth_args
+    if [ -n "$ASC_KEY_ID" ] && [ -n "$ASC_ISSUER_ID" ] && [ -f "${ASC_KEY_PATH:-}" ]; then
+        auth_args=(--key "$ASC_KEY_PATH" --key-id "$ASC_KEY_ID" --issuer "$ASC_ISSUER_ID")
+        echo "Using App Store Connect API key $ASC_KEY_ID"
+    elif [ -n "$apple_id" ] && [ -n "$team_id" ] && [ -n "$app_password" ]; then
+        auth_args=(--apple-id "$apple_id" --team-id "$team_id" --password "$app_password")
+    else
         print_warning "Notarization credentials not set - skipping"
         return 1
     fi
@@ -22,9 +29,7 @@ notarize_dmg() {
 
     # Submit for notarization
     local output=$(xcrun notarytool submit "$dmg_path" \
-        --apple-id "$apple_id" \
-        --team-id "$team_id" \
-        --password "$app_password" \
+        "${auth_args[@]}" \
         2>&1 | tee notarization-submit.log)
 
     # Extract submission ID
@@ -52,9 +57,7 @@ notarize_dmg() {
         elapsed=$((elapsed + poll_interval))
 
         local status_output=$(xcrun notarytool info "$submission_id" \
-            --apple-id "$apple_id" \
-            --team-id "$team_id" \
-            --password "$app_password" 2>&1)
+            "${auth_args[@]}" 2>&1)
 
         if echo "$status_output" | grep -q "status:"; then
             status=$(echo "$status_output" | grep "status:" | awk '{print $2}')
@@ -90,9 +93,7 @@ notarize_dmg() {
     else
         # Fetch failure log
         xcrun notarytool log "$submission_id" \
-            --apple-id "$apple_id" \
-            --team-id "$team_id" \
-            --password "$app_password" \
+            "${auth_args[@]}" \
             notarization-failure.json 2>/dev/null
 
         if [ -f "notarization-failure.json" ]; then

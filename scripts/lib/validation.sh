@@ -31,7 +31,10 @@ check_sparkle_tools() {
 check_notarization_credentials() {
     local is_ci="$1"
 
-    if [ -n "$APPLE_ID" ] && [ -n "$APPLE_TEAM_ID" ] && [ -n "$APPLE_APP_SPECIFIC_PASSWORD" ]; then
+    if [ -n "$ASC_KEY_ID" ] && [ -n "$ASC_ISSUER_ID" ] && [ -f "${ASC_KEY_PATH:-}" ]; then
+        print_success "Notarization credentials found (App Store Connect API key)"
+        return 0
+    elif [ -n "$APPLE_ID" ] && [ -n "$APPLE_TEAM_ID" ] && [ -n "$APPLE_APP_SPECIFIC_PASSWORD" ]; then
         print_success "Notarization credentials found"
         return 0
     else

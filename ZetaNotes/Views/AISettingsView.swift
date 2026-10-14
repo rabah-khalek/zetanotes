@@ -705,7 +705,7 @@ struct GeneralSettingsContent: View {
                             .foregroundColor(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
 
-                        Text("Updates are delivered automatically through the Mac App Store.")
+                        Text("Version 1.0.3 is the final release; no further updates will be delivered.")
                             .font(.system(size: 11))
                             .foregroundColor(.secondary)
 
@@ -1451,19 +1451,9 @@ struct LegalSupportSection: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(.blue)
-
-                Button {
-                    // Open App Store subscription management
-                    if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
-                        openURL(url)
-                    }
-                } label: {
-                    Label("Manage Subscription", systemImage: "creditcard")
-                }
-                .buttonStyle(.bordered)
             }
 
-            Text("Updates are delivered automatically through the Mac App Store.")
+            Text("Version 1.0.3 is the final release; no further updates will be delivered.")
                 .font(.system(size: 11))
                 .foregroundColor(.secondary)
 
