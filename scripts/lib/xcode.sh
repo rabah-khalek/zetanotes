@@ -7,13 +7,8 @@ build_app() {
     local project_dir="$1"
     local build_dir="$2"
     local team_id="$3"
-    local app_review_mode="${4:-false}"
 
-    if [ "$app_review_mode" = "true" ]; then
-        print_step "Building and signing app (APP REVIEW MODE)"
-    else
-        print_step "Building and signing app"
-    fi
+    print_step "Building and signing app"
     cd "$project_dir"
 
     # Clean build
@@ -24,13 +19,6 @@ build_app() {
         -quiet
 
     # Build with signing
-    # Add APP_REVIEW_BUILD flag if in app review mode
-    local swift_flags=""
-    if [ "$app_review_mode" = "true" ]; then
-        swift_flags="-DAPP_REVIEW_BUILD"
-        echo -e "${YELLOW} APP REVIEW MODE: Test credentials enabled${NC}"
-    fi
-
     xcodebuild \
         -project ZetaNotes.xcodeproj \
         -scheme ZetaNotes \
@@ -41,7 +29,6 @@ build_app() {
         DEVELOPMENT_TEAM="$team_id" \
         ENABLE_HARDENED_RUNTIME=YES \
         OTHER_CODE_SIGN_FLAGS="--timestamp --options runtime" \
-        OTHER_SWIFT_FLAGS="$swift_flags" \
         -quiet || print_error "Build failed"
 
     # Find and copy built app
@@ -50,11 +37,7 @@ build_app() {
 
     cp -R "$built_app" "$build_dir/ZetaNotes.app"
 
-    if [ "$app_review_mode" = "true" ]; then
-        print_success "App built successfully (APP REVIEW MODE - Test credentials: admin/TEST)"
-    else
-        print_success "App built successfully"
-    fi
+    print_success "App built successfully"
 }
 
 rebuild_llama_if_needed() {

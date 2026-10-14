@@ -3,11 +3,10 @@
 # Works in both local and CI environments
 #
 # Usage:
-#   ./release.sh <version> [--app-review]
+#   ./release.sh <version>
 #
 # Examples:
-#   ./release.sh 1.0.0              # Release with fresh llama.cpp build
-#   ./release.sh 1.0.0 --app-review # Build for App Store review (enables test credentials)
+#   ./release.sh 1.0.0
 #
 # Environment variables:
 #   APPLE_ID                       - Apple ID email (for notarization)
@@ -37,19 +36,9 @@ source "$SCRIPT_DIR/lib/packaging.sh"
 # Parse arguments
 VERSION="${1}"
 REBUILD_LLAMA="always"  # Always rebuild for fresh signatures
-APP_REVIEW_MODE="false"
-
-# Check for --app-review flag
-if [ "$2" = "--app-review" ] || [ "$1" = "--app-review" ]; then
-    APP_REVIEW_MODE="true"
-    # If --app-review is first arg, shift to get version
-    if [ "$1" = "--app-review" ]; then
-        VERSION="${2}"
-    fi
-fi
 
 if [ -z "$VERSION" ]; then
-    print_error "Version required. Usage: ./release.sh <version> [--app-review]"
+    print_error "Version required. Usage: ./release.sh <version>"
 fi
 
 # Detect environment and set paths
@@ -62,10 +51,6 @@ DMG_NAME="${APP_NAME}-v${VERSION}.dmg"
 print_banner "$VERSION" "$ENVIRONMENT"
 echo -e "${GREEN}Signing Identity:${NC} ${SIGNING_IDENTITY}"
 echo -e "${GREEN}Build directory:${NC} ${BUILD_DIR}"
-if [ "$APP_REVIEW_MODE" = "true" ]; then
-    echo -e "${YELLOW} APP REVIEW MODE ENABLED${NC}"
-    echo -e "${YELLOW}   Test credentials: Email='admin' Key='TEST'${NC}"
-fi
 echo ""
 
 # STEP 1: Prerequisites
@@ -89,7 +74,7 @@ mkdir -p "$BUILD_DIR"
 rebuild_llama_if_needed "$REBUILD_LLAMA" "$PROJECT_DIR"
 
 # STEP 3: Build app
-build_app "$PROJECT_DIR" "$BUILD_DIR" "$TEAM_ID" "$APP_REVIEW_MODE"
+build_app "$PROJECT_DIR" "$BUILD_DIR" "$TEAM_ID"
 
 # STEP 4: Re-sign components
 resign_sparkle_components "$BUILD_DIR" "$SIGNING_IDENTITY"
@@ -169,17 +154,6 @@ generate_appcast_info "$DMG_NAME" "$VERSION" "$SPARKLE_SIGNATURE"
 
 # STEP 10: Summary
 print_release_summary "$VERSION" "$DMG_NAME" "$SPARKLE_SIGNATURE" "$NOTARIZATION_STATUS"
-
-if [ "$APP_REVIEW_MODE" = "true" ]; then
-    echo ""
-    echo -e "${YELLOW}═══════════════════════════════════════════════════════════════${NC}"
-    echo -e "${YELLOW}  APP REVIEW BUILD - PROVIDE THESE CREDENTIALS TO APPLE${NC}"
-    echo -e "${YELLOW}═══════════════════════════════════════════════════════════════${NC}"
-    echo -e "${YELLOW}  Email:        ${NC}admin"
-    echo -e "${YELLOW}  License Key:  ${NC}TEST"
-    echo -e "${YELLOW}═══════════════════════════════════════════════════════════════${NC}"
-    echo ""
-fi
 
 # Export outputs for CI
 if [ -n "$GITHUB_OUTPUT" ]; then
