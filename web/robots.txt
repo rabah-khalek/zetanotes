@@ -5,7 +5,7 @@ User-agent: *
 Allow: /
 
 # Sitemap location
-Sitemap: https://zetanotes.com/sitemap.xml
+Sitemap: https://rabah-khalek.github.io/zetanotes/sitemap.xml
 
 # Common SEO best practices
 # Allow Google Image Bot

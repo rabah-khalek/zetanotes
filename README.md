@@ -4,7 +4,7 @@
 > Version 1.0.3 removed in-app purchases; every former Pro feature is unlocked for everyone.
 > Download the notarized build from [GitHub Releases](https://github.com/rabah-khalek/zetanotes/releases/latest).
 > The Mac App Store listing is available until late October 2026, and installed copies keep working after that.
-> The source is MIT licensed, so anyone can build or fork it. Website: https://www.zetanotes.com
+> The source is MIT licensed, so anyone can build or fork it. Website: https://rabah-khalek.github.io/zetanotes/
 
 Offline AI notes for Mac. ZetaNotes runs small open-source language models locally through
 [llama.cpp](https://github.com/ggerganov/llama.cpp): autocomplete, summarization, translation,
@@ -39,7 +39,7 @@ and are documented in [scripts/README.md](scripts/README.md).
 
 - `ZetaNotes/` app sources (SwiftUI): `AI/`, `Managers/`, `Models/`, `Search/`, `Storage/`, `Utilities/`, `ViewModels/`, `Views/`
 - `ZetaNotes.xcodeproj/` Xcode project; Swift package dependencies are resolved by Xcode
-- `web/` website, published to zetanotes.com by the Pages workflow in `.github/workflows/`
+- `web/` website, published to rabah-khalek.github.io/zetanotes by the Pages workflow in `.github/workflows/`
 - `scripts/` build and release tooling, see `scripts/README.md`
 - `Makefile` shortcuts for the scripts above
 - `CHANGELOG.md` release history
