@@ -21,7 +21,7 @@ class WindowSizeDelegate: NSObject, NSWindowDelegate {
             height: max(frameSize.height, minHeight)
         )
 
-        print("🪟 Window resize attempt: \(frameSize) -> constrained to: \(constrainedSize)")
+        print("Window resize attempt: \(frameSize) -> constrained to: \(constrainedSize)")
         return constrainedSize
     }
 }
@@ -64,7 +64,7 @@ enum WindowConfiguration {
         // Set delegate to enforce size constraints during resize
         window.delegate = windowDelegate
 
-        print("🪟 Window constraints set: minSize = \(minSize)")
+        print("Window constraints set: minSize = \(minSize)")
     }
 }
 

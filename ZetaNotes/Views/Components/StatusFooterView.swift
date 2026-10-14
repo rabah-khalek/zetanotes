@@ -177,7 +177,7 @@ struct StatusFooterView: View {
 
     private var activeModelBadge: some View {
         Button(action: {
-            print("🔘 Model badge clicked")
+            print("Model badge clicked")
             showingModelMetadata = true
         }) {
             HStack(spacing: 4) {

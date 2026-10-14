@@ -63,15 +63,12 @@ print_banner "$VERSION" "$ENVIRONMENT"
 echo -e "${GREEN}Signing Identity:${NC} ${SIGNING_IDENTITY}"
 echo -e "${GREEN}Build directory:${NC} ${BUILD_DIR}"
 if [ "$APP_REVIEW_MODE" = "true" ]; then
-    echo -e "${YELLOW}⚠️  APP REVIEW MODE ENABLED${NC}"
+    echo -e "${YELLOW} APP REVIEW MODE ENABLED${NC}"
     echo -e "${YELLOW}   Test credentials: Email='admin' Key='TEST'${NC}"
 fi
 echo ""
 
-# ============================================================================
 # STEP 1: Prerequisites
-# ============================================================================
-
 print_step "Checking prerequisites"
 
 check_certificate
@@ -88,30 +85,18 @@ fi
 
 mkdir -p "$BUILD_DIR"
 
-# ============================================================================
 # STEP 2: Rebuild llama.cpp (always - ensures fresh signatures)
-# ============================================================================
-
 rebuild_llama_if_needed "$REBUILD_LLAMA" "$PROJECT_DIR"
 
-# ============================================================================
 # STEP 3: Build app
-# ============================================================================
-
 build_app "$PROJECT_DIR" "$BUILD_DIR" "$TEAM_ID" "$APP_REVIEW_MODE"
 
-# ============================================================================
 # STEP 4: Re-sign components
-# ============================================================================
-
 resign_sparkle_components "$BUILD_DIR" "$SIGNING_IDENTITY"
 resign_llama_libraries "$BUILD_DIR" "$SIGNING_IDENTITY"
 resign_app_bundle "$BUILD_DIR" "$PROJECT_DIR" "$SIGNING_IDENTITY"
 
-# ============================================================================
 # STEP 5: Verify signatures
-# ============================================================================
-
 print_step "Verifying all signatures"
 
 verify_app_signature "$BUILD_DIR/${APP_NAME}.app"
@@ -120,17 +105,11 @@ run_verification_script "$BUILD_DIR/${APP_NAME}.app" "$PROJECT_DIR/$VERIFY_SCRIP
 
 print_success "All signatures verified"
 
-# ============================================================================
 # STEP 6: Create and sign DMG
-# ============================================================================
-
 create_dmg "$BUILD_DIR" "$DMG_NAME"
 sign_dmg "$BUILD_DIR/$DMG_NAME" "$SIGNING_IDENTITY"
 
-# ============================================================================
 # STEP 7: Generate Sparkle signature
-# ============================================================================
-
 cd "$BUILD_DIR"
 
 SPARKLE_SIGNATURE=""
@@ -163,10 +142,7 @@ if [ "$ENVIRONMENT" = "ci" ] && [ -z "$SPARKLE_SIGNATURE" ]; then
     print_error "CRITICAL: Sparkle signature is required in CI but was not generated"
 fi
 
-# ============================================================================
 # STEP 8: Notarize DMG
-# ============================================================================
-
 NOTARIZATION_STATUS="Skipped"
 
 if [ "$NOTARIZATION_ENABLED" = "true" ]; then
@@ -187,17 +163,11 @@ if [ "$NOTARIZATION_ENABLED" = "true" ]; then
     fi
 fi
 
-# ============================================================================
 # STEP 9: Generate metadata
-# ============================================================================
-
 SHA256=$(generate_checksum "$DMG_NAME")
 generate_appcast_info "$DMG_NAME" "$VERSION" "$SPARKLE_SIGNATURE"
 
-# ============================================================================
 # STEP 10: Summary
-# ============================================================================
-
 print_release_summary "$VERSION" "$DMG_NAME" "$SPARKLE_SIGNATURE" "$NOTARIZATION_STATUS"
 
 if [ "$APP_REVIEW_MODE" = "true" ]; then

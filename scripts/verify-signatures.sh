@@ -36,16 +36,16 @@ ERRORS=0
 WARNINGS=0
 
 print_pass() {
-    echo -e "${GREEN}✓${NC} $1"
+    echo -e "${GREEN}${NC} $1"
 }
 
 print_fail() {
-    echo -e "${RED}✗${NC} $1"
+    echo -e "${RED}${NC} $1"
     ((ERRORS++))
 }
 
 print_warn() {
-    echo -e "${YELLOW}⚠${NC} $1"
+    echo -e "${YELLOW}${NC} $1"
     ((WARNINGS++))
 }
 
@@ -183,17 +183,17 @@ echo -e "${BLUE}╚════════════════════�
 echo ""
 
 if [ $ERRORS -eq 0 ] && [ $WARNINGS -eq 0 ]; then
-    echo -e "${GREEN}✅ All checks passed! Ready for notarization.${NC}"
+    echo -e "${GREEN}All checks passed! Ready for notarization.${NC}"
     exit 0
 elif [ $ERRORS -eq 0 ]; then
-    echo -e "${YELLOW}⚠️  No critical errors, but $WARNINGS warning(s) found.${NC}"
+    echo -e "${YELLOW} No critical errors, but $WARNINGS warning(s) found.${NC}"
     echo -e "${YELLOW}   Review warnings above.${NC}"
     echo ""
-    echo -e "${GREEN}✅ Safe to proceed with notarization.${NC}"
+    echo -e "${GREEN}Safe to proceed with notarization.${NC}"
     echo -e "${GREEN}   (Warnings are informational and won't block notarization)${NC}"
     exit 0
 else
-    echo -e "${RED}❌ Found $ERRORS error(s) and $WARNINGS warning(s).${NC}"
+    echo -e "${RED}Found $ERRORS error(s) and $WARNINGS warning(s).${NC}"
     echo -e "${RED}   Fix errors before submitting for notarization!${NC}"
     exit 1
 fi

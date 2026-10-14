@@ -51,7 +51,7 @@ class TitleGenerationService: AIService {
     /// Override process to use direct completion instead of chat template
     /// This works better for title generation with small models
     func process(_ text: String, customPrompt: String) async -> String? {
-        print("📋 Title: Processing \(text.count) chars")
+        print("Title: Processing \(text.count) chars")
 
         // Get model-specific config from ModelToolConfigRegistry (for temperature/maxTokens only)
         let toolConfig = ModelToolConfigRegistry.getConfig(
@@ -69,7 +69,7 @@ class TitleGenerationService: AIService {
         \(promptInstruction)
         """
 
-        print("🔍 Title: Using direct completion format with prompt: '\(promptInstruction)'")
+        print("Title: Using direct completion format with prompt: '\(promptInstruction)'")
 
         // Use direct generate() - the cancellation happens but title generation is fast
         // so it typically completes before other services start
@@ -80,14 +80,14 @@ class TitleGenerationService: AIService {
         )
 
         if let result = result {
-            print("🔍 Title: Raw model output: '\(result)'")
+            print("Title: Raw model output: '\(result)'")
             let title = postProcess(result)
             let finalTitle = title.isEmpty ? nil : title
 
             if let finalTitle = finalTitle {
-                print("✅ Title: Final output: '\(finalTitle)'")
+                print("Title: Final output: '\(finalTitle)'")
             } else {
-                print("❌ Title: Post-processing resulted in empty output")
+                print("Title: Post-processing resulted in empty output")
                 ErrorLogger.shared.logWarning(
                     code: .generationEmpty,
                     operation: "Title Generation",
@@ -97,7 +97,7 @@ class TitleGenerationService: AIService {
 
             return finalTitle
         } else {
-            print("❌ Title: Failed to generate output")
+            print("Title: Failed to generate output")
             ErrorLogger.shared.logError(
                 code: .generationFailed,
                 operation: "Title Generation",

@@ -17,22 +17,22 @@ LLAMA_DIR="${SRCROOT}/llama.cpp"
 BUILD_DIR="${LLAMA_DIR}/build"
 LIB_PATH="${BUILD_DIR}/bin/libllama.dylib"
 
-echo "🔨 Checking llama.cpp build status..."
+echo "Checking llama.cpp build status..."
 
 # Check if llama.cpp directory exists
 if [ ! -d "$LLAMA_DIR" ]; then
-    echo "📥 Cloning llama.cpp..."
+    echo "Cloning llama.cpp..."
     cd "${SRCROOT}"
     git clone --depth 1 https://github.com/ggerganov/llama.cpp.git
 else
     # Check if library already built
     if [ -f "$LIB_PATH" ]; then
-        echo "✅ llama.cpp already built at: $LIB_PATH"
+        echo "llama.cpp already built at: $LIB_PATH"
         exit 0
     fi
 fi
 
-echo "🔨 Building llama.cpp with Metal support..."
+echo "Building llama.cpp with Metal support..."
 
 # Create build directory
 mkdir -p "$BUILD_DIR"
@@ -67,18 +67,18 @@ echo "Using CMake: $CMAKE"
 
 # Verify build
 if [ -f "$LIB_PATH" ]; then
-    echo "✅ llama.cpp built successfully!"
-    echo "📦 Library: $LIB_PATH"
+    echo "llama.cpp built successfully!"
+    echo "Library: $LIB_PATH"
     ls -lh "$LIB_PATH"
 
     # List all built libraries
     echo ""
-    echo "📦 All built libraries:"
+    echo "All built libraries:"
     ls -lh "${BUILD_DIR}/bin/"*.dylib 2>/dev/null || true
 
     # Code sign all dynamic libraries with hardened runtime
     echo ""
-    echo "🔐 Code signing libraries with hardened runtime..."
+    echo "Code signing libraries with hardened runtime..."
 
     # Determine signing identity - ALWAYS use Developer ID for notarization
     if [ -n "$GITHUB_ACTIONS" ]; then
@@ -87,7 +87,7 @@ if [ -f "$LIB_PATH" ]; then
         # Use Developer ID Application certificate (required for notarization)
         SIGNING_IDENTITY="Developer ID Application: Rabah Abdul Khalek (HDA4C6CU89)"
     else
-        echo "❌ ERROR: Developer ID Application certificate not found!"
+        echo "ERROR: Developer ID Application certificate not found!"
         echo "   Notarization requires a Developer ID Application certificate."
         echo "   Available certificates:"
         security find-identity -v -p codesigning
@@ -98,19 +98,19 @@ if [ -f "$LIB_PATH" ]; then
 
     # First, generate dSYM files for all libraries
     echo ""
-    echo "🔍 Generating dSYM files for libraries..."
+    echo "Generating dSYM files for libraries..."
     for dylib in "${BUILD_DIR}/bin/"*.dylib; do
         if [ -f "$dylib" ]; then
             echo "  Generating dSYM for: $(basename "$dylib")"
             dsymutil "$dylib" -o "${dylib}.dSYM" || {
-                echo "⚠️  Warning: Could not generate dSYM for $(basename "$dylib")"
+                echo " Warning: Could not generate dSYM for $(basename "$dylib")"
             }
         fi
     done
 
     # Now sign all libraries
     echo ""
-    echo "🔐 Signing all libraries..."
+    echo "Signing all libraries..."
     for dylib in "${BUILD_DIR}/bin/"*.dylib; do
         if [ -f "$dylib" ]; then
             echo "  Signing: $(basename "$dylib")"
@@ -118,33 +118,33 @@ if [ -f "$LIB_PATH" ]; then
                 --options runtime \
                 --timestamp \
                 "$dylib" || {
-                echo "❌ ERROR: Failed to sign $(basename "$dylib")"
+                echo "ERROR: Failed to sign $(basename "$dylib")"
                 echo "   All libraries must be properly signed for notarization."
                 exit 1
             }
         fi
     done
 
-    echo "✅ All libraries signed with Developer ID and dSYM files generated"
+    echo "All libraries signed with Developer ID and dSYM files generated"
 
     # For Xcode archiving: Copy dSYM files to a location Xcode can find
     # This is critical for App Store submission
     if [ -n "$DWARF_DSYM_FOLDER_PATH" ]; then
         echo ""
-        echo "📦 Copying dSYM files for Xcode archive..."
+        echo "Copying dSYM files for Xcode archive..."
         mkdir -p "$DWARF_DSYM_FOLDER_PATH"
         for dsym in "${BUILD_DIR}/bin/"*.dSYM; do
             if [ -d "$dsym" ]; then
                 echo "  Copying $(basename "$dsym") to archive"
                 cp -R "$dsym" "$DWARF_DSYM_FOLDER_PATH/" || {
-                    echo "⚠️  Warning: Could not copy $(basename "$dsym")"
+                    echo " Warning: Could not copy $(basename "$dsym")"
                 }
             fi
         done
-        echo "✅ dSYM files copied to archive location"
+        echo "dSYM files copied to archive location"
     fi
 else
-    echo "❌ Build failed: libllama.dylib not found"
+    echo "Build failed: libllama.dylib not found"
     echo "Expected location: $LIB_PATH"
     echo ""
     echo "Contents of build directory:"

@@ -71,7 +71,7 @@ class ChatManager: ObservableObject {
     /// Loads chat history from disk
     private func loadHistory() {
         guard fileManager.fileExists(atPath: chatHistoryURL.path) else {
-            print("📭 No chat history found")
+            print("No chat history found")
             return
         }
 
@@ -79,9 +79,9 @@ class ChatManager: ObservableObject {
             let data = try Data(contentsOf: chatHistoryURL)
             let decoded = try JSONDecoder().decode([ChatMessage].self, from: data)
             messages = decoded
-            print("✅ Loaded \(messages.count) chat messages")
+            print("Loaded \(messages.count) chat messages")
         } catch {
-            print("⚠️ Failed to load chat history: \(error)")
+            print("Failed to load chat history: \(error)")
         }
     }
 
@@ -90,9 +90,9 @@ class ChatManager: ObservableObject {
         do {
             let encoded = try JSONEncoder().encode(messages)
             try encoded.write(to: chatHistoryURL)
-            print("💾 Saved \(messages.count) chat messages")
+            print("Saved \(messages.count) chat messages")
         } catch {
-            print("⚠️ Failed to save chat history: \(error)")
+            print("Failed to save chat history: \(error)")
         }
     }
 

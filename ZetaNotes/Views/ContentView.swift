@@ -130,7 +130,7 @@ struct ContentView: View {
                 object: nil,
                 queue: .main
             ) { [viewModel] _ in
-                print("💾 App terminating, flushing pending saves...")
+                print("App terminating, flushing pending saves...")
                 Task { @MainActor in
                     viewModel.flushPendingSaves()
                 }
@@ -761,7 +761,7 @@ struct ContentView: View {
     }
 
     private func performSemanticSearch(in content: String) {
-        // ✅ SCOPED SEARCH: Only searches within the CURRENT note's content
+        // SCOPED SEARCH: Only searches within the CURRENT note's content
         // Does NOT search across all notes or generate embeddings for other notes
         // Embeddings are computed on-demand for:
         //   1. The search query
@@ -771,20 +771,20 @@ struct ContentView: View {
         Task {
             guard !searchQuery.isEmpty else { return }
 
-            print("🔍 Performing semantic search within current note for '\(searchQuery)'")
+            print("Performing semantic search within current note for '\(searchQuery)'")
 
             // Extract only base content (exclude AI-generated sections) from CURRENT note
             let baseContent = extractBaseContent(from: content)
 
             if baseContent.isEmpty {
-                print("⚠️ No base content to search")
+                print("No base content to search")
                 await MainActor.run { isSearching = false }
                 return
             }
 
             // Get embedding for search query
             guard let queryEmbedding = await aiEngine.embeddingService.generateEmbedding(for: searchQuery) else {
-                print("⚠️ Failed to generate query embedding")
+                print("Failed to generate query embedding")
                 await MainActor.run { isSearching = false }
                 return
             }
@@ -834,7 +834,7 @@ struct ContentView: View {
             let similarityRange = maxSimilarity - minSimilarity
 
             print(
-                "📊 Similarity range: \(String(format: "%.2f", minSimilarity)) to \(String(format: "%.2f", maxSimilarity)) (range: \(String(format: "%.2f", similarityRange)))"
+                "Similarity range: \(String(format: "%.2f", minSimilarity)) to \(String(format: "%.2f", maxSimilarity)) (range: \(String(format: "%.2f", similarityRange)))"
             )
 
             // Only keep top results that are meaningfully different from the rest

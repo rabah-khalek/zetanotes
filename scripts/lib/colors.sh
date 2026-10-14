@@ -14,16 +14,16 @@ print_step() {
 }
 
 print_success() {
-    echo -e "${GREEN}✓ $1${NC}"
+    echo -e "${GREEN}$1${NC}"
 }
 
 print_error() {
-    echo -e "${RED}✗ Error: $1${NC}"
+    echo -e "${RED}Error: $1${NC}"
     exit 1
 }
 
 print_warning() {
-    echo -e "${YELLOW}⚠ $1${NC}"
+    echo -e "${YELLOW}$1${NC}"
 }
 
 print_banner() {

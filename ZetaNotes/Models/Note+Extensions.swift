@@ -112,14 +112,14 @@ extension Note {
         if let content = content, content.count > Self.maxContentLength {
             self.content = String(content.prefix(Self.maxContentLength))
             didTruncate = true
-            print("⚠️ Content truncated to \(Self.maxContentLength) characters (\(Self.maxContentLength / 1000)KB)")
+            print("Content truncated to \(Self.maxContentLength) characters (\(Self.maxContentLength / 1000)KB)")
         }
 
         // Validate title length
         if let title = title, title.count > Self.maxTitleLength {
             self.title = String(title.prefix(Self.maxTitleLength))
             didTruncate = true
-            print("⚠️ Title truncated to \(Self.maxTitleLength) characters")
+            print("Title truncated to \(Self.maxTitleLength) characters")
         }
 
         if didTruncate {

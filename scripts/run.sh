@@ -9,16 +9,16 @@ cd "$(dirname "$0")/.." || exit 1
 
 set -e
 
-echo "🧹 Cleaning project..."
+echo "Cleaning project..."
 xcodebuild -project ZetaNotes.xcodeproj -scheme ZetaNotes -configuration Debug clean
 
-echo "🔨 Building project in Debug mode..."
+echo "Building project in Debug mode..."
 xcodebuild -project ZetaNotes.xcodeproj -scheme ZetaNotes -configuration Debug build
 
-echo "🚀 Running ZetaNotes in debug mode..."
+echo "Running ZetaNotes in debug mode..."
 
 # Find the built app and run it directly to see console output
-echo "🔍 Looking for built app..."
+echo "Looking for built app..."
 
 # More comprehensive search for the built app
 APP_PATH=""
@@ -33,15 +33,15 @@ do
         # Verify the executable exists inside the app bundle
         if [ -f "$BUILD_PATH/Contents/MacOS/ZetaNotes" ]; then
             APP_PATH="$BUILD_PATH"
-            echo "✅ Found app at: $APP_PATH"
+            echo "Found app at: $APP_PATH"
             break
         fi
     fi
 done
 
 if [ -z "$APP_PATH" ]; then
-    echo "❌ Could not find built app with executable."
-    echo "💡 Try building first or check Xcode build settings."
+    echo "Could not find built app with executable."
+    echo "Try building first or check Xcode build settings."
     echo ""
     echo "Searched locations:"
     echo "  - build/Debug/ZetaNotes.app"
@@ -49,5 +49,5 @@ if [ -z "$APP_PATH" ]; then
     exit 1
 fi
 
-echo "🔍 Running with console output (Press Ctrl+C to stop)..."
+echo "Running with console output (Press Ctrl+C to stop)..."
 "$APP_PATH/Contents/MacOS/ZetaNotes"

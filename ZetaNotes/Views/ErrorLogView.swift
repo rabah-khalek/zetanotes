@@ -279,7 +279,7 @@ class ErrorLogger: ObservableObject {
         }
 
         // Also print to console for debugging
-        print("❌ [\(code.code)] [\(operation ?? "AI")] \(code.userMessage)")
+        print("[\(code.code)] [\(operation ?? "AI")] \(code.userMessage)")
         if let details = technicalDetails {
             print("   Technical details: \(details)")
         }
@@ -313,7 +313,7 @@ class ErrorLogger: ObservableObject {
         }
 
         // Also print to console for debugging
-        print("⚠️ [\(code.code)] [\(operation ?? "AI")] \(code.userMessage)")
+        print("[\(code.code)] [\(operation ?? "AI")] \(code.userMessage)")
         if let details = details {
             print("   Details: \(details)")
         }
@@ -330,7 +330,7 @@ class ErrorLogger: ObservableObject {
         // Filter out non-user-relevant messages
         if !ErrorFilter.shouldShowMessage(message) {
             // Still log to console for debugging
-            print("🔍 [FILTERED] [\(operation ?? "AI")] \(message)")
+            print("[FILTERED] [\(operation ?? "AI")] \(message)")
             if let details = details {
                 print("   Details: \(details)")
             }
@@ -383,7 +383,7 @@ class ErrorLogger: ObservableObject {
                 // Remove the specific error
                 if let index = self.errors.firstIndex(where: { $0.id == entry.id }) {
                     self.errors.remove(at: index)
-                    print("🧹 Auto-cleared \(entry.severity) from error log: [\(entry.errorCode ?? "N/A")]")
+                    print("Auto-cleared \(entry.severity) from error log: [\(entry.errorCode ?? "N/A")]")
                 }
 
                 // Remove the timer reference

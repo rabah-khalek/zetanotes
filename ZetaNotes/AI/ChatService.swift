@@ -28,8 +28,8 @@ class ChatService {
         // Build the prompt from conversation history
         let prompt = buildPrompt(from: messages, systemPrompt: settings.systemPrompt)
 
-        print("🤖 Generating chat response...")
-        print("📊 Settings: temp=\(settings.temperature), maxTokens=\(settings.maxTokens)")
+        print("Generating chat response...")
+        print("Settings: temp=\(settings.temperature), maxTokens=\(settings.maxTokens)")
 
         // Generate with streaming via the LLM service
         // Note: The current LLMInferenceService doesn't expose token-by-token streaming

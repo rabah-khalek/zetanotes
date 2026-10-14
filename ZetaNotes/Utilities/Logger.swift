@@ -16,11 +16,11 @@ class Logger {
     // MARK: - Log Level
 
     enum LogLevel: String {
-        case debug = "🔍 DEBUG"
-        case info = "ℹ️ INFO"
-        case warning = "⚠️ WARNING"
-        case error = "❌ ERROR"
-        case critical = "🔥 CRITICAL"
+        case debug = "DEBUG"
+        case info = "INFO"
+        case warning = "WARNING"
+        case error = "ERROR"
+        case critical = "CRITICAL"
 
         var priority: Int {
             switch self {
@@ -186,7 +186,7 @@ class Logger {
 
         do {
             try FileManager.default.moveItem(at: logFileURL, to: archivedURL)
-            print("📦 Log file rotated to: \(archivedURL.lastPathComponent)")
+            print("Log file rotated to: \(archivedURL.lastPathComponent)")
         } catch {
             print("Failed to rotate log file: \(error)")
         }
@@ -207,7 +207,7 @@ class Logger {
                 let attributes = try FileManager.default.attributesOfItem(atPath: logFile.path)
                 if let creationDate = attributes[.creationDate] as? Date, creationDate < cutoffDate {
                     try FileManager.default.removeItem(at: logFile)
-                    print("🗑️ Deleted old log file: \(logFile.lastPathComponent)")
+                    print("Deleted old log file: \(logFile.lastPathComponent)")
                 }
             }
         } catch {

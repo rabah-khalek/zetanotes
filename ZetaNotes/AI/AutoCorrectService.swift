@@ -39,7 +39,7 @@ class AutoCorrectService: AIService {
 
     /// Override process to use custom prompt and dynamic max tokens with batching support
     func process(_ text: String, customPrompt: String) async -> String? {
-        print("🔧 AutoCorrect: Processing \(text.count) chars")
+        print("AutoCorrect: Processing \(text.count) chars")
 
         // Calculate dynamic max tokens with 20% buffer for corrections
         let maxTokens = calculateMaxTokens(for: text, bufferPercent: 20, maxLimit: 1024)
@@ -57,9 +57,9 @@ class AutoCorrectService: AIService {
         )
 
         if let result = result {
-            print("✅ AutoCorrect: Generated \(result.count) chars")
+            print("AutoCorrect: Generated \(result.count) chars")
         } else {
-            print("❌ AutoCorrect: Failed to generate output")
+            print("AutoCorrect: Failed to generate output")
             ErrorLogger.shared.logError(
                 code: .generationFailed,
                 operation: "Auto-Correct",

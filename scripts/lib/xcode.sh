@@ -28,7 +28,7 @@ build_app() {
     local swift_flags=""
     if [ "$app_review_mode" = "true" ]; then
         swift_flags="-DAPP_REVIEW_BUILD"
-        echo -e "${YELLOW}⚠️  APP REVIEW MODE: Test credentials enabled${NC}"
+        echo -e "${YELLOW} APP REVIEW MODE: Test credentials enabled${NC}"
     fi
 
     xcodebuild \

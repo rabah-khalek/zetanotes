@@ -70,28 +70,28 @@ class AIEngine: ObservableObject {
     /// Loads a specific model
     /// - Parameter modelType: The AI model to load
     func loadModel(_ modelType: AIModel) async {
-        print("🔄 loadModel called for: \(modelType.displayName)")
+        print("loadModel called for: \(modelType.displayName)")
         print(
-            "🔍 Current state - isModelLoaded: \(isModelLoaded), currentModel: \(llmService.getCurrentModel().displayName)"
+            "Current state - isModelLoaded: \(isModelLoaded), currentModel: \(llmService.getCurrentModel().displayName)"
         )
 
         // If already loaded with the same model, skip
         if isModelLoaded, llmService.getCurrentModel() == modelType {
-            print("⏭️ Model already loaded, skipping")
+            print("Model already loaded, skipping")
             return
         }
 
         await MainActor.run {
-            print("🔄 Setting isModelLoaded = false")
+            print("Setting isModelLoaded = false")
             self.isModelLoaded = false
         }
 
         do {
-            print("📥 Calling llmService.loadModel...")
+            print("Calling llmService.loadModel...")
             try await llmService.loadModel(modelType)
 
             await MainActor.run {
-                print("✅ Setting isModelLoaded = true for \(modelType.displayName)")
+                print("Setting isModelLoaded = true for \(modelType.displayName)")
                 self.isModelLoaded = true
                 self.modelLoadingError = nil
                 self.selectedModel = modelType
@@ -103,9 +103,9 @@ class AIEngine: ObservableObject {
             // Update system monitor with the active model
             SystemMonitor.shared.setActiveModel(modelType.displayName)
 
-            print("✅ \(modelType.displayName) loaded successfully. Final isModelLoaded: \(isModelLoaded)")
+            print("\(modelType.displayName) loaded successfully. Final isModelLoaded: \(isModelLoaded)")
         } catch {
-            print("❌ Model load failed: \(error.localizedDescription)")
+            print("Model load failed: \(error.localizedDescription)")
             await MainActor.run {
                 self.isModelLoaded = false
                 self.modelLoadingError = error.localizedDescription
@@ -118,7 +118,7 @@ class AIEngine: ObservableObject {
                 )
             }
 
-            print("❌ Failed to load \(modelType.displayName): \(error)")
+            print("Failed to load \(modelType.displayName): \(error)")
         }
     }
 
@@ -131,7 +131,7 @@ class AIEngine: ObservableObject {
             self.switchingToModel = modelType
         }
 
-        print("🔄 Switching to \(modelType.displayName)...")
+        print("Switching to \(modelType.displayName)...")
         await loadModel(modelType)
 
         // Update autocomplete service with new model
@@ -152,7 +152,7 @@ class AIEngine: ObservableObject {
             self.isModelLoaded = false
         }
 
-        print("🔄 AI Model unloaded")
+        print("AI Model unloaded")
     }
 
     // MARK: - Memory Monitoring
@@ -186,7 +186,7 @@ class AIEngine: ObservableObject {
 
                 // Warn if approaching 3GB limit
                 if usedMemoryMB > 2500 {
-                    print("⚠️ High memory usage: \(String(format: "%.1f", usedMemoryMB)) MB")
+                    print("High memory usage: \(String(format: "%.1f", usedMemoryMB)) MB")
                 }
             }
         }
@@ -238,28 +238,28 @@ class AIEngine: ObservableObject {
     func deleteModel(_ modelType: AIModel) -> Bool {
         // If deleting the currently loaded model, unload it first
         if isModelLoaded && selectedModel == modelType {
-            print("⚠️ Unloading currently active model before deletion: \(modelType.displayName)")
+            print("Unloading currently active model before deletion: \(modelType.displayName)")
             unloadModel()
         }
 
         guard let modelsDir = llmService.getModelsDirectory() else {
-            print("❌ Failed to get models directory")
+            print("Failed to get models directory")
             return false
         }
 
         let modelPath = modelsDir.appendingPathComponent(modelType.fileName)
 
         guard FileManager.default.fileExists(atPath: modelPath.path) else {
-            print("⚠️ Model file doesn't exist: \(modelPath.path)")
+            print("Model file doesn't exist: \(modelPath.path)")
             return false
         }
 
         do {
             try FileManager.default.removeItem(at: modelPath)
-            print("✅ Deleted model: \(modelType.displayName)")
+            print("Deleted model: \(modelType.displayName)")
             return true
         } catch {
-            print("❌ Failed to delete model: \(error)")
+            print("Failed to delete model: \(error)")
             return false
         }
     }
@@ -270,7 +270,7 @@ class AIEngine: ObservableObject {
 extension AIEngine {
     /// Responds to memory pressure warnings from the system
     func handleMemoryPressure() {
-        print("⚠️ Memory pressure detected - considering model unload")
+        print("Memory pressure detected - considering model unload")
 
         // If memory usage is very high, unload the model temporarily
         if memoryUsage > 2800 {

@@ -9,18 +9,18 @@ if [ "$ACTION" != "install" ]; then
     exit 0
 fi
 
-echo "📦 Copying llama.cpp dSYM files to archive..."
+echo "Copying llama.cpp dSYM files to archive..."
 
 LLAMA_BUILD_DIR="${SRCROOT}/llama.cpp/build/bin"
 
 if [ ! -d "$LLAMA_BUILD_DIR" ]; then
-    echo "⚠️  Warning: llama.cpp build directory not found at: $LLAMA_BUILD_DIR"
+    echo " Warning: llama.cpp build directory not found at: $LLAMA_BUILD_DIR"
     exit 0
 fi
 
 # The DWARF_DSYM_FOLDER_PATH is set by Xcode during archiving
 if [ -z "$DWARF_DSYM_FOLDER_PATH" ]; then
-    echo "⚠️  Warning: DWARF_DSYM_FOLDER_PATH not set"
+    echo " Warning: DWARF_DSYM_FOLDER_PATH not set"
     exit 0
 fi
 
@@ -38,8 +38,8 @@ for dsym in "$LLAMA_BUILD_DIR"/*.dSYM; do
 done
 
 if [ $DSYM_COUNT -eq 0 ]; then
-    echo "⚠️  Warning: No dSYM files found in $LLAMA_BUILD_DIR"
+    echo " Warning: No dSYM files found in $LLAMA_BUILD_DIR"
     echo "   Run ./scripts/build-llama.sh to generate them"
 else
-    echo "✅ Copied $DSYM_COUNT dSYM files to archive"
+    echo "Copied $DSYM_COUNT dSYM files to archive"
 fi

@@ -14,7 +14,7 @@ import SwiftUI
 class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         // This is called when the app is about to quit (Cmd+Q or Quit from menu)
-        print("🛑 App terminating - performing final save...")
+        print("App terminating - performing final save...")
 
         // Critical: Flush all pending debounced saves FIRST
         // This must happen synchronously on the main thread to ensure completion
@@ -31,9 +31,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if context.hasChanges {
             do {
                 try context.save()
-                print("✅ Final save completed successfully")
+                print("Final save completed successfully")
             } catch {
-                print("❌ Failed to save on termination: \(error)")
+                print("Failed to save on termination: \(error)")
                 // Log error but don't crash during termination
                 ErrorLogger.shared.logError(
                     code: .databaseSaveFailed,
@@ -89,7 +89,7 @@ struct ZetaNotesApp: App {
             object: nil,
             queue: .main
         ) { _ in
-            print("⚠️ Memory pressure detected, clearing caches...")
+            print("Memory pressure detected, clearing caches...")
             NoteEmbedding.clearVectorCache()
         }
     }
@@ -166,7 +166,7 @@ struct ZetaNotesApp: App {
         case .background:
             // App is moving to background (minimized or hidden)
             // Save any pending changes
-            print("📱 App entering background - saving pending changes...")
+            print("App entering background - saving pending changes...")
             saveAllPendingChanges()
 
         case .inactive:
@@ -177,7 +177,7 @@ struct ZetaNotesApp: App {
 
         case .active:
             // App is active and in foreground
-            print("✅ App is active")
+            print("App is active")
 
         @unknown default:
             break
@@ -190,9 +190,9 @@ struct ZetaNotesApp: App {
 
         // Save Core Data context if there are any unsaved changes
         if persistenceController.container.viewContext.hasChanges {
-            print("💾 Saving Core Data changes to disk...")
+            print("Saving Core Data changes to disk...")
             persistenceController.save()
-            print("✅ Core Data saved successfully")
+            print("Core Data saved successfully")
         } else {
             print("ℹ️ No unsaved changes to persist")
         }

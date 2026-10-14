@@ -86,7 +86,7 @@ class SystemMonitor: ObservableObject {
         totalSystemMemory = Double(processInfo.physicalMemory) / 1024 / 1024
         cpuCoreCount = processInfo.processorCount
 
-        print("📊 System: \(cpuCoreCount) cores, \(Int(totalSystemMemory))MB RAM")
+        print("System: \(cpuCoreCount) cores, \(Int(totalSystemMemory))MB RAM")
     }
 
     // MARK: - Monitoring Control
@@ -105,7 +105,7 @@ class SystemMonitor: ObservableObject {
             self?.updateMetrics()
         }
 
-        print("📊 System monitoring started (polling every 3 seconds)")
+        print("System monitoring started (polling every 3 seconds)")
     }
 
     /// Stops monitoring system resources
@@ -114,7 +114,7 @@ class SystemMonitor: ObservableObject {
         timer = nil
         isMonitoring = false
 
-        print("📊 System monitoring stopped")
+        print("System monitoring stopped")
     }
 
     // MARK: - Metrics Update

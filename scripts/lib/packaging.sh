@@ -83,7 +83,7 @@ print_release_summary() {
 
     print_step "Release Summary"
     echo ""
-    echo -e "${GREEN}✅ Release build complete!${NC}"
+    echo -e "${GREEN}Release build complete!${NC}"
     echo ""
     echo -e "${BLUE}Version:${NC} ${version}"
     echo -e "${BLUE}DMG:${NC} ${dmg_name}"
@@ -93,13 +93,13 @@ print_release_summary() {
     if [ -n "$sparkle_signature" ]; then
         echo -e "${BLUE}Sparkle Signature:${NC} ${sparkle_signature:0:32}..."
     else
-        echo -e "${BLUE}Sparkle Signature:${NC} ⚠️  NOT GENERATED"
+        echo -e "${BLUE}Sparkle Signature:${NC}  NOT GENERATED"
     fi
 
     if [ "$notarization_status" = "Accepted" ]; then
-        echo -e "${BLUE}Notarization:${NC} ✅ Accepted and stapled"
+        echo -e "${BLUE}Notarization:${NC} Accepted and stapled"
     else
-        echo -e "${BLUE}Notarization:${NC} ⚠️  ${notarization_status}"
+        echo -e "${BLUE}Notarization:${NC}  ${notarization_status}"
     fi
 
     echo ""

@@ -20,16 +20,16 @@ print_step() {
 }
 
 print_error() {
-    echo -e "\n${RED}❌ ERROR:${NC} $1\n"
+    echo -e "\n${RED}ERROR:${NC} $1\n"
     exit 1
 }
 
 print_success() {
-    echo -e "${GREEN}✓${NC} $1"
+    echo -e "${GREEN}${NC} $1"
 }
 
 print_warning() {
-    echo -e "${YELLOW}⚠️  WARNING:${NC} $1"
+    echo -e "${YELLOW} WARNING:${NC} $1"
 }
 
 # Configuration
@@ -49,10 +49,7 @@ echo -e "${BLUE}║${NC}          ${GREEN}ZetaNotes App Store Archive Builder${N
 echo -e "${BLUE}╚══════════════════════════════════════════════════════════════╝${NC}"
 echo ""
 
-# ============================================================================
 # STEP 1: Clean and rebuild llama.cpp
-# ============================================================================
-
 print_step "Rebuilding llama.cpp with debug symbols"
 
 cd "$PROJECT_DIR"
@@ -62,10 +59,7 @@ bash scripts/build-llama.sh || print_error "llama.cpp build failed"
 
 print_success "llama.cpp rebuilt with debug symbols"
 
-# ============================================================================
 # STEP 2: Clean Xcode build
-# ============================================================================
-
 print_step "Cleaning previous builds"
 
 rm -rf "$PROJECT_DIR/build"
@@ -78,10 +72,7 @@ xcodebuild clean \
 
 print_success "Clean complete"
 
-# ============================================================================
 # STEP 3: Archive the app
-# ============================================================================
-
 print_step "Archiving app for App Store"
 
 xcodebuild archive \
@@ -117,10 +108,7 @@ fi
 
 print_success "Archive created successfully"
 
-# ============================================================================
 # STEP 3.5: Verify and fix archive structure
-# ============================================================================
-
 print_step "Verifying archive structure"
 
 APP_IN_ARCHIVE="$ARCHIVE_PATH/Products/Applications/$APP_NAME.app"
@@ -144,10 +132,7 @@ fi
 
 print_success "Archive structure verified"
 
-# ============================================================================
 # STEP 4: Generate and copy llama.cpp dSYM files to archive
-# ============================================================================
-
 print_step "Generating dSYM files for llama.cpp libraries"
 
 DSYM_DIR="$ARCHIVE_PATH/dSYMs"
@@ -219,10 +204,7 @@ else
     print_error "Frameworks directory not found in archive at: $FRAMEWORKS_DIR"
 fi
 
-# ============================================================================
 # STEP 5: Create ExportOptions.plist for App Store
-# ============================================================================
-
 print_step "Creating App Store export options"
 
 cat > "$EXPORT_OPTIONS" <<EOF
@@ -257,10 +239,7 @@ EOF
 
 print_success "Export options created"
 
-# ============================================================================
 # STEP 6: Export for App Store
-# ============================================================================
-
 print_step "Exporting for App Store submission"
 
 xcodebuild -exportArchive \
@@ -278,10 +257,7 @@ fi
 
 print_success "Export complete"
 
-# ============================================================================
 # STEP 7: Validate the package
-# ============================================================================
-
 print_step "Validating exported package"
 
 # Find the exported package
@@ -334,7 +310,7 @@ elif [ -d "$EXPORT_PATH/$APP_NAME.app" ]; then
             if [ -d "$item" ]; then
                 print_error "ERROR: $(basename "$item") is a directory (bundle structure) but should be a plain file"
             elif [ -f "$item" ]; then
-                echo "  ✓ $(basename "$item") is a plain file"
+                echo "  $(basename "$item") is a plain file"
             fi
         done
     fi
@@ -344,10 +320,7 @@ else
     print_error "Could not find exported package or app"
 fi
 
-# ============================================================================
 # Summary
-# ============================================================================
-
 echo ""
 echo -e "${GREEN}╔══════════════════════════════════════════════════════════════╗${NC}"
 echo -e "${GREEN}║${NC}                    ${BLUE}Build Summary${NC}                           ${GREEN}║${NC}"

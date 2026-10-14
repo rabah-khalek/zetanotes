@@ -48,7 +48,7 @@ class SummarizationService: AIService {
 
     /// Override process to use custom prompt with batching support
     func process(_ text: String, customPrompt: String) async -> String? {
-        print("📝 Summarize: Processing \(text.count) chars")
+        print("Summarize: Processing \(text.count) chars")
 
         // Use custom prompt with placeholder replacement
         let instruction = customPrompt.isEmpty ? DefaultPrompts.summarization : customPrompt
@@ -63,9 +63,9 @@ class SummarizationService: AIService {
         )
 
         if let result = result {
-            print("✅ Summarize: Generated \(result.count) chars")
+            print("Summarize: Generated \(result.count) chars")
         } else {
-            print("❌ Summarize: Failed to generate output")
+            print("Summarize: Failed to generate output")
             ErrorLogger.shared.logError(
                 code: .generationFailed,
                 operation: "Summarization",

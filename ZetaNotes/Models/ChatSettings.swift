@@ -50,7 +50,7 @@ struct ChatSettings: Codable {
             if decoded.generationTimeout <= 60.0 {
                 let oldTimeout = decoded.generationTimeout
                 decoded.generationTimeout = 120.0
-                print("⚠️ Migrated chat timeout from \(oldTimeout)s to 120s to prevent truncation")
+                print("Migrated chat timeout from \(oldTimeout)s to 120s to prevent truncation")
                 needsSave = true
             }
 

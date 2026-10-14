@@ -7,8 +7,7 @@
 
 set -e  # Exit on error
 
-echo "🚀 ZetaNotes Development Setup"
-echo "================================"
+echo "ZetaNotes Development Setup"
 echo ""
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -26,15 +25,15 @@ NC='\033[0m' # No Color
 
 # Function to print status
 print_status() {
-    echo -e "${GREEN}✅${NC} $1"
+    echo -e "${GREEN}${NC} $1"
 }
 
 print_warning() {
-    echo -e "${YELLOW}⚠️${NC}  $1"
+    echo -e "${YELLOW}${NC}  $1"
 }
 
 print_error() {
-    echo -e "${RED}❌${NC} $1"
+    echo -e "${RED}${NC} $1"
 }
 
 # Initialize Homebrew environment if available
@@ -45,7 +44,7 @@ elif [ -f "/usr/local/bin/brew" ]; then
 fi
 
 # Step 1: Check prerequisites
-echo "📋 Step 1/5: Checking prerequisites..."
+echo "Step 1/5: Checking prerequisites..."
 echo ""
 
 # Check for Xcode Command Line Tools
@@ -81,7 +80,7 @@ print_status "Git installed: $(git --version)"
 echo ""
 
 # Step 2: Clone and build llama.cpp
-echo "📦 Step 2/5: Setting up llama.cpp..."
+echo "Step 2/5: Setting up llama.cpp..."
 echo ""
 
 # Check if llama.cpp exists and if it needs rebuilding
@@ -145,7 +144,7 @@ fi
 echo ""
 
 # Step 3: Create bridging header
-echo "🔗 Step 3/5: Setting up Swift-C++ bridge..."
+echo "Step 3/5: Setting up Swift-C++ bridge..."
 echo ""
 
 BRIDGING_HEADER="$PROJECT_ROOT/ZetaNotes/ZetaNotes-Bridging-Header.h"
@@ -173,7 +172,7 @@ fi
 echo ""
 
 # Step 4: Download AI model
-echo "🤖 Step 4/5: Downloading AI model..."
+echo "Step 4/5: Downloading AI model..."
 echo ""
 
 mkdir -p "$MODEL_DIR"
@@ -209,7 +208,7 @@ fi
 echo ""
 
 # Step 5: Verify setup
-echo "✅ Step 5/5: Verifying setup..."
+echo "Step 5/5: Verifying setup..."
 echo ""
 
 # Check all components
@@ -240,10 +239,9 @@ else
 fi
 
 echo ""
-echo "================================"
 
 if [ "$CHECKS_PASSED" = true ]; then
-    echo -e "${GREEN}✨ Setup complete!${NC}"
+    echo -e "${GREEN}Setup complete!${NC}"
     echo ""
     echo "Next steps:"
     echo ""
@@ -251,8 +249,8 @@ if [ "$CHECKS_PASSED" = true ]; then
     echo ""
     echo "2. Build and run (Cmd+R)"
     echo ""
-    echo "📖 Full integration guide: LLAMA_CPP_INTEGRATION.md"
+    echo "Full integration guide: LLAMA_CPP_INTEGRATION.md"
 else
-    echo -e "${RED}⚠️  Setup incomplete - please check errors above${NC}"
+    echo -e "${RED} Setup incomplete - please check errors above${NC}"
     exit 1
 fi

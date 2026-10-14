@@ -39,9 +39,9 @@ final class PersistenceController: ObservableObject, @unchecked Sendable {
                         withIntermediateDirectories: true,
                         attributes: nil
                     )
-                    print("✅ Created Core Data directory: \(zetaNotesDirectory.path)")
+                    print("Created Core Data directory: \(zetaNotesDirectory.path)")
                 } catch {
-                    print("❌ Failed to create Core Data directory: \(error)")
+                    print("Failed to create Core Data directory: \(error)")
                 }
             }
 
@@ -71,7 +71,7 @@ final class PersistenceController: ObservableObject, @unchecked Sendable {
                 let nsError = error as NSError
 
                 // Log to console
-                print("❌ Failed to load Core Data stack: \(error.localizedDescription)")
+                print("Failed to load Core Data stack: \(error.localizedDescription)")
                 print("   Error details: \(nsError)")
 
                 // Log to ErrorLogger for UI visibility
@@ -93,9 +93,9 @@ final class PersistenceController: ObservableObject, @unchecked Sendable {
                         .posixPermissions: 0o600 // Owner read/write only
                     ]
                     try FileManager.default.setAttributes(attributes, ofItemAtPath: storeURL.path)
-                    print("✅ Core Data store secured with restricted permissions")
+                    print("Core Data store secured with restricted permissions")
                 } catch {
-                    print("⚠️ Failed to set file permissions: \(error)")
+                    print("Failed to set file permissions: \(error)")
                 }
             }
         }
@@ -188,7 +188,7 @@ final class PersistenceController: ObservableObject, @unchecked Sendable {
                 // Check if it's a merge conflict
                 if error.domain == NSCocoaErrorDomain, error.code == NSManagedObjectMergeError {
                     print(
-                        "⚠️ Merge conflict detected, attempting to resolve (attempt \(retryCount + 1)/\(maxRetries))..."
+                        "Merge conflict detected, attempting to resolve (attempt \(retryCount + 1)/\(maxRetries))..."
                     )
 
                     // Refresh all objects to get latest data and merge changes
@@ -200,13 +200,13 @@ final class PersistenceController: ObservableObject, @unchecked Sendable {
 
                     // If still have changes after refresh, try again
                     if !targetContext.hasChanges {
-                        print("✅ Merge conflict resolved, no changes after refresh")
+                        print("Merge conflict resolved, no changes after refresh")
                         return
                     }
                     continue
                 } else {
                     // Non-recoverable error
-                    print("❌ Failed to save context: \(error.localizedDescription)")
+                    print("Failed to save context: \(error.localizedDescription)")
                     print("   Error details: \(error)")
 
                     // Log to ErrorLogger for UI visibility
@@ -225,7 +225,7 @@ final class PersistenceController: ObservableObject, @unchecked Sendable {
         }
 
         // If we exhausted retries, roll back to prevent corruption
-        print("❌ Failed to save after \(maxRetries) attempts, rolling back changes")
+        print("Failed to save after \(maxRetries) attempts, rolling back changes")
         targetContext.rollback()
     }
 

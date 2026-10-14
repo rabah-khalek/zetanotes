@@ -58,11 +58,11 @@ final class EmbeddingService: @unchecked Sendable {
         let textToEmbed = String(combinedText.prefix(maxChars))
 
         if combinedText.count > maxChars {
-            print("⚠️ Content truncated to \(maxChars) chars for embedding generation")
+            print("Content truncated to \(maxChars) chars for embedding generation")
         }
 
         guard let embedding = await generateEmbedding(for: textToEmbed) else {
-            print("⚠️ Failed to generate embedding for note: \(note.id?.uuidString ?? "unknown")")
+            print("Failed to generate embedding for note: \(note.id?.uuidString ?? "unknown")")
             return
         }
 
@@ -72,7 +72,7 @@ final class EmbeddingService: @unchecked Sendable {
 
         await context.perform {
             guard let noteInContext = try? context.existingObject(with: noteObjectID) as? Note else {
-                print("❌ Failed to get note in context")
+                print("Failed to get note in context")
                 return
             }
 
@@ -91,7 +91,7 @@ final class EmbeddingService: @unchecked Sendable {
             do {
                 try context.save()
             } catch {
-                print("❌ Failed to save embedding: \(error)")
+                print("Failed to save embedding: \(error)")
             }
         }
     }
@@ -101,7 +101,7 @@ final class EmbeddingService: @unchecked Sendable {
     ///   - notes: Array of notes to process
     ///   - context: Background context for Core Data operations
     func batchGenerateEmbeddings(for notes: [Note], in context: NSManagedObjectContext) async {
-        print("🔄 Generating embeddings for \(notes.count) notes...")
+        print("Generating embeddings for \(notes.count) notes...")
 
         for (index, note) in notes.enumerated() {
             // Skip if embedding already exists and is current
@@ -117,7 +117,7 @@ final class EmbeddingService: @unchecked Sendable {
             }
         }
 
-        print("✅ Embedding generation complete")
+        print("Embedding generation complete")
     }
 
     // MARK: - Similarity Computation

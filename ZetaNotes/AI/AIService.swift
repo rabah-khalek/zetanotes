@@ -99,7 +99,7 @@ extension AIService {
         }
 
         // Process each chunk
-        print("📦 Processing large text in \(chunks.count) batches...")
+        print("Processing large text in \(chunks.count) batches...")
         var processedChunks: [String] = []
 
         for (index, chunk) in chunks.enumerated() {
@@ -117,7 +117,7 @@ extension AIService {
                 maxTokens: maxTokens ?? config.maxTokens,
                 temperature: config.temperature
             ) else {
-                print("   ⚠️ Batch \(index + 1) failed, skipping")
+                print("Batch \(index + 1) failed, skipping")
                 continue
             }
 
@@ -125,18 +125,18 @@ extension AIService {
             if !processed.isEmpty {
                 processedChunks.append(processed)
             } else {
-                print("   ⚠️ Batch \(index + 1) produced empty output after post-processing")
+                print("Batch \(index + 1) produced empty output after post-processing")
             }
         }
 
         if processedChunks.isEmpty {
-            print("❌ All batches failed")
+            print("All batches failed")
             return nil
         }
 
-        print("✅ Successfully processed \(processedChunks.count)/\(chunks.count) batches")
+        print("Successfully processed \(processedChunks.count)/\(chunks.count) batches")
         let result = processedChunks.joined(separator: separator)
-        print("📊 Final output length: \(result.count) chars")
+        print("Final output length: \(result.count) chars")
         return result
     }
 

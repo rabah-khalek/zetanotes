@@ -42,7 +42,7 @@ class NoteViewModel: ObservableObject {
 
                 // Save immediately
                 saveNoteImmediately(currentNote)
-                print("💾 Saved note before switching: \(currentNote.displayTitle)")
+                print("Saved note before switching: \(currentNote.displayTitle)")
             }
         }
     }
@@ -117,15 +117,15 @@ class NoteViewModel: ObservableObject {
             let selectedModel = aiEngine.selectedModel
             let isDownloaded = aiEngine.isModelDownloaded(selectedModel)
 
-            print("🔍 NoteViewModel init - Selected model: \(selectedModel.displayName)")
-            print("🔍 Model downloaded: \(isDownloaded)")
+            print("NoteViewModel init - Selected model: \(selectedModel.displayName)")
+            print("Model downloaded: \(isDownloaded)")
 
             if isDownloaded {
-                print("📥 Loading model \(selectedModel.displayName)...")
+                print("Loading model \(selectedModel.displayName)...")
                 await aiEngine.loadModel()
-                print("✅ Model load complete. isModelLoaded: \(aiEngine.isModelLoaded)")
+                print("Model load complete. isModelLoaded: \(aiEngine.isModelLoaded)")
             } else {
-                print("⚠️ Model \(selectedModel.displayName) not downloaded - tools will be disabled")
+                print("Model \(selectedModel.displayName) not downloaded - tools will be disabled")
             }
         }
     }
@@ -192,11 +192,11 @@ class NoteViewModel: ObservableObject {
     }
 
     func createNewNote() {
-        print("📝 Creating new note...")
+        print("Creating new note...")
         let newNote = repository.createNote()
 
         guard let newItem = repository.makeListItem(from: newNote) else {
-            print("⚠️ Failed to create list item for new note")
+            print("Failed to create list item for new note")
             return
         }
 
@@ -204,7 +204,7 @@ class NoteViewModel: ObservableObject {
         noteListItems.insert(newItem, at: 0)
         noteListItems.sort(by: { $0.updatedAt > $1.updatedAt })
         selectedNoteID = newItem.id
-        print("✅ Note created: \(newNote.id?.uuidString ?? "unknown")")
+        print("Note created: \(newNote.id?.uuidString ?? "unknown")")
     }
 
     func deleteNote(_ note: Note) {
@@ -280,7 +280,7 @@ class NoteViewModel: ObservableObject {
                         await self.saveNoteInBackground(note)
                     }
                 } catch {
-                    print("⚠️ Debounced save skipped: Note no longer exists (\(error.localizedDescription))")
+                    print("Debounced save skipped: Note no longer exists (\(error.localizedDescription))")
                 }
 
                 // Clean up timer reference
@@ -332,7 +332,7 @@ class NoteViewModel: ObservableObject {
 
         // Early validation - ensure note still exists before expensive background work
         guard let noteID = noteID, noteCache[noteID] != nil else {
-            print("⚠️ Background save skipped: Note no longer in cache")
+            print("Background save skipped: Note no longer in cache")
             return
         }
 
@@ -343,13 +343,13 @@ class NoteViewModel: ObservableObject {
             do {
                 // Get note in background context with defensive nil check
                 guard let bgNote = try? backgroundContext.existingObject(with: noteObjectID) as? Note else {
-                    print("⚠️ Background save skipped: Note object not found (objectID: \(noteObjectID))")
+                    print("Background save skipped: Note object not found (objectID: \(noteObjectID))")
                     return false
                 }
 
                 // Verify the note still exists and is not deleted
                 guard !bgNote.isDeleted, !bgNote.isFault else {
-                    print("⚠️ Background save skipped: Note is deleted or faulted")
+                    print("Background save skipped: Note is deleted or faulted")
                     return false
                 }
 
@@ -368,10 +368,10 @@ class NoteViewModel: ObservableObject {
                 }
 
                 try backgroundContext.save()
-                print("✅ Background save successful for note: \(bgNote.id?.uuidString ?? "unknown")")
+                print("Background save successful for note: \(bgNote.id?.uuidString ?? "unknown")")
                 return true
             } catch {
-                print("❌ Background save failed: \(error)")
+                print("Background save failed: \(error)")
                 // Roll back the context to prevent corruption
                 backgroundContext.rollback()
                 return false
@@ -487,7 +487,7 @@ class NoteViewModel: ObservableObject {
             return
         }
 
-        // ✅ CRITICAL: Cancel any ongoing generation to prevent memory corruption
+        // CRITICAL: Cancel any ongoing generation to prevent memory corruption
         aiEngine.llmService.cancelGeneration()
 
         // Immediately clear old suggestion when new request comes in
@@ -786,10 +786,10 @@ class NoteViewModel: ObservableObject {
         let defaultModel: AIModel = .llamaThreeTwoOneB
         if AIEngine.shared.isModelDownloaded(defaultModel) {
             AIEngine.shared.selectedModel = defaultModel
-            print("✅ Reset to default model: \(defaultModel.displayName)")
+            print("Reset to default model: \(defaultModel.displayName)")
         } else {
             // Default model not downloaded - keep current selection unchanged
-            print("⚠️ Default model not downloaded. Keeping current selection: \(AIEngine.shared.selectedModel.displayName)")
+            print("Default model not downloaded. Keeping current selection: \(AIEngine.shared.selectedModel.displayName)")
         }
 
         // Reset tools to defaults (removes custom tools, resets default tools)
@@ -802,7 +802,7 @@ class NoteViewModel: ObservableObject {
         // Reset appearance to dark mode
         UserDefaults.standard.set("dark", forKey: "preferredAppearance")
 
-        print("✅ Reset all settings to defaults")
+        print("Reset all settings to defaults")
     }
 
     /// Updates all prompts to match the currently selected model's optimized defaults
@@ -832,7 +832,7 @@ class NoteViewModel: ObservableObject {
             reformulatePrompt = DefaultPrompts.reformulate
         }
 
-        print("📝 Updated prompts for model: \(aiEngine.selectedModel.displayName)")
+        print("Updated prompts for model: \(aiEngine.selectedModel.displayName)")
     }
 
     /// Helper functions to check if each prompt is at default (not customized)
@@ -957,7 +957,7 @@ class NoteViewModel: ObservableObject {
             maxTokens = min(max(estimatedInputTokens + 200, 300), 1024) // At least 300, at most 1024
         }
 
-        print("🔧 Custom Tool '\(tool.name)': Processing \(sections.baseContent.count) chars")
+        print("Custom Tool '\(tool.name)': Processing \(sections.baseContent.count) chars")
 
         // Create a temporary service to use the standard AIService infrastructure
         // This ensures custom tools work the same way as built-in tools (using chat template)
@@ -977,7 +977,7 @@ class NoteViewModel: ObservableObject {
         )
 
         if let result = result, !result.isEmpty {
-            print("✅ Custom Tool '\(tool.name)': Generated \(result.count) chars")
+            print("Custom Tool '\(tool.name)': Generated \(result.count) chars")
 
             // Post-process the result to remove common unwanted prefixes/suffixes
             let cleanedResult = cleanToolOutput(result)
@@ -1013,14 +1013,14 @@ class NoteViewModel: ObservableObject {
                     self.executingToolId = nil
                 }
             } else {
-                print("⚠️ Custom Tool '\(tool.name)': Post-processing resulted in empty output")
+                print("Custom Tool '\(tool.name)': Post-processing resulted in empty output")
                 await MainActor.run {
                     self.isExecutingTool = false
                     self.executingToolId = nil
                 }
             }
         } else {
-            print("❌ Custom Tool '\(tool.name)': Failed to generate output or output was empty")
+            print("Custom Tool '\(tool.name)': Failed to generate output or output was empty")
             await MainActor.run {
                 self.isExecutingTool = false
                 self.executingToolId = nil

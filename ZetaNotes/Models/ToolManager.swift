@@ -43,7 +43,7 @@ class ToolManager: ObservableObject {
     // MARK: - Loading & Saving
 
     func loadTools() {
-        print("🔄 Loading tools from UserDefaults...")
+        print("Loading tools from UserDefaults...")
 
         // Check if we've initialized default tools
         let hasInitialized = UserDefaults.standard.bool(forKey: hasInitializedKey)
@@ -54,13 +54,13 @@ class ToolManager: ObservableObject {
             tools = AITool.createDefaultTools()
             saveTools()
             UserDefaults.standard.set(true, forKey: hasInitializedKey)
-            print("✅ Initialized default tools (first run)")
+            print("Initialized default tools (first run)")
             return
         }
 
         // Load from storage
         guard let data = UserDefaults.standard.data(forKey: storageKey) else {
-            print("⚠️ No data found in UserDefaults for key '\(storageKey)'")
+            print("No data found in UserDefaults for key '\(storageKey)'")
             // Fallback: Re-initialize if load fails
             tools = AITool.createDefaultTools()
             saveTools()
@@ -70,7 +70,7 @@ class ToolManager: ObservableObject {
         print("   Found data in UserDefaults: \(data.count) bytes")
 
         guard let decoded = try? JSONDecoder().decode([AITool].self, from: data) else {
-            print("❌ Failed to decode tools from UserDefaults")
+            print("Failed to decode tools from UserDefaults")
             // Fallback: Re-initialize if load fails
             tools = AITool.createDefaultTools()
             saveTools()
@@ -78,7 +78,7 @@ class ToolManager: ObservableObject {
         }
 
         tools = decoded
-        print("✅ Loaded \(tools.count) tools (\(tools.filter { !$0.isDefault }.count) custom)")
+        print("Loaded \(tools.count) tools (\(tools.filter { !$0.isDefault }.count) custom)")
 
         // Ensure default tools exist (in case of updates/migration)
         ensureDefaultToolsExist()
@@ -89,11 +89,11 @@ class ToolManager: ObservableObject {
 
     func saveTools() {
         guard let encoded = try? JSONEncoder().encode(tools) else {
-            print("❌ Failed to encode tools")
+            print("Failed to encode tools")
             return
         }
         UserDefaults.standard.set(encoded, forKey: storageKey)
-        print("✅ Saved \(tools.count) tools (\(defaultTools.count) default, \(customTools.count) custom)")
+        print("Saved \(tools.count) tools (\(defaultTools.count) default, \(customTools.count) custom)")
     }
 
     /// Ensures all default tools exist (for migration/updates)
@@ -104,7 +104,7 @@ class ToolManager: ObservableObject {
         for defaultTool in AITool.createDefaultTools() where !existingNames.contains(defaultTool.name) {
             // Missing default tool, add it
             tools.insert(defaultTool, at: defaultToolInsertionIndex())
-            print("➕ Added missing default tool: \(defaultTool.name)")
+            print("Added missing default tool: \(defaultTool.name)")
         }
 
         if tools.filter({ $0.isDefault }).count != defaultToolNames.count {
@@ -121,7 +121,7 @@ class ToolManager: ObservableObject {
             if tools[index].keyboardShortcut == "A" {
                 tools[index].keyboardShortcut = ""
                 needsSave = true
-                print("🔄 Migrated Autocomplete tool: removed keyboard shortcut 'A'")
+                print("Migrated Autocomplete tool: removed keyboard shortcut 'A'")
             }
         }
 
@@ -152,7 +152,7 @@ class ToolManager: ObservableObject {
 
     func addTool(_ tool: AITool) {
         guard customTools.count < maxCustomTools else {
-            print("⚠️ Maximum number of custom tools reached")
+            print("Maximum number of custom tools reached")
             return
         }
 
@@ -160,18 +160,18 @@ class ToolManager: ObservableObject {
         newTool.isDefault = false // Ensure it's marked as custom
         tools.append(newTool)
 
-        print("📝 Adding custom tool: \(newTool.name) (ID: \(newTool.id))")
-        print("📊 Total tools before save: \(tools.count) (custom: \(customTools.count))")
+        print("Adding custom tool: \(newTool.name) (ID: \(newTool.id))")
+        print("Total tools before save: \(tools.count) (custom: \(customTools.count))")
 
         saveTools()
 
         // Verify it was saved
         if let data = UserDefaults.standard.data(forKey: storageKey),
            let decoded = try? JSONDecoder().decode([AITool].self, from: data) {
-            print("✅ Verification: \(decoded.count) tools in UserDefaults after save")
+            print("Verification: \(decoded.count) tools in UserDefaults after save")
             print("   Custom tools in storage: \(decoded.filter { !$0.isDefault }.count)")
         } else {
-            print("❌ Verification failed: Could not read back from UserDefaults")
+            print("Verification failed: Could not read back from UserDefaults")
         }
     }
 
@@ -185,7 +185,7 @@ class ToolManager: ObservableObject {
 
     func deleteTool(_ tool: AITool) {
         guard !tool.isDefault else {
-            print("⚠️ Cannot delete default tools")
+            print("Cannot delete default tools")
             return
         }
 
@@ -215,7 +215,7 @@ class ToolManager: ObservableObject {
             tools[index].keyboardShortcut = factoryTool.keyboardShortcut
             tools[index].touch()
             saveTools()
-            print("🔄 Reset \(tool.name) to default config for current model")
+            print("Reset \(tool.name) to default config for current model")
         }
     }
 
@@ -237,7 +237,7 @@ class ToolManager: ObservableObject {
                 tools[index].llmConfig = defaultTool.llmConfig
                 tools[index].touch()
                 needsSave = true
-                print("🔄 Updated \(defaultTool.name) config for current model")
+                print("Updated \(defaultTool.name) config for current model")
             }
         }
 
@@ -289,7 +289,7 @@ class ToolManager: ObservableObject {
         // Save the reset state
         saveTools()
 
-        print("✅ Reset all tools to defaults (removed \(customTools.count) custom tools)")
+        print("Reset all tools to defaults (removed \(customTools.count) custom tools)")
     }
 
     // MARK: - Validation

@@ -59,10 +59,10 @@ class TranslationService: AIService {
             .replacingOccurrences(of: "{language}", with: targetLanguage)
             .replacingOccurrences(of: "{content}", with: text)
 
-        print("🌍 Translation prompt built:")
-        print("📝 Using: \(customPrompt != nil && !customPrompt!.isEmpty ? "custom prompt" : "default prompt")")
-        print("🎯 Target language: \(targetLanguage)")
-        print("📄 Text length: \(text.count) characters")
+        print("Translation prompt built:")
+        print("Using: \(customPrompt != nil && !customPrompt!.isEmpty ? "custom prompt" : "default prompt")")
+        print("Target language: \(targetLanguage)")
+        print("Text length: \(text.count) characters")
 
         return prompt
     }
@@ -104,7 +104,7 @@ class TranslationService: AIService {
     ///   - customPrompt: Optional custom prompt template (use {language} as placeholder)
     /// - Returns: Translated text, or nil on failure
     func translate(_ text: String, withPrompt customPrompt: String) async -> String? {
-        print("🌍 Translate: Processing \(text.count) chars to \(targetLanguage)")
+        print("Translate: Processing \(text.count) chars to \(targetLanguage)")
 
         // Prepare instruction with language placeholder replacement
         let instruction = (customPrompt.isEmpty ? DefaultPrompts.translation : customPrompt)
@@ -114,7 +114,7 @@ class TranslationService: AIService {
         // Use config maxTokens if specified, otherwise use intelligent limit based on model context
         let maxLimit = config.maxTokens ?? Int(llmService.getCurrentModel().maxContextSize) / 2  // Use half of context size as limit
         let maxTokens = calculateMaxTokens(for: text, bufferPercent: 70, maxLimit: maxLimit)
-        print("📊 Estimated max tokens needed: \(maxTokens) (limit: \(maxLimit))")
+        print("Estimated max tokens needed: \(maxTokens) (limit: \(maxLimit))")
 
         // Use batched processing to handle large texts
         let result = await processBatched(
@@ -127,7 +127,7 @@ class TranslationService: AIService {
         if let result = result {
             // Validate that the output is actually a translation
             if !isValidTranslation(result, originalText: text) {
-                print("❌ Translate: Output appears to be the same language as input")
+                print("Translate: Output appears to be the same language as input")
                 ErrorLogger.shared.logWarning(
                     code: WarningCode.generationEmpty,
                     operation: "Translation",
@@ -135,10 +135,10 @@ class TranslationService: AIService {
                 )
                 return nil
             }
-            print("✅ Translate: Generated \(result.count) chars")
+            print("Translate: Generated \(result.count) chars")
             return result
         } else {
-            print("❌ Translate: Failed to generate output")
+            print("Translate: Failed to generate output")
             ErrorLogger.shared.logError(
                 code: ErrorCode.generationFailed,
                 operation: "Translation",
@@ -209,7 +209,7 @@ class TranslationService: AIService {
         }
 
         cleaned = cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
-        print("🧹 Post-process cleaned output: \(cleaned)")
+        print("Post-process cleaned output: \(cleaned)")
         return cleaned
     }
 
@@ -235,9 +235,9 @@ class TranslationService: AIService {
         let isValid = overlapPercentage < threshold
 
         if !isValid {
-            print("⚠️ Translation validation failed: \(Int(overlapPercentage))% word overlap with original (target language: \(targetLanguage), threshold: \(Int(threshold))%)")
+            print("Translation validation failed: \(Int(overlapPercentage))% word overlap with original (target language: \(targetLanguage), threshold: \(Int(threshold))%)")
         } else {
-            print("✅ Translation validation passed: \(Int(overlapPercentage))% overlap (under \(Int(threshold))% threshold)")
+            print("Translation validation passed: \(Int(overlapPercentage))% overlap (under \(Int(threshold))% threshold)")
         }
 
         return isValid

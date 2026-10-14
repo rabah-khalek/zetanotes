@@ -39,7 +39,7 @@ class ReformulationService: AIService {
 
     /// Override process to use custom prompt and dynamic max tokens with batching support
     func process(_ text: String, customPrompt: String) async -> String? {
-        print("🔄 Reformulate: Processing \(text.count) chars")
+        print("Reformulate: Processing \(text.count) chars")
 
         // Calculate dynamic max tokens with 30% buffer for expansion
         let maxTokens = calculateMaxTokens(for: text, bufferPercent: 30, maxLimit: 1024)
@@ -57,9 +57,9 @@ class ReformulationService: AIService {
         )
 
         if let result = result {
-            print("✅ Reformulate: Generated \(result.count) chars")
+            print("Reformulate: Generated \(result.count) chars")
         } else {
-            print("❌ Reformulate: Failed to generate output")
+            print("Reformulate: Failed to generate output")
             ErrorLogger.shared.logError(
                 code: .generationFailed,
                 operation: "Reformulation",

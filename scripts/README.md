@@ -13,7 +13,7 @@ and the `Makefile` at the root wraps the common ones (`make build`, `make run`, 
 | `build.sh` | `xcodebuild` wrapper that prints only errors, warnings and the result. |
 | `run.sh` | Cleans, builds and launches a Debug build with console output. |
 | `format.sh` | Runs SwiftFormat and SwiftLint auto-fix over `ZetaNotes/`, then reports what is left. |
-| `generate-app-icons.py` | Regenerates `AppIcon.appiconset` from `docs/logo.png`. Needs Pillow (`pip install pillow`). |
+| `generate-app-icons.py` | Regenerates `AppIcon.appiconset` from `web/logo.png`. Needs Pillow (`pip install pillow`). |
 
 ## Release (Developer ID DMG)
 
@@ -58,3 +58,14 @@ so crash reports symbolicate.
 
 All of this needs an active Apple Developer membership. The 1.0.3 release was the last one, so these
 scripts are kept for reference and for forks.
+
+## Versioning
+
+When bumping the version for a release, change all four values together:
+
+1. `MARKETING_VERSION` in `ZetaNotes.xcodeproj/project.pbxproj` (Debug and Release).
+2. `CFBundleShortVersionString` in `ZetaNotes/Info.plist`, matching `MARKETING_VERSION`.
+3. `CFBundleVersion` in `ZetaNotes/Info.plist`, higher than the previous App Store build.
+4. `CURRENT_PROJECT_VERSION` in `ZetaNotes.xcodeproj/project.pbxproj`, matching `CFBundleVersion`.
+
+`CFBundleVersion` must always increase, even for a rebuild of the same marketing version.

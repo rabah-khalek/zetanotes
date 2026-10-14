@@ -749,20 +749,20 @@ struct GeneralSettingsContent: View {
     private func performFullReset() {
         // Unload model from memory FIRST (critical - prevents using deleted model)
         AIEngine.shared.unloadModel()
-        print("🔄 Unloaded model from memory")
+        print("Unloaded model from memory")
 
         // Delete all Core Data (notes)
         viewModel.deleteAllNotes()
 
         // Clear chat messages from memory AND delete the file
         ChatManager.shared.clearMessages()
-        print("🗑️ Cleared chat messages from memory")
+        print("Cleared chat messages from memory")
 
         // Delete all downloaded models
         if let modelsDir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?
             .appendingPathComponent("ZetaNotes/Models") {
             try? FileManager.default.removeItem(at: modelsDir)
-            print("🗑️ Deleted Models directory from disk")
+            print("Deleted Models directory from disk")
         }
 
         // Delete chat history file (after clearing in-memory messages)
@@ -772,7 +772,7 @@ struct GeneralSettingsContent: View {
 
             if FileManager.default.fileExists(atPath: chatHistoryFile.path) {
                 try? FileManager.default.removeItem(at: chatHistoryFile)
-                print("🗑️ Deleted chat history file from disk")
+                print("Deleted chat history file from disk")
             }
         }
 
@@ -789,7 +789,7 @@ struct GeneralSettingsContent: View {
             try? FileManager.default.removeItem(at: sqliteShmFile)
             try? FileManager.default.removeItem(at: sqliteWalFile)
 
-            print("✅ Deleted Core Data store files (directory preserved)")
+            print("Deleted Core Data store files (directory preserved)")
         }
 
         // Reset all UserDefaults
@@ -807,7 +807,7 @@ struct GeneralSettingsContent: View {
     }
 
     private func exportUserData() {
-        print("🔄 Export Data button clicked")
+        print("Export Data button clicked")
 
         // Export to Application Support directory (sandboxed location)
         guard let appSupportURL = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)
@@ -823,7 +823,7 @@ struct GeneralSettingsContent: View {
         }
 
         let exportBaseURL = appSupportURL.appendingPathComponent("ZetaNotes/Exports")
-        print("📁 Exporting to: \(exportBaseURL.path)")
+        print("Exporting to: \(exportBaseURL.path)")
 
         Task {
             let success = await DataExportManager.shared.exportAllData(to: exportBaseURL)
@@ -886,14 +886,14 @@ struct ModelSettingsContent: View {
                             modelDownloader.downloadModel(model) { result in
                                 switch result {
                                 case .success:
-                                    print("✅ Model download completed")
+                                    print("Model download completed")
                                     // Automatically load the model after download
                                     Task {
                                         await aiEngine.loadModel(model)
-                                        print("✅ Model \(model.displayName) loaded and ready")
+                                        print("Model \(model.displayName) loaded and ready")
                                     }
                                 case let .failure(error):
-                                    print("❌ Download failed: \(error)")
+                                    print("Download failed: \(error)")
                                 }
                             }
                         },
@@ -1013,14 +1013,14 @@ struct ModelSelectionSection: View {
                         modelDownloader.downloadModel(model) { result in
                             switch result {
                             case .success:
-                                print("✅ Model download completed")
+                                print("Model download completed")
                                 // Automatically load the model after download
                                 Task {
                                     await aiEngine.loadModel(model)
-                                    print("✅ Model \(model.displayName) loaded and ready")
+                                    print("Model \(model.displayName) loaded and ready")
                                 }
                             case let .failure(error):
-                                print("❌ Download failed: \(error)")
+                                print("Download failed: \(error)")
                             }
                         }
                     },

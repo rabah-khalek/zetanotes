@@ -101,6 +101,5 @@ DerivedData/
 build/
 *.xcarchive
 .venv/
-.claude/
 scripts/ExportOptions-AppStore.plist
 __pycache__/

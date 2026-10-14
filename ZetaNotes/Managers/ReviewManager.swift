@@ -51,25 +51,25 @@ class ReviewManager: ObservableObject {
     func recordAppLaunch() {
         let currentCount = UserDefaults.standard.integer(forKey: appLaunchCountKey)
         UserDefaults.standard.set(currentCount + 1, forKey: appLaunchCountKey)
-        print("📊 [ReviewManager] App launch count: \(currentCount + 1)")
+        print("[ReviewManager] App launch count: \(currentCount + 1)")
     }
 
     /// Increment note creation count (call when user creates a note)
     func recordNoteCreation() {
         let currentCount = UserDefaults.standard.integer(forKey: noteCreationCountKey)
         UserDefaults.standard.set(currentCount + 1, forKey: noteCreationCountKey)
-        print("📊 [ReviewManager] Note creation count: \(currentCount + 1)")
+        print("[ReviewManager] Note creation count: \(currentCount + 1)")
     }
 
     /// Request review after Pro purchase (guaranteed once)
     func requestReviewAfterPurchase() {
         // Only request once after purchase
         guard !UserDefaults.standard.bool(forKey: hasRequestedReviewAfterPurchaseKey) else {
-            print("⏭️ [ReviewManager] Already requested review after purchase, skipping")
+            print("[ReviewManager] Already requested review after purchase, skipping")
             return
         }
 
-        print("⭐ [ReviewManager] Requesting review after Pro purchase")
+        print("[ReviewManager] Requesting review after Pro purchase")
         UserDefaults.standard.set(true, forKey: hasRequestedReviewAfterPurchaseKey)
         requestReview()
     }
@@ -77,17 +77,17 @@ class ReviewManager: ObservableObject {
     /// Smart review request - only shows if conditions are met
     func requestReviewIfAppropriate() {
         guard shouldRequestReview() else {
-            print("⏭️ [ReviewManager] Not appropriate to request review yet")
+            print("[ReviewManager] Not appropriate to request review yet")
             return
         }
 
-        print("⭐ [ReviewManager] Conditions met, requesting review")
+        print("[ReviewManager] Conditions met, requesting review")
         requestReview()
     }
 
     /// Manual review request (for "Rate ZetaNotes" button in settings)
     func requestReviewManually() {
-        print("⭐ [ReviewManager] Manual review request from settings")
+        print("[ReviewManager] Manual review request from settings")
         requestReview()
     }
 
@@ -101,7 +101,7 @@ class ReviewManager: ObservableObject {
                 .day ?? 0
             guard daysSinceLastRequest >= minimumDaysBetweenRequests else {
                 print(
-                    "⏭️ [ReviewManager] Only \(daysSinceLastRequest) days since last request (need \(minimumDaysBetweenRequests))"
+                    "[ReviewManager] Only \(daysSinceLastRequest) days since last request (need \(minimumDaysBetweenRequests))"
                 )
                 return false
             }
@@ -113,7 +113,7 @@ class ReviewManager: ObservableObject {
                 .day ?? 0
             guard daysSinceFirstLaunch >= minimumDaysSinceFirstLaunch else {
                 print(
-                    "⏭️ [ReviewManager] Only \(daysSinceFirstLaunch) days since first launch (need \(minimumDaysSinceFirstLaunch))"
+                    "[ReviewManager] Only \(daysSinceFirstLaunch) days since first launch (need \(minimumDaysSinceFirstLaunch))"
                 )
                 return false
             }
@@ -122,18 +122,18 @@ class ReviewManager: ObservableObject {
         // Check launch count
         let launchCount = UserDefaults.standard.integer(forKey: appLaunchCountKey)
         guard launchCount >= minimumLaunchCount else {
-            print("⏭️ [ReviewManager] Only \(launchCount) launches (need \(minimumLaunchCount))")
+            print("[ReviewManager] Only \(launchCount) launches (need \(minimumLaunchCount))")
             return false
         }
 
         // Check note count
         let noteCount = UserDefaults.standard.integer(forKey: noteCreationCountKey)
         guard noteCount >= minimumNoteCount else {
-            print("⏭️ [ReviewManager] Only \(noteCount) notes (need \(minimumNoteCount))")
+            print("[ReviewManager] Only \(noteCount) notes (need \(minimumNoteCount))")
             return false
         }
 
-        print("✅ [ReviewManager] All conditions met:")
+        print("[ReviewManager] All conditions met:")
         print("   - Launch count: \(launchCount)")
         print("   - Note count: \(noteCount)")
         return true
@@ -146,7 +146,7 @@ class ReviewManager: ObservableObject {
 
         // Request review (macOS doesn't require window scene)
         SKStoreReviewController.requestReview()
-        print("✅ [ReviewManager] Review request sent to SKStoreReviewController")
+        print("[ReviewManager] Review request sent to SKStoreReviewController")
     }
 
     // MARK: - Debug Helpers
@@ -158,7 +158,7 @@ class ReviewManager: ObservableObject {
         UserDefaults.standard.removeObject(forKey: appLaunchCountKey)
         UserDefaults.standard.removeObject(forKey: noteCreationCountKey)
         UserDefaults.standard.removeObject(forKey: hasRequestedReviewAfterPurchaseKey)
-        print("🔄 [ReviewManager] Reset all review tracking")
+        print("[ReviewManager] Reset all review tracking")
     }
 
     /// Print current tracking stats
@@ -169,7 +169,7 @@ class ReviewManager: ObservableObject {
         let lastRequest = UserDefaults.standard.object(forKey: lastReviewRequestDateKey) as? Date
         let hasRequestedAfterPurchase = UserDefaults.standard.bool(forKey: hasRequestedReviewAfterPurchaseKey)
 
-        print("📊 [ReviewManager] Stats:")
+        print("[ReviewManager] Stats:")
         print("   - Launches: \(launches)")
         print("   - Notes: \(notes)")
         print("   - First launch: \(firstLaunch?.description ?? "not set")")

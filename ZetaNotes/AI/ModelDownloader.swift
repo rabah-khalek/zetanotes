@@ -81,12 +81,12 @@ class ModelDownloader: NSObject, ObservableObject {
         if FileManager.default.fileExists(atPath: destinationURL.path) {
             // Validate existing file
             if validateDownloadedFile(at: destinationURL, modelType: modelType) {
-                print("✅ Model already exists and validated at: \(destinationURL.path)")
+                print("Model already exists and validated at: \(destinationURL.path)")
                 completion?(.success(destinationURL))
                 return
             } else {
                 // Remove corrupted file
-                print("⚠️ Existing model file is corrupted, removing and re-downloading...")
+                print("Existing model file is corrupted, removing and re-downloading...")
                 try? FileManager.default.removeItem(at: destinationURL)
             }
         }
@@ -115,7 +115,7 @@ class ModelDownloader: NSObject, ObservableObject {
     private func startDownloadTask(url: URL, modelType: AIModel, destinationURL: URL, completion: ((Result<URL, Error>) -> Void)?) {
         let fileName = modelType.fileName
 
-        print("📥 Starting download of \(modelType.displayName) from Hugging Face...")
+        print("Starting download of \(modelType.displayName) from Hugging Face...")
         print("   URL: \(url)")
         print("   Destination: \(destinationURL.path)")
         print("   Active downloads: \(activeTasks.count + 1)")
@@ -128,7 +128,7 @@ class ModelDownloader: NSObject, ObservableObject {
             guard let self = self else { return }
 
             if let error = error {
-                print("❌ Download failed for \(modelType.displayName): \(error)")
+                print("Download failed for \(modelType.displayName): \(error)")
                 self.sharedState.failDownload(modelName: modelType.displayName, error: error.localizedDescription)
                 self.notifyCompletion(for: fileName, result: .failure(error))
                 return
@@ -151,19 +151,19 @@ class ModelDownloader: NSObject, ObservableObject {
 
                 // Validate the downloaded file
                 if self.validateDownloadedFile(at: destinationURL, modelType: modelType) {
-                    print("✅ Model downloaded and validated successfully: \(modelType.displayName)")
+                    print("Model downloaded and validated successfully: \(modelType.displayName)")
                     self.sharedState.completeDownload(modelName: modelType.displayName)
                     self.notifyCompletion(for: fileName, result: .success(destinationURL))
                 } else {
                     // File validation failed, remove it
                     try? FileManager.default.removeItem(at: destinationURL)
                     let error = DownloadError.fileCorrupted(reason: "File validation failed after download")
-                    print("❌ Downloaded file validation failed: \(modelType.displayName)")
+                    print("Downloaded file validation failed: \(modelType.displayName)")
                     self.sharedState.failDownload(modelName: modelType.displayName, error: error.localizedDescription)
                     self.notifyCompletion(for: fileName, result: .failure(error))
                 }
             } catch {
-                print("❌ Failed to move downloaded file: \(error)")
+                print("Failed to move downloaded file: \(error)")
                 self.sharedState.failDownload(modelName: modelType.displayName, error: error.localizedDescription)
                 self.notifyCompletion(for: fileName, result: .failure(error))
             }
@@ -220,7 +220,7 @@ class ModelDownloader: NSObject, ObservableObject {
             self?.updateGlobalProgress()
         }
 
-        print("🛑 Download cancelled: \(modelType.displayName)")
+        print("Download cancelled: \(modelType.displayName)")
     }
 
     /// Cancels the first active download (for backward compatibility)
@@ -256,7 +256,7 @@ class ModelDownloader: NSObject, ObservableObject {
             self?.updateGlobalProgress()
         }
 
-        print("🛑 All downloads cancelled")
+        print("All downloads cancelled")
     }
 
     // MARK: - Helpers
@@ -316,21 +316,21 @@ class ModelDownloader: NSObject, ObservableObject {
 
         // Check if file exists
         guard fileManager.fileExists(atPath: fileURL.path) else {
-            print("⚠️ Validation failed: File doesn't exist at \(fileURL.path)")
+            print("Validation failed: File doesn't exist at \(fileURL.path)")
             return false
         }
 
         // Get file attributes
         guard let attributes = try? fileManager.attributesOfItem(atPath: fileURL.path),
               let fileSize = attributes[.size] as? Int64 else {
-            print("⚠️ Validation failed: Cannot read file attributes")
+            print("Validation failed: Cannot read file attributes")
             return false
         }
 
         // Check if file is too small (less than 100 MB suggests corruption)
         let minSizeBytes: Int64 = 100 * 1024 * 1024 // 100 MB
         if fileSize < minSizeBytes {
-            print("⚠️ Validation failed: File too small (\(ByteCountFormatter.string(fromByteCount: fileSize, countStyle: .file)))")
+            print("Validation failed: File too small (\(ByteCountFormatter.string(fromByteCount: fileSize, countStyle: .file)))")
             return false
         }
 
@@ -341,19 +341,19 @@ class ModelDownloader: NSObject, ObservableObject {
 
             guard let headerData = try fileHandle.read(upToCount: 4),
                   let signature = String(data: headerData, encoding: .ascii) else {
-                print("⚠️ Validation failed: Cannot read file header")
+                print("Validation failed: Cannot read file header")
                 return false
             }
 
             if signature != "GGUF" {
-                print("⚠️ Validation failed: Invalid GGUF signature. Got '\(signature)' instead of 'GGUF'")
+                print("Validation failed: Invalid GGUF signature. Got '\(signature)' instead of 'GGUF'")
                 return false
             }
 
-            print("✅ File validation passed for \(modelType.displayName)")
+            print("File validation passed for \(modelType.displayName)")
             return true
         } catch {
-            print("⚠️ Validation failed: Cannot open file - \(error.localizedDescription)")
+            print("Validation failed: Cannot open file - \(error.localizedDescription)")
             return false
         }
     }
@@ -370,7 +370,7 @@ class ModelDownloader: NSObject, ObservableObject {
 
         let task = URLSession.shared.dataTask(with: request) { _, response, error in
             if let error = error {
-                print("⚠️ URL validation failed for \(modelType.displayName): \(error.localizedDescription)")
+                print("URL validation failed for \(modelType.displayName): \(error.localizedDescription)")
                 completion(.failure(DownloadError.urlNotReachable(url: url.absoluteString, statusCode: 0)))
                 return
             }
@@ -381,10 +381,10 @@ class ModelDownloader: NSObject, ObservableObject {
             }
 
             if httpResponse.statusCode == 200 {
-                print("✅ URL validation passed for \(modelType.displayName)")
+                print("URL validation passed for \(modelType.displayName)")
                 completion(.success(()))
             } else {
-                print("⚠️ URL returned status code \(httpResponse.statusCode) for \(modelType.displayName)")
+                print("URL returned status code \(httpResponse.statusCode) for \(modelType.displayName)")
                 completion(.failure(DownloadError.urlNotReachable(url: url.absoluteString, statusCode: httpResponse.statusCode)))
             }
         }

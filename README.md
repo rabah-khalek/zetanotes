@@ -39,7 +39,7 @@ and are documented in [scripts/README.md](scripts/README.md).
 
 - `ZetaNotes/` app sources (SwiftUI): `AI/`, `Managers/`, `Models/`, `Search/`, `Storage/`, `Utilities/`, `ViewModels/`, `Views/`
 - `ZetaNotes.xcodeproj/` Xcode project; Swift package dependencies are resolved by Xcode
-- `docs/` website, served by GitHub Pages at zetanotes.com
+- `web/` website, published to zetanotes.com by the Pages workflow in `.github/workflows/`
 - `scripts/` build and release tooling, see `scripts/README.md`
 - `Makefile` shortcuts for the scripts above
 - `CHANGELOG.md` release history

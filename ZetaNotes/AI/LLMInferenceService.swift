@@ -310,7 +310,7 @@ class LLMInferenceService: @unchecked Sendable {
         }
 
         guard kerr == KERN_SUCCESS else {
-            print("⚠️ Failed to get memory info - allowing generation")
+            print("Failed to get memory info - allowing generation")
             return (true, 0)
         }
 
@@ -322,7 +322,7 @@ class LLMInferenceService: @unchecked Sendable {
         let hasEnough = freeMemoryMB >= ModelConfig.minFreeMemoryMB
 
         if !hasEnough {
-            print("⚠️ Insufficient memory for generation:")
+            print("Insufficient memory for generation:")
             print("   Free: \(String(format: "%.1f", freeMemoryMB)) MB")
             print("   Required: \(String(format: "%.1f", ModelConfig.minFreeMemoryMB)) MB")
         }
@@ -336,7 +336,7 @@ class LLMInferenceService: @unchecked Sendable {
         let mem = llama_get_memory(ctx)
         llama_memory_clear(mem, true) // Clear both metadata and data buffer
         currentKVCacheTokenCount = 0 // Reset token counter
-        print("🔄 Cleared KV cache to free GPU memory")
+        print("Cleared KV cache to free GPU memory")
     }
 
     /// Check if KV cache needs pruning and prune if necessary
@@ -346,8 +346,8 @@ class LLMInferenceService: @unchecked Sendable {
         let projectedCount = currentKVCacheTokenCount + addingTokens
 
         if projectedCount > ModelConfig.maxKVCacheTokens {
-            print("⚠️ KV cache approaching limit: \(currentKVCacheTokenCount) + \(addingTokens) > \(ModelConfig.maxKVCacheTokens)")
-            print("🧹 Pruning KV cache to prevent memory overflow...")
+            print("KV cache approaching limit: \(currentKVCacheTokenCount) + \(addingTokens) > \(ModelConfig.maxKVCacheTokens)")
+            print("Pruning KV cache to prevent memory overflow...")
             resetContext()
         }
     }
@@ -404,13 +404,13 @@ class LLMInferenceService: @unchecked Sendable {
             let event = source.data
 
             if event.contains(.warning) {
-                print("⚠️ Memory pressure WARNING detected")
+                print("Memory pressure WARNING detected")
                 self.isUnderMemoryPressure = true
                 // AGGRESSIVE: Clear KV cache immediately
                 if self.context != nil {
                     self.inferenceQueue.async {
                         self.resetContext()
-                        print("🧹 Aggressively cleared KV cache due to memory warning")
+                        print("Aggressively cleared KV cache due to memory warning")
                     }
                 }
                 // Log error for user visibility
@@ -422,14 +422,14 @@ class LLMInferenceService: @unchecked Sendable {
             }
 
             if event.contains(.critical) {
-                print("🔴 Memory pressure CRITICAL detected")
+                print("Memory pressure CRITICAL detected")
                 self.isUnderMemoryPressure = true
                 // AGGRESSIVE: Cancel all operations and clear everything
                 self.cancelGeneration()
                 if self.context != nil {
                     self.inferenceQueue.async {
                         self.resetContext()
-                        print("🚨 Emergency memory cleanup: KV cache cleared")
+                        print("Emergency memory cleanup: KV cache cleared")
                     }
                 }
                 // Log error for user visibility
@@ -443,7 +443,7 @@ class LLMInferenceService: @unchecked Sendable {
 
         source.resume()
         memoryPressureSource = source
-        print("✅ Memory pressure monitoring enabled with aggressive response")
+        print("Memory pressure monitoring enabled with aggressive response")
     }
 
     // MARK: - Model Loading
@@ -459,7 +459,7 @@ class LLMInferenceService: @unchecked Sendable {
 
         // If different model requested, unload current model first
         if isLoaded, currentModel != modelType {
-            print("🔄 Switching from \(currentModel.displayName) to \(modelType.displayName)")
+            print("Switching from \(currentModel.displayName) to \(modelType.displayName)")
             unloadModel()
         }
 
@@ -478,7 +478,7 @@ class LLMInferenceService: @unchecked Sendable {
                         throw LLMError.modelNotFound
                     }
 
-                    print("📦 Loading \(modelType.displayName) from: \(modelPath)")
+                    print("Loading \(modelType.displayName) from: \(modelPath)")
 
                     // Log memory BEFORE loading
                     var taskInfoBefore = mach_task_basic_info()
@@ -490,7 +490,7 @@ class LLMInferenceService: @unchecked Sendable {
                     }
                     if kerrBefore == KERN_SUCCESS {
                         let memoryBeforeMB = Double(taskInfoBefore.resident_size) / 1024 / 1024
-                        print("📊 Memory BEFORE model load: \(String(format: "%.1f", memoryBeforeMB)) MB")
+                        print("Memory BEFORE model load: \(String(format: "%.1f", memoryBeforeMB)) MB")
                     }
 
                     // Initialize llama.cpp backend
@@ -554,9 +554,9 @@ class LLMInferenceService: @unchecked Sendable {
                     // Extract model metadata
                     self.extractModelMetadata()
 
-                    print("✅ Model loaded successfully with Metal GPU acceleration")
+                    print("Model loaded successfully with Metal GPU acceleration")
                     print(
-                        "📊 Model specs: Context=\(modelType.maxContextSize) tokens, Batch=\(modelType.optimalBatchSize) tokens"
+                        "Model specs: Context=\(modelType.maxContextSize) tokens, Batch=\(modelType.optimalBatchSize) tokens"
                     )
 
                     // Log memory AFTER loading
@@ -569,11 +569,11 @@ class LLMInferenceService: @unchecked Sendable {
                     }
                     if kerrAfter == KERN_SUCCESS {
                         let memoryAfterMB = Double(taskInfoAfter.resident_size) / 1024 / 1024
-                        print("📊 Memory AFTER model load: \(String(format: "%.1f", memoryAfterMB)) MB")
+                        print("Memory AFTER model load: \(String(format: "%.1f", memoryAfterMB)) MB")
                         if kerrBefore == KERN_SUCCESS {
                             let memoryBeforeMB = Double(taskInfoBefore.resident_size) / 1024 / 1024
                             let delta = memoryAfterMB - memoryBeforeMB
-                            print("📊 Memory delta: +\(String(format: "%.1f", delta)) MB")
+                            print("Memory delta: +\(String(format: "%.1f", delta)) MB")
                         }
                     }
 
@@ -612,7 +612,7 @@ class LLMInferenceService: @unchecked Sendable {
 
                 llama_backend_free()
                 isLoaded = false
-                print("🔄 Model unloaded and memory freed from process")
+                print("Model unloaded and memory freed from process")
             }
 
             // REALITY CHECK: We cannot force macOS to release system memory
@@ -634,7 +634,7 @@ class LLMInferenceService: @unchecked Sendable {
 
                 if kerr == KERN_SUCCESS {
                     let usedMemoryMB = Double(taskInfo.resident_size) / 1024 / 1024
-                    print("📊 Resident memory: \(String(format: "%.1f", usedMemoryMB)) MB")
+                    print("Resident memory: \(String(format: "%.1f", usedMemoryMB)) MB")
                     print("ℹ️  Note: macOS may keep this cached until system needs memory")
                 }
             }
@@ -660,7 +660,7 @@ class LLMInferenceService: @unchecked Sendable {
         grammar: String? = nil
     ) async -> String? {
         guard isLoaded else {
-            print("⚠️ Model not loaded")
+            print("Model not loaded")
             ErrorLogger.shared.logError(
                 code: .modelNotLoaded,
                 operation: "Chat Generation",
@@ -689,7 +689,7 @@ class LLMInferenceService: @unchecked Sendable {
 
                     // If no chat template, fall back to simple prompt format
                     if tmpl == nil {
-                        print("⚠️ Model has no chat template, falling back to simple format")
+                        print("Model has no chat template, falling back to simple format")
                         let fallbackPrompt = "\(systemMessage)\n\n\(userMessage)"
 
                         Task {
@@ -726,7 +726,7 @@ class LLMInferenceService: @unchecked Sendable {
                     }
 
                     guard requiredSize > 0 else {
-                        print("❌ Failed to calculate chat template size")
+                        print("Failed to calculate chat template size")
                         continuation.resume(returning: nil)
                         return
                     }
@@ -755,7 +755,7 @@ class LLMInferenceService: @unchecked Sendable {
                     }
 
                     guard actualSize > 0 else {
-                        print("❌ Failed to apply chat template")
+                        print("Failed to apply chat template")
                         ErrorLogger.shared.logError(
                             code: .generationFailed,
                             operation: "Chat Generation",
@@ -766,7 +766,7 @@ class LLMInferenceService: @unchecked Sendable {
                     }
 
                     let prompt = String(cString: buffer)
-                    print("📝 Chat template applied, prompt length: \(prompt.count) chars")
+                    print("Chat template applied, prompt length: \(prompt.count) chars")
 
                     // Now call the regular generate function with the formatted prompt
                     Task {
@@ -787,7 +787,7 @@ class LLMInferenceService: @unchecked Sendable {
     /// Safe to call even if no generation is in progress
     func cancelGeneration() {
         shouldCancelGeneration = true
-        print("🛑 Generation cancellation requested")
+        print("Generation cancellation requested")
     }
 
     /// Generates text completion for the given prompt
@@ -806,7 +806,7 @@ class LLMInferenceService: @unchecked Sendable {
         timeout: TimeInterval = 120.0  // Increased from 10s to 120s (2 minutes) to prevent premature truncation
     ) async -> String? {
         guard isLoaded else {
-            print("⚠️ Model not loaded")
+            print("Model not loaded")
             ErrorLogger.shared.logError(
                 code: .modelNotLoaded,
                 operation: "Text Generation",
@@ -840,9 +840,9 @@ class LLMInferenceService: @unchecked Sendable {
                     // Reset cancellation flag at start of new generation
                     self.shouldCancelGeneration = false
 
-                    print("\n🚀 === Text Generation Started ===")
-                    print("📝 Prompt: \(prompt.prefix(150))\(prompt.count > 150 ? "..." : "")")
-                    print("📊 Prompt length: \(prompt.count) chars")
+                    print("\n=== Text Generation Started ===")
+                    print("Prompt: \(prompt.prefix(150))\(prompt.count > 150 ? "..." : "")")
+                    print("Prompt length: \(prompt.count) chars")
 
                     // Check if we need to prune KV cache before generation
                     self.pruneKVCacheIfNeeded(addingTokens: Int32(prompt.count / 4)) // Rough estimate
@@ -858,7 +858,7 @@ class LLMInferenceService: @unchecked Sendable {
                     // Check memory before starting generation
                     let memCheck = self.hassufficientMemory()
                     if !memCheck.available {
-                        print("❌ Insufficient memory for generation - aborting")
+                        print("Insufficient memory for generation - aborting")
                         ErrorLogger.shared.logError(
                             code: .insufficientMemory,
                             operation: "Text Generation",
@@ -875,7 +875,7 @@ class LLMInferenceService: @unchecked Sendable {
                     var samplerParams = llama_sampler_chain_default_params()
                     samplerParams.no_perf = false
                     guard let newSamplerChain = llama_sampler_chain_init(samplerParams) else {
-                        print("❌ Failed to create sampler chain")
+                        print("Failed to create sampler chain")
                         ErrorLogger.shared.logError(
                             code: .generationFailed,
                             operation: "Text Generation",
@@ -911,9 +911,9 @@ class LLMInferenceService: @unchecked Sendable {
                         let vocab = llama_model_get_vocab(mdl)
                         if let grammarSampler = llama_sampler_init_grammar(vocab, grammarStr, "root") {
                             llama_sampler_chain_add(newSamplerChain, grammarSampler)
-                            print("📐 Grammar sampler enabled")
+                            print("Grammar sampler enabled")
                         } else {
-                            print("⚠️ Failed to initialize grammar sampler")
+                            print("Failed to initialize grammar sampler")
                         }
                     }
 
@@ -924,7 +924,7 @@ class LLMInferenceService: @unchecked Sendable {
                     self.sampler = newSamplerChain
                     let grammarStatus = grammar != nil ? ", grammar enabled" : ""
                     print(
-                        "🧹 Context fully reset (KV cache + data cleared, sampler recreated with temp=\(temperature), penalties enabled\(grammarStatus))"
+                        "Context fully reset (KV cache + data cleared, sampler recreated with temp=\(temperature), penalties enabled\(grammarStatus))"
                     )
 
                     // Determine max generation length using current model's context size
@@ -935,8 +935,8 @@ class LLMInferenceService: @unchecked Sendable {
                     let maxBufferSize = prompt.count + 2048 // Generous buffer
                     var tokens = [llama_token](repeating: 0, count: maxBufferSize)
 
-                    print("🔍 About to tokenize prompt of \(prompt.count) chars with buffer size \(maxBufferSize)")
-                    print("📋 Full prompt text:\n\(prompt)")
+                    print("About to tokenize prompt of \(prompt.count) chars with buffer size \(maxBufferSize)")
+                    print("Full prompt text:\n\(prompt)")
 
                     let tokenCount = prompt.withCString { promptCStr in
                         llama_tokenize(
@@ -951,7 +951,7 @@ class LLMInferenceService: @unchecked Sendable {
                     }
 
                     guard tokenCount > 0 else {
-                        print("❌ Failed to tokenize prompt")
+                        print("Failed to tokenize prompt")
                         ErrorLogger.shared.logError(
                             code: .tokenizationFailed,
                             operation: "Text Generation",
@@ -961,14 +961,14 @@ class LLMInferenceService: @unchecked Sendable {
                         return
                     }
 
-                    print("✅ Tokenized: \(tokenCount) tokens (\(prompt.count) chars → \(tokenCount) tokens)")
-                    print("📊 Ratio: \(String(format: "%.2f", Double(prompt.count) / Double(tokenCount))) chars/token")
+                    print("Tokenized: \(tokenCount) tokens (\(prompt.count) chars → \(tokenCount) tokens)")
+                    print("Ratio: \(String(format: "%.2f", Double(prompt.count) / Double(tokenCount))) chars/token")
 
                     // Check if prompt exceeds batch size and truncate if necessary
                     let maxPromptTokens = batchSize
                     if tokenCount > maxPromptTokens {
                         print(
-                            "⚠️ Prompt token count (\(tokenCount)) exceeds batch size (\(maxPromptTokens)), truncating prompt"
+                            "Prompt token count (\(tokenCount)) exceeds batch size (\(maxPromptTokens)), truncating prompt"
                         )
                         ErrorLogger.shared.logWarning(
                             code: .generationTruncated,
@@ -986,12 +986,12 @@ class LLMInferenceService: @unchecked Sendable {
                     let promptTokenCount = Int32(promptTokens.count)
 
                     if validTokenCount < Int(tokenCount) {
-                        print("🔒 Prompt limited to \(promptTokenCount) tokens for safety (was \(tokenCount))")
+                        print("Prompt limited to \(promptTokenCount) tokens for safety (was \(tokenCount))")
                     }
 
                     // Safety check: Ensure prompt token count is valid and not too large
                     if promptTokenCount <= 0 {
-                        print("❌ Invalid prompt token count: \(promptTokenCount)")
+                        print("Invalid prompt token count: \(promptTokenCount)")
                         ErrorLogger.shared.logError(
                             code: .tokenizationFailed,
                             operation: "Text Generation",
@@ -1003,7 +1003,7 @@ class LLMInferenceService: @unchecked Sendable {
 
                     // Additional safety: verify token count doesn't exceed context size
                     if promptTokenCount > contextSize {
-                        print("❌ Prompt tokens (\(promptTokenCount)) exceed context size (\(contextSize))")
+                        print("Prompt tokens (\(promptTokenCount)) exceed context size (\(contextSize))")
                         ErrorLogger.shared.logError(
                             code: .promptTooLarge,
                             operation: "Text Generation",
@@ -1013,7 +1013,7 @@ class LLMInferenceService: @unchecked Sendable {
                         return
                     }
 
-                    print("🔄 Processing \(promptTokenCount) prompt tokens...")
+                    print("Processing \(promptTokenCount) prompt tokens...")
 
                     // Create batch using the new API with error handling and retry logic
                     // Important: tokens array must remain valid for the lifetime of the batch
@@ -1023,7 +1023,7 @@ class LLMInferenceService: @unchecked Sendable {
 
                     while retryCount <= maxRetries, decodeResult != 0 {
                         if retryCount > 0 {
-                            print("🔄 Retry attempt \(retryCount)/\(maxRetries) for prompt decoding...")
+                            print("Retry attempt \(retryCount)/\(maxRetries) for prompt decoding...")
                             // Clear cache before retry
                             self.resetContext()
                             // Brief pause before retry
@@ -1033,13 +1033,13 @@ class LLMInferenceService: @unchecked Sendable {
                         decodeResult = promptTokens.withUnsafeMutableBufferPointer { tokensPtr -> Int32 in
                             // Safety check: Ensure pointer is valid
                             guard let baseAddress = tokensPtr.baseAddress, promptTokenCount > 0 else {
-                                print("❌ Invalid token buffer or count")
+                                print("Invalid token buffer or count")
                                 return -3 // Special error code for invalid buffer
                             }
 
                             // Additional safety: verify count matches buffer size
                             if Int(promptTokenCount) > tokensPtr.count {
-                                print("❌ Token count (\(promptTokenCount)) exceeds buffer size (\(tokensPtr.count))")
+                                print("Token count (\(promptTokenCount)) exceeds buffer size (\(tokensPtr.count))")
                                 return -3
                             }
 
@@ -1047,7 +1047,7 @@ class LLMInferenceService: @unchecked Sendable {
                             let memCheck = self.hassufficientMemory()
                             if !memCheck.available {
                                 print(
-                                    "⚠️ Memory pressure detected during decode - free: \(String(format: "%.1f", memCheck.freeMemoryMB)) MB"
+                                    "Memory pressure detected during decode - free: \(String(format: "%.1f", memCheck.freeMemoryMB)) MB"
                                 )
                                 return -2 // Special error code for memory pressure
                             }
@@ -1062,10 +1062,10 @@ class LLMInferenceService: @unchecked Sendable {
                         if decodeResult == 0 {
                             break // Success
                         } else if decodeResult == -2 {
-                            print("❌ Memory pressure prevented decode - aborting")
+                            print("Memory pressure prevented decode - aborting")
                             break // Don't retry on memory pressure
                         } else if decodeResult == -3 {
-                            print("❌ Invalid token buffer - aborting")
+                            print("Invalid token buffer - aborting")
                             break // Don't retry on invalid buffer
                         }
 
@@ -1073,7 +1073,7 @@ class LLMInferenceService: @unchecked Sendable {
                     }
 
                     if decodeResult != 0 {
-                        print("❌ Failed to decode prompt after \(retryCount) attempts (error code: \(decodeResult))")
+                        print("Failed to decode prompt after \(retryCount) attempts (error code: \(decodeResult))")
                         ErrorLogger.shared.logError(
                             code: .decodeFailed,
                             operation: "Text Generation",
@@ -1085,7 +1085,7 @@ class LLMInferenceService: @unchecked Sendable {
                         return
                     }
 
-                    print("✅ Prompt processed successfully")
+                    print("Prompt processed successfully")
 
                     // Track generation start time for timeout
                     let generationStartTime = Date()
@@ -1099,7 +1099,7 @@ class LLMInferenceService: @unchecked Sendable {
                     let nLen = nCur + Int32(maxGenTokens)
 
                     print(
-                        "🎯 Generating up to \(maxGenTokens) new tokens (temp: \(String(format: "%.1f", temperature)))..."
+                        "Generating up to \(maxGenTokens) new tokens (temp: \(String(format: "%.1f", temperature)))..."
                     )
 
                     var lastProgressPrint = Date()
@@ -1110,7 +1110,7 @@ class LLMInferenceService: @unchecked Sendable {
                     while nCur < nLen {
                         // Check for cancellation request
                         if self.shouldCancelGeneration {
-                            print("🛑 Generation cancelled by request")
+                            print("Generation cancelled by request")
                             continuation.resume(returning: nil)
                             return
                         }
@@ -1140,7 +1140,7 @@ class LLMInferenceService: @unchecked Sendable {
 
                         // Check for end of sequence
                         if llama_vocab_is_eog(vocab, newTokenId) {
-                            print("🏁 End-of-generation token detected")
+                            print("End-of-generation token detected")
                             break
                         }
 
@@ -1153,7 +1153,7 @@ class LLMInferenceService: @unchecked Sendable {
                         if now.timeIntervalSince(lastProgressPrint) >= progressInterval {
                             let progress = Double(tokensGenerated) / Double(maxGenTokens) * 100
                             print(
-                                "⏳ Progress: \(tokensGenerated)/\(maxGenTokens) tokens (\(String(format: "%.1f", progress))%)"
+                                "Progress: \(tokensGenerated)/\(maxGenTokens) tokens (\(String(format: "%.1f", progress))%)"
                             )
                             lastProgressPrint = now
                         }
@@ -1172,7 +1172,7 @@ class LLMInferenceService: @unchecked Sendable {
                                 // Quick memory check
                                 let memCheck = self.hassufficientMemory()
                                 if !memCheck.available {
-                                    print("⚠️ Memory pressure during token generation")
+                                    print("Memory pressure during token generation")
                                     return -2
                                 }
 
@@ -1184,7 +1184,7 @@ class LLMInferenceService: @unchecked Sendable {
                             }
 
                             if decodeResult != 0, decodeRetryCount < maxDecodeRetries {
-                                print("🔄 Retrying token decode at position \(nCur)...")
+                                print("Retrying token decode at position \(nCur)...")
                                 Thread.sleep(forTimeInterval: 0.05)
                                 decodeRetryCount += 1
                             } else {
@@ -1194,7 +1194,7 @@ class LLMInferenceService: @unchecked Sendable {
 
                         if decodeResult != 0 {
                             print(
-                                "❌ Failed to decode token at position \(nCur) after \(decodeRetryCount) retries (error: \(decodeResult))"
+                                "Failed to decode token at position \(nCur) after \(decodeRetryCount) retries (error: \(decodeResult))"
                             )
                             // Clean up before breaking
                             self.resetContext()
@@ -1250,7 +1250,7 @@ class LLMInferenceService: @unchecked Sendable {
 
                     // Update KV cache token count
                     self.currentKVCacheTokenCount += Int32(tokensGenerated)
-                    print("📊 KV cache now contains ~\(self.currentKVCacheTokenCount) tokens (limit: \(ModelConfig.maxKVCacheTokens))")
+                    print("KV cache now contains ~\(self.currentKVCacheTokenCount) tokens (limit: \(ModelConfig.maxKVCacheTokens))")
 
                     // Collect performance metrics from llama.cpp
                     let perfData = llama_perf_context(ctx)
@@ -1278,17 +1278,17 @@ class LLMInferenceService: @unchecked Sendable {
                     // Reset performance counters for next generation
                     llama_perf_context_reset(ctx)
 
-                    print("✅ Generation complete: \(tokensGenerated) tokens → \(generatedText.count) chars")
+                    print("Generation complete: \(tokensGenerated) tokens → \(generatedText.count) chars")
                     print(
-                        "⚡ Performance: \(String(format: "%.1f", perfMetrics.tokensPerSecond)) t/s, prompt: \(String(format: "%.0f", perfMetrics.promptTime))ms, gen: \(String(format: "%.0f", perfMetrics.generationTime))ms"
+                        "Performance: \(String(format: "%.1f", perfMetrics.tokensPerSecond)) t/s, prompt: \(String(format: "%.0f", perfMetrics.promptTime))ms, gen: \(String(format: "%.0f", perfMetrics.generationTime))ms"
                     )
-                    print("🔍 Debug - n_eval: \(perfData.n_eval), t_eval_ms: \(perfData.t_eval_ms)")
-                    print("📄 Output preview: \(generatedText.prefix(200))\(generatedText.count > 200 ? "..." : "")")
+                    print("Debug - n_eval: \(perfData.n_eval), t_eval_ms: \(perfData.t_eval_ms)")
+                    print("Output preview: \(generatedText.prefix(200))\(generatedText.count > 200 ? "..." : "")")
                     print("=== Generation Complete ===\n")
 
                     // Warn if generation produced empty output despite valid input
                     if generatedText.isEmpty && !prompt.isEmpty {
-                        print("⚠️ Warning: Generated empty output despite valid prompt")
+                        print("Warning: Generated empty output despite valid prompt")
                         ErrorLogger.shared.logWarning(
                             code: .generationEmpty,
                             operation: "Text Generation",
@@ -1340,7 +1340,7 @@ class LLMInferenceService: @unchecked Sendable {
         }
 
         // Process each chunk
-        print("📦 Batched generation: Processing large text in \(chunks.count) batches...")
+        print("Batched generation: Processing large text in \(chunks.count) batches...")
         var processedChunks: [String] = []
 
         for (index, chunk) in chunks.enumerated() {
@@ -1353,7 +1353,7 @@ class LLMInferenceService: @unchecked Sendable {
                 maxTokens: maxTokens,
                 temperature: temperature
             ) else {
-                print("   ⚠️ Batch \(index + 1) failed, skipping")
+                print("Batch \(index + 1) failed, skipping")
                 continue
             }
 
@@ -1363,7 +1363,7 @@ class LLMInferenceService: @unchecked Sendable {
         }
 
         if processedChunks.isEmpty {
-            print("❌ All batches failed")
+            print("All batches failed")
             ErrorLogger.shared.logError(
                 code: .generationFailed,
                 operation: "Batched Generation",
@@ -1374,7 +1374,7 @@ class LLMInferenceService: @unchecked Sendable {
 
         // Warn if some batches failed
         if processedChunks.count < chunks.count {
-            print("⚠️ Warning: Some batches failed (\(processedChunks.count)/\(chunks.count) succeeded)")
+            print("Warning: Some batches failed (\(processedChunks.count)/\(chunks.count) succeeded)")
             ErrorLogger.shared.logWarning(
                 code: .batchProcessingIncomplete,
                 operation: "Batched Generation",
@@ -1382,7 +1382,7 @@ class LLMInferenceService: @unchecked Sendable {
             )
         }
 
-        print("✅ Successfully processed \(processedChunks.count)/\(chunks.count) batches")
+        print("Successfully processed \(processedChunks.count)/\(chunks.count) batches")
         return processedChunks.joined(separator: separator)
     }
 
@@ -1391,7 +1391,7 @@ class LLMInferenceService: @unchecked Sendable {
     /// - Returns: Float array representing the embedding (typically 768 or 2048 dimensions)
     func generateEmbedding(for text: String) async -> [Float]? {
         guard isLoaded else {
-            print("⚠️ Model not loaded")
+            print("Model not loaded")
             ErrorLogger.shared.logError(
                 code: .modelNotLoaded,
                 operation: "Embedding Generation",
@@ -1436,7 +1436,7 @@ class LLMInferenceService: @unchecked Sendable {
                     }
 
                     guard tokenCount > 0 else {
-                        print("❌ Failed to tokenize text for embedding")
+                        print("Failed to tokenize text for embedding")
                         ErrorLogger.shared.logError(
                             code: .tokenizationFailed,
                             operation: "Embedding Generation",
@@ -1449,7 +1449,7 @@ class LLMInferenceService: @unchecked Sendable {
                     // Check if token count exceeds batch size
                     let batchSize = self.currentModel.optimalBatchSize
                     if tokenCount > batchSize {
-                        print("⚠️ Token count (\(tokenCount)) exceeds batch size (\(batchSize)), truncating")
+                        print("Token count (\(tokenCount)) exceeds batch size (\(batchSize)), truncating")
                     }
 
                     // Keep only the valid tokens, limited to batch size
@@ -1464,7 +1464,7 @@ class LLMInferenceService: @unchecked Sendable {
                     }
 
                     if decodeResult != 0 {
-                        print("❌ Failed to decode for embeddings")
+                        print("Failed to decode for embeddings")
                         ErrorLogger.shared.logError(
                             code: .decodeFailed,
                             operation: "Embedding Generation",
@@ -1477,7 +1477,7 @@ class LLMInferenceService: @unchecked Sendable {
                     // Get embeddings using sequence-level extraction (works with mean pooling)
                     let embeddingSize = llama_model_n_embd(mdl)
                     guard let embeddingsPtr = llama_get_embeddings_seq(ctx, 0) else {
-                        print("❌ Failed to get embeddings")
+                        print("Failed to get embeddings")
                         ErrorLogger.shared.logError(
                             code: .generationFailed,
                             operation: "Embedding Generation",
@@ -1496,7 +1496,7 @@ class LLMInferenceService: @unchecked Sendable {
                         embedding = embedding.map { $0 / magnitude }
                     }
 
-                    print("✅ Generated embedding with \(embedding.count) dimensions (normalized)")
+                    print("Generated embedding with \(embedding.count) dimensions (normalized)")
                     continuation.resume(returning: embedding)
                 } // End autoreleasepool
             }
@@ -1540,13 +1540,13 @@ class LLMInferenceService: @unchecked Sendable {
         """
 
         print(
-            "📊 Model metadata: \(formatParameterCount(paramCount)) params, \(ctxTrain) ctx, \(embdSize) embd, \(layers) layers"
+            "Model metadata: \(formatParameterCount(paramCount)) params, \(ctxTrain) ctx, \(embdSize) embd, \(layers) layers"
         )
-        print("💡 Setting SystemMonitor metadata tooltip: \(tooltip)")
+        print("Setting SystemMonitor metadata tooltip: \(tooltip)")
 
         Task { @MainActor in
             SystemMonitor.shared.setModelMetadata(tooltip)
-            print("✅ SystemMonitor metadata updated on main thread")
+            print("SystemMonitor metadata updated on main thread")
         }
     }
 
@@ -1569,7 +1569,7 @@ class LLMInferenceService: @unchecked Sendable {
     func setThreadCount(threads: Int32, batchThreads: Int32? = nil) {
         guard let ctx = context else { return }
         llama_set_n_threads(ctx, threads, batchThreads ?? threads)
-        print("🔧 Thread count updated: generation=\(threads), batch=\(batchThreads ?? threads)")
+        print("Thread count updated: generation=\(threads), batch=\(batchThreads ?? threads)")
     }
 
     /// Returns current thread configuration
@@ -1582,7 +1582,7 @@ class LLMInferenceService: @unchecked Sendable {
 
     private func getModelPath(for modelType: AIModel, verbose: Bool = false) -> String? {
         if verbose {
-            print("🔍 Starting search for \(modelType.displayName)...")
+            print("Starting search for \(modelType.displayName)...")
         }
 
         let modelFileName = modelType.fileName
@@ -1594,7 +1594,7 @@ class LLMInferenceService: @unchecked Sendable {
         // First, check if model exists in app bundle (Resources/Models/)
         if let bundlePath = Bundle.main.path(forResource: baseName, ofType: "gguf") {
             if verbose {
-                print("✅ Found model in app bundle: \(bundlePath)")
+                print("Found model in app bundle: \(bundlePath)")
             }
             return bundlePath
         }
@@ -1604,7 +1604,7 @@ class LLMInferenceService: @unchecked Sendable {
             let modelsPath = resourcesPath + "/Models/" + modelFileName
             if fileManager.fileExists(atPath: modelsPath) {
                 if verbose {
-                    print("✅ Found model in bundle Models: \(modelsPath)")
+                    print("Found model in bundle Models: \(modelsPath)")
                 }
                 return modelsPath
             }
@@ -1617,7 +1617,7 @@ class LLMInferenceService: @unchecked Sendable {
 
             if fileManager.fileExists(atPath: modelPath.path) {
                 if verbose {
-                    print("✅ Found model in Application Support: \(modelPath.path)")
+                    print("Found model in Application Support: \(modelPath.path)")
                 }
                 return modelPath.path
             }
@@ -1629,7 +1629,7 @@ class LLMInferenceService: @unchecked Sendable {
         // This prevents tools working after reset in development builds
 
         if verbose {
-            print("❌ Model not found in any location")
+            print("Model not found in any location")
             ErrorLogger.shared.logError(
                 code: .modelNotFound,
                 operation: "Model Loading",

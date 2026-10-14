@@ -88,7 +88,7 @@ class DataExportManager: ObservableObject {
                 self.exportStatus = ""
             }
 
-            print("✅ Export completed successfully to: \(exportDir.path)")
+            print("Export completed successfully to: \(exportDir.path)")
             return true
 
         } catch {
@@ -101,7 +101,7 @@ class DataExportManager: ObservableObject {
                 self.exportStatus = ""
             }
 
-            print("❌ Export failed: \(error)")
+            print("Export failed: \(error)")
             return false
         }
     }
@@ -141,7 +141,7 @@ class DataExportManager: ObservableObject {
         let jsonData = try JSONSerialization.data(withJSONObject: exportData, options: .prettyPrinted)
         try jsonData.write(to: notesExportURL)
 
-        print("✅ Exported \(exportData.count) notes")
+        print("Exported \(exportData.count) notes")
     }
 
     private func exportChatHistory(to exportDir: URL) throws {
@@ -169,7 +169,7 @@ class DataExportManager: ObservableObject {
         let jsonData = try JSONSerialization.data(withJSONObject: chatData, options: .prettyPrinted)
         try jsonData.write(to: chatExportURL)
 
-        print("✅ Exported chat history with \(chatManager.messages.count) messages")
+        print("Exported chat history with \(chatManager.messages.count) messages")
     }
 
     private func exportSettings(to exportDir: URL) throws {
@@ -195,7 +195,7 @@ class DataExportManager: ObservableObject {
         let jsonData = try JSONSerialization.data(withJSONObject: settingsData, options: .prettyPrinted)
         try jsonData.write(to: settingsExportURL)
 
-        print("✅ Exported user settings")
+        print("Exported user settings")
     }
 
     private func exportModelsInfo(to exportDir: URL) throws {
@@ -235,7 +235,7 @@ class DataExportManager: ObservableObject {
         let jsonData = try JSONSerialization.data(withJSONObject: modelsData, options: .prettyPrinted)
         try jsonData.write(to: modelsExportURL)
 
-        print("✅ Exported models information for \(modelFiles.count) models")
+        print("Exported models information for \(modelFiles.count) models")
     }
 
     private func createExportMetadata(in exportDir: URL) throws {
@@ -254,7 +254,7 @@ class DataExportManager: ObservableObject {
         let jsonData = try JSONSerialization.data(withJSONObject: metadata, options: .prettyPrinted)
         try jsonData.write(to: metadataURL)
 
-        print("✅ Created export metadata")
+        print("Created export metadata")
     }
 
     private func createReadmeFile(in exportDir: URL) throws {
@@ -285,7 +285,7 @@ class DataExportManager: ObservableObject {
 
         try readmeContent.write(to: readmeURL, atomically: true, encoding: .utf8)
 
-        print("✅ Created README file")
+        print("Created README file")
     }
 
     // MARK: - Formatters

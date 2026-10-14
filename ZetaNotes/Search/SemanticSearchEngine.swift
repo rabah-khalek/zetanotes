@@ -58,13 +58,13 @@ class SemanticSearchEngine {
         let cacheKey = "\(query)_\(limit)_\(threshold)"
         if let cached = searchCache[cacheKey],
            Date().timeIntervalSince(cached.timestamp) < cacheExpirationTime {
-            print("🔍 Using cached search results for: \(query)")
+            print("Using cached search results for: \(query)")
             return cached.results
         }
 
         // Generate query embedding
         guard let queryEmbedding = await embeddingService.generateEmbedding(for: query) else {
-            print("⚠️ Failed to generate query embedding")
+            print("Failed to generate query embedding")
             return []
         }
 
@@ -91,7 +91,7 @@ class SemanticSearchEngine {
 
         // Generate embeddings lazily for notes that are missing them (up to 5 at a time)
         if !notesNeedingEmbeddings.isEmpty {
-            print("⚠️ Found \(notesNeedingEmbeddings.count) notes without embeddings during search")
+            print("Found \(notesNeedingEmbeddings.count) notes without embeddings during search")
             let embeddingService = embeddingService
             let persistenceController = persistenceController
             Task.detached(priority: .utility) {
@@ -138,7 +138,7 @@ class SemanticSearchEngine {
     /// Invalidates the search cache (call when notes are modified)
     func invalidateCache() {
         searchCache.removeAll()
-        print("🔍 Search cache invalidated")
+        print("Search cache invalidated")
     }
 
     /// Finds notes similar to a given note
@@ -148,7 +148,7 @@ class SemanticSearchEngine {
     /// - Returns: Array of similar notes
     func findSimilarNotes(to note: Note, limit: Int = 5) async -> [SearchResult] {
         guard let embedding = note.embedding, let noteVector = embedding.vector else {
-            print("⚠️ Note has no embedding")
+            print("Note has no embedding")
             return []
         }
 
@@ -268,15 +268,15 @@ class SemanticSearchEngine {
                 let notesWithoutEmbeddings = try context.fetch(fetchRequest)
 
                 if !notesWithoutEmbeddings.isEmpty {
-                    print("🔄 Lazy indexing \(notesWithoutEmbeddings.count) recent notes (max: \(maxNotes))...")
+                    print("Lazy indexing \(notesWithoutEmbeddings.count) recent notes (max: \(maxNotes))...")
                     Task {
                         await embeddingService.batchGenerateEmbeddings(for: notesWithoutEmbeddings, in: context)
                     }
                 } else {
-                    print("✅ All recent notes already indexed")
+                    print("All recent notes already indexed")
                 }
             } catch {
-                print("❌ Failed to fetch notes for indexing: \(error)")
+                print("Failed to fetch notes for indexing: \(error)")
             }
         }
     }
@@ -295,13 +295,13 @@ class SemanticSearchEngine {
                 let notesWithoutEmbeddings = try context.fetch(fetchRequest)
 
                 if !notesWithoutEmbeddings.isEmpty {
-                    print("🔄 Full indexing \(notesWithoutEmbeddings.count) notes (this may take a while)...")
+                    print("Full indexing \(notesWithoutEmbeddings.count) notes (this may take a while)...")
                     Task {
                         await embeddingService.batchGenerateEmbeddings(for: notesWithoutEmbeddings, in: context)
                     }
                 }
             } catch {
-                print("❌ Failed to fetch notes for indexing: \(error)")
+                print("Failed to fetch notes for indexing: \(error)")
             }
         }
     }
@@ -327,7 +327,7 @@ class SemanticSearchEngine {
                     }
                 }
             } catch {
-                print("❌ Failed to reindex note: \(error)")
+                print("Failed to reindex note: \(error)")
             }
         }
     }
@@ -347,7 +347,7 @@ class SemanticSearchEngine {
                     let notes = try context.fetch(fetchRequest)
                     continuation.resume(returning: notes)
                 } catch {
-                    print("❌ Failed to fetch notes with embeddings: \(error)")
+                    print("Failed to fetch notes with embeddings: \(error)")
                     continuation.resume(returning: [])
                 }
             }
